@@ -1,0 +1,55 @@
+# Android Studio project metadata that is local to each developer machine.
+*.iml
+/.idea/caches/
+/.idea/libraries/
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+/.idea/deploymentTargetDropDown.xml
+
+# Gradle caches and generated build outputs should be recreated locally, not committed.
+.gradle/
+build/
+**/build/
+.externalNativeBuild/
+.cxx/
+captures/
+
+# Local SDK paths, environment overrides, and secrets must stay out of source control.
+local.properties
+*.properties.local
+.env
+.env.*
+!.env.example
+secrets.properties
+keystore.properties
+signing.properties
+
+# Release signing material is sensitive because it can publish trusted EduLife builds.
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+*.crt
+*.cer
+
+# Generated app packages and mapping files can leak release metadata or old code names.
+*.apk
+*.aab
+*.ap_
+*.idsig
+**/outputs/
+**/mapping/
+
+# Logs and crash dumps may contain tokens, API responses, or user-identifying data.
+*.log
+hs_err_pid*
+replay_pid*
+
+# OS/editor files are machine noise and do not belong in the project history.
+.DS_Store
+Thumbs.db
+desktop.ini
