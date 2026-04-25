@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">EduLife</string>
+    <string name="app_name_prefix">Edu</string>
+    <string name="app_name_suffix">Life</string>
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_title">Learn with clarity.\nGrow with purpose.</string>
+    <string name="onboarding_subtitle">A focused space for modern learners to master new skills with a disciplined, minimalist environment designed for deep focus.</string>
+    <string name="onboarding_get_started">Get Started</string>
+    <string name="onboarding_login">Login</string>
+    <string name="onboarding_terms">By continuing, you agree to our Terms of Service and Privacy Policy.</string>
+    <string name="onboarding_hero_description">Learner overlooking a mountain landscape</string>
+    <string name="onboarding_focus_icon_description">Focus symbol</string>
+    <string name="onboarding_terms_icon_description">Privacy and terms shield</string>
 </resources>

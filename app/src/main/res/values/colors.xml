@@ -2,4 +2,12 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="onboarding_background">#F8FEFB</color>
+    <color name="onboarding_green">#11765E</color>
+    <color name="onboarding_green_dark">#0F6D58</color>
+    <color name="onboarding_text_primary">#111820</color>
+    <color name="onboarding_text_secondary">#33413D</color>
+    <color name="onboarding_text_muted">#6F7780</color>
+    <color name="onboarding_border">#DCEBE7</color>
+    <color name="onboarding_dot_inactive">#DFE2E2</color>
 </resources>
