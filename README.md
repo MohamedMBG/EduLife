@@ -1,171 +1,177 @@
-# EduLife
+# 🎓 EduLife
 
-EduLife is a mobile-first educational platform for Moroccan learners. The MVP focuses on a simple, structured learning journey:
+> Transforming fragmented learning into a structured, guided journey for Moroccan learners.
 
-```text
-Discover course -> Enroll -> Learn -> Take exam -> Pass -> Receive certificate
-```
+---
 
-The project currently contains the Android application. The backend vision is a modular monolith, but backend modules are not part of this repository yet.
+## 🚀 Overview
 
-## Product Scope
+EduLife is a **mobile-first educational platform** designed to replace chaotic learning (YouTube, PDFs, WhatsApp groups) with a **clear, structured learning experience**.
 
-EduLife is designed to replace fragmented learning across random videos, PDFs, and chat groups with one organized course experience.
+It allows students to:
 
-MVP features planned for the product include:
+- Discover relevant courses  
+- Follow structured lessons  
+- Take validated exams  
+- Receive certificates  
+- Interact with teachers  
 
-- Authentication and role-based access
-- Student and teacher profiles
-- Course catalog and course details
-- Course enrollment
-- Lesson and resource access
-- Progress tracking
-- Final MCQ exams with automatic scoring
-- Certificate generation after passing
-- Course discussion and Q&A threads
-- Basic notifications
-- Basic admin and teacher verification flows
+All in one centralized system.
 
-Post-MVP features such as payments, real-time chat, mentorship booking, advanced analytics, gamification, and AI recommendations are intentionally out of scope until the learning core is stable.
+---
 
-## Architecture
+## 🔁 Core Learning Flow
 
-### Android
+Discover Course → Enroll → Learn → Take Exam → Pass → Get Certificate
 
-The Android app follows a pragmatic MVVM approach using Java and XML layouts.
+---
 
-Current package namespace:
+## ❗ Problem
 
-```text
-com.baghdad.edulife
-```
+Today, learning is:
 
-Recommended feature-first structure:
+- ❌ Scattered across multiple platforms  
+- ❌ Unstructured and confusing  
+- ❌ Lacking validation (no exams, no certificates)  
+- ❌ Missing guidance and mentorship  
 
-```text
-app/src/main/java/com/baghdad/edulife/
-  core/
-    network/
-    storage/
-    utils/
-    ui/
-    navigation/
-  features/
-    auth/
-      ui/
-      viewmodel/
-      data/
-      model/
-    onboarding/
-      ui/
-```
+Students often don’t know:
+- what to learn  
+- where to start  
+- how to stay consistent  
 
-Current implemented areas include:
+---
 
-- `core/network` for shared API setup
-- `features/auth` for login/register models, repository, ViewModel, and UI
-- `features/onboarding` for the onboarding UI
-- XML layouts and navigation resources under `app/src/main/res`
+## ✅ Solution
 
-### Backend Direction
+EduLife centralizes the entire learning journey:
 
-When backend work is added, EduLife should use a modular monolith. Domain modules should remain inside one deployable backend application rather than being split into microservices during the MVP.
+- 📚 Structured courses  
+- 🎥 Video-based lessons  
+- 📝 Final exams with automatic scoring  
+- 🏆 Certificate generation  
+- 💬 Course discussions with teachers  
+- 📊 Progress tracking  
 
-Planned backend domains:
+---
 
-```text
-auth, users, profiles, roles, courses, lessons, resources,
-enrollments, progress, exams, certificates, discussions,
-notifications, groups, admin
-```
+## 🎯 Target Users
 
-## Tech Stack
+### Primary Users
+- Students  
+- Young professionals  
+- Moroccan learners seeking career skills  
+- Teachers and trainers  
+- Educational groups / academies  
+
+### Secondary Users
+- Group administrators  
+- Platform administrators  
+- Mentors (Post-MVP)
+
+---
+
+## 🌍 Unique Value
+
+EduLife is tailored for the Moroccan ecosystem:
+
+- 🇲🇦 Localized learning experience  
+- 🌐 Multilingual content (Darija / French / English)  
+- 🧑‍🏫 Teacher-student interaction  
+- 📈 Structured career-oriented learning  
+
+---
+
+## 📦 MVP Scope
+
+The MVP focuses **strictly on the learning core**.
+
+### 👨‍🎓 Student Features
+
+- Authentication (Register / Login)
+- Browse course catalog
+- View course details
+- Enroll in courses
+- Watch lessons (videos/resources)
+- Track progress
+- Take final MCQ exams
+- View results (pass/fail)
+- Receive certificates
+- Ask questions in course discussions
+- Receive basic notifications
+
+---
+
+### 👨‍🏫 Teacher Features
+
+- Create and manage profile
+- Create courses
+- Upload lessons and resources
+- Structure course content
+- Create final exams
+- View enrolled students
+- Track student performance
+- Answer student questions
+
+---
+
+### 🛠 Admin Features
+
+- Manage users
+- Verify teachers
+- Approve/reject courses
+- Monitor platform activity
+
+---
+
+## ❌ Out of Scope (Post-MVP)
+
+- Payments / subscriptions  
+- Real-time chat  
+- Video calls  
+- Advanced AI  
+- Gamification  
+- Analytics  
+- Microservices  
+
+---
+
+## 🏗 Architecture
+
+### Mobile
+- Android (Java + XML)
+- MVVM
+
+### Backend (planned)
+- Modular Monolith
+
+---
+
+## ⚙️ Tech Stack
 
 - Java
-- XML layouts
-- Android Gradle Plugin
-- AppCompat
-- Material Design Components
-- ConstraintLayout
-- AndroidX Lifecycle ViewModel
-- AndroidX LiveData
+- XML
+- MVVM
 - Retrofit
-- Gson converter
-- OkHttp logging interceptor
-- AndroidX Navigation Component
-- JUnit, AndroidX Test, Espresso
+- Gson
+- OkHttp
+- Navigation Component
+- Material Design
 
-## Requirements
+---
 
-- Android Studio
-- JDK 11 or newer
-- Android SDK with compile SDK 36 support
-- Gradle wrapper included in the repository
-
-## Getting Started
-
-Clone the project and open it in Android Studio:
+## 🚀 Getting Started
 
 ```bash
 git clone <repository-url>
 cd EduLife
 ```
 
-Sync Gradle, then run the `app` configuration on an emulator or physical Android device.
+Run in Android Studio.
 
-You can also build from the command line:
+---
 
-```bash
-./gradlew assembleDebug
-```
+## 👤 Author
 
-On Windows PowerShell:
-
-```powershell
-.\gradlew.bat assembleDebug
-```
-
-## Project Layout
-
-```text
-EduLife/
-  app/
-    src/
-      main/
-        java/
-        res/
-        AndroidManifest.xml
-    build.gradle.kts
-  docs/
-  gradle/
-  build.gradle.kts
-  settings.gradle.kts
-  gradle.properties
-```
-
-## Development Rules
-
-- Keep the MVP focused on the core learning loop.
-- Use feature-first MVVM for Android code.
-- Put UI logic in feature `ui` packages.
-- Put state logic in feature `viewmodel` packages.
-- Put API and repository logic in feature `data` packages or shared `core/network` when cross-feature.
-- Keep business logic out of UI classes.
-- Use JWT and RBAC for protected backend endpoints when backend work begins.
-- Store heavy files such as videos, PDFs, and generated certificates in external storage, not directly in the database.
-- Add clear comments for non-obvious validation, security, permission, API, transaction, or state-handling decisions.
-- Add a task audit file in `docs/` for every completed coding, setup, refactor, or architecture task.
-
-## Documentation
-
-Task-level implementation notes live in `docs/`.
-
-Each completed task should add a file using this format:
-
-```text
-docs/YYYY-MM-DD-task-name.md
-```
-
-## Status
-
-EduLife is in early MVP development. The current repository is focused on the Android client foundation, including onboarding, authentication screens, navigation setup, and network dependencies.
+Mohamed Baghdad  
+https://github.com/MohamedMBG
