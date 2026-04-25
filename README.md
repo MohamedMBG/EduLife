@@ -163,7 +163,7 @@ The MVP focuses **strictly on the learning core**.
 ## 🚀 Getting Started
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/MohamedMBG/EduLife
 cd EduLife
 ```
 
