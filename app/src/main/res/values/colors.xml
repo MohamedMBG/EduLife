@@ -13,4 +13,14 @@
     <color name="onboarding_page1_bg">#E3F4ED</color>
     <color name="onboarding_page2_bg">#E9EFF9</color>
     <color name="onboarding_page3_bg">#FBF3E4</color>
+
+    <color name="login_background">#FBFFFD</color>
+    <color name="login_primary_green">#0F8A68</color>
+    <color name="login_primary_green_dark">#0B7558</color>
+    <color name="login_text_dark">#0E1A2A</color>
+    <color name="login_text_secondary">#7A8190</color>
+    <color name="login_border">#E4ECE9</color>
+    <color name="login_light_mint">#EEF9F5</color>
+    <color name="login_icon_mint">#DDF4EC</color>
+    <color name="login_dot_mint">#DCEFE8</color>
 </resources>

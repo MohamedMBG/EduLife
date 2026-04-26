@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="88dp"
+    android:height="104dp"
+    android:viewportWidth="88"
+    android:viewportHeight="104">
+    <path android:fillColor="@color/login_dot_mint" android:pathData="M8,8m-1.2,0a1.2,1.2 0,1 0,2.4 0a1.2,1.2 0,1 0,-2.4 0" />
+    <path android:fillColor="@color/login_dot_mint" android:pathData="M24,8m-1.2,0a1.2,1.2 0,1 0,2.4 0a1.2,1.2 0,1 0,-2.4 0" />
+    <path android:fillColor="@color/login_dot_mint" android:pathData="M40,8m-1.2,0a1.2,1.2 0,1 0,2.4 0a1.2,1.2 0,1 0,-2.4 0" />
+    <path android:fillColor="@color/login_dot_mint" android:pathData="M56,8m-1.2,0a1.2,1.2 0,1 0,2.4 0a1.2,1.2 0,1 0,-2.4 0" />
+    <path android:fillColor="@color/login_dot_mint" android:pathData="M72,8m-1.2,0a1.2,1.2 0,1 0,2.4 0a1.2,1.2 0,1 0,-2.4 0" />
+    <path android:fillColor="@color/login_dot_mint" android:pathData="M8,24m-1.2,0a1.2,1.2 0,1 0,2.4 0a1.2,1.2 0,1 0,-2.4 0" />
+    <path android:fillColor="@color/login_dot_mint" android:pathData="M24,24m-1.2,0a1.2,1.2 0,1 0,2.4 0a1.2,1.2 0,1 0,-2.4 0" />
+    <path android:fillColor="@color/login_dot_mint" android:pathData="M40,24m-1.2,0a1.2,1.2 0,1 0,2.4 0a1.2,1.2 0,1 0,-2.4 0" />
+    <path android:fillColor="@color/login_dot_mint" android:pathData="M56,24m-1.2,0a1.2,1.2 0,1 0,2.4 0a1.2,1.2 0,1 0,-2.4 0" />
+    <path android:fillColor="@color/login_dot_mint" android:pathData="M72,24m-1.2,0a1.2,1.2 0,1 0,2.4 0a1.2,1.2 0,1 0,-2.4 0" />
+    <path android:fillColor="@color/login_dot_mint" android:pathData="M8,40m-1.2,0a1.2,1.2 0,1 0,2.4 0a1.2,1.2 0,1 0,-2.4 0" />
+    <path android:fillColor="@color/login_dot_mint" android:pathData="M24,40m-1.2,0a1.2,1.2 0,1 0,2.4 0a1.2,1.2 0,1 0,-2.4 0" />
+    <path android:fillColor="@color/login_dot_mint" android:pathData="M40,40m-1.2,0a1.2,1.2 0,1 0,2.4 0a1.2,1.2 0,1 0,-2.4 0" />
+    <path android:fillColor="@color/login_dot_mint" android:pathData="M56,40m-1.2,0a1.2,1.2 0,1 0,2.4 0a1.2,1.2 0,1 0,-2.4 0" />
+    <path android:fillColor="@color/login_dot_mint" android:pathData="M72,40m-1.2,0a1.2,1.2 0,1 0,2.4 0a1.2,1.2 0,1 0,-2.4 0" />
+    <path android:fillColor="@color/login_dot_mint" android:pathData="M8,56m-1.2,0a1.2,1.2 0,1 0,2.4 0a1.2,1.2 0,1 0,-2.4 0" />
+    <path android:fillColor="@color/login_dot_mint" android:pathData="M24,56m-1.2,0a1.2,1.2 0,1 0,2.4 0a1.2,1.2 0,1 0,-2.4 0" />
+    <path android:fillColor="@color/login_dot_mint" android:pathData="M40,56m-1.2,0a1.2,1.2 0,1 0,2.4 0a1.2,1.2 0,1 0,-2.4 0" />
+    <path android:fillColor="@color/login_dot_mint" android:pathData="M56,56m-1.2,0a1.2,1.2 0,1 0,2.4 0a1.2,1.2 0,1 0,-2.4 0" />
+    <path android:fillColor="@color/login_dot_mint" android:pathData="M72,56m-1.2,0a1.2,1.2 0,1 0,2.4 0a1.2,1.2 0,1 0,-2.4 0" />
+</vector>
