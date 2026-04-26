@@ -10,3 +10,9 @@ spring:
 
   flyway:
     enabled: true
+
+firebase:
+  admin:
+    # Credentials must come from the environment so service account secrets never live in the repo.
+    credentials-path: ${FIREBASE_ADMIN_CREDENTIALS_PATH:}
+    credentials-json: ${FIREBASE_ADMIN_CREDENTIALS_JSON:}

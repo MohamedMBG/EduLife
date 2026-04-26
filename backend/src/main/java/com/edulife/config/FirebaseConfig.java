@@ -3,40 +3,64 @@ package com.edulife.config;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import jakarta.annotation.PostConstruct;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 @Configuration
+@EnableConfigurationProperties(FirebaseAdminProperties.class)
 public class FirebaseConfig {
 
-    @PostConstruct
-    public void init() {
-        try {
-            // Prevent multiple initialization
-            if (!FirebaseApp.getApps().isEmpty()) {
-                return;
-            }
+    private static final Logger log = LoggerFactory.getLogger(FirebaseConfig.class);
 
-            InputStream serviceAccount = getClass()
-                    .getClassLoader()
-                    .getResourceAsStream("edulife-firebase-service-account.json");
+    @Bean
+    public FirebaseApp firebaseApp(FirebaseAdminProperties properties) {
+        if (!FirebaseApp.getApps().isEmpty()) {
+            // Firebase must be initialized once so token verification uses one shared Admin SDK instance.
+            return FirebaseApp.getInstance();
+        }
 
-            if (serviceAccount == null) {
-                throw new RuntimeException("Firebase service account file not found");
-            }
-
+        try (InputStream credentialsStream = openCredentialsStream(properties)) {
             FirebaseOptions options = FirebaseOptions.builder()
-                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                    .setCredentials(GoogleCredentials.fromStream(credentialsStream))
                     .build();
 
-            FirebaseApp.initializeApp(options);
-
-            System.out.println("✅ Firebase initialized successfully");
-
-        } catch (Exception e) {
-            throw new RuntimeException("❌ Failed to initialize Firebase", e);
+            FirebaseApp firebaseApp = FirebaseApp.initializeApp(options);
+            log.info("Firebase Admin SDK initialized successfully.");
+            return firebaseApp;
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to initialize Firebase Admin SDK from the configured credentials source.", exception);
         }
+    }
+
+    private InputStream openCredentialsStream(FirebaseAdminProperties properties) throws IOException {
+        String credentialsJson = properties.getCredentialsJson();
+        if (credentialsJson != null && !credentialsJson.isBlank()) {
+            // Raw JSON support keeps CI and local setups out of source control when a file path is inconvenient.
+            return new ByteArrayInputStream(credentialsJson.getBytes(StandardCharsets.UTF_8));
+        }
+
+        String credentialsPath = properties.getCredentialsPath();
+        if (credentialsPath != null && !credentialsPath.isBlank()) {
+            Path path = Path.of(credentialsPath);
+            if (!Files.exists(path) || !Files.isRegularFile(path)) {
+                throw new IllegalStateException("Firebase Admin credentials file was not found at: " + path.toAbsolutePath());
+            }
+
+            return Files.newInputStream(path);
+        }
+
+        throw new IllegalStateException(
+                "Firebase Admin credentials are required. Set FIREBASE_ADMIN_CREDENTIALS_PATH or FIREBASE_ADMIN_CREDENTIALS_JSON before starting the backend."
+        );
     }
 }
