@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+backend/src/main/resources/edulife-firebase-service-account.json
+*service-account*.json
+*adminsdk*.json
