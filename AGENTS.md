@@ -1,23 +1,28 @@
-# AGENTS.md — EduLife Project Instructions
+# AGENTS.md - EduLife Project Instructions
 
 ## 1. Project Context
 
-EduLife is a mobile-first educational platform focused on structured learning for Moroccan learners. The platform allows students to create accounts, browse courses, enroll, watch lessons, take final exams, receive certificates, and interact with teachers through course discussions.
+EduLife is a mobile-first educational platform focused on structured learning for Moroccan learners. The platform helps students create accounts, browse courses, enroll, study lessons, take final exams, and receive certificates through one guided learning flow.
 
-The product is designed around multilingual accessibility, especially Darija, French, and English, with future expansion toward AI course recommendations, mentorship, payments, and advanced analytics.
+The product is designed around multilingual accessibility, especially Darija, French, and English, with future expansion toward AI recommendations, mentorship, payments, and analytics.
 
-The current goal is to build a clean, realistic MVP, not a fully expanded learning ecosystem.
+The current goal is a realistic MVP. The current technical state is:
+
+- Android skeleton exists
+- Backend does not exist yet
+
+Execution decisions in this file must follow the "EduLife MVP - Realistic Execution Plan" dated `2026-04-26`.
 
 ---
 
 ## 2. Core Product Vision
 
-EduLife solves the problem of fragmented learning. Instead of students relying on random YouTube videos, WhatsApp groups, PDFs, and disconnected content, EduLife centralizes the learning journey into one structured platform.
+EduLife solves the problem of fragmented learning. Instead of students relying on random videos, chat groups, PDFs, and disconnected content, EduLife centralizes the learning journey into one structured platform.
 
 The core learning loop is:
 
 ```text
-Discover course → Enroll → Learn → Take exam → Pass → Receive certificate
+Discover course -> Enroll -> Learn -> Take exam -> Pass -> Receive certificate
 ```
 
 Everything in the MVP must support this loop directly.
@@ -30,11 +35,9 @@ Everything in the MVP must support this loop directly.
 
 Use a **Modular Monolith**.
 
-The backend is one deployable application, internally divided into clear domain modules.
+The backend is one deployable Spring Boot application divided into clear domain modules.
 
 Do **not** implement microservices in the MVP.
-
-Microservices are postponed because they would introduce unnecessary complexity in deployment, tracing, service communication, consistency management, and debugging.
 
 ### Mobile
 
@@ -53,6 +56,7 @@ Recommended mobile stack:
 - OkHttp logging interceptor
 - Navigation Component
 - Material Design Components
+- Firebase Authentication SDK
 
 Do not create heavy Clean Architecture layers unless they are clearly useful.
 
@@ -62,26 +66,36 @@ Do not create heavy Clean Architecture layers unless they are clearly useful.
 
 ### Included in MVP
 
-The MVP includes:
+The realistic MVP includes:
 
-- Authentication
+- Firebase-based authentication
+- Backend identity sync with internal UUID
 - Role-based access
-- Student profile
-- Teacher profile
+- Student profile basics
+- Teacher profile basics
 - Course catalog
 - Course details
 - Course enrollment
 - Lesson access
-- Video/resource access
+- Video/resource URL access
 - Progress tracking
 - Final MCQ exam
 - Automatic correction
 - Pass/fail result
 - Certificate generation after passing
+- Basic admin approval for courses
+- Teacher verification / course approval
+- Delete account flow for Play Store compliance
+
+### Deferred Until Core Learner Flow Is Proven
+
+These items are acknowledged product needs but are **not part of the first execution path** and must not block Sprints 0-7:
+
 - Course discussion / Q&A threads
 - Basic notifications
-- Basic admin back-office
-- Teacher verification / course approval
+- Teacher CMS beyond what is explicitly scheduled
+
+If discussions and notifications must ship in the MVP later, they require an explicit additional sprint after the learner flow is stable.
 
 ### Excluded from MVP
 
@@ -107,13 +121,14 @@ These features may be prepared conceptually, but must not block the MVP.
 
 ## 5. User Roles
 
-EduLife has four main operational roles in the MVP.
+EduLife has four main operational roles in the product model.
 
 ### Student
 
 Can:
 
 - Register and log in
+- Verify email
 - Manage own profile
 - Browse courses
 - View course details
@@ -123,13 +138,11 @@ Can:
 - Take final exams
 - View results
 - Receive certificates
-- Ask questions in course discussions
-- Receive notifications
 
 Cannot:
 
 - Create courses
-- Access other students’ private data
+- Access other students' private data
 - Manage teachers
 - Access platform business metrics
 
@@ -138,18 +151,14 @@ Cannot:
 Can:
 
 - Manage teacher profile
-- Create courses
+- Create courses when CMS work is scheduled
 - Add course metadata
-- Upload lessons and resources
-- Structure lessons inside courses
-- Create final exams
-- View enrolled students in own courses
-- Track student performance in own courses
-- Answer student questions
+- Structure sections and lessons
+- Create final exams when exam authoring is explicitly scheduled
 
 Cannot:
 
-- Access unrelated teachers’ private data
+- Access unrelated teachers' private data
 - Manage platform-level settings
 - Access unrelated groups unless explicitly authorized
 
@@ -161,7 +170,6 @@ Can:
 - View courses created by group teachers
 - Track enrollments inside own group
 - View group performance summaries
-- View revenue summaries only if enabled later
 
 Cannot:
 
@@ -176,11 +184,9 @@ Can:
 - Manage teachers
 - Verify teachers
 - Manage groups
-- Approve/reject courses
+- Approve or reject courses
 - Monitor enrollments
-- Monitor platform activity
 - Manage certificates
-- Access reports and moderation tools
 
 Important: `Group` is not a role. It is a business entity. `GroupAdmin` is the user role linked to that group.
 
@@ -205,10 +211,16 @@ backend/
   progress/
   exams/
   certificates/
-  discussions/
-  notifications/
   groups/
   admin/
+```
+
+Deferred modules after the learner loop is stable:
+
+```text
+backend/
+  discussions/
+  notifications/
 ```
 
 Each module should generally contain:
@@ -248,10 +260,16 @@ app/
     lessons/
     exams/
     certificates/
-    discussions/
-    notifications/
     teacher/
     admin/
+```
+
+Deferred features after the learner loop is stable:
+
+```text
+features/
+  discussions/
+  notifications/
 ```
 
 Each feature should follow:
@@ -286,7 +304,7 @@ courses/
 
 ## 8. Core Data Entities
 
-Expected MVP entities:
+Expected implementation order for MVP entities:
 
 ### Identity / Access
 
@@ -314,20 +332,17 @@ Expected MVP entities:
 - ExamAnswer
 - Certificate
 
-### Interaction
-
-- DiscussionThread
-- DiscussionMessage
-- Notification
-
 ### Organization
 
 - Group
 - GroupMembership
 - TeacherVerification
 
-Future-only entities:
+Deferred entities:
 
+- DiscussionThread
+- DiscussionMessage
+- Notification
 - Payment
 - Payout
 - MentorshipSession
@@ -335,7 +350,7 @@ Future-only entities:
 - Recommendation
 - GamificationBadge
 
-Do not implement future-only entities unless explicitly requested.
+Do not implement deferred entities unless explicitly requested or formally scheduled.
 
 ---
 
@@ -348,10 +363,9 @@ A course should support:
 - Metadata
 - Sections or chapters
 - Lessons
-- Downloadable resources
+- Downloadable resources or external URLs
 - Final exam
 - Certificate eligibility
-- Discussion threads
 
 Recommended structure:
 
@@ -378,13 +392,16 @@ The system should support:
 - Final exam per course
 - Questions
 - Choices
-- Correct answer
+- Correct answer stored only on the server
 - Student attempt
-- Automatic scoring
+- Automatic scoring on the server
 - Pass/fail threshold
 - Result display
+- Attempt policy of 2 failed attempts followed by a 72-hour cooldown
 
-Do not implement open text correction, manual review, timed exams, or large question banks in MVP unless explicitly requested.
+Do not implement open text correction, manual review, timed exams, or large question banks unless explicitly requested.
+
+Never serialize correct answers to the client.
 
 ---
 
@@ -401,30 +418,17 @@ Certificate should contain:
 - Teacher or verified issuer identity
 - Issue date
 - Unique certificate identifier
-- Verification code/token
+- Verification code or hash
+
+Do not implement certificate generation before exam logic is stable.
 
 ---
 
-## 12. Discussion Rules
-
-Use course discussion / Q&A threads in the MVP.
-
-Do not implement full real-time chat.
-
-Discussion requirements:
-
-- Student can ask a question in a course or lesson context
-- Teacher can answer
-- Messages are attached to course/lesson context
-- Thread-based system is enough
-
----
-
-## 13. Storage Strategy
+## 12. Storage Strategy
 
 Do not store videos, PDFs, or heavy files directly in the database.
 
-Use external storage for:
+Use external storage or the file system for:
 
 - Videos
 - PDFs
@@ -441,39 +445,45 @@ Database stores only:
 
 ---
 
-## 14. Security Rules
+## 13. Security Rules
 
-Use JWT authentication and RBAC.
+Use Firebase Authentication on Android and a validated backend token bridge with RBAC.
 
 General flow:
 
 ```text
-User logs in
-  ↓
-Backend verifies credentials
-  ↓
-JWT token generated
-  ↓
-Mobile app stores token securely
-  ↓
-Token sent with API requests
-  ↓
-Backend validates token and role permissions
+User registers or logs in with Firebase
+  ->
+Firebase returns ID token
+  ->
+Android sends Bearer token with API requests
+  ->
+Backend validates token with Firebase Admin SDK
+  ->
+Backend checks email_verified and role permissions
+  ->
+Backend resolves internal user UUID and continues request
 ```
 
-Every protected endpoint must check authentication and authorization.
+Mandatory rules:
 
-Never trust role or user ID values sent directly from the client without verifying them on the backend.
+- Every protected endpoint must validate the Firebase token
+- `email_verified` must be enforced before protected learner flow access
+- `/api/v1/auth/sync` must upsert and return internal `userId` and `role`
+- Never expose `firebase_uid` in API responses
+- Never trust role or user ID values sent directly from the client
+- Android must refresh expired ID tokens safely and retry once on `401`
+- Token refresh race conditions must be guarded with synchronization or equivalent locking
 
 ---
 
-## 15. Backend Resilience Rules
+## 14. Backend Resilience Rules
 
 The backend must include:
 
 ### Error Isolation
 
-Each module handles its own errors. A failure in exams should not break courses.
+Each module handles its own errors. A failure in exams must not break courses.
 
 ### Validation Layer
 
@@ -485,64 +495,200 @@ Log important events and errors per module.
 
 ### Defensive Coding
 
-Use null checks, safe parsing, and controlled access.
+Use null checks, safe parsing, controlled access, and ownership checks.
 
 ### Graceful Failure
 
 Return controlled error responses instead of crashing.
 
-Example:
+Global API errors should follow this contract:
 
-```text
-Exam unavailable → return clear error message
-Courses remain accessible
+```json
+{
+  "status": 400,
+  "message": "Validation failed",
+  "timestamp": "2026-04-26T10:00:00Z"
+}
 ```
 
 ---
 
-## 16. Data Consistency Rules
+## 15. Data Consistency Rules
 
 Use relational database consistency.
 
 Critical operations must use transactions.
 
-Example: course enrollment should be transactional.
+Examples:
+
+- Enrollment creation
+- Enrollment removal when related progress must be updated
+- Exam submission and certificate generation
+
+Enrollment is a high-priority transactional rule:
 
 ```text
 Create enrollment
-Update course statistics
-Initialize student progress
+Initialize lesson progress
+Commit or rollback together
 ```
 
 If one step fails, rollback all steps.
 
 ---
 
-## 17. Development Principles
+## 16. Delivery Phases And Sprint Plan
 
-Follow these principles:
+Execution must follow this realistic order:
 
-1. Business before buzzwords
-2. Modular monolith before microservices
-3. Pragmatic MVVM before overengineering
-4. Clear domain boundaries
-5. Relational data where relationships matter
-6. MVP simplicity with growth awareness
-7. Future-ready design without premature complexity
+### Sprint 0 - Foundation
+
+Goal:
+
+- Spring Boot starts
+- PostgreSQL connects
+- Flyway runs
+- Android Navigation, Retrofit, OkHttp, and Firebase SDK are wired
+
+### Sprint 1 - Identity Bridge
+
+Goal:
+
+- Register
+- Verify email
+- Login
+- Backend token validation
+- `/auth/sync`
+- Internal UUID stored on Android
+
+### Sprint 2 - Course Discovery
+
+Goal:
+
+- Backend serves seeded courses, sections, and lessons
+- Android shows course list and course detail from live backend
+
+### Sprint 3 - Enrollment
+
+Goal:
+
+- Enroll
+- Unenroll
+- My Courses
+
+### Sprint 4 - Lessons And Progress
+
+Goal:
+
+- Lesson list
+- Lesson content
+- Mark complete
+- Progress updates
+
+### Sprint 5 - MCQ Exam
+
+Goal:
+
+- Questions served without answers
+- Answers submitted to backend
+- Score computed on backend
+- Attempt policy enforced
+
+### Sprint 6 - Certificate
+
+Goal:
+
+- PDF certificate generated after pass
+- Verification hash stored
+- Android can list and download certificates
+
+### Sprint 7 - UAT And Hardening
+
+Goal:
+
+- Full end-to-end test
+- Error states
+- Empty states
+- Delete account
+- Security checklist review
+
+### Sprint 2A - Basic CMS
+
+This sprint is intentionally **deprioritized**.
+
+Recommended order for a solo developer:
+
+```text
+Sprint 0 -> Sprint 1 -> Sprint 2 -> Sprint 3 -> Sprint 4 -> Sprint 5 -> Sprint 6 -> Sprint 7 -> Sprint 2A
+```
+
+Do not start CMS early if it risks blocking the learner flow.
 
 ---
 
-## 18. Agent Behavior Rules
+## 17. Priority Order
+
+Build first, in this exact order:
+
+1. Backend foundation
+2. Firebase token validation filter
+3. `/api/v1/auth/sync`
+4. Course discovery endpoints with seed data
+5. Enrollment
+6. Lessons and progress
+7. Exams
+8. Certificates
+9. CMS only after the learner flow is proven
+
+Do not touch early:
+
+- CMS before the learner flow works end to end
+- Certificate PDF generation before exam logic is stable
+- Discussions and notifications unless they are formally added to schedule
+
+---
+
+## 18. Technical Blockers And Locked Decisions
+
+Must be resolved before the matching sprint:
+
+- Firebase project created
+- `google-services.json` added to `app/`
+- Firebase Email/Password auth enabled
+- Firebase Admin service account JSON generated for backend
+- PostgreSQL instance available
+- Lesson content hosting decision made before Sprint 4
+- Exam UI decision made before Sprint 5
+
+Locked product and technical decisions:
+
+- Pass score is `80%`
+- Attempt policy is `2 failed attempts + 72 hour cooldown`
+- Manual dependency injection is acceptable
+- MCQ only for MVP
+
+Do not reopen locked decisions unless explicitly requested.
+
+Certificate engine note:
+
+- If licensing makes iText unsuitable, switch to a license-compatible alternative such as PDFBox instead of blocking Sprint 6
+
+---
+
+## 19. Agent Behavior Rules
 
 When modifying the project, AI agents must:
 
-- Respect the MVP scope
+- Respect the realistic sprint order
+- Protect the learner flow first
+- Prefer backend-first vertical slices with Android integrated immediately after
 - Avoid adding future features unless requested
+- Avoid early CMS work unless the user explicitly asks for it
+- Avoid discussions and notifications unless formally scheduled
 - Keep architecture simple and clean
 - Prefer feature-first organization
 - Avoid useless abstractions
 - Avoid creating microservices
-- Avoid real-time chat unless requested
 - Avoid payment logic unless requested
 - Keep naming consistent
 - Keep business logic outside UI/controllers
@@ -551,78 +697,54 @@ When modifying the project, AI agents must:
 - Maintain role-based access rules
 - Explain important architectural changes briefly
 
-When unsure, choose the simpler MVP-compatible solution.
+When unsure, choose the simpler solution that keeps Sprint 0 through Sprint 7 moving.
 
 ---
 
-## 19. What Not To Do
+## 20. What Not To Do
 
 Do not:
 
 - Turn the backend into microservices
-- Add Kafka/event-driven architecture in MVP
+- Add Kafka or event-driven architecture in MVP
 - Add complex Clean Architecture layers on Android without need
 - Store video files in the database
 - Mix admin, teacher, and student permissions
-- Let students access other students’ private data
+- Let students access other students' private data
 - Let teachers access unrelated courses
 - Treat group as a user role
 - Build full real-time chat in MVP
 - Build payment/revenue/payout flows in MVP
 - Overbuild AI features before the learning core works
+- Mock large parts of the backend once seed-data-backed APIs exist
+- Build teacher CMS before validating the learner flow end to end
+- Score exams on the client
 
 ---
 
-## 20. Recommended Delivery Phases
+## 21. Execution Strategy
 
-### Phase 1 — Foundation
+Use these delivery rules:
 
-- Authentication
-- Roles/permissions
-- Profiles
-- Course catalog
-- Enrollments
+### Backend First By One Sprint
 
-### Phase 2 — Learning Core
+Backend foundation and identity work start first. Android may wire infrastructure in parallel, but feature work should target the real backend as soon as it exists.
 
-- Lessons
-- Resources
-- Progress tracking
+### Vertical Slices
 
-### Phase 3 — Evaluation
+Each sprint should deliver backend endpoint, Android screen, navigation, and error or empty states together before moving on.
 
-- Exams
-- Attempts
-- Scoring
-- Certificates
+### Seed Data Over Mock APIs
 
-### Phase 4 — Interaction
+Use Flyway seed data for discovery instead of maintaining long-lived mocked APIs.
 
-- Discussion threads
-- Notifications
+### Contract First
 
-### Phase 5 — Organization/Admin
+Define DTOs and response contracts before writing controllers and Android callers.
 
-- Teacher verification
-- Groups
-- Group admin features
-- Admin back-office
+### UAT Before Marking Complete
 
-### Phase 6 — Post-MVP
-
-- AI recommendation
-- Mentorship
-- Payments
-- Analytics
-- Richer community features
-
----
-
-## 21. Final Architecture Statement
-
-EduLife uses a mobile-first architecture with Pragmatic MVVM on Android and a Modular Monolith on the backend. This is intentional because the product is still in MVP phase and its domains are strongly connected: users, courses, lessons, enrollments, exams, certificates, discussions, and groups.
-
-This architecture gives the project strong maintainability, simpler data consistency, faster development, and a clean path for future service extraction only if scale later justifies it.
+Each sprint must be validated against its Definition of Done before the next sprint begins.
 
 ---
 
@@ -649,7 +771,7 @@ Comments must explain **why the code exists**, not repeat what the code already 
 Good comment example:
 
 ```java
-// Only enrolled students can access lessons to prevent users from bypassing course enrollment.
+// Only enrolled students can access lessons so users cannot bypass enrollment with a direct URL.
 ```
 
 Bad comment example:
@@ -666,21 +788,21 @@ Do not over-comment obvious code. The goal is clarity, not noise.
 
 AI agents must respect the current EduLife architecture before writing any code.
 
-Before implementing a task, the agent must identify where the change belongs:
+Before implementing a task, identify where the change belongs:
 
-- Android UI logic → `features/<feature>/ui/`
-- Android state logic → `features/<feature>/viewmodel/`
-- Android API/data access → `features/<feature>/data/`
-- Android shared utilities → `core/`
-- Backend endpoint → correct domain module controller
-- Backend business logic → correct domain module service
-- Backend persistence → correct domain module repository
-- Backend DTOs → correct module `dto/`
-- Backend entities/models → correct module entity/model folder
+- Android UI logic -> `features/<feature>/ui/`
+- Android state logic -> `features/<feature>/viewmodel/`
+- Android API/data access -> `features/<feature>/data/`
+- Android shared utilities -> `core/`
+- Backend endpoint -> correct domain module controller
+- Backend business logic -> correct domain module service
+- Backend persistence -> correct domain module repository
+- Backend DTOs -> correct module `dto/`
+- Backend entities/models -> correct module entity/model folder
 
-The agent must not create random folders, duplicate existing patterns, or introduce a new architecture style without explicit instruction.
+Do not create random folders, duplicate patterns, or introduce a new architecture style without explicit instruction.
 
-If a task conflicts with the current architecture, the agent must explain the conflict and propose the smallest architecture-compatible solution.
+If a task conflicts with the current architecture, explain the conflict and propose the smallest architecture-compatible solution.
 
 ---
 
@@ -696,16 +818,15 @@ The file name must follow this format:
 
 Rules:
 
-- Use the current date.
-- Use a short kebab-case task name.
-- Example: `/docs/2026-04-25-add-login-fragment.md`
-- If `/docs` does not exist, create it.
-- This file is mandatory for every coding task, refactor, bug fix, setup task, or architecture change.
+- Use the current date
+- Use a short kebab-case task name
+- If `/docs` does not exist, create it
+- This file is mandatory for every coding task, refactor, bug fix, setup task, documentation architecture change, or execution policy update
 
 The audit file must include:
 
 ```markdown
-# Task Audit — <Task Name>
+# Task Audit - <Task Name>
 
 ## Date
 YYYY-MM-DD
@@ -735,7 +856,7 @@ Explain what was tested or what should be tested manually.
 Mention possible risks, limitations, or follow-up work.
 ```
 
-The audit must be specific. Do not write generic text like “updated files”. Mention exactly what changed.
+The audit must be specific.
 
 ---
 
@@ -748,12 +869,10 @@ The final response must include:
 1. What was done
 2. Which files were created or modified
 3. Where the `/docs/YYYY-MM-DD-task-name.md` audit file was created
-4. Any validation/testing performed
+4. Any validation or testing performed
 5. Any remaining risks or next steps
 
-The explanation must be understandable for a human developer reviewing the work.
-
-Do not only say “done”. Always provide a full task audit explanation.
+Do not only say "done". Always provide a full task audit explanation.
 
 ---
 
@@ -763,7 +882,7 @@ For every task, the AI agent must follow this workflow:
 
 ```text
 1. Understand the requested task
-2. Locate the correct module/feature based on the architecture
+2. Locate the correct module or feature based on the architecture
 3. Implement the smallest clean solution
 4. Add useful comments in the code
 5. Validate the change when possible
@@ -772,4 +891,3 @@ For every task, the AI agent must follow this workflow:
 ```
 
 The agent must not skip steps 4, 6, or 7.
-
