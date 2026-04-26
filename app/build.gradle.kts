@@ -70,4 +70,7 @@ dependencies {
 // Navigation
     implementation("androidx.navigation:navigation-fragment:2.7.7")
     implementation("androidx.navigation:navigation-ui:2.7.7")
+
+    // ViewPager2
+    implementation("androidx.viewpager2:viewpager2:1.0.0")
 }

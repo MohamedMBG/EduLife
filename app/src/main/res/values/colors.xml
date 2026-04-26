@@ -10,4 +10,7 @@
     <color name="onboarding_text_muted">#6F7780</color>
     <color name="onboarding_border">#DCEBE7</color>
     <color name="onboarding_dot_inactive">#DFE2E2</color>
+    <color name="onboarding_page1_bg">#E3F4ED</color>
+    <color name="onboarding_page2_bg">#E9EFF9</color>
+    <color name="onboarding_page3_bg">#FBF3E4</color>
 </resources>

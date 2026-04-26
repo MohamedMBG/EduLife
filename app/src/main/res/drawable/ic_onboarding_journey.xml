@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+
+    <!-- Curved path connecting nodes -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M18,76 C18,52 78,44 78,20"
+        android:strokeColor="@color/onboarding_green"
+        android:strokeLineCap="round"
+        android:strokeWidth="3" />
+
+    <!-- Node 1 — bottom, completed (filled) -->
+    <path
+        android:fillColor="@color/onboarding_green"
+        android:pathData="M8,76 A10,10 0 1,0 28,76 A10,10 0 1,0 8,76 Z" />
+
+    <!-- Checkmark in node 1 -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M13,76 L16.5,79.5 L23,72"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="2.5" />
+
+    <!-- Node 2 — middle, completed (filled) -->
+    <path
+        android:fillColor="@color/onboarding_green"
+        android:pathData="M38,48 A10,10 0 1,0 58,48 A10,10 0 1,0 38,48 Z" />
+
+    <!-- Checkmark in node 2 -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M43,48 L46.5,51.5 L53,44"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="2.5" />
+
+    <!-- Node 3 — top, upcoming (outlined) -->
+    <path
+        android:fillColor="@color/onboarding_page2_bg"
+        android:pathData="M68,20 A10,10 0 1,0 88,20 A10,10 0 1,0 68,20 Z"
+        android:strokeColor="@color/onboarding_green"
+        android:strokeWidth="2.5" />
+
+</vector>

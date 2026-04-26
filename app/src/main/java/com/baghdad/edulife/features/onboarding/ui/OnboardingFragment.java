@@ -1,5 +1,6 @@
 package com.baghdad.edulife.features.onboarding.ui;
 
+import android.animation.ValueAnimator;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.SpannableString;
@@ -7,7 +8,6 @@ import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
-import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,27 +16,31 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.baghdad.edulife.R;
 import com.baghdad.edulife.features.onboarding.data.OnboardingPreferences;
-import com.baghdad.edulife.features.onboarding.model.OnboardingItem;
+import com.baghdad.edulife.features.onboarding.viewmodel.OnboardingViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class OnboardingFragment extends Fragment {
 
-    private final List<OnboardingItem> onboardingItems = new ArrayList<>();
-
-    private OnboardingPreferences onboardingPreferences;
-    private TextView titleView;
-    private TextView subtitleView;
-    private TextView ctaButton;
+    private ViewPager2 viewPager;
     private LinearLayout dotRow;
-    private int currentStep = 0;
+    private TextView btnGetStarted;
+    private TextView txtSkip;
+
+    private OnboardingViewModel viewModel;
+    private OnboardingPreferences onboardingPreferences;
+    private final List<View> dots = new ArrayList<>();
 
     @Nullable
     @Override
@@ -50,108 +54,118 @@ public class OnboardingFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        viewModel = new ViewModelProvider(this).get(OnboardingViewModel.class);
         onboardingPreferences = new OnboardingPreferences(requireContext());
-        titleView = view.findViewById(R.id.txtTitle);
-        subtitleView = view.findViewById(R.id.txtSubtitle);
-        ctaButton = view.findViewById(R.id.btnGetStarted);
+
+        viewPager = view.findViewById(R.id.viewPager);
         dotRow = view.findViewById(R.id.dotRow);
+        btnGetStarted = view.findViewById(R.id.btnGetStarted);
+        txtSkip = view.findViewById(R.id.txtSkip);
 
-        buildOnboardingItems();
-        styleTermsText(view.findViewById(R.id.txtTerms));
-        renderCurrentStep();
+        OnboardingPagerAdapter adapter = new OnboardingPagerAdapter(
+                requireContext(), viewModel.getItems());
+        viewPager.setAdapter(adapter);
 
-        ctaButton.setOnClickListener(v -> handlePrimaryAction());
+        buildDots(viewModel.getPageCount());
+        updateIndicators(0);
 
-        // Skip and Login both finish onboarding because the user chose to enter the auth flow directly.
-        View.OnClickListener goToLogin = v ->
-                completeOnboardingAndNavigate(R.id.action_onboardingFragment_to_loginFragment);
-        view.findViewById(R.id.txtSkip).setOnClickListener(goToLogin);
+        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                viewModel.setCurrentPage(position);
+                updateIndicators(position);
+                updateCtaLabel(position);
+                txtSkip.setVisibility(
+                        position == viewModel.getPageCount() - 1 ? View.INVISIBLE : View.VISIBLE);
+            }
+        });
+
+        btnGetStarted.setOnClickListener(v -> handlePrimaryAction());
+
+        View.OnClickListener goToLogin =
+                v -> completeOnboardingAndNavigate(R.id.action_onboardingFragment_to_loginFragment);
+        txtSkip.setOnClickListener(goToLogin);
         view.findViewById(R.id.btnLogin).setOnClickListener(goToLogin);
+
+        styleTermsText(view.findViewById(R.id.txtTerms));
     }
 
-    private void buildOnboardingItems() {
-        onboardingItems.clear();
-        onboardingItems.add(new OnboardingItem(
-                getString(R.string.onboarding_title),
-                getString(R.string.onboarding_subtitle),
-                getString(R.string.onboarding_accent_purpose)
-        ));
-        onboardingItems.add(new OnboardingItem(
-                getString(R.string.onboarding_structure_title),
-                getString(R.string.onboarding_structure_subtitle),
-                getString(R.string.onboarding_accent_journey)
-        ));
-        onboardingItems.add(new OnboardingItem(
-                getString(R.string.onboarding_certificate_title),
-                getString(R.string.onboarding_certificate_subtitle),
-                getString(R.string.onboarding_accent_certificate)
-        ));
+    private void buildDots(int count) {
+        dotRow.removeAllViews();
+        dots.clear();
+        int size = dpToPx(10);
+        int gap = dpToPx(8);
+
+        for (int i = 0; i < count; i++) {
+            View dot = new View(requireContext());
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
+            if (i > 0) params.leftMargin = gap;
+            dot.setLayoutParams(params);
+            dot.setBackgroundResource(R.drawable.bg_dot_inactive);
+            dotRow.addView(dot);
+            dots.add(dot);
+        }
+    }
+
+    private void updateIndicators(int activePage) {
+        int inactiveWidth = dpToPx(10);
+        int activeWidth = dpToPx(24);
+
+        for (int i = 0; i < dots.size(); i++) {
+            View dot = dots.get(i);
+            boolean isActive = i == activePage;
+            int targetWidth = isActive ? activeWidth : inactiveWidth;
+
+            dot.setBackgroundResource(
+                    isActive ? R.drawable.bg_indicator_active : R.drawable.bg_dot_inactive);
+
+            ViewGroup.LayoutParams params = dot.getLayoutParams();
+            if (params.width != targetWidth) {
+                animateWidth(dot, params.width > 0 ? params.width : dpToPx(10), targetWidth);
+            }
+        }
+    }
+
+    private void animateWidth(View view, int from, int to) {
+        ValueAnimator animator = ValueAnimator.ofInt(from, to);
+        animator.addUpdateListener(va -> {
+            ViewGroup.LayoutParams p = view.getLayoutParams();
+            p.width = (int) va.getAnimatedValue();
+            view.setLayoutParams(p);
+        });
+        animator.setDuration(250);
+        animator.setInterpolator(new FastOutSlowInInterpolator());
+        animator.start();
+    }
+
+    private void updateCtaLabel(int position) {
+        boolean isLast = position == viewModel.getPageCount() - 1;
+        btnGetStarted.setText(isLast ? R.string.onboarding_get_started : R.string.onboarding_next);
     }
 
     private void handlePrimaryAction() {
-        if (currentStep < onboardingItems.size() - 1) {
-            currentStep++;
-            renderCurrentStep();
-            return;
+        if (!viewModel.isLastPage()) {
+            Integer current = viewModel.getCurrentPage().getValue();
+            viewPager.setCurrentItem((current != null ? current : 0) + 1, true);
+        } else {
+            completeOnboardingAndNavigate(R.id.action_onboardingFragment_to_registerFragment);
         }
-
-        // Account creation starts the learning loop, while Firebase implementation stays in the auth feature.
-        completeOnboardingAndNavigate(R.id.action_onboardingFragment_to_registerFragment);
-    }
-
-    private void renderCurrentStep() {
-        OnboardingItem currentItem = onboardingItems.get(currentStep);
-
-        titleView.setText(buildAccentedTitle(currentItem));
-        subtitleView.setText(currentItem.getSubtitle());
-        ctaButton.setText(currentStep == onboardingItems.size() - 1
-                ? R.string.onboarding_get_started
-                : R.string.onboarding_next);
-
-        for (int index = 0; index < dotRow.getChildCount(); index++) {
-            View dot = dotRow.getChildAt(index);
-            dot.setBackgroundResource(index == currentStep
-                    ? R.drawable.bg_dot_active
-                    : R.drawable.bg_dot_inactive);
-        }
-    }
-
-    private SpannableString buildAccentedTitle(OnboardingItem item) {
-        String title = item.getTitle();
-        String accentText = item.getAccentText();
-        SpannableString styledTitle = new SpannableString(title);
-        int accentStart = title.indexOf(accentText);
-
-        if (accentStart >= 0) {
-            styledTitle.setSpan(
-                    new ForegroundColorSpan(requireContext().getColor(R.color.onboarding_green)),
-                    accentStart,
-                    accentStart + accentText.length(),
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-            );
-        }
-
-        return styledTitle;
     }
 
     private void completeOnboardingAndNavigate(int actionId) {
         onboardingPreferences.markOnboardingSeen();
-
-        NavController navController = NavHostFragment.findNavController(this);
-        if (navController.getCurrentDestination() != null
-                && navController.getCurrentDestination().getId() == R.id.onboardingFragment) {
-            navController.navigate(actionId);
+        NavController nav = NavHostFragment.findNavController(this);
+        if (nav.getCurrentDestination() != null
+                && nav.getCurrentDestination().getId() == R.id.onboardingFragment) {
+            nav.navigate(actionId);
         }
     }
 
     private void styleTermsText(TextView termsView) {
         String terms = getString(R.string.onboarding_terms);
         SpannableString styledTerms = new SpannableString(terms);
-
         applyGreenLink(styledTerms, terms, getString(R.string.onboarding_terms_label));
         applyGreenLink(styledTerms, terms, getString(R.string.onboarding_privacy_label));
-
-        // Legal pages are not part of the current MVP screen set, so links are visual until those routes exist.
         termsView.setText(styledTerms);
         termsView.setHighlightColor(Color.TRANSPARENT);
         termsView.setMovementMethod(LinkMovementMethod.getInstance());
@@ -159,23 +173,22 @@ public class OnboardingFragment extends Fragment {
 
     private void applyGreenLink(SpannableString spannable, String source, String target) {
         int start = source.indexOf(target);
-        if (start < 0) {
-            return;
-        }
-
+        if (start < 0) return;
         spannable.setSpan(new ClickableSpan() {
             @Override
-            public void onClick(@NonNull View widget) {
-                // Intentionally empty until Terms and Privacy screens are added to the navigation graph.
-            }
+            public void onClick(@NonNull View widget) {}
 
             @Override
             public void updateDrawState(@NonNull TextPaint ds) {
                 super.updateDrawState(ds);
-                ds.setColor(requireContext().getColor(R.color.onboarding_green));
+                ds.setColor(ContextCompat.getColor(requireContext(), R.color.onboarding_green));
                 ds.setUnderlineText(false);
                 ds.setFakeBoldText(true);
             }
         }, start, start + target.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+    }
+
+    private int dpToPx(int dp) {
+        return Math.round(dp * getResources().getDisplayMetrics().density);
     }
 }

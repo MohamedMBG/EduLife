@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+
+    <!-- Left page of open book -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M48,24 C44,24 34,25 22,28 L22,72 C34,69 44,68 48,72 L48,24 Z"
+        android:strokeColor="@color/onboarding_green"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="3" />
+
+    <!-- Right page of open book -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M48,24 C52,24 62,25 74,28 L74,72 C62,69 52,68 48,72 L48,24 Z"
+        android:strokeColor="@color/onboarding_green"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="3" />
+
+    <!-- Left page text lines -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M28,38 L44,37"
+        android:strokeColor="@color/onboarding_green"
+        android:strokeLineCap="round"
+        android:strokeWidth="2.2" />
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M28,46 L44,45"
+        android:strokeColor="@color/onboarding_green"
+        android:strokeLineCap="round"
+        android:strokeWidth="2.2" />
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M28,54 L41,53"
+        android:strokeColor="@color/onboarding_green"
+        android:strokeLineCap="round"
+        android:strokeWidth="2.2" />
+
+    <!-- Right page text lines -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M52,37 L68,38"
+        android:strokeColor="@color/onboarding_green"
+        android:strokeLineCap="round"
+        android:strokeWidth="2.2" />
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M52,45 L68,46"
+        android:strokeColor="@color/onboarding_green"
+        android:strokeLineCap="round"
+        android:strokeWidth="2.2" />
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M55,53 L68,54"
+        android:strokeColor="@color/onboarding_green"
+        android:strokeLineCap="round"
+        android:strokeWidth="2.2" />
+
+    <!-- Sparkle (large) -->
+    <path
+        android:fillColor="@color/onboarding_green"
+        android:pathData="M76,14 C76.5,17 78,18.5 81,19 C78,19.5 76.5,21 76,24 C75.5,21 74,19.5 71,19 C74,18.5 75.5,17 76,14 Z" />
+
+    <!-- Sparkle (small) -->
+    <path
+        android:fillColor="@color/onboarding_green"
+        android:pathData="M84,10 C84.2,11.2 84.9,11.9 86.1,12.1 C84.9,12.3 84.2,13 84,14.2 C83.8,13 83.1,12.3 81.9,12.1 C83.1,11.9 83.8,11.2 84,10 Z" />
+
+</vector>

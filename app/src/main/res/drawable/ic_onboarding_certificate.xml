@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+
+    <!-- Medal ribbon — left -->
+    <path
+        android:fillColor="@color/onboarding_green_dark"
+        android:pathData="M40,68 L36,90 L48,82 L48,68 Z" />
+
+    <!-- Medal ribbon — right -->
+    <path
+        android:fillColor="@color/onboarding_green_dark"
+        android:pathData="M56,68 L60,90 L48,82 L48,68 Z" />
+
+    <!-- Medal body circle -->
+    <path
+        android:fillColor="@color/onboarding_green"
+        android:pathData="M26,46 A22,22 0 1,0 70,46 A22,22 0 1,0 26,46 Z" />
+
+    <!-- Checkmark in medal (white) -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M37,46 L43,52 L59,36"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="3.5" />
+
+    <!-- Large sparkle (top-right) -->
+    <path
+        android:fillColor="@color/onboarding_green"
+        android:pathData="M74,16 C74.5,19 76,20.5 79,21 C76,21.5 74.5,23 74,26 C73.5,23 72,21.5 69,21 C72,20.5 73.5,19 74,16 Z" />
+
+    <!-- Small sparkle (top-right corner) -->
+    <path
+        android:fillColor="@color/onboarding_green"
+        android:pathData="M83,10 C83.2,11.3 84,12.1 85.3,12.3 C84,12.5 83.2,13.3 83,14.6 C82.8,13.3 82,12.5 80.7,12.3 C82,12.1 82.8,11.3 83,10 Z" />
+
+</vector>
