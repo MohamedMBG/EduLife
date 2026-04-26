@@ -39,14 +39,10 @@ public class User {
     public User(String firebaseUid, String email) {
         this.firebaseUid = firebaseUid;
         this.email = email;
-        this.role = UserRole.LEARNER;
     }
 
     @PrePersist
     void onCreate() {
-        if (role == null) {
-            role = UserRole.LEARNER;
-        }
         if (createdAt == null) {
             createdAt = Instant.now();
         }
