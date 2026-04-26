@@ -15,12 +15,17 @@
     <color name="onboarding_page3_bg">#FBF3E4</color>
 
     <color name="login_background">#FBFFFD</color>
+    <color name="login_background_soft">#F7FAFF</color>
     <color name="login_primary_green">#0F8A68</color>
     <color name="login_primary_green_dark">#0B7558</color>
     <color name="login_text_dark">#0E1A2A</color>
+    <color name="login_text_body">#334155</color>
     <color name="login_text_secondary">#7A8190</color>
     <color name="login_border">#E4ECE9</color>
+    <color name="login_border_strong">#CFE1DB</color>
     <color name="login_light_mint">#EEF9F5</color>
     <color name="login_icon_mint">#DDF4EC</color>
     <color name="login_dot_mint">#DCEFE8</color>
+    <color name="login_surface">#FFFFFFFF</color>
+    <color name="login_surface_muted">#F3F8F6</color>
 </resources>

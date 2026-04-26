@@ -4,79 +4,96 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/login_background"
+    android:background="@drawable/bg_auth_screen"
+    android:clipToPadding="false"
     android:fillViewport="true"
     android:overScrollMode="never"
+    android:paddingBottom="18dp"
     tools:context=".features.auth.ui.LoginFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:minHeight="640dp"
-        android:paddingStart="28dp"
-        android:paddingEnd="28dp">
+        android:minHeight="690dp"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp">
 
-        <View
-            android:id="@+id/topMintBlob"
-            android:layout_width="168dp"
-            android:layout_height="168dp"
-            android:layout_marginStart="-92dp"
-            android:layout_marginTop="-74dp"
-            android:alpha="0.92"
-            android:background="@drawable/bg_login_top_blob"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+        <!-- Decorative elements are constrained away from form controls so they never compete with input affordances. -->
 
         <ImageView
             android:id="@+id/dotGrid"
             android:layout_width="88dp"
             android:layout_height="104dp"
-            android:layout_marginTop="44dp"
-            android:layout_marginEnd="10dp"
-            android:alpha="0.72"
+            android:layout_marginTop="36dp"
+            android:layout_marginEnd="-4dp"
+            android:alpha="0.56"
             android:contentDescription="@null"
             android:src="@drawable/bg_login_dot_grid"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <ImageView
-            android:id="@+id/logoIcon"
-            android:layout_width="52dp"
-            android:layout_height="52dp"
-            android:layout_marginTop="56dp"
-            android:contentDescription="@string/app_name"
-            android:src="@drawable/ic_edulife_leaf_logo"
-            android:tint="@color/login_primary_green"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
         <LinearLayout
-            android:id="@+id/logoTextRow"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
+            android:id="@+id/brandRow"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="36dp"
+            android:gravity="center_vertical"
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/logoIcon">
+            app:layout_constraintTop_toTopOf="parent">
 
-            <TextView
+            <FrameLayout
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_logo_green">
+
+                <ImageView
+                    android:id="@+id/logoIcon"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@string/app_name"
+                    android:src="@drawable/ic_edulife_leaf_logo" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:id="@+id/logoTextRow"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="sans-serif-medium"
-                android:text="Edu"
-                android:textColor="@color/login_text_dark"
-                android:textSize="25sp"
-                android:textStyle="bold" />
+                android:layout_marginStart="12dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="Edu"
+                    android:textColor="@color/login_text_dark"
+                    android:textSize="23sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="Life"
+                    android:textColor="@color/login_primary_green"
+                    android:textSize="23sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
             <TextView
+                android:id="@+id/eyebrowText"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="sans-serif-medium"
-                android:text="Life"
-                android:textColor="@color/login_primary_green"
-                android:textSize="25sp"
+                android:layout_height="34dp"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/bg_auth_eyebrow"
+                android:gravity="center"
+                android:text="MVP access"
+                android:textColor="@color/login_primary_green_dark"
+                android:textSize="12sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -84,49 +101,89 @@
             android:id="@+id/titleText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="34dp"
             android:fontFamily="sans-serif-medium"
-            android:gravity="center"
             android:text="Welcome back"
             android:textColor="@color/login_text_dark"
-            android:textSize="26sp"
+            android:textSize="32sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/logoTextRow" />
+            app:layout_constraintTop_toBottomOf="@id/brandRow" />
 
         <TextView
             android:id="@+id/subtitleText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:gravity="center"
-            android:text="Continue your journey of growth"
-            android:textColor="@color/login_text_secondary"
-            android:textSize="14sp"
+            android:layout_marginTop="8dp"
+            android:lineSpacingExtra="2dp"
+            android:text="Continue your structured learning journey with courses, exams, and certificates in one place."
+            android:textColor="@color/login_text_body"
+            android:textSize="15sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/titleText" />
+
+        <LinearLayout
+            android:id="@+id/infoPanel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:background="@drawable/bg_auth_info_panel"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="14dp"
+            android:paddingTop="12dp"
+            android:paddingEnd="14dp"
+            android:paddingBottom="12dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/subtitleText">
+
+            <FrameLayout
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:background="@drawable/bg_login_icon_container">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_shield_outline" />
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:lineSpacingExtra="2dp"
+                android:text="Secure sign-in keeps every learner tied to their own profile, progress, and certificates."
+                android:textColor="@color/login_text_body"
+                android:textSize="13sp" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/emailLabel"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="42dp"
+            android:layout_marginTop="26dp"
             android:fontFamily="sans-serif-medium"
             android:text="Email address"
             android:textColor="@color/login_text_dark"
             android:textSize="13sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/subtitleText" />
+            app:layout_constraintTop_toBottomOf="@id/infoPanel" />
 
         <LinearLayout
             android:id="@+id/emailInputCard"
             android:layout_width="0dp"
-            android:layout_height="56dp"
+            android:layout_height="58dp"
             android:layout_marginTop="8dp"
             android:background="@drawable/bg_login_input"
+            android:elevation="1dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:paddingStart="14dp"
@@ -136,8 +193,8 @@
             app:layout_constraintTop_toBottomOf="@id/emailLabel">
 
             <FrameLayout
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
                 android:background="@drawable/bg_login_icon_container">
 
                 <ImageView
@@ -153,22 +210,23 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_marginStart="14dp"
+                android:layout_weight="1"
                 android:background="@android:color/transparent"
-                android:hint="name@company.com"
+                android:hint="name@example.com"
                 android:imeOptions="actionNext"
                 android:inputType="textEmailAddress"
                 android:padding="0dp"
                 android:singleLine="true"
                 android:textColor="@color/login_text_dark"
                 android:textColorHint="@color/login_text_secondary"
-                android:textSize="14sp" />
+                android:textSize="15sp" />
         </LinearLayout>
 
         <TextView
             android:id="@+id/passwordLabel"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="18dp"
             android:fontFamily="sans-serif-medium"
             android:text="Password"
             android:textColor="@color/login_text_dark"
@@ -180,20 +238,21 @@
         <LinearLayout
             android:id="@+id/passwordInputCard"
             android:layout_width="0dp"
-            android:layout_height="56dp"
+            android:layout_height="58dp"
             android:layout_marginTop="8dp"
             android:background="@drawable/bg_login_input"
+            android:elevation="1dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:paddingStart="14dp"
-            android:paddingEnd="10dp"
+            android:paddingEnd="8dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/passwordLabel">
 
             <FrameLayout
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
                 android:background="@drawable/bg_login_icon_container">
 
                 <ImageView
@@ -211,29 +270,29 @@
                 android:layout_marginStart="14dp"
                 android:layout_weight="1"
                 android:background="@android:color/transparent"
-                android:hint="••••••••••"
+                android:hint="Enter password"
                 android:imeOptions="actionDone"
                 android:inputType="textPassword"
                 android:padding="0dp"
                 android:singleLine="true"
                 android:textColor="@color/login_text_dark"
                 android:textColorHint="@color/login_text_secondary"
-                android:textSize="14sp" />
+                android:textSize="15sp" />
 
             <ImageButton
                 android:id="@+id/passwordVisibilityButton"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Show password"
-                android:padding="9dp"
+                android:padding="10dp"
                 android:src="@drawable/ic_login_eye" />
         </LinearLayout>
 
         <com.google.android.material.checkbox.MaterialCheckBox
             android:id="@+id/rememberMeCheckBox"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="44dp"
             android:layout_marginTop="12dp"
             android:fontFamily="sans-serif"
             android:minWidth="0dp"
@@ -241,8 +300,8 @@
             android:paddingStart="0dp"
             android:paddingEnd="0dp"
             android:text="Remember me"
-            android:textColor="@color/login_text_dark"
-            android:textSize="12sp"
+            android:textColor="@color/login_text_body"
+            android:textSize="13sp"
             app:buttonTint="@color/login_primary_green"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/passwordInputCard" />
@@ -250,7 +309,7 @@
         <TextView
             android:id="@+id/forgotPasswordText"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="44dp"
             android:layout_marginTop="12dp"
             android:clickable="true"
             android:focusable="true"
@@ -258,7 +317,7 @@
             android:gravity="center"
             android:text="Forgot password?"
             android:textColor="@color/login_primary_green"
-            android:textSize="12sp"
+            android:textSize="13sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/passwordInputCard" />
@@ -266,7 +325,7 @@
         <LinearLayout
             android:id="@+id/loginButton"
             android:layout_width="0dp"
-            android:layout_height="56dp"
+            android:layout_height="58dp"
             android:layout_marginTop="22dp"
             android:background="@drawable/bg_login_button_green"
             android:clickable="true"
@@ -275,8 +334,8 @@
             android:foreground="?attr/selectableItemBackground"
             android:gravity="center"
             android:orientation="horizontal"
-            android:paddingStart="20dp"
-            android:paddingEnd="18dp"
+            android:paddingStart="22dp"
+            android:paddingEnd="16dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/rememberMeCheckBox">
@@ -287,7 +346,7 @@
                 android:layout_weight="1"
                 android:fontFamily="sans-serif-medium"
                 android:gravity="center"
-                android:text="Login"
+                android:text="Log in"
                 android:textColor="@android:color/white"
                 android:textSize="16sp"
                 android:textStyle="bold" />
@@ -302,7 +361,7 @@
         <LinearLayout
             android:id="@+id/dividerRow"
             android:layout_width="0dp"
-            android:layout_height="24dp"
+            android:layout_height="26dp"
             android:layout_marginTop="18dp"
             android:gravity="center"
             android:orientation="horizontal"
@@ -336,7 +395,7 @@
         <LinearLayout
             android:id="@+id/googleButton"
             android:layout_width="0dp"
-            android:layout_height="54dp"
+            android:layout_height="56dp"
             android:layout_marginTop="14dp"
             android:background="@drawable/bg_login_google_button"
             android:clickable="true"
@@ -369,7 +428,7 @@
         <LinearLayout
             android:id="@+id/registerRow"
             android:layout_width="wrap_content"
-            android:layout_height="42dp"
+            android:layout_height="46dp"
             android:layout_marginTop="18dp"
             android:clickable="true"
             android:focusable="true"
@@ -383,7 +442,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Don't have an account? "
+                android:text="New to EduLife? "
                 android:textColor="@color/login_text_secondary"
                 android:textSize="13sp" />
 
@@ -391,7 +450,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-medium"
-                android:text="Register"
+                android:text="Create account"
                 android:textColor="@color/login_primary_green"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -409,9 +468,10 @@
             android:id="@+id/securityPanel"
             android:layout_width="0dp"
             android:layout_height="82dp"
-            android:layout_marginStart="-28dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginEnd="-28dp"
+            android:layout_marginStart="-24dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="-24dp"
+            android:background="@drawable/bg_auth_footer_band"
             android:gravity="center"
             android:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -420,24 +480,20 @@
             app:layout_constraintTop_toBottomOf="@id/registerRow"
             app:layout_constraintVertical_bias="1">
 
-            <FrameLayout
-                android:layout_width="42dp"
-                android:layout_height="42dp"
-                android:background="@drawable/bg_login_icon_container">
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_gravity="center"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_shield_outline" />
-            </FrameLayout>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:text="Private by default"
+                android:textColor="@color/login_text_dark"
+                android:textSize="12sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Your data is secure and protected"
+                android:layout_marginTop="4dp"
+                android:text="Your learning data stays tied to your account."
                 android:textColor="@color/login_text_secondary"
                 android:textSize="11sp" />
         </LinearLayout>

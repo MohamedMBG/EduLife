@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The footer band anchors long forms while keeping security copy visually secondary. -->
+    <gradient
+        android:angle="0"
+        android:endColor="#F7FAFF"
+        android:startColor="#ECF8F4" />
+    <corners
+        android:topLeftRadius="24dp"
+        android:topRightRadius="24dp" />
+</shape>

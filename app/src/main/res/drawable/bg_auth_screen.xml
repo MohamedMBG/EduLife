@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- A quiet two-tone wash gives the auth screens depth without turning them into a marketing page. -->
+    <gradient
+        android:angle="270"
+        android:endColor="@color/login_background_soft"
+        android:startColor="@color/login_background" />
+</shape>
