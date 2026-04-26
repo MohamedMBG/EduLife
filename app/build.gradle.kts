@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -48,6 +49,12 @@ android {
 }
 
 dependencies {
+    // The Firebase BoM keeps all Firebase SDK versions compatible during Sprint 0 wiring.
+    implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
+
+    // Firebase Auth is the MVP authentication provider and replaces custom client-side auth flows.
+    implementation("com.google.firebase:firebase-auth")
+
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)

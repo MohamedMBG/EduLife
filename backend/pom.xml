@@ -54,6 +54,12 @@
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-database-postgresql</artifactId>
 		</dependency>
+		<!-- Firebase Admin validates Android ID tokens on the server before protected learner flows continue. -->
+		<dependency>
+			<groupId>com.google.firebase</groupId>
+			<artifactId>firebase-admin</artifactId>
+			<version>9.7.0</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.postgresql</groupId>
