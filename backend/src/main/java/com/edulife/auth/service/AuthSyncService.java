@@ -9,8 +9,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.Locale;
-
 @Service
 public class AuthSyncService {
 
@@ -72,6 +70,11 @@ public class AuthSyncService {
          * Defensive validation:
          * Ensure email exists
          */
+
+        if (firebaseUid == null || firebaseUid.isBlank()) {
+            throw new IllegalStateException("Firebase UID is missing from authentication context");
+        }
+
         if (email == null || email.isBlank()) {
             throw new IllegalStateException("Firebase email is missing from authentication context");
         }

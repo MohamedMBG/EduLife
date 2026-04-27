@@ -6,6 +6,6 @@ import java.util.UUID;
 
 public record AuthSyncResponse(
         UUID userId,
-        UserRole userRole
+        UserRole role
 ) {
 }
