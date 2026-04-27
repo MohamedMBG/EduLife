@@ -18,10 +18,7 @@ import java.io.IOException;
 
 public class FirebaseTokenFilter extends OncePerRequestFilter {
 
-    private static final RequestMatcher PUBLIC_ENDPOINTS = new OrRequestMatcher(
-            new AntPathRequestMatcher("/api/v1/public/**"),
-            new AntPathRequestMatcher("/actuator/health")
-    );
+    private static final RequestMatcher PUBLIC_ENDPOINTS = new AntPathRequestMatcher("/actuator/health");
 
     private final FirebaseAuth firebaseAuth;
 
