@@ -27,11 +27,9 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/v1/public/**",
-                                "/actuator/health"
-                        ).permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/api/v1/**").authenticated()
+                        .anyRequest().denyAll()
                 )
                 .addFilterBefore(firebaseTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 /** By default, if no token is sent to a protected endpoint, Spring Security should return 403 sometimes depending on config. You want 401 **/
