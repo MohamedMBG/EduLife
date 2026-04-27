@@ -3,6 +3,7 @@ package com.edulife.config;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
+import com.google.firebase.auth.FirebaseAuth;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -62,5 +63,11 @@ public class FirebaseConfig {
         throw new IllegalStateException(
                 "Firebase Admin credentials are required. Set FIREBASE_ADMIN_CREDENTIALS_PATH or FIREBASE_ADMIN_CREDENTIALS_JSON before starting the backend."
         );
+    }
+
+    @Bean
+    public FirebaseAuth firebaseAuth(FirebaseApp firebaseApp) {
+        // Token verification must use the shared FirebaseApp so all protected endpoints validate against one trusted Admin SDK instance.
+        return FirebaseAuth.getInstance(firebaseApp);
     }
 }
