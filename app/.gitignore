@@ -6,3 +6,7 @@
 *.aab
 *.idsig
 mapping/
+
+# google-services.json contains Firebase project secrets and must never be committed.
+# Each developer or CI environment must supply their own copy at app/google-services.json.
+google-services.json
