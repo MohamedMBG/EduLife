@@ -82,20 +82,18 @@ class FirebaseTokenFilterSecurityTest {
     }
 
     @Test
-    void leavesPublicEndpointAccessibleWithoutAuthentication() throws Exception {
+    void rejectsFormerPublicApiEndpointWithoutAuthentication() throws Exception {
         mockMvc.perform(get("/api/v1/public/ping"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("ok"));
+                .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(firebaseAuth);
     }
 
     @Test
-    void ignoresMalformedAuthorizationHeaderOnPublicEndpoint() throws Exception {
+    void rejectsMalformedAuthorizationHeaderOnFormerPublicApiEndpoint() throws Exception {
         mockMvc.perform(get("/api/v1/public/ping")
                         .header("Authorization", "Token invalid-format"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("ok"));
+                .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(firebaseAuth);
     }
