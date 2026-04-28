@@ -25,6 +25,19 @@ jobs:
       - name: Grant execute permission to Gradle
         run: chmod +x ./gradlew
 
+      - name: Create mock google-services.json
+        run: |
+          cat << 'EOF' > app/google-services.json
+          {
+            "project_info": { "project_number": "1234567890", "project_id": "dummy-project" },
+            "client": [ {
+              "client_info": { "mobilesdk_app_id": "1:1234567890:android:abcdef", "android_client_info": { "package_name": "com.baghdad.edulife" } },
+              "api_key": [ { "current_key": "dummy_api_key" } ]
+            } ],
+            "configuration_version": "1"
+          }
+          EOF
+
       - name: Run lint
         run: ./gradlew lintDebug
 
