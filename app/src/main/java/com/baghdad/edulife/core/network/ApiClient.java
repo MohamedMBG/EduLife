@@ -32,6 +32,7 @@ public class ApiClient {
                     .addInterceptor(loggingInterceptor)            // optional (debug only)
                     .connectTimeout(30, TimeUnit.SECONDS)
                     .readTimeout(30, TimeUnit.SECONDS)
+                    .authenticator(new FirebaseTokenAuthenticator())
                     .build();
 
             retrofit = new Retrofit.Builder()
