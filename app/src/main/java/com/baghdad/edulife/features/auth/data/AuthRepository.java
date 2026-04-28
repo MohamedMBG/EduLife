@@ -12,6 +12,10 @@ public class AuthRepository {
         this.firebaseAuth = FirebaseAuth.getInstance();
     }
 
+    public void signOut() {
+        firebaseAuth.signOut();
+    }
+
     public interface AuthCallback {
         void onResult(AuthResult result);
     }
