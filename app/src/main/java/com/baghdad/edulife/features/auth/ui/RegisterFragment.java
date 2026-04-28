@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.Navigation;
 
 import com.baghdad.edulife.R;
 import com.baghdad.edulife.features.auth.model.AuthUiState;
@@ -63,7 +64,9 @@ public class RegisterFragment extends Fragment {
                 Toast.makeText(requireContext(), "Google sign-up coming soon", Toast.LENGTH_SHORT).show());
 
         loginText.setOnClickListener(v ->
-                Toast.makeText(requireContext(), "Login flow coming soon", Toast.LENGTH_SHORT).show());
+                // Navigate back to the login screen; popUpTo in the nav graph action removes the register screen.
+                Navigation.findNavController(requireView())
+                        .navigate(R.id.action_registerFragment_to_loginFragment));
 
         authViewModel.getAuthState().observe(getViewLifecycleOwner(), this::renderAuthState);
 
