@@ -61,6 +61,11 @@ public class AuthViewModel extends ViewModel {
         authState.setValue(AuthUiState.idle());
     }
 
+    public void signOut() {
+        authRepository.signOut();
+        authState.setValue(AuthUiState.idle());
+    }
+
     private String safeMessage(AuthResult result) {
         if (result.message == null || result.message.isBlank()) {
             return "Something went wrong. Please try again.";
