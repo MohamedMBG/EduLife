@@ -1,22 +1,33 @@
 package com.baghdad.edulife.features.auth.viewmodel;
 
+import android.app.Application;
+
+import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
 
 import com.baghdad.edulife.features.auth.data.AuthRepository;
 import com.baghdad.edulife.features.auth.model.AuthResult;
 import com.baghdad.edulife.features.auth.model.AuthUiState;
 
-public class AuthViewModel extends ViewModel {
+/**
+ * AuthViewModel manages the authentication UI state for login and registration flows.
+ *
+ * Extends AndroidViewModel to access Application context, which is required to construct
+ * SessionStorage (via AuthRepository) without leaking an Activity reference.
+ */
+public class AuthViewModel extends AndroidViewModel {
 
     private final AuthRepository authRepository;
 
     private final MutableLiveData<AuthUiState> authState =
             new MutableLiveData<>(AuthUiState.idle());
 
-    public AuthViewModel() {
-        this.authRepository = new AuthRepository();
+    public AuthViewModel(@NonNull Application application) {
+        super(application);
+        // Application context is safe here; it lives for the entire app lifetime
+        this.authRepository = new AuthRepository(application.getApplicationContext());
     }
 
     public LiveData<AuthUiState> getAuthState() {
@@ -40,7 +51,9 @@ public class AuthViewModel extends ViewModel {
 
         authRepository.login(email, password, result -> {
             if (result.success) {
-                authRepository.prepareBackendSyncToken(syncResult -> {
+                // Firebase login succeeded; now sync identity with the backend.
+                // Session is only saved after this second step succeeds.
+                authRepository.syncWithBackend(syncResult -> {
                     if (syncResult.success) {
                         authState.postValue(AuthUiState.success("Login successful."));
                     } else if (syncResult.emailVerificationRequired) {
@@ -61,7 +74,12 @@ public class AuthViewModel extends ViewModel {
         authState.setValue(AuthUiState.idle());
     }
 
+    /**
+     * Signs the user out completely: Firebase session + local EduLife session.
+     * Both are always cleared together so the two sources never become inconsistent.
+     */
     public void signOut() {
+        // AuthRepository.signOut() calls both FirebaseAuth.signOut() and SessionStorage.clearSession()
         authRepository.signOut();
         authState.setValue(AuthUiState.idle());
     }
