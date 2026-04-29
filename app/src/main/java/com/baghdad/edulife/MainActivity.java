@@ -11,10 +11,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.NavGraph;
 import androidx.navigation.fragment.NavHostFragment;
 
-import com.baghdad.edulife.core.storage.SessionStorage;
 import com.baghdad.edulife.features.onboarding.data.OnboardingPreferences;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -46,22 +43,12 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = navHostFragment.getNavController();
         NavGraph navGraph = navController.getNavInflater().inflate(R.navigation.nav_graph);
         OnboardingPreferences onboardingPreferences = new OnboardingPreferences(this);
-        SessionStorage sessionStorage = new SessionStorage(this);
-        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
-        // Route to home if there is an active Firebase user AND a persisted backend session.
-        // This avoids forcing a re-login on every app relaunch when the user is still authenticated.
-        // HomeFragment will repeat the same guard check and redirect to login if the session is stale.
-        if (firebaseUser != null && sessionStorage.hasSession()) {
-            navGraph.setStartDestination(R.id.homeFragment);
-        } else if (onboardingPreferences.hasSeenOnboarding()) {
-            // Onboarding was completed but no active session: go directly to login.
-            navGraph.setStartDestination(R.id.loginFragment);
-        } else {
-            // First-time launch: show onboarding.
-            navGraph.setStartDestination(R.id.onboardingFragment);
-        }
-
+        // After onboarding is completed, login becomes the MVP entry point until Firebase session routing exists.
+        int startDestination = onboardingPreferences.hasSeenOnboarding()
+                ? R.id.loginFragment
+                : R.id.onboardingFragment;
+        navGraph.setStartDestination(startDestination);
         navController.setGraph(navGraph);
     }
 }

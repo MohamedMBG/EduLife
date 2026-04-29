@@ -53,9 +53,8 @@ public class LoginFragment extends Fragment {
                 Toast.makeText(requireContext(), "Password recovery coming soon", Toast.LENGTH_SHORT).show());
 
         view.findViewById(R.id.registerRow).setOnClickListener(v ->
-                // Navigate to the register screen so users who land on login can create an account.
-                Navigation.findNavController(requireView())
-                        .navigate(R.id.action_loginFragment_to_registerFragment));
+                // Registration navigation stays as a placeholder until the app navigation graph is finalized.
+                Toast.makeText(requireContext(), "Register flow coming soon", Toast.LENGTH_SHORT).show());
 
         authViewModel.getAuthState().observe(getViewLifecycleOwner(), this::renderAuthState);
     }
@@ -88,9 +87,7 @@ public class LoginFragment extends Fragment {
         }
 
         if (state.success) {
-            // Navigate to home only after Firebase login + email verification + backend sync all succeed.
-            // The popUpTo in the nav graph action clears the entire auth back stack so the user
-            // cannot press back to return to the login or onboarding screens.
+            // Navigate to home only after sync succeeds (which sets state.success = true in viewmodel)
             Navigation.findNavController(requireView()).navigate(R.id.action_loginFragment_to_homeFragment);
             authViewModel.resetState();
             return;
