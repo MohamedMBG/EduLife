@@ -1,5 +1,6 @@
 package com.edulife.security;
 
+import com.edulife.common.error.ApiErrorWriter;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
@@ -8,9 +9,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -21,9 +22,11 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
     private static final RequestMatcher PUBLIC_ENDPOINTS = new AntPathRequestMatcher("/actuator/health");
 
     private final FirebaseAuth firebaseAuth;
+    private final ApiErrorWriter apiErrorWriter;
 
-    public FirebaseTokenFilter(FirebaseAuth firebaseAuth) {
+    public FirebaseTokenFilter(FirebaseAuth firebaseAuth, ApiErrorWriter apiErrorWriter) {
         this.firebaseAuth = firebaseAuth;
+        this.apiErrorWriter = apiErrorWriter;
     }
 
     @Override
@@ -47,7 +50,7 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
         }
 
         if (!authorizationHeader.startsWith("Bearer ")) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Malformed Authorization header");
+            apiErrorWriter.write(response, HttpStatus.UNAUTHORIZED, "Malformed Authorization header");
             return;
         }
 
@@ -59,7 +62,7 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
             Boolean emailVerified = decodedToken.isEmailVerified();
 
             if (!Boolean.TRUE.equals(emailVerified)) {
-                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Email is not verified");
+                apiErrorWriter.write(response, HttpStatus.FORBIDDEN, "Email is not verified");
                 return;
             }
 
@@ -75,7 +78,7 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
 
         } catch (FirebaseAuthException e) {
             SecurityContextHolder.clearContext();
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired Firebase token");
+            apiErrorWriter.write(response, HttpStatus.UNAUTHORIZED, "Invalid or expired Firebase token");
         }
     }
 }

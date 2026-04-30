@@ -18,6 +18,7 @@ public class AuthController {
 
     @PostMapping("/sync")
     public AuthSyncResponse sync() {
+        // The user identity comes only from the verified Firebase token in SecurityContext, never from request body fields.
         return authSyncService.syncCurrentUser();
     }
 }
