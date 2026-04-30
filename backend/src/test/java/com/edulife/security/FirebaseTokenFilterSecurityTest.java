@@ -1,5 +1,7 @@
 package com.edulife.security;
 
+import com.edulife.common.error.ApiErrorWriter;
+import com.edulife.common.error.GlobalApiExceptionHandler;
 import com.google.firebase.ErrorCode;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
@@ -18,7 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(TestSecurityController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, ApiErrorWriter.class, GlobalApiExceptionHandler.class})
 class FirebaseTokenFilterSecurityTest {
 
     @Autowired
@@ -45,7 +47,10 @@ class FirebaseTokenFilterSecurityTest {
     @Test
     void rejectsMissingTokenOnProtectedEndpoint() throws Exception {
         mockMvc.perform(get("/api/v1/secure/profile"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.message").value("Authentication required"))
+                .andExpect(jsonPath("$.timestamp").exists());
 
         verifyNoInteractions(firebaseAuth);
     }
@@ -54,7 +59,10 @@ class FirebaseTokenFilterSecurityTest {
     void rejectsMalformedAuthorizationHeaderOnProtectedEndpoint() throws Exception {
         mockMvc.perform(get("/api/v1/secure/profile")
                         .header("Authorization", "Token invalid-format"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.message").value("Malformed Authorization header"))
+                .andExpect(jsonPath("$.timestamp").exists());
 
         verifyNoInteractions(firebaseAuth);
     }
@@ -67,7 +75,10 @@ class FirebaseTokenFilterSecurityTest {
 
         mockMvc.perform(get("/api/v1/secure/profile")
                         .header("Authorization", "Bearer expired-token"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.message").value("Invalid or expired Firebase token"))
+                .andExpect(jsonPath("$.timestamp").exists());
     }
 
     @Test
@@ -78,13 +89,19 @@ class FirebaseTokenFilterSecurityTest {
 
         mockMvc.perform(get("/api/v1/secure/profile")
                         .header("Authorization", "Bearer unverified-token"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.message").value("Email is not verified"))
+                .andExpect(jsonPath("$.timestamp").exists());
     }
 
     @Test
     void rejectsFormerPublicApiEndpointWithoutAuthentication() throws Exception {
         mockMvc.perform(get("/api/v1/public/ping"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.message").value("Authentication required"))
+                .andExpect(jsonPath("$.timestamp").exists());
 
         verifyNoInteractions(firebaseAuth);
     }
@@ -93,8 +110,43 @@ class FirebaseTokenFilterSecurityTest {
     void rejectsMalformedAuthorizationHeaderOnFormerPublicApiEndpoint() throws Exception {
         mockMvc.perform(get("/api/v1/public/ping")
                         .header("Authorization", "Token invalid-format"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.message").value("Malformed Authorization header"))
+                .andExpect(jsonPath("$.timestamp").exists());
 
         verifyNoInteractions(firebaseAuth);
+    }
+
+    @Test
+    void formatsBadRequestExceptionsWithApiErrorContract() throws Exception {
+        FirebaseToken decodedToken = org.mockito.Mockito.mock(FirebaseToken.class);
+        given(firebaseAuth.verifyIdToken("valid-token")).willReturn(decodedToken);
+        given(decodedToken.getUid()).willReturn("firebase-uid-123");
+        given(decodedToken.getEmail()).willReturn("student@edulife.test");
+        given(decodedToken.isEmailVerified()).willReturn(true);
+
+        mockMvc.perform(get("/api/v1/secure/bad-request")
+                        .header("Authorization", "Bearer valid-token"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Invalid test request"))
+                .andExpect(jsonPath("$.timestamp").exists());
+    }
+
+    @Test
+    void formatsUnexpectedExceptionsWithSafeApiErrorContract() throws Exception {
+        FirebaseToken decodedToken = org.mockito.Mockito.mock(FirebaseToken.class);
+        given(firebaseAuth.verifyIdToken("valid-token")).willReturn(decodedToken);
+        given(decodedToken.getUid()).willReturn("firebase-uid-123");
+        given(decodedToken.getEmail()).willReturn("student@edulife.test");
+        given(decodedToken.isEmailVerified()).willReturn(true);
+
+        mockMvc.perform(get("/api/v1/secure/server-error")
+                        .header("Authorization", "Bearer valid-token"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.status").value(500))
+                .andExpect(jsonPath("$.message").value("Internal server error"))
+                .andExpect(jsonPath("$.timestamp").exists());
     }
 }

@@ -1,9 +1,10 @@
 package com.edulife.security;
 
+import com.edulife.common.error.ApiErrorWriter;
 import com.google.firebase.auth.FirebaseAuth;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -13,14 +14,15 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     @Bean
-    public FirebaseTokenFilter firebaseTokenFilter(FirebaseAuth firebaseAuth) {
-        return new FirebaseTokenFilter(firebaseAuth);
+    public FirebaseTokenFilter firebaseTokenFilter(FirebaseAuth firebaseAuth, ApiErrorWriter apiErrorWriter) {
+        return new FirebaseTokenFilter(firebaseAuth, apiErrorWriter);
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
-            FirebaseTokenFilter firebaseTokenFilter
+            FirebaseTokenFilter firebaseTokenFilter,
+            ApiErrorWriter apiErrorWriter
     ) throws Exception {
 
         return http
@@ -32,10 +34,14 @@ public class SecurityConfig {
                         .anyRequest().denyAll()
                 )
                 .addFilterBefore(firebaseTokenFilter, UsernamePasswordAuthenticationFilter.class)
-                /** By default, if no token is sent to a protected endpoint, Spring Security should return 403 sometimes depending on config. You want 401 **/
                 .exceptionHandling(ex -> ex
+                        // Missing credentials are security errors outside MVC, so write the shared API error contract here.
                         .authenticationEntryPoint((request, response, authException) ->
-                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication required")
+                                apiErrorWriter.write(response, HttpStatus.UNAUTHORIZED, "Authentication required")
+                        )
+                        // Future role checks should also return the same contract instead of Spring's default HTML/error body.
+                        .accessDeniedHandler((request, response, accessDeniedException) ->
+                                apiErrorWriter.write(response, HttpStatus.FORBIDDEN, "Access denied")
                         )
                 )
                 .build();

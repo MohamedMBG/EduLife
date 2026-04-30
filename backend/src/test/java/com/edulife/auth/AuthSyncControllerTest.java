@@ -98,7 +98,10 @@ class AuthSyncControllerTest {
 
         mockMvc.perform(post("/api/v1/auth/sync")
                         .header("Authorization", "Bearer expired-token"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.message").value("Invalid or expired Firebase token"))
+                .andExpect(jsonPath("$.timestamp").exists());
     }
 
     @Test
@@ -112,7 +115,10 @@ class AuthSyncControllerTest {
 
         mockMvc.perform(post("/api/v1/auth/sync")
                         .header("Authorization", "Bearer unverified-token"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.message").value("Email is not verified"))
+                .andExpect(jsonPath("$.timestamp").exists());
 
         assert userRepository.findByFirebaseUid("firebase-uid-unverified").isEmpty();
     }
@@ -120,6 +126,9 @@ class AuthSyncControllerTest {
     @Test
     void syncRejectsMissingToken() throws Exception {
         mockMvc.perform(post("/api/v1/auth/sync"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.message").value("Authentication required"))
+                .andExpect(jsonPath("$.timestamp").exists());
     }
 }

@@ -25,4 +25,16 @@ class TestSecurityController {
                 "email", firebaseAuthentication.getEmail()
         ));
     }
+
+    @GetMapping("/api/v1/secure/bad-request")
+    ResponseEntity<Map<String, String>> badRequest() {
+        // Test-only endpoint proving controller exceptions use the global API error contract.
+        throw new IllegalArgumentException("Invalid test request");
+    }
+
+    @GetMapping("/api/v1/secure/server-error")
+    ResponseEntity<Map<String, String>> serverError() {
+        // Test-only endpoint proving unexpected exceptions are hidden behind a safe public message.
+        throw new IllegalStateException("Sensitive internal detail");
+    }
 }
