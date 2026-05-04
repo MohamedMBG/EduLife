@@ -1,6 +1,6 @@
 package com.edulife.courses.controller;
 
-import com.edulife.courses.dto.CourseListItemResponse;
+import com.edulife.courses.dto.CourseSummaryDto;
 import com.edulife.courses.service.CourseService;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +16,7 @@ public class CourseController {
     }
 
     @GetMapping
-    public Page<CourseListItemResponse> listCourses(
+    public Page<CourseSummaryDto> listCourses(
             @RequestParam(required = false) String level,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
