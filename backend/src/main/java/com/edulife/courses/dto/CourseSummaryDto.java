@@ -3,7 +3,11 @@ package com.edulife.courses.dto;
 import java.time.Instant;
 import java.util.UUID;
 
-public record CourseListItemResponse(
+/**
+ * Summary shape for paginated course discovery responses.
+ * It intentionally excludes internal ownership fields and full nested content.
+ */
+public record CourseSummaryDto(
         UUID id,
         String slug,
         String title,
