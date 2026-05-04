@@ -3,6 +3,7 @@
 -- backend contract instead of long-lived mock APIs.
 
 -- Five published courses give the catalog enough variety for list, detail, and preview states.
+-- The seed stays intentionally small so local resets remain fast during Sprint 2 work.
 INSERT INTO courses (
     id,
     slug,

@@ -68,5 +68,14 @@ CREATE TABLE lessons (
 -- Catalog screens will commonly filter by course publication state.
 CREATE INDEX idx_courses_status ON courses (status);
 
+-- Published catalog pages sort by release time, so this index keeps the list query simple.
+CREATE INDEX idx_courses_published_at ON courses (published_at DESC);
+
 -- Teacher-scoped admin and CMS queries can resolve authored courses without scanning the catalog.
 CREATE INDEX idx_courses_created_by_user_id ON courses (created_by_user_id);
+
+-- Section lookups always start from the parent course and then apply display order in the UI.
+CREATE INDEX idx_course_sections_course_id ON course_sections (course_id);
+
+-- Lesson lookups always start from the parent section and then apply display order in the UI.
+CREATE INDEX idx_lessons_course_section_id ON lessons (course_section_id);
