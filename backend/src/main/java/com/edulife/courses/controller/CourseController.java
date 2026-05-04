@@ -1,8 +1,12 @@
 package com.edulife.courses.controller;
 
+import com.edulife.courses.dto.CourseDetailDto;
 import com.edulife.courses.dto.CourseSummaryDto;
+import java.util.UUID;
 import com.edulife.courses.service.CourseService;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -17,10 +21,14 @@ public class CourseController {
 
     @GetMapping
     public Page<CourseSummaryDto> listCourses(
-            @RequestParam(required = false) String level,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(required = false) String category,
+            @PageableDefault(size = 20) Pageable pageable
     ) {
-        return courseService.listPublishedCourses(level, page, size);
+        return courseService.getPublishedCourses(category, pageable);
+    }
+
+    @GetMapping("/{courseId}")
+    public CourseDetailDto getCourseDetail(@PathVariable UUID courseId) {
+        return courseService.getPublishedCourseDetail(courseId);
     }
 }
