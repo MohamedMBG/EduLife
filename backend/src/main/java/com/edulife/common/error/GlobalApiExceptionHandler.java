@@ -34,7 +34,14 @@ public class GlobalApiExceptionHandler {
             status = HttpStatus.INTERNAL_SERVER_ERROR;
         }
 
-        return build(status, safeMessage(exception, status.getReasonPhrase()));
+        // ResponseStatusException already carries a safe public-facing reason, so prefer it
+        // over the framework-generated message that includes the HTTP enum name.
+        String reason = exception.getReason();
+        String message = (reason == null || reason.isBlank())
+                ? safeMessage(exception, status.getReasonPhrase())
+                : reason;
+
+        return build(status, message);
     }
 
     @ExceptionHandler(Exception.class)

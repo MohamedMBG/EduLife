@@ -30,6 +30,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health").permitAll()
+                        // Sprint 2 discovery stays behind Firebase auth so course browsing remains
+                        // part of the verified learner flow defined in the current execution plan.
                         .requestMatchers("/api/v1/**").authenticated()
                         .anyRequest().denyAll()
                 )
