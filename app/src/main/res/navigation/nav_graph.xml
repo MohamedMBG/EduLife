@@ -50,7 +50,7 @@
     <fragment
         android:id="@+id/homeFragment"
         android:name="com.baghdad.edulife.features.courses.ui.HomeFragment"
-        android:label="Home">
+        android:label="Courses">
         <!--
             Auth guard and logout both use this action.
             popUpTo nav_graph + inclusive=true ensures the authenticated home screen is fully
@@ -61,6 +61,14 @@
             app:destination="@id/loginFragment"
             app:popUpTo="@id/nav_graph"
             app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_homeFragment_to_courseDetailFragment"
+            app:destination="@id/courseDetailFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/courseDetailFragment"
+        android:name="com.baghdad.edulife.features.courses.ui.CourseDetailFragment"
+        android:label="Course detail" />
 
 </navigation>

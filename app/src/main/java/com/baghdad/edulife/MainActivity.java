@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         SessionStorage sessionStorage = new SessionStorage(this);
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
-        // Route to home if there is an active Firebase user AND a persisted backend session.
+        // Route to the course catalog if there is an active Firebase user AND a persisted backend session.
         // This avoids forcing a re-login on every app relaunch when the user is still authenticated.
         // HomeFragment will repeat the same guard check and redirect to login if the session is stale.
         if (firebaseUser != null && sessionStorage.hasSession()) {
