@@ -28,4 +28,13 @@
     <color name="login_dot_mint">#DCEFE8</color>
     <color name="login_surface">#FFFFFFFF</color>
     <color name="login_surface_muted">#F3F8F6</color>
+    <color name="catalog_background">#F4F8F6</color>
+    <color name="catalog_surface">#FFFFFFFF</color>
+    <color name="catalog_surface_alt">#ECF5F0</color>
+    <color name="catalog_primary">#166A4E</color>
+    <color name="catalog_primary_dark">#0F543D</color>
+    <color name="catalog_text_primary">#12202C</color>
+    <color name="catalog_text_secondary">#53606C</color>
+    <color name="catalog_border">#D6E5DD</color>
+    <color name="catalog_warning">#9C5C18</color>
 </resources>
