@@ -2,6 +2,7 @@ package com.baghdad.edulife.features.courses.ui;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -10,16 +11,32 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.baghdad.edulife.R;
 import com.baghdad.edulife.core.storage.SessionStorage;
 import com.baghdad.edulife.features.auth.viewmodel.AuthViewModel;
+import com.baghdad.edulife.features.courses.model.CourseCatalogUiState;
+import com.baghdad.edulife.features.courses.model.CourseSummary;
+import com.baghdad.edulife.features.courses.viewmodel.CourseCatalogViewModel;
 import com.google.firebase.auth.FirebaseAuth;
+
+import java.util.Collections;
 
 public class HomeFragment extends Fragment {
 
     private AuthViewModel authViewModel;
+    private CourseCatalogViewModel courseCatalogViewModel;
     private SessionStorage sessionStorage;
+    private CourseCatalogAdapter courseCatalogAdapter;
+
+    private View loadingIndicator;
+    private TextView statusText;
+    private Button retryButton;
+    private Button allFilterButton;
+    private Button beginnerFilterButton;
+    private Button intermediateFilterButton;
 
     public HomeFragment() {
         super(R.layout.fragment_home);
@@ -29,69 +46,148 @@ public class HomeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // AuthViewModel is scoped to this fragment; it handles both logout and state clearing.
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
-
-        // SessionStorage gives access to the persisted internal userId and role from /auth/sync.
+        courseCatalogViewModel = new ViewModelProvider(this).get(CourseCatalogViewModel.class);
         sessionStorage = new SessionStorage(requireContext());
 
-        // Auth guard: if Firebase user is gone or local session was never written,
-        // the user cannot remain on the authenticated home screen.
         if (!isSessionValid()) {
             redirectToLogin(view);
             return;
         }
 
-        // Display the session identity so the stub confirms what was synced from the backend.
         bindSessionData(view);
+        setupRecyclerView(view);
+        setupFilterButtons(view);
 
-        // Logout clears both Firebase and the local session, then redirects to login.
+        loadingIndicator = view.findViewById(R.id.loadingIndicator);
+        statusText = view.findViewById(R.id.statusText);
+        retryButton = view.findViewById(R.id.retryButton);
+
+        retryButton.setOnClickListener(v -> reloadCurrentFilter());
         view.findViewById(R.id.logoutButton).setOnClickListener(v -> handleLogout(view));
+
+        courseCatalogViewModel.getUiState().observe(getViewLifecycleOwner(), this::renderCatalogState);
+
+        CourseCatalogUiState currentState = courseCatalogViewModel.getUiState().getValue();
+        if (currentState == null || (currentState.courses.isEmpty() && currentState.errorMessage == null && !currentState.loading)) {
+            courseCatalogViewModel.loadCourses(null);
+        } else {
+            updateFilterButtons(currentState.selectedCategory);
+        }
     }
 
-    /**
-     * Validates that a real Firebase user is signed in AND a local session was persisted.
-     * Both must be true: Firebase alone is insufficient without a successful backend sync.
-     */
+    private void setupRecyclerView(@NonNull View view) {
+        RecyclerView courseRecyclerView = view.findViewById(R.id.courseRecyclerView);
+        courseCatalogAdapter = new CourseCatalogAdapter(this::openCourseDetail);
+        courseRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        courseRecyclerView.setAdapter(courseCatalogAdapter);
+    }
+
+    private void setupFilterButtons(@NonNull View view) {
+        allFilterButton = view.findViewById(R.id.allFilterButton);
+        beginnerFilterButton = view.findViewById(R.id.beginnerFilterButton);
+        intermediateFilterButton = view.findViewById(R.id.intermediateFilterButton);
+
+        // The backend currently interprets the category query as the seeded level bucket,
+        // so the Android filter labels stay user-friendly while preserving the real contract.
+        allFilterButton.setOnClickListener(v -> courseCatalogViewModel.loadCourses(null));
+        beginnerFilterButton.setOnClickListener(v -> courseCatalogViewModel.loadCourses("BEGINNER"));
+        intermediateFilterButton.setOnClickListener(v -> courseCatalogViewModel.loadCourses("INTERMEDIATE"));
+    }
+
+    private void renderCatalogState(CourseCatalogUiState state) {
+        if (state == null) {
+            return;
+        }
+
+        updateFilterButtons(state.selectedCategory);
+        loadingIndicator.setVisibility(state.loading ? View.VISIBLE : View.GONE);
+
+        if (state.loading) {
+            statusText.setVisibility(View.VISIBLE);
+            statusText.setText(R.string.catalog_loading);
+            retryButton.setVisibility(View.GONE);
+            courseCatalogAdapter.submitList(Collections.emptyList());
+            return;
+        }
+
+        if (state.errorMessage != null && !state.errorMessage.isBlank()) {
+            statusText.setVisibility(View.VISIBLE);
+            statusText.setText(state.errorMessage);
+            retryButton.setVisibility(View.VISIBLE);
+            courseCatalogAdapter.submitList(Collections.emptyList());
+            return;
+        }
+
+        retryButton.setVisibility(View.GONE);
+
+        if (state.courses.isEmpty()) {
+            statusText.setVisibility(View.VISIBLE);
+            statusText.setText(R.string.catalog_empty);
+        } else {
+            statusText.setVisibility(View.GONE);
+        }
+
+        courseCatalogAdapter.submitList(state.courses);
+    }
+
+    private void updateFilterButtons(String category) {
+        styleFilterButton(allFilterButton, category == null);
+        styleFilterButton(beginnerFilterButton, "BEGINNER".equals(category));
+        styleFilterButton(intermediateFilterButton, "INTERMEDIATE".equals(category));
+    }
+
+    private void styleFilterButton(Button button, boolean selected) {
+        if (button == null) {
+            return;
+        }
+
+        button.setBackgroundResource(selected
+                ? R.drawable.bg_catalog_filter_button_active
+                : R.drawable.bg_catalog_filter_button);
+        button.setTextColor(requireContext().getColor(selected
+                ? android.R.color.white
+                : R.color.catalog_text_primary));
+    }
+
+    private void reloadCurrentFilter() {
+        CourseCatalogUiState state = courseCatalogViewModel.getUiState().getValue();
+        courseCatalogViewModel.loadCourses(state != null ? state.selectedCategory : null);
+    }
+
     private boolean isSessionValid() {
         boolean hasFirebaseUser = FirebaseAuth.getInstance().getCurrentUser() != null;
         boolean hasLocalSession = sessionStorage.hasSession();
         return hasFirebaseUser && hasLocalSession;
     }
 
-    /**
-     * Populates the UI labels with the userId and role stored by SessionStorage after /auth/sync.
-     */
     private void bindSessionData(@NonNull View view) {
-        String userId = sessionStorage.getUserId();
         String role = sessionStorage.getRole();
+        String userId = sessionStorage.getUserId();
 
         TextView roleText = view.findViewById(R.id.roleText);
         TextView userIdText = view.findViewById(R.id.userIdText);
 
-        // Show a dash placeholder if the value is somehow null (defensive; should not happen after sync).
-        roleText.setText(role != null ? role : "—");
-        userIdText.setText(userId != null ? userId : "—");
+        // Showing the synced role and internal UUID here makes it obvious that course discovery
+        // is running inside the authenticated learner flow instead of a mock public catalog.
+        roleText.setText(getString(R.string.catalog_signed_in_as, role != null ? role : "Unknown"));
+        userIdText.setText(getString(R.string.catalog_internal_id, userId != null ? userId : "Unavailable"));
     }
 
-    /**
-     * Signs the user out of Firebase and clears the local session via AuthViewModel,
-     * then navigates back to the login screen and clears the home screen from the back stack.
-     * The user must not be able to press back to re-enter the authenticated area after logout.
-     */
+    private void openCourseDetail(CourseSummary courseSummary) {
+        Bundle args = new Bundle();
+        args.putString("courseId", courseSummary.id);
+        Navigation.findNavController(requireView())
+                .navigate(R.id.action_homeFragment_to_courseDetailFragment, args);
+    }
+
     private void handleLogout(@NonNull View view) {
-        // Delegate sign-out to AuthViewModel so both Firebase and SessionStorage are cleared atomically.
         authViewModel.signOut();
         redirectToLogin(view);
     }
 
-    /**
-     * Navigates to the login screen and pops the entire authenticated back stack.
-     * This is used both for logout and for the auth guard when session is invalid.
-     */
     private void redirectToLogin(@NonNull View view) {
         NavOptions navOptions = new NavOptions.Builder()
-                // Pop everything up to and including the nav graph root so there is nothing to go back to.
                 .setPopUpTo(R.id.nav_graph, true)
                 .build();
 

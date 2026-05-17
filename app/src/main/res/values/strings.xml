@@ -21,4 +21,24 @@
     <string name="onboarding_hero_description">Learner overlooking a mountain landscape</string>
     <string name="onboarding_focus_icon_description">Focus symbol</string>
     <string name="onboarding_terms_icon_description">Privacy and terms shield</string>
+    <string name="catalog_title">Course Catalog</string>
+    <string name="catalog_subtitle">Browse the live EduLife backend catalog and open a real course structure with sections and lesson previews.</string>
+    <string name="catalog_signed_in_as">Signed in as %1$s</string>
+    <string name="catalog_internal_id">Internal ID: %1$s</string>
+    <string name="catalog_all_levels">All</string>
+    <string name="catalog_beginner">Beginner</string>
+    <string name="catalog_intermediate">Intermediate</string>
+    <string name="catalog_loading">Loading courses...</string>
+    <string name="catalog_empty">No published courses matched this filter.</string>
+    <string name="catalog_retry">Retry</string>
+    <string name="catalog_logout">Log out</string>
+    <string name="catalog_open_course">Open course</string>
+    <string name="catalog_course_language">Language: %1$s</string>
+    <string name="course_detail_back">Back</string>
+    <string name="course_detail_section_count">%1$d sections</string>
+    <string name="course_detail_lesson_meta">%1$s - %2$d min</string>
+    <string name="course_detail_preview">Preview lesson</string>
+    <string name="course_detail_locked">Enrollment required later</string>
+    <string name="course_detail_missing_id">Course detail could not open because the course ID was missing.</string>
+    <string name="course_detail_loading">Loading course detail...</string>
 </resources>
