@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    android:background="@drawable/bg_course_card"
+    android:clickable="true"
+    android:elevation="3dp"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    android:orientation="horizontal"
+    android:padding="16dp">
+
+    <!-- Color accent bar -->
+    <View
+        android:id="@+id/accentBar"
+        android:layout_width="4dp"
+        android:layout_height="match_parent"
+        android:layout_marginEnd="14dp"
+        android:background="@color/login_primary_green" />
+
+    <!-- Content -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <!-- Level badge -->
+        <TextView
+            android:id="@+id/levelBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_level_beginner"
+            android:paddingStart="10dp"
+            android:paddingTop="3dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="3dp"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            tools:text="BEGINNER"
+            tools:textColor="@color/level_beginner_text" />
+
+        <TextView
+            android:id="@+id/courseTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="sans-serif-medium"
+            android:maxLines="2"
+            android:textColor="@color/login_text_dark"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            tools:text="Android Development Fundamentals" />
+
+        <TextView
+            android:id="@+id/courseDesc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textColor="@color/login_text_body"
+            android:textSize="12sp"
+            tools:text="Build your first Android app from scratch." />
+
+        <TextView
+            android:id="@+id/courseLanguage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColor="@color/login_text_secondary"
+            android:textSize="11sp"
+            tools:text="English" />
+    </LinearLayout>
+
+    <!-- Arrow -->
+    <ImageView
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_gravity="center_vertical"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_chevron_right" />
+</LinearLayout>

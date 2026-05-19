@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\pc\\\\AndroidStudioProjects\\\\EduLife\" -Force)",
+      "Bash(Select-Object Name, FullName)",
+      "Bash(Get-ChildItem -Force)"
+    ]
+  }
+}

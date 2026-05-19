@@ -1,6 +1,7 @@
 package com.baghdad.edulife;
 
 import android.os.Bundle;
+import android.view.View;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -10,9 +11,11 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.NavGraph;
 import androidx.navigation.fragment.NavHostFragment;
+import androidx.navigation.ui.NavigationUI;
 
 import com.baghdad.edulife.core.storage.SessionStorage;
 import com.baghdad.edulife.features.onboarding.data.OnboardingPreferences;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -23,15 +26,37 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+
+        BottomNavigationView bottomNav = findViewById(R.id.bottomNavView);
+        View mainContainer = findViewById(R.id.mainContainer);
+
+        View navHostView = findViewById(R.id.main);
+        ViewCompat.setOnApplyWindowInsetsListener(mainContainer, (v, insets) -> {
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            // Fragment container gets top/side insets; bottom nav gets bottom inset.
+            navHostView.setPadding(bars.left, bars.top, bars.right, 0);
+            bottomNav.setPadding(bars.left, 0, bars.right, bars.bottom);
             return insets;
         });
 
-        // Avoid resetting the user's current screen during configuration changes.
         if (savedInstanceState == null) {
             configureNavigationStartDestination();
+        }
+
+        // Wire bottom nav after graph is set.
+        NavHostFragment navHostFragment =
+                (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.main);
+        if (navHostFragment != null) {
+            NavController navController = navHostFragment.getNavController();
+            NavigationUI.setupWithNavController(bottomNav, navController);
+
+            navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
+                int id = destination.getId();
+                boolean isMainTab = id == R.id.homeFragment
+                        || id == R.id.coursesFragment
+                        || id == R.id.profileFragment;
+                bottomNav.setVisibility(isMainTab ? View.VISIBLE : View.GONE);
+            });
         }
     }
 
@@ -39,9 +64,7 @@ public class MainActivity extends AppCompatActivity {
         NavHostFragment navHostFragment =
                 (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.main);
 
-        if (navHostFragment == null) {
-            return;
-        }
+        if (navHostFragment == null) return;
 
         NavController navController = navHostFragment.getNavController();
         NavGraph navGraph = navController.getNavInflater().inflate(R.navigation.nav_graph);
@@ -49,16 +72,11 @@ public class MainActivity extends AppCompatActivity {
         SessionStorage sessionStorage = new SessionStorage(this);
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
-        // Route to home if there is an active Firebase user AND a persisted backend session.
-        // This avoids forcing a re-login on every app relaunch when the user is still authenticated.
-        // HomeFragment will repeat the same guard check and redirect to login if the session is stale.
         if (firebaseUser != null && sessionStorage.hasSession()) {
             navGraph.setStartDestination(R.id.homeFragment);
         } else if (onboardingPreferences.hasSeenOnboarding()) {
-            // Onboarding was completed but no active session: go directly to login.
             navGraph.setStartDestination(R.id.loginFragment);
         } else {
-            // First-time launch: show onboarding.
             navGraph.setStartDestination(R.id.onboardingFragment);
         }
 

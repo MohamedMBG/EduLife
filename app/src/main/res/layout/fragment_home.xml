@@ -1,167 +1,335 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F7FA"
-    android:padding="24dp">
+    android:background="@color/home_bg"
+    android:overScrollMode="never"
+    tools:context=".features.courses.ui.HomeFragment">
 
-    <!-- App brand header -->
     <LinearLayout
-        android:id="@+id/brandRow"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:orientation="vertical">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-medium"
-            android:text="Edu"
-            android:textColor="#1A1A2E"
-            android:textSize="26sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-medium"
-            android:text="Life"
-            android:textColor="#2ECC71"
-            android:textSize="26sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <!-- Authenticated session card -->
-    <LinearLayout
-        android:id="@+id/sessionCard"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
-        android:background="@drawable/bg_home_card"
-        android:elevation="4dp"
-        android:orientation="vertical"
-        android:padding="24dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/brandRow">
-
-        <!-- Welcome to EduLife heading -->
-        <TextView
-            android:id="@+id/welcomeTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-medium"
-            android:text="Welcome to EduLife"
-            android:textColor="#1A1A2E"
-            android:textSize="22sp"
-            android:textStyle="bold" />
-
-        <!-- Authenticated session active indicator -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="Authenticated session active"
-            android:textColor="#2ECC71"
-            android:textSize="13sp"
-            android:textStyle="bold" />
-
-        <View
+        <!-- ── HEADER ── -->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="18dp"
-            android:layout_marginBottom="18dp"
-            android:background="#E0E0E0" />
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_home_header"
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingTop="20dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="36dp">
 
-        <!-- Role display -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Good morning,"
+                        android:textColor="#CCFFFFFF"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/greetingName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:fontFamily="sans-serif-medium"
+                        android:text="Learner"
+                        android:textColor="#FFFFFF"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        tools:text="Mohamed" />
+                </LinearLayout>
+
+                <FrameLayout
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/bg_back_button"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="Notifications"
+                        android:src="@drawable/ic_bell" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="What will you learn today?"
+                android:textColor="#99FFFFFF"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <!-- ── SEARCH BAR (overlaps header) ── -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="-26dp"
+            android:layout_marginEnd="20dp"
+            android:background="@drawable/bg_search_bar"
+            android:elevation="6dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:contentDescription="Search"
+                android:src="@drawable/ic_search" />
+
+            <EditText
+                android:id="@+id/searchEditText"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                android:hint="Search courses, topics…"
+                android:inputType="text"
+                android:padding="0dp"
+                android:singleLine="true"
+                android:textColor="@color/login_text_dark"
+                android:textColorHint="@color/login_text_secondary"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- ── CATEGORIES ── -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="24dp"
             android:fontFamily="sans-serif-medium"
-            android:text="Role"
-            android:textColor="#888888"
-            android:textSize="11sp"
-            android:textAllCaps="true" />
-
-        <TextView
-            android:id="@+id/roleText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="—"
-            android:textColor="#1A1A2E"
-            android:textSize="15sp"
+            android:text="Categories"
+            android:textColor="@color/home_section_title"
+            android:textSize="17sp"
             android:textStyle="bold" />
 
-        <!-- User ID display -->
-        <TextView
-            android:layout_width="wrap_content"
+        <HorizontalScrollView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:fontFamily="sans-serif-medium"
-            android:text="User ID"
-            android:textColor="#888888"
-            android:textSize="11sp"
-            android:textAllCaps="true" />
+            android:layout_marginTop="12dp"
+            android:overScrollMode="never"
+            android:scrollbars="none">
 
-        <TextView
-            android:id="@+id/userIdText"
-            android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp">
+
+                <TextView
+                    android:id="@+id/chipAll"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_category_chip_active"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:gravity="center"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:text="All"
+                    android:textColor="#FFFFFF"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_category_chip"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:gravity="center"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:text="Design"
+                    android:textColor="@color/login_primary_green"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_category_chip"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:gravity="center"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:text="Development"
+                    android:textColor="@color/login_primary_green"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_category_chip"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:gravity="center"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:text="Business"
+                    android:textColor="@color/login_primary_green"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_category_chip"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:gravity="center"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:text="Science"
+                    android:textColor="@color/login_primary_green"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="20dp"
+                    android:background="@drawable/bg_category_chip"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:gravity="center"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:text="Data"
+                    android:textColor="@color/login_primary_green"
+                    android:textSize="13sp" />
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <!-- ── FEATURED COURSES SECTION HEADER ── -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:text="—"
-            android:textColor="#1A1A2E"
-            android:textSize="13sp" />
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="28dp"
+            android:layout_marginEnd="20dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="sans-serif-medium"
+                android:text="Featured Courses"
+                android:textColor="@color/home_section_title"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/seeAllFeatured"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:text="See all"
+                android:textColor="@color/login_primary_green"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- ── FEATURED RecyclerView (horizontal) ── -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/featuredCoursesRecycler"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:clipToPadding="false"
+            android:orientation="horizontal"
+            android:overScrollMode="never"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+        <!-- ── POPULAR COURSES SECTION HEADER ── -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="28dp"
+            android:layout_marginEnd="20dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="sans-serif-medium"
+                android:text="Popular Courses"
+                android:textColor="@color/home_section_title"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/seeAllPopular"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:text="See all"
+                android:textColor="@color/login_primary_green"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- ── POPULAR RecyclerView (vertical, nested scroll disabled) ── -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/popularCoursesRecycler"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="16dp"
+            android:clipToPadding="false"
+            android:nestedScrollingEnabled="false"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
     </LinearLayout>
-
-    <!-- Sprint notice -->
-    <TextView
-        android:id="@+id/sprintNotice"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:background="@drawable/bg_home_notice"
-        android:gravity="center"
-        android:padding="14dp"
-        android:text="Sprint 1 complete. Course catalog coming in Sprint 2."
-        android:textColor="#666666"
-        android:textSize="13sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/sessionCard" />
-
-    <!-- Logout button anchored to the bottom -->
-    <LinearLayout
-        android:id="@+id/logoutButton"
-        android:layout_width="0dp"
-        android:layout_height="54dp"
-        android:layout_marginBottom="12dp"
-        android:background="@drawable/bg_home_logout_button"
-        android:clickable="true"
-        android:elevation="2dp"
-        android:focusable="true"
-        android:foreground="?attr/selectableItemBackground"
-        android:gravity="center"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-medium"
-            android:text="Log out"
-            android:textColor="#CC4444"
-            android:textSize="15sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.core.widget.NestedScrollView>

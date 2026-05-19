@@ -28,4 +28,21 @@
     <color name="login_dot_mint">#DCEFE8</color>
     <color name="login_surface">#FFFFFFFF</color>
     <color name="login_surface_muted">#F3F8F6</color>
+
+    <!-- Dashboard / Home screen -->
+    <color name="home_bg">#F5F7FA</color>
+    <color name="home_section_title">#0E1A2A</color>
+    <color name="home_card_bg">#FFFFFF</color>
+
+    <!-- Level badges -->
+    <color name="level_beginner_bg">#E3F9EF</color>
+    <color name="level_beginner_text">#0F8A68</color>
+    <color name="level_intermediate_bg">#FFF4E5</color>
+    <color name="level_intermediate_text">#C97000</color>
+    <color name="level_advanced_bg">#FFECEC</color>
+    <color name="level_advanced_text">#C03232</color>
+
+    <!-- Profile screen -->
+    <color name="profile_stat_value">#0E1A2A</color>
+    <color name="profile_stat_label">#7A8190</color>
 </resources>

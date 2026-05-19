@@ -20,16 +20,11 @@
         android:id="@+id/loginFragment"
         android:name="com.baghdad.edulife.features.auth.ui.LoginFragment"
         android:label="Login">
-        <!--
-            popUpTo nav_graph + inclusive=true removes the entire back stack including onboarding/login.
-            The user must not be able to press back from home to return to the login or onboarding screens.
-        -->
         <action
             android:id="@+id/action_loginFragment_to_homeFragment"
             app:destination="@id/homeFragment"
             app:popUpTo="@id/nav_graph"
             app:popUpToInclusive="true" />
-        <!-- Allows a user on the login screen to navigate to registration. -->
         <action
             android:id="@+id/action_loginFragment_to_registerFragment"
             app:destination="@id/registerFragment" />
@@ -39,7 +34,6 @@
         android:id="@+id/registerFragment"
         android:name="com.baghdad.edulife.features.auth.ui.RegisterFragment"
         android:label="Register">
-        <!-- Allows the register screen to navigate back to login (e.g. "Already have an account?" link). -->
         <action
             android:id="@+id/action_registerFragment_to_loginFragment"
             app:destination="@id/loginFragment"
@@ -47,20 +41,66 @@
             app:popUpToInclusive="true" />
     </fragment>
 
+    <!-- ── AUTHENTICATED AREA (bottom nav destinations) ── -->
+
     <fragment
         android:id="@+id/homeFragment"
         android:name="com.baghdad.edulife.features.courses.ui.HomeFragment"
         android:label="Home">
-        <!--
-            Auth guard and logout both use this action.
-            popUpTo nav_graph + inclusive=true ensures the authenticated home screen is fully
-            removed from the back stack before the user lands on login.
-        -->
         <action
             android:id="@+id/action_homeFragment_to_loginFragment"
             app:destination="@id/loginFragment"
             app:popUpTo="@id/nav_graph"
             app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_homeFragment_to_courseDetailFragment"
+            app:destination="@id/courseDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/coursesFragment"
+        android:name="com.baghdad.edulife.features.courses.ui.CoursesFragment"
+        android:label="Courses">
+        <action
+            android:id="@+id/action_coursesFragment_to_courseDetailFragment"
+            app:destination="@id/courseDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.baghdad.edulife.features.courses.ui.ProfileFragment"
+        android:label="Profile">
+        <action
+            android:id="@+id/action_profileFragment_to_loginFragment"
+            app:destination="@id/loginFragment"
+            app:popUpTo="@id/nav_graph"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/courseDetailFragment"
+        android:name="com.baghdad.edulife.features.courses.ui.CourseDetailFragment"
+        android:label="Course Detail">
+        <argument
+            android:name="courseId"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="courseTitle"
+            app:argType="string"
+            android:defaultValue="Course" />
+        <argument
+            android:name="courseLevel"
+            app:argType="string"
+            android:defaultValue="BEGINNER" />
+        <argument
+            android:name="courseLanguage"
+            app:argType="string"
+            android:defaultValue="en" />
+        <argument
+            android:name="courseDesc"
+            app:argType="string"
+            android:defaultValue="" />
     </fragment>
 
 </navigation>

@@ -80,4 +80,7 @@ dependencies {
 
     // ViewPager2
     implementation("androidx.viewpager2:viewpager2:1.0.0")
+
+    // RecyclerView for course catalog and featured lists
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
 }
