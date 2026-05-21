@@ -6,6 +6,7 @@ import android.text.method.PasswordTransformationMethod;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -24,6 +25,8 @@ public class LoginFragment extends Fragment {
     private View loginButton;
     private EditText emailEditText;
     private EditText passwordEditText;
+    private View loginErrorCard;
+    private TextView loginErrorText;
 
     public LoginFragment() {
         super(R.layout.fragment_login);
@@ -38,6 +41,8 @@ public class LoginFragment extends Fragment {
         emailEditText = view.findViewById(R.id.emailEditText);
         passwordEditText = view.findViewById(R.id.passwordEditText);
         loginButton = view.findViewById(R.id.loginButton);
+        loginErrorCard = view.findViewById(R.id.loginErrorCard);
+        loginErrorText = view.findViewById(R.id.loginErrorText);
         ImageButton passwordVisibilityButton = view.findViewById(R.id.passwordVisibilityButton);
 
         passwordVisibilityButton.setOnClickListener(v -> togglePasswordVisibility(passwordEditText));
@@ -74,6 +79,7 @@ public class LoginFragment extends Fragment {
             return;
         }
 
+        hideError();
         authViewModel.login(email, password);
     }
 
@@ -81,29 +87,55 @@ public class LoginFragment extends Fragment {
         if (state == null) return;
 
         loginButton.setEnabled(!state.loading);
+        loginButton.setAlpha(state.loading ? 0.65f : 1f);
 
         if (state.loading) {
-            Toast.makeText(requireContext(), "Logging in...", Toast.LENGTH_SHORT).show();
+            hideError();
             return;
         }
 
         if (state.success) {
-            // Navigate to the catalog only after Firebase login + email verification + backend sync all succeed.
-            // The popUpTo in the nav graph action clears the entire auth back stack so the user
-            // cannot press back to return to the login or onboarding screens.
             Navigation.findNavController(requireView()).navigate(R.id.action_loginFragment_to_homeFragment);
             authViewModel.resetState();
             return;
         }
 
         if (state.emailVerificationRequired) {
-            Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show();
+            showError("Email not verified. Check your inbox and click the verification link, then try again.");
             return;
         }
 
-        if (state.message != null && !state.message.isBlank() && !state.success) {
-            Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show();
+        if (state.message != null && !state.message.isBlank()) {
+            showError(friendlyMessage(state.message));
         }
+    }
+
+    private void showError(String message) {
+        loginErrorText.setText(message);
+        loginErrorCard.setVisibility(View.VISIBLE);
+    }
+
+    private void hideError() {
+        loginErrorCard.setVisibility(View.GONE);
+    }
+
+    private String friendlyMessage(String raw) {
+        if (raw.startsWith("Network error during sync:")) {
+            return "Cannot reach the server. Make sure your phone is on the right network and the backend is running.";
+        }
+        if (raw.startsWith("Backend sync failed.")) {
+            return "Server rejected the request (" + raw.replace("Backend sync failed. Status: ", "HTTP ") + "). Contact support if this persists.";
+        }
+        if (raw.contains("password") || raw.contains("credential") || raw.contains("no user")) {
+            return "Incorrect email or password. Please try again.";
+        }
+        if (raw.contains("verify")) {
+            return "Email not verified. Check your inbox and click the verification link.";
+        }
+        if (raw.contains("network") || raw.contains("Unable to resolve") || raw.contains("timeout")) {
+            return "Network error. Check your internet connection and try again.";
+        }
+        return raw;
     }
 
     private void togglePasswordVisibility(@NonNull EditText passwordEditText) {

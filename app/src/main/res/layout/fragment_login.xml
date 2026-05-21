@@ -358,16 +358,44 @@
                 android:src="@drawable/ic_arrow_forward" />
         </LinearLayout>
 
+        <!-- Inline error — replaces Toast so the message persists and is readable -->
+        <LinearLayout
+            android:id="@+id/loginErrorCard"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_login_error_card"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="14dp"
+            android:paddingTop="12dp"
+            android:paddingEnd="14dp"
+            android:paddingBottom="12dp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/loginButton">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:id="@+id/loginErrorText"
+                android:lineSpacingMultiplier="1.4"
+                android:textColor="@color/brand_error"
+                android:textSize="13sp" />
+        </LinearLayout>
+
         <LinearLayout
             android:id="@+id/dividerRow"
             android:layout_width="0dp"
             android:layout_height="26dp"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="14dp"
             android:gravity="center"
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/loginButton">
+            app:layout_constraintTop_toBottomOf="@id/loginErrorCard">
 
             <View
                 android:layout_width="0dp"
