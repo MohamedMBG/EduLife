@@ -2,7 +2,6 @@ package com.baghdad.edulife.features.courses.ui;
 
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -33,10 +32,10 @@ public class HomeFragment extends Fragment {
 
     private View loadingIndicator;
     private TextView statusText;
-    private Button retryButton;
-    private Button allFilterButton;
-    private Button beginnerFilterButton;
-    private Button intermediateFilterButton;
+    private TextView retryButton;
+    private TextView allFilterButton;
+    private TextView beginnerFilterButton;
+    private TextView intermediateFilterButton;
 
     public HomeFragment() {
         super(R.layout.fragment_home);
@@ -137,7 +136,7 @@ public class HomeFragment extends Fragment {
         styleFilterButton(intermediateFilterButton, "INTERMEDIATE".equals(category));
     }
 
-    private void styleFilterButton(Button button, boolean selected) {
+    private void styleFilterButton(TextView button, boolean selected) {
         if (button == null) {
             return;
         }
@@ -147,7 +146,7 @@ public class HomeFragment extends Fragment {
                 : R.drawable.bg_catalog_filter_button);
         button.setTextColor(requireContext().getColor(selected
                 ? android.R.color.white
-                : R.color.catalog_text_primary));
+                : R.color.brand_primary));
     }
 
     private void reloadCurrentFilter() {

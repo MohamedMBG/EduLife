@@ -133,46 +133,52 @@
                 android:paddingStart="20dp"
                 android:paddingEnd="20dp">
 
-                <Button
+                <TextView
                     android:id="@+id/allFilterButton"
                     android:layout_width="wrap_content"
-                    android:layout_height="36dp"
+                    android:layout_height="38dp"
                     android:background="@drawable/bg_catalog_filter_button_active"
-                    android:minWidth="0dp"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:gravity="center"
+                    android:paddingStart="22dp"
+                    android:paddingEnd="22dp"
                     android:text="@string/catalog_all_levels"
-                    android:textAllCaps="false"
                     android:textColor="@color/white"
                     android:textSize="13sp"
                     android:textStyle="bold" />
 
-                <Button
+                <TextView
                     android:id="@+id/beginnerFilterButton"
                     android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:layout_marginStart="10dp"
+                    android:layout_height="38dp"
+                    android:layout_marginStart="8dp"
                     android:background="@drawable/bg_catalog_filter_button"
-                    android:minWidth="0dp"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:gravity="center"
+                    android:paddingStart="22dp"
+                    android:paddingEnd="22dp"
                     android:text="@string/catalog_beginner"
-                    android:textAllCaps="false"
                     android:textColor="@color/brand_primary"
                     android:textSize="13sp"
                     android:textStyle="bold" />
 
-                <Button
+                <TextView
                     android:id="@+id/intermediateFilterButton"
                     android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:layout_marginStart="10dp"
+                    android:layout_height="38dp"
+                    android:layout_marginStart="8dp"
                     android:background="@drawable/bg_catalog_filter_button"
-                    android:minWidth="0dp"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:gravity="center"
+                    android:paddingStart="22dp"
+                    android:paddingEnd="22dp"
                     android:text="@string/catalog_intermediate"
-                    android:textAllCaps="false"
                     android:textColor="@color/brand_primary"
                     android:textSize="13sp"
                     android:textStyle="bold" />
@@ -227,17 +233,19 @@
                 android:textSize="14sp"
                 android:visibility="gone" />
 
-            <Button
+            <TextView
                 android:id="@+id/retryButton"
                 android:layout_width="wrap_content"
                 android:layout_height="44dp"
                 android:layout_marginTop="16dp"
                 android:background="@drawable/bg_enroll_cta_button"
-                android:minWidth="0dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center"
                 android:paddingStart="28dp"
                 android:paddingEnd="28dp"
                 android:text="@string/catalog_retry"
-                android:textAllCaps="false"
                 android:textColor="@color/white"
                 android:textSize="14sp"
                 android:textStyle="bold"
