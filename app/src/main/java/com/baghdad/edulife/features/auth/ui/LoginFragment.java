@@ -88,7 +88,7 @@ public class LoginFragment extends Fragment {
         }
 
         if (state.success) {
-            // Navigate to home only after Firebase login + email verification + backend sync all succeed.
+            // Navigate to the catalog only after Firebase login + email verification + backend sync all succeed.
             // The popUpTo in the nav graph action clears the entire auth back stack so the user
             // cannot press back to return to the login or onboarding screens.
             Navigation.findNavController(requireView()).navigate(R.id.action_loginFragment_to_homeFragment);

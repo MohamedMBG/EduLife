@@ -1,9 +1,15 @@
 package com.baghdad.edulife.core.network;
 
 import com.baghdad.edulife.features.auth.model.AuthSyncResponse;
+import com.baghdad.edulife.features.courses.model.CourseDetail;
+import com.baghdad.edulife.features.courses.model.CoursePageResponse;
+import com.baghdad.edulife.features.courses.model.CourseSummary;
 
 import retrofit2.Call;
+import retrofit2.http.GET;
+import retrofit2.http.Path;
 import retrofit2.http.POST;
+import retrofit2.http.Query;
 
 /**
  * Retrofit interface defining all EduLife backend API endpoints.
@@ -22,5 +28,22 @@ public interface ApiService {
      */
     @POST("auth/sync")
     Call<AuthSyncResponse> syncUser();
+
+    /**
+     * Loads the published course catalog from the live backend.
+     * The category query currently maps to the seeded course level bucket.
+     */
+    @GET("courses")
+    Call<CoursePageResponse<CourseSummary>> getCourses(
+            @Query("category") String category,
+            @Query("page") int page,
+            @Query("size") int size
+    );
+
+    /**
+     * Loads one course with ordered sections and lesson previews.
+     */
+    @GET("courses/{courseId}")
+    Call<CourseDetail> getCourseDetail(@Path("courseId") String courseId);
 }
 

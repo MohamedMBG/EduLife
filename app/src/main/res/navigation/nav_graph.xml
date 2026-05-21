@@ -41,7 +41,7 @@
             app:popUpToInclusive="true" />
     </fragment>
 
-    <!-- ── AUTHENTICATED AREA (bottom nav destinations) ── -->
+    <!-- Authenticated area used by the bottom navigation destinations. -->
 
     <fragment
         android:id="@+id/homeFragment"
@@ -101,6 +101,84 @@
             android:name="courseDesc"
             app:argType="string"
             android:defaultValue="" />
+        <action
+            android:id="@+id/action_courseDetailFragment_to_enrollCourseFragment"
+            app:destination="@id/enrollCourseFragment" />
+        <action
+            android:id="@+id/action_courseDetailFragment_to_lessonPlayerFragment"
+            app:destination="@id/lessonPlayerFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/enrollCourseFragment"
+        android:name="com.baghdad.edulife.features.courses.ui.EnrollCourseFragment"
+        android:label="Enroll">
+        <argument
+            android:name="courseId"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="courseTitle"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="courseLevel"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="courseLanguage"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="courseDesc"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="sectionCount"
+            app:argType="integer"
+            android:defaultValue="0" />
+        <argument
+            android:name="lessonCount"
+            app:argType="integer"
+            android:defaultValue="0" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/lessonPlayerFragment"
+        android:name="com.baghdad.edulife.features.courses.ui.LessonPlayerFragment"
+        android:label="Lesson">
+        <argument
+            android:name="lessonId"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="lessonTitle"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="lessonSummary"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="lessonType"
+            app:argType="string"
+            android:defaultValue="VIDEO" />
+        <argument
+            android:name="durationMinutes"
+            app:argType="integer"
+            android:defaultValue="0" />
+        <argument
+            android:name="isPreview"
+            app:argType="boolean"
+            android:defaultValue="false" />
+        <argument
+            android:name="sectionTitle"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="orderInSection"
+            app:argType="integer"
+            android:defaultValue="1" />
     </fragment>
 
 </navigation>

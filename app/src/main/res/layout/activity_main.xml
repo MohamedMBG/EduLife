@@ -26,7 +26,6 @@
         android:background="@drawable/bg_bottom_nav"
         android:elevation="12dp"
         android:visibility="gone"
-        app:itemActiveIndicatorColor="#E3F9EF"
         app:itemIconTint="@color/bottom_nav_tint"
         app:itemTextColor="@color/bottom_nav_tint"
         app:labelVisibilityMode="labeled"

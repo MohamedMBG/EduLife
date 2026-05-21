@@ -1,5 +1,7 @@
 package com.baghdad.edulife.core.network;
 
+import com.baghdad.edulife.BuildConfig;
+
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
@@ -10,8 +12,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ApiClient {
 
-    private static final String BASE_URL = "http://10.0.2.2:8080/api/v1/";
-    // 10.0.2.2 = localhost for Android emulator
+    private static final String BASE_URL = BuildConfig.API_BASE_URL;
 
     private static Retrofit retrofit;
 
@@ -24,6 +25,8 @@ public class ApiClient {
 
             // Logging interceptor (for debugging)
             HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
+            // Firebase ID tokens must never be printed to logcat because log files are often shared during debugging.
+            loggingInterceptor.redactHeader("Authorization");
             loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
             // OkHttp client with Firebase interceptor

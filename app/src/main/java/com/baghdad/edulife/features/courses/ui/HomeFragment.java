@@ -2,26 +2,41 @@ package com.baghdad.edulife.features.courses.ui;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.baghdad.edulife.R;
 import com.baghdad.edulife.core.storage.SessionStorage;
+import com.baghdad.edulife.features.auth.viewmodel.AuthViewModel;
+import com.baghdad.edulife.features.courses.model.CourseCatalogUiState;
 import com.baghdad.edulife.features.courses.model.CourseSummary;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.baghdad.edulife.features.courses.viewmodel.CourseCatalogViewModel;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
 
 public class HomeFragment extends Fragment {
+
+    private AuthViewModel authViewModel;
+    private CourseCatalogViewModel courseCatalogViewModel;
+    private SessionStorage sessionStorage;
+    private CourseCatalogAdapter courseCatalogAdapter;
+
+    private View loadingIndicator;
+    private TextView statusText;
+    private Button retryButton;
+    private Button allFilterButton;
+    private Button beginnerFilterButton;
+    private Button intermediateFilterButton;
 
     public HomeFragment() {
         super(R.layout.fragment_home);
@@ -31,102 +46,151 @@ public class HomeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        SessionStorage session = new SessionStorage(requireContext());
+        authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+        courseCatalogViewModel = new ViewModelProvider(this).get(CourseCatalogViewModel.class);
+        sessionStorage = new SessionStorage(requireContext());
 
-        if (!isSessionValid(session)) {
+        if (!isSessionValid()) {
             redirectToLogin(view);
             return;
         }
 
-        bindGreeting(view);
-        setupFeaturedCourses(view);
-        setupPopularCourses(view);
+        bindSessionData(view);
+        setupRecyclerView(view);
+        setupFilterButtons(view);
 
-        view.findViewById(R.id.seeAllFeatured).setOnClickListener(v -> switchToCoursesTab());
-        view.findViewById(R.id.seeAllPopular).setOnClickListener(v -> switchToCoursesTab());
-    }
+        loadingIndicator = view.findViewById(R.id.loadingIndicator);
+        statusText = view.findViewById(R.id.statusText);
+        retryButton = view.findViewById(R.id.retryButton);
 
-    private boolean isSessionValid(SessionStorage session) {
-        return FirebaseAuth.getInstance().getCurrentUser() != null && session.hasSession();
-    }
+        retryButton.setOnClickListener(v -> reloadCurrentFilter());
+        view.findViewById(R.id.logoutButton).setOnClickListener(v -> handleLogout(view));
 
-    private void bindGreeting(View view) {
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        TextView greetingName = view.findViewById(R.id.greetingName);
+        courseCatalogViewModel.getUiState().observe(getViewLifecycleOwner(), this::renderCatalogState);
 
-        if (user != null && user.getDisplayName() != null && !user.getDisplayName().isEmpty()) {
-            greetingName.setText(user.getDisplayName().split(" ")[0]);
-        } else if (user != null && user.getEmail() != null) {
-            String email = user.getEmail();
-            int at = email.indexOf('@');
-            String name = at > 0 ? email.substring(0, at) : email;
-            greetingName.setText(name.substring(0, 1).toUpperCase() + name.substring(1));
+        CourseCatalogUiState currentState = courseCatalogViewModel.getUiState().getValue();
+        if (currentState == null
+                || (currentState.courses.isEmpty() && currentState.errorMessage == null && !currentState.loading)) {
+            courseCatalogViewModel.loadCourses(null);
         } else {
-            greetingName.setText("Learner");
+            updateFilterButtons(currentState.selectedCategory);
         }
     }
 
-    private void setupFeaturedCourses(View view) {
-        List<CourseSummary> featured = new ArrayList<>();
-        featured.add(makeCourse("1", "Android Development Fundamentals",
-                "Build your first Android app from scratch.", "BEGINNER", "en"));
-        featured.add(makeCourse("3", "Machine Learning with Python",
-                "Hands-on ML projects with scikit-learn and TensorFlow.", "INTERMEDIATE", "en"));
-        featured.add(makeCourse("5", "Advanced Kotlin Coroutines",
-                "Master async programming with Flow and coroutines.", "ADVANCED", "en"));
-
-        CourseAdapter adapter = new CourseAdapter(true);
-        adapter.setCourses(featured);
-        adapter.setOnCourseClickListener(course -> navigateToDetail(view, course));
-
-        RecyclerView recycler = view.findViewById(R.id.featuredCoursesRecycler);
-        recycler.setLayoutManager(
-                new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
-        recycler.setAdapter(adapter);
+    private void setupRecyclerView(@NonNull View view) {
+        RecyclerView courseRecyclerView = view.findViewById(R.id.courseRecyclerView);
+        courseCatalogAdapter = new CourseCatalogAdapter(this::openCourseDetail);
+        courseRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        courseRecyclerView.setAdapter(courseCatalogAdapter);
     }
 
-    private void setupPopularCourses(View view) {
-        List<CourseSummary> popular = new ArrayList<>();
-        popular.add(makeCourse("2", "UI/UX Design Principles",
-                "Typography, color, layout, and user flows.", "BEGINNER", "en"));
-        popular.add(makeCourse("4", "Backend APIs with Node.js",
-                "RESTful APIs, auth systems, and database integrations.", "INTERMEDIATE", "en"));
-        popular.add(makeCourse("7", "Web Design with CSS Grid",
-                "Responsive layouts using CSS Grid and Flexbox.", "BEGINNER", "en"));
+    private void setupFilterButtons(@NonNull View view) {
+        allFilterButton = view.findViewById(R.id.allFilterButton);
+        beginnerFilterButton = view.findViewById(R.id.beginnerFilterButton);
+        intermediateFilterButton = view.findViewById(R.id.intermediateFilterButton);
 
-        CourseAdapter adapter = new CourseAdapter(false);
-        adapter.setCourses(popular);
-        adapter.setOnCourseClickListener(course -> navigateToDetail(view, course));
-
-        RecyclerView recycler = view.findViewById(R.id.popularCoursesRecycler);
-        recycler.setAdapter(adapter);
+        // The backend currently maps the category query to the seeded level bucket.
+        allFilterButton.setOnClickListener(v -> courseCatalogViewModel.loadCourses(null));
+        beginnerFilterButton.setOnClickListener(v -> courseCatalogViewModel.loadCourses("BEGINNER"));
+        intermediateFilterButton.setOnClickListener(v -> courseCatalogViewModel.loadCourses("INTERMEDIATE"));
     }
 
-    private void navigateToDetail(View view, CourseSummary course) {
+    private void renderCatalogState(CourseCatalogUiState state) {
+        if (state == null) {
+            return;
+        }
+
+        updateFilterButtons(state.selectedCategory);
+        loadingIndicator.setVisibility(state.loading ? View.VISIBLE : View.GONE);
+
+        if (state.loading) {
+            statusText.setVisibility(View.VISIBLE);
+            statusText.setText(R.string.catalog_loading);
+            retryButton.setVisibility(View.GONE);
+            courseCatalogAdapter.submitList(Collections.emptyList());
+            return;
+        }
+
+        if (state.errorMessage != null && !state.errorMessage.isBlank()) {
+            statusText.setVisibility(View.VISIBLE);
+            statusText.setText(state.errorMessage);
+            retryButton.setVisibility(View.VISIBLE);
+            courseCatalogAdapter.submitList(Collections.emptyList());
+            return;
+        }
+
+        retryButton.setVisibility(View.GONE);
+
+        if (state.courses.isEmpty()) {
+            statusText.setVisibility(View.VISIBLE);
+            statusText.setText(R.string.catalog_empty);
+        } else {
+            statusText.setVisibility(View.GONE);
+        }
+
+        courseCatalogAdapter.submitList(state.courses);
+    }
+
+    private void updateFilterButtons(String category) {
+        styleFilterButton(allFilterButton, category == null);
+        styleFilterButton(beginnerFilterButton, "BEGINNER".equals(category));
+        styleFilterButton(intermediateFilterButton, "INTERMEDIATE".equals(category));
+    }
+
+    private void styleFilterButton(Button button, boolean selected) {
+        if (button == null) {
+            return;
+        }
+
+        button.setBackgroundResource(selected
+                ? R.drawable.bg_catalog_filter_button_active
+                : R.drawable.bg_catalog_filter_button);
+        button.setTextColor(requireContext().getColor(selected
+                ? android.R.color.white
+                : R.color.catalog_text_primary));
+    }
+
+    private void reloadCurrentFilter() {
+        CourseCatalogUiState state = courseCatalogViewModel.getUiState().getValue();
+        courseCatalogViewModel.loadCourses(state != null ? state.selectedCategory : null);
+    }
+
+    private boolean isSessionValid() {
+        boolean hasFirebaseUser = FirebaseAuth.getInstance().getCurrentUser() != null;
+        boolean hasLocalSession = sessionStorage.hasSession();
+        return hasFirebaseUser && hasLocalSession;
+    }
+
+    private void bindSessionData(@NonNull View view) {
+        String role = sessionStorage.getRole();
+        String userId = sessionStorage.getUserId();
+
+        TextView roleText = view.findViewById(R.id.roleText);
+        TextView userIdText = view.findViewById(R.id.userIdText);
+
+        // Showing the synced role and internal UUID proves this is the authenticated live catalog.
+        roleText.setText(getString(R.string.catalog_signed_in_as, role != null ? role : "Unknown"));
+        userIdText.setText(getString(R.string.catalog_internal_id, userId != null ? userId : "Unavailable"));
+    }
+
+    private void openCourseDetail(CourseSummary courseSummary) {
         Bundle args = new Bundle();
-        args.putString("courseId", course.id);
-        args.putString("courseTitle", course.title);
-        args.putString("courseLevel", course.level);
-        args.putString("courseLanguage", course.languageCode);
-        args.putString("courseDesc", course.shortDescription);
-        Navigation.findNavController(view)
+        args.putString("courseId", courseSummary.id);
+        Navigation.findNavController(requireView())
                 .navigate(R.id.action_homeFragment_to_courseDetailFragment, args);
     }
 
-    private void switchToCoursesTab() {
-        BottomNavigationView nav = requireActivity().findViewById(R.id.bottomNavView);
-        if (nav != null) nav.setSelectedItemId(R.id.coursesFragment);
+    private void handleLogout(@NonNull View view) {
+        authViewModel.signOut();
+        redirectToLogin(view);
     }
 
-    private void redirectToLogin(View view) {
+    private void redirectToLogin(@NonNull View view) {
+        NavOptions navOptions = new NavOptions.Builder()
+                .setPopUpTo(R.id.nav_graph, true)
+                .build();
+
         Navigation.findNavController(view)
-                .navigate(R.id.action_homeFragment_to_loginFragment);
-    }
-
-    private CourseSummary makeCourse(String id, String title, String desc, String level, String lang) {
-        CourseSummary c = new CourseSummary();
-        c.id = id; c.title = title; c.shortDescription = desc;
-        c.level = level; c.languageCode = lang;
-        return c;
+                .navigate(R.id.action_homeFragment_to_loginFragment, null, navOptions);
     }
 }

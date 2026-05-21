@@ -416,7 +416,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-medium"
                 android:text="Log Out"
-                android:textColor="#CC4444"
+                android:textColor="@color/brand_error"
                 android:textSize="15sp"
                 android:textStyle="bold" />
         </LinearLayout>

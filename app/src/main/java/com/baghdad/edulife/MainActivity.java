@@ -29,11 +29,10 @@ public class MainActivity extends AppCompatActivity {
 
         BottomNavigationView bottomNav = findViewById(R.id.bottomNavView);
         View mainContainer = findViewById(R.id.mainContainer);
-
         View navHostView = findViewById(R.id.main);
+
         ViewCompat.setOnApplyWindowInsetsListener(mainContainer, (v, insets) -> {
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            // Fragment container gets top/side insets; bottom nav gets bottom inset.
             navHostView.setPadding(bars.left, bars.top, bars.right, 0);
             bottomNav.setPadding(bars.left, 0, bars.right, bars.bottom);
             return insets;
@@ -43,7 +42,6 @@ public class MainActivity extends AppCompatActivity {
             configureNavigationStartDestination();
         }
 
-        // Wire bottom nav after graph is set.
         NavHostFragment navHostFragment =
                 (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.main);
         if (navHostFragment != null) {
@@ -72,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
         SessionStorage sessionStorage = new SessionStorage(this);
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
+        // Start inside the authenticated shell only when Firebase and backend sync state both exist.
         if (firebaseUser != null && sessionStorage.hasSession()) {
             navGraph.setStartDestination(R.id.homeFragment);
         } else if (onboardingPreferences.hasSeenOnboarding()) {
