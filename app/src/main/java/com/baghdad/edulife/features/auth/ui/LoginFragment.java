@@ -27,6 +27,7 @@ public class LoginFragment extends Fragment {
     private EditText passwordEditText;
     private View loginErrorCard;
     private TextView loginErrorText;
+    private TextView loginButtonText;
 
     public LoginFragment() {
         super(R.layout.fragment_login);
@@ -43,6 +44,7 @@ public class LoginFragment extends Fragment {
         loginButton = view.findViewById(R.id.loginButton);
         loginErrorCard = view.findViewById(R.id.loginErrorCard);
         loginErrorText = view.findViewById(R.id.loginErrorText);
+        loginButtonText = view.findViewById(R.id.loginButtonText);
         ImageButton passwordVisibilityButton = view.findViewById(R.id.passwordVisibilityButton);
 
         passwordVisibilityButton.setOnClickListener(v -> togglePasswordVisibility(passwordEditText));
@@ -88,6 +90,10 @@ public class LoginFragment extends Fragment {
 
         loginButton.setEnabled(!state.loading);
         loginButton.setAlpha(state.loading ? 0.65f : 1f);
+        emailEditText.setEnabled(!state.loading);
+        passwordEditText.setEnabled(!state.loading);
+        // Mirror the backend-sync wait state in the button text so users know the request is still being processed.
+        loginButtonText.setText(state.loading ? "Signing in..." : "Log in");
 
         if (state.loading) {
             hideError();
@@ -122,6 +128,9 @@ public class LoginFragment extends Fragment {
     private String friendlyMessage(String raw) {
         if (raw.startsWith("Network error during sync:")) {
             return "Cannot reach the server. Make sure your phone is on the right network and the backend is running.";
+        }
+        if (raw.startsWith("Backend sync timed out.")) {
+            return "The server did not answer in time. Check that the backend is running and reachable at the configured IP address.";
         }
         if (raw.startsWith("Backend sync failed.")) {
             return "Server rejected the request (" + raw.replace("Backend sync failed. Status: ", "HTTP ") + "). Contact support if this persists.";

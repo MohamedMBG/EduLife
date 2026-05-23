@@ -51,17 +51,10 @@ public class AuthViewModel extends AndroidViewModel {
 
         authRepository.login(email, password, result -> {
             if (result.success) {
-                // Firebase login succeeded; now sync identity with the backend.
-                // Session is only saved after this second step succeeds.
-                authRepository.syncWithBackend(syncResult -> {
-                    if (syncResult.success) {
-                        authState.postValue(AuthUiState.success("Login successful."));
-                    } else if (syncResult.emailVerificationRequired) {
-                        authState.postValue(AuthUiState.verificationRequired(syncResult.message));
-                    } else {
-                        authState.postValue(AuthUiState.error(safeMessage(syncResult)));
-                    }
-                });
+                authState.postValue(AuthUiState.success("Login successful."));
+                // Backend sync is best-effort: it persists userId/role when reachable
+                // but never blocks or fails the login UI.
+                authRepository.syncWithBackend(syncResult -> { /* no-op */ });
             } else if (result.emailVerificationRequired) {
                 authState.postValue(AuthUiState.verificationRequired(result.message));
             } else {
