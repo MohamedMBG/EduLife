@@ -155,9 +155,7 @@ public class HomeFragment extends Fragment {
     }
 
     private boolean isSessionValid() {
-        boolean hasFirebaseUser = FirebaseAuth.getInstance().getCurrentUser() != null;
-        boolean hasLocalSession = sessionStorage.hasSession();
-        return hasFirebaseUser && hasLocalSession;
+        return FirebaseAuth.getInstance().getCurrentUser() != null;
     }
 
     private void bindSessionData(@NonNull View view) {

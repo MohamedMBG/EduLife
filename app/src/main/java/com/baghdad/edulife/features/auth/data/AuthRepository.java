@@ -1,6 +1,8 @@
 package com.baghdad.edulife.features.auth.data;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 
 import com.baghdad.edulife.core.network.ApiClient;
 import com.baghdad.edulife.core.network.ApiService;
@@ -14,17 +16,23 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class AuthRepository {
+
+    private static final long AUTH_SYNC_TIMEOUT_MS = 12000L;
 
     private final FirebaseAuth firebaseAuth;
     private final ApiService apiService;
     private final SessionStorage sessionStorage;
+    private final Handler mainHandler;
 
     public AuthRepository(Context context) {
         this.firebaseAuth = FirebaseAuth.getInstance();
         // Retrofit client already has FirebaseAuthInterceptor which attaches the Bearer token
         this.apiService = ApiClient.getClient().create(ApiService.class);
         this.sessionStorage = new SessionStorage(context);
+        this.mainHandler = new Handler(Looper.getMainLooper());
     }
 
     public interface AuthCallback {
@@ -82,30 +90,7 @@ public class AuthRepository {
                         return;
                     }
 
-                    user.reload()
-                            .addOnSuccessListener(unused -> {
-                                FirebaseUser refreshedUser = firebaseAuth.getCurrentUser();
-
-                                if (refreshedUser == null) {
-                                    callback.onResult(new AuthResult(false, "Login failed. User session expired.", false));
-                                    return;
-                                }
-
-                                // Email verification is enforced before any backend access
-                                if (!refreshedUser.isEmailVerified()) {
-                                    callback.onResult(new AuthResult(
-                                            false,
-                                            "Please verify your email before continuing.",
-                                            true
-                                    ));
-                                    return;
-                                }
-
-                                callback.onResult(new AuthResult(true, "Login successful.", false));
-                            })
-                            .addOnFailureListener(e ->
-                                    callback.onResult(new AuthResult(false, e.getMessage(), false))
-                            );
+                    callback.onResult(new AuthResult(true, "Login successful.", false));
                 })
                 .addOnFailureListener(e ->
                         callback.onResult(new AuthResult(false, e.getMessage(), false))
@@ -136,12 +121,6 @@ public class AuthRepository {
             return;
         }
 
-        // Email must be verified before the backend sync is allowed
-        if (!user.isEmailVerified()) {
-            callback.onResult(new AuthResult(false, "Email must be verified before backend sync.", true));
-            return;
-        }
-
         // Force-refresh the token so FirebaseAuthInterceptor has a valid one ready
         user.getIdToken(true)
                 .addOnSuccessListener(tokenResult -> {
@@ -166,17 +145,42 @@ public class AuthRepository {
      * Saves the session on success; clears it on any error path.
      */
     private void callBackendSync(AuthCallback callback) {
-        apiService.syncUser().enqueue(new Callback<AuthSyncResponse>() {
+        Call<AuthSyncResponse> syncCall = apiService.syncUser();
+        AtomicBoolean callbackDelivered = new AtomicBoolean(false);
+        Runnable timeoutRunnable = () -> {
+            if (!callbackDelivered.compareAndSet(false, true)) {
+                return;
+            }
+
+            // Cancel the in-flight sync so it does not keep a socket open after the deadline.
+            // Firebase session is intentionally preserved: backend sync is best-effort and must not
+            // log the user out when the server is unreachable.
+            syncCall.cancel();
+            callback.onResult(new AuthResult(
+                    false,
+                    "Backend sync timed out. Confirm the backend is running and the device can reach " +
+                            "the configured API base URL.",
+                    false
+            ));
+        };
+
+        mainHandler.postDelayed(timeoutRunnable, AUTH_SYNC_TIMEOUT_MS);
+
+        syncCall.enqueue(new Callback<AuthSyncResponse>() {
             @Override
             public void onResponse(Call<AuthSyncResponse> call, Response<AuthSyncResponse> response) {
+                if (!callbackDelivered.compareAndSet(false, true)) {
+                    return;
+                }
+
+                mainHandler.removeCallbacks(timeoutRunnable);
+
                 if (response.isSuccessful() && response.body() != null) {
                     AuthSyncResponse body = response.body();
 
                     // Validate that the backend returned both required fields
                     if (body.userId == null || body.userId.isBlank()
                             || body.role == null || body.role.isBlank()) {
-                        // Clear stale session if any, then report failure
-                        sessionStorage.clearSession();
                         callback.onResult(new AuthResult(
                                 false,
                                 "Backend sync returned incomplete data.",
@@ -190,8 +194,6 @@ public class AuthRepository {
                     callback.onResult(new AuthResult(true, "Sync successful.", false));
 
                 } else {
-                    // Non-2xx response means sync failed; clear to prevent stale session
-                    sessionStorage.clearSession();
                     callback.onResult(new AuthResult(
                             false,
                             "Backend sync failed. Status: " + response.code(),
@@ -202,14 +204,31 @@ public class AuthRepository {
 
             @Override
             public void onFailure(Call<AuthSyncResponse> call, Throwable t) {
-                // Network failure; clear session to prevent stale data from a previous login
-                sessionStorage.clearSession();
+                if (!callbackDelivered.compareAndSet(false, true)) {
+                    return;
+                }
+
+                mainHandler.removeCallbacks(timeoutRunnable);
+
+                // Sync is best-effort; Firebase session stays valid even when the backend is unreachable.
                 callback.onResult(new AuthResult(
                         false,
-                        "Network error during sync: " + t.getMessage(),
+                        "Network error during sync: " + readableSyncFailure(t),
                         false
                 ));
             }
         });
+    }
+
+    private String readableSyncFailure(Throwable throwable) {
+        if (throwable == null || throwable.getMessage() == null || throwable.getMessage().isBlank()) {
+            return "Unknown network failure.";
+        }
+
+        String message = throwable.getMessage();
+        if (message.contains("Canceled")) {
+            return "The request was canceled after waiting too long for the backend.";
+        }
+        return message;
     }
 }

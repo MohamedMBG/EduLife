@@ -33,8 +33,12 @@ public class ApiClient {
             OkHttpClient okHttpClient = new OkHttpClient.Builder()
                     .addInterceptor(new FirebaseAuthInterceptor()) // attaches Bearer token
                     .addInterceptor(loggingInterceptor)            // optional (debug only)
+                    // Fail fast when the backend IP is unreachable so the login screen can recover instead of
+                    // leaving the learner stuck in loading during /auth/sync.
                     .connectTimeout(30, TimeUnit.SECONDS)
+                    .writeTimeout(15, TimeUnit.SECONDS)
                     .readTimeout(30, TimeUnit.SECONDS)
+                    .callTimeout(35, TimeUnit.SECONDS)
                     .authenticator(new FirebaseTokenAuthenticator())
                     .build();
 
