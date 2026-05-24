@@ -2,15 +2,18 @@ package com.baghdad.edulife.features.courses.ui;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 
 import com.baghdad.edulife.R;
+import com.baghdad.edulife.features.courses.model.EnrollUiState;
+import com.baghdad.edulife.features.courses.viewmodel.EnrollmentViewModel;
 
 import java.util.Locale;
 
@@ -47,11 +50,48 @@ public class EnrollCourseFragment extends Fragment {
         ((TextView) view.findViewById(R.id.enrollInstructorName))
                 .setText("EduLife Team");
 
+        Button enrollButton = view.findViewById(R.id.enrollButton);
+
+        EnrollmentViewModel vm = new ViewModelProvider(this).get(EnrollmentViewModel.class);
+
+        vm.getEnrollState().observe(getViewLifecycleOwner(), state -> {
+            applyState(view, enrollButton, state);
+
+            if (state.enrolled) {
+                Navigation.findNavController(view).popBackStack();
+            }
+        });
+
         view.findViewById(R.id.enrollBackButton).setOnClickListener(v ->
                 Navigation.findNavController(view).popBackStack());
 
-        view.findViewById(R.id.enrollButton).setOnClickListener(v ->
-                Toast.makeText(requireContext(), "Enrollment coming in next sprint!", Toast.LENGTH_SHORT).show());
+        enrollButton.setOnClickListener(v -> {
+            if (!courseId.isBlank()) {
+                vm.enroll(courseId);
+            }
+        });
+    }
+
+    private void applyState(View root, Button enrollButton, EnrollUiState state) {
+        enrollButton.setEnabled(!state.loading);
+
+        if (state.loading) {
+            enrollButton.setText(R.string.enrolling);
+            return;
+        }
+
+        enrollButton.setText(R.string.enroll_cta);
+
+        if (state.errorMessage != null) {
+            TextView errorView = root.findViewById(R.id.enrollErrorText);
+            if (errorView != null) {
+                errorView.setVisibility(View.VISIBLE);
+                errorView.setText(state.errorMessage);
+            }
+        } else {
+            TextView errorView = root.findViewById(R.id.enrollErrorText);
+            if (errorView != null) errorView.setVisibility(View.GONE);
+        }
     }
 
     private String normalizeLabel(String raw) {

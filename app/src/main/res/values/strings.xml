@@ -55,6 +55,7 @@
     <string name="enroll_instructor_initial">E</string>
     <string name="enroll_disclaimer">Free to enroll. Certificate requires passing the final exam.</string>
     <string name="enroll_cta">Enroll Now — It\'s Free</string>
+    <string name="enrolling">Enrolling…</string>
 
     <!-- Lesson player -->
     <string name="lesson_player_tap_to_play">Tap to play</string>

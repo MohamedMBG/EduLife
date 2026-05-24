@@ -7,6 +7,9 @@ import com.baghdad.edulife.core.network.ApiService;
 import com.baghdad.edulife.features.courses.model.CourseDetail;
 import com.baghdad.edulife.features.courses.model.CoursePageResponse;
 import com.baghdad.edulife.features.courses.model.CourseSummary;
+import com.baghdad.edulife.features.courses.model.EnrolledCourse;
+import com.baghdad.edulife.features.courses.model.EnrollmentResponse;
+import com.baghdad.edulife.features.courses.model.EnrollRequest;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -130,6 +133,56 @@ public class CourseRepository {
             @Override
             public void onFailure(@NonNull Call<CourseDetail> call, @NonNull Throwable t) {
                 callback.onError("Course detail network error: " + safeMessage(t));
+            }
+        });
+    }
+
+    public interface EnrollCallback {
+        void onSuccess(EnrollmentResponse response);
+        void onError(String message);
+    }
+
+    public interface MyEnrollmentsCallback {
+        void onSuccess(List<EnrolledCourse> courses);
+        void onError(String message);
+    }
+
+    public void enrollCourse(String courseId, EnrollCallback callback) {
+        apiService.enrollCourse(new EnrollRequest(courseId)).enqueue(new Callback<EnrollmentResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<EnrollmentResponse> call, @NonNull Response<EnrollmentResponse> response) {
+                if (response.code() == 409) {
+                    callback.onSuccess(response.body());
+                    return;
+                }
+                if (!response.isSuccessful() || response.body() == null) {
+                    callback.onError("Enrollment failed. Status: " + response.code());
+                    return;
+                }
+                callback.onSuccess(response.body());
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<EnrollmentResponse> call, @NonNull Throwable t) {
+                callback.onError("Network error: " + safeMessage(t));
+            }
+        });
+    }
+
+    public void getMyEnrollments(MyEnrollmentsCallback callback) {
+        apiService.getMyEnrollments().enqueue(new Callback<List<EnrolledCourse>>() {
+            @Override
+            public void onResponse(@NonNull Call<List<EnrolledCourse>> call, @NonNull Response<List<EnrolledCourse>> response) {
+                if (!response.isSuccessful() || response.body() == null) {
+                    callback.onError("Failed to load enrollments. Status: " + response.code());
+                    return;
+                }
+                callback.onSuccess(response.body());
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<List<EnrolledCourse>> call, @NonNull Throwable t) {
+                callback.onError("Network error: " + safeMessage(t));
             }
         });
     }

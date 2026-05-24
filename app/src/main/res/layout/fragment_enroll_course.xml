@@ -385,6 +385,16 @@
         android:paddingEnd="20dp"
         android:paddingBottom="24dp">
 
+        <TextView
+            android:id="@+id/enrollErrorText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:gravity="center"
+            android:textColor="@color/brand_error"
+            android:textSize="13sp"
+            android:visibility="gone" />
+
         <Button
             android:id="@+id/enrollButton"
             android:layout_width="match_parent"

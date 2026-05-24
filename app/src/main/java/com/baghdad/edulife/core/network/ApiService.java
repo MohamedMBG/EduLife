@@ -4,8 +4,14 @@ import com.baghdad.edulife.features.auth.model.AuthSyncResponse;
 import com.baghdad.edulife.features.courses.model.CourseDetail;
 import com.baghdad.edulife.features.courses.model.CoursePageResponse;
 import com.baghdad.edulife.features.courses.model.CourseSummary;
+import com.baghdad.edulife.features.courses.model.EnrolledCourse;
+import com.baghdad.edulife.features.courses.model.EnrollmentResponse;
+import com.baghdad.edulife.features.courses.model.EnrollRequest;
+
+import java.util.List;
 
 import retrofit2.Call;
+import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
 import retrofit2.http.POST;
@@ -45,5 +51,19 @@ public interface ApiService {
      */
     @GET("courses/{courseId}")
     Call<CourseDetail> getCourseDetail(@Path("courseId") String courseId);
+
+    /**
+     * Enrolls the authenticated user in a course.
+     * Endpoint: POST /api/v1/enrollments
+     */
+    @POST("enrollments")
+    Call<EnrollmentResponse> enrollCourse(@Body EnrollRequest request);
+
+    /**
+     * Returns the authenticated user's active enrollments with course metadata.
+     * Endpoint: GET /api/v1/enrollments
+     */
+    @GET("enrollments")
+    Call<List<EnrolledCourse>> getMyEnrollments();
 }
 
