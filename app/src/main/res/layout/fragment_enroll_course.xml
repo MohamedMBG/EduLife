@@ -3,6 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     android:background="@color/catalog_background"
     android:orientation="vertical">
 
@@ -15,9 +16,9 @@
         android:elevation="4dp"
         android:orientation="vertical"
         android:paddingStart="20dp"
-        android:paddingTop="16dp"
+        android:paddingTop="20dp"
         android:paddingEnd="20dp"
-        android:paddingBottom="14dp">
+        android:paddingBottom="18dp">
 
         <!-- Back row -->
         <LinearLayout
@@ -50,9 +51,9 @@
             android:id="@+id/enrollCourseTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="14dp"
             android:textColor="@color/catalog_text_primary"
-            android:textSize="24sp"
+            android:textSize="26sp"
             android:textStyle="bold" />
 
         <!-- Badges row -->
@@ -122,10 +123,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingStart="20dp"
-            android:paddingTop="16dp"
-            android:paddingEnd="20dp"
-            android:paddingBottom="16dp">
+            android:paddingStart="24dp"
+            android:paddingTop="24dp"
+            android:paddingEnd="24dp"
+            android:paddingBottom="24dp">
 
             <!-- Description card -->
             <LinearLayout
@@ -133,7 +134,7 @@
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_enroll_card"
                 android:orientation="vertical"
-                android:padding="18dp">
+                android:padding="22dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -157,10 +158,10 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
+                android:layout_marginTop="20dp"
                 android:background="@drawable/bg_enroll_card"
                 android:orientation="vertical"
-                android:padding="18dp">
+                android:padding="22dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -174,7 +175,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
+                    android:layout_marginTop="18dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
@@ -184,11 +185,12 @@
                         android:background="@drawable/bg_enroll_perk_icon"
                         android:gravity="center">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="📚"
-                            android:textSize="16sp" />
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_book_open"
+                            android:tint="@color/catalog_primary"
+                            android:contentDescription="@null" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -219,7 +221,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
+                    android:layout_marginTop="18dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
@@ -229,11 +231,12 @@
                         android:background="@drawable/bg_enroll_perk_icon"
                         android:gravity="center">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="🎬"
-                            android:textSize="16sp" />
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_videocam"
+                            android:tint="@color/catalog_primary"
+                            android:contentDescription="@null" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -264,7 +267,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
+                    android:layout_marginTop="18dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
@@ -274,11 +277,12 @@
                         android:background="@drawable/bg_enroll_perk_icon"
                         android:gravity="center">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="🏅"
-                            android:textSize="16sp" />
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_workspace_premium"
+                            android:tint="@color/catalog_primary"
+                            android:contentDescription="@null" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -310,11 +314,11 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
+                android:layout_marginTop="20dp"
                 android:background="@drawable/bg_enroll_card"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="18dp">
+                android:padding="22dp">
 
                 <LinearLayout
                     android:layout_width="48dp"
@@ -360,7 +364,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="28dp"
                 android:gravity="center"
                 android:text="@string/enroll_disclaimer"
                 android:textColor="@color/catalog_text_secondary"

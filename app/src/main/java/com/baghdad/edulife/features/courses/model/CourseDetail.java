@@ -10,6 +10,7 @@ public class CourseDetail {
     public String description;
     public String level;
     public String languageCode;
+    public String imageUrl;
     public String publishedAt;
     public List<CourseSection> sections;
 }

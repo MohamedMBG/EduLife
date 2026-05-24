@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="16dp"
+    android:layout_marginBottom="22dp"
     android:foreground="?attr/selectableItemBackground"
     android:clickable="true"
     android:focusable="true"
@@ -14,7 +14,7 @@
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="210dp">
+        android:layout_height="240dp">
 
         <ImageView
             android:id="@+id/courseHeroImage"
@@ -52,7 +52,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:orientation="vertical"
-            android:padding="18dp">
+            android:padding="22dp">
 
             <TextView
                 android:id="@+id/courseTitleText"
@@ -66,14 +66,14 @@
                 android:shadowDy="1"
                 android:shadowRadius="4"
                 android:textColor="#FFFFFFFF"
-                android:textSize="20sp"
+                android:textSize="22sp"
                 tools:text="Math Bac SM - Algebra Foundations" />
 
             <TextView
                 android:id="@+id/courseDescriptionText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
+                android:layout_marginTop="8dp"
                 android:alpha="0.88"
                 android:ellipsize="end"
                 android:lineSpacingMultiplier="1.25"
@@ -85,7 +85,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
+                android:layout_marginTop="18dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -100,12 +100,12 @@
                     android:paddingEnd="12dp"
                     android:paddingBottom="5dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="★"
-                        android:textColor="#FFD24A"
-                        android:textSize="13sp" />
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:src="@drawable/ic_star"
+                        android:tint="#FFD24A"
+                        android:contentDescription="@null" />
 
                     <TextView
                         android:id="@+id/courseRatingText"

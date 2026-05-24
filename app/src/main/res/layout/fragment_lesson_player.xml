@@ -3,13 +3,14 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     android:background="@color/catalog_background"
     android:orientation="vertical">
 
     <!-- Video / Media area -->
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="240dp"
+        android:layout_height="260dp"
         android:background="@color/lesson_player_video_bg">
 
         <!-- Placeholder thumbnail / play area -->
@@ -27,12 +28,12 @@
                 android:background="@drawable/bg_lesson_play_button"
                 android:gravity="center">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="▶"
-                    android:textColor="@color/catalog_primary"
-                    android:textSize="28sp" />
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/ic_play_arrow"
+                    android:tint="@color/catalog_primary"
+                    android:contentDescription="@null" />
             </LinearLayout>
 
             <TextView
@@ -59,12 +60,13 @@
             android:paddingEnd="10dp"
             android:paddingBottom="5dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="⏱ "
-                android:textColor="@color/white"
-                android:textSize="11sp" />
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_marginEnd="4dp"
+                android:src="@drawable/ic_timer"
+                android:tint="@color/white"
+                android:contentDescription="@null" />
 
             <TextView
                 android:id="@+id/lessonDurationText"
@@ -96,9 +98,9 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="20dp"
-        android:paddingTop="10dp"
+        android:paddingTop="12dp"
         android:paddingEnd="20dp"
-        android:paddingBottom="10dp">
+        android:paddingBottom="12dp">
 
         <TextView
             android:id="@+id/lessonTypeBadge"
@@ -151,9 +153,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingStart="20dp"
-            android:paddingTop="20dp"
-            android:paddingEnd="20dp">
+            android:paddingStart="24dp"
+            android:paddingTop="24dp"
+            android:paddingEnd="24dp">
 
             <!-- Title -->
             <TextView
@@ -177,8 +179,8 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:layout_marginTop="18dp"
-                android:layout_marginBottom="18dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="24dp"
                 android:background="@color/catalog_border" />
 
             <!-- About this lesson -->
@@ -203,10 +205,10 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="28dp"
                 android:background="@drawable/bg_lesson_notes_card"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="20dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -214,11 +216,13 @@
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="📝 "
-                        android:textSize="14sp" />
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_marginEnd="6dp"
+                        android:src="@drawable/ic_notes"
+                        android:tint="@color/catalog_primary"
+                        android:contentDescription="@null" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -250,14 +254,14 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="20dp"
-        android:paddingTop="12dp"
+        android:paddingTop="14dp"
         android:paddingEnd="20dp"
-        android:paddingBottom="20dp">
+        android:paddingBottom="24dp">
 
         <Button
             android:id="@+id/lessonPrevButton"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="52dp"
             android:layout_marginEnd="8dp"
             android:layout_weight="1"
             android:background="@drawable/bg_lesson_nav_button_outline"
@@ -270,7 +274,7 @@
         <Button
             android:id="@+id/lessonNextButton"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="52dp"
             android:layout_marginStart="8dp"
             android:layout_weight="1"
             android:background="@drawable/bg_lesson_nav_button_filled"

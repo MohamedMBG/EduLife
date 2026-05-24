@@ -6,6 +6,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -87,7 +89,16 @@ public class CourseCatalogAdapter extends RecyclerView.Adapter<CourseCatalogAdap
                     normalizeLabel(course.languageCode)
             ));
 
-            heroImage.setImageResource(heroForLevel(course.level));
+            if (course.imageUrl != null && !course.imageUrl.isBlank()) {
+                Glide.with(itemView.getContext())
+                        .load(course.imageUrl)
+                        .placeholder(heroForLevel(course.level))
+                        .error(heroForLevel(course.level))
+                        .centerCrop()
+                        .into(heroImage);
+            } else {
+                heroImage.setImageResource(heroForLevel(course.level));
+            }
 
             // Ratings are not yet served by the backend; derive a stable value per course id
             // so the catalog reads as polished without showing fake activity on every scroll.

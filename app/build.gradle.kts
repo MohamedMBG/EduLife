@@ -110,4 +110,7 @@ dependencies {
 
     // RecyclerView for course catalog and featured lists
     implementation("androidx.recyclerview:recyclerview:1.3.2")
+
+    // Glide for loading remote course thumbnail images
+    implementation("com.github.bumptech.glide:glide:4.16.0")
 }
