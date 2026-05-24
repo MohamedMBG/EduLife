@@ -11,6 +11,7 @@ import com.baghdad.edulife.features.courses.data.CourseRepository;
 import com.baghdad.edulife.features.courses.model.EnrolledCourse;
 import com.baghdad.edulife.features.courses.model.EnrollmentResponse;
 import com.baghdad.edulife.features.courses.model.EnrollUiState;
+import com.baghdad.edulife.features.courses.model.UnenrollUiState;
 
 import java.util.List;
 
@@ -20,6 +21,9 @@ public class EnrollmentViewModel extends AndroidViewModel {
 
     private final MutableLiveData<EnrollUiState> enrollState =
             new MutableLiveData<>(EnrollUiState.idle());
+
+    private final MutableLiveData<UnenrollUiState> unenrollState =
+            new MutableLiveData<>(UnenrollUiState.idle());
 
     private final MutableLiveData<List<EnrolledCourse>> myEnrollments =
             new MutableLiveData<>();
@@ -31,6 +35,10 @@ public class EnrollmentViewModel extends AndroidViewModel {
 
     public LiveData<EnrollUiState> getEnrollState() {
         return enrollState;
+    }
+
+    public LiveData<UnenrollUiState> getUnenrollState() {
+        return unenrollState;
     }
 
     public LiveData<List<EnrolledCourse>> getMyEnrollments() {
@@ -49,6 +57,23 @@ public class EnrollmentViewModel extends AndroidViewModel {
             @Override
             public void onError(String message) {
                 enrollState.postValue(EnrollUiState.error(message));
+            }
+        });
+    }
+
+    public void unenroll(String enrollmentId) {
+        unenrollState.setValue(UnenrollUiState.loading());
+
+        courseRepository.unenroll(enrollmentId, new CourseRepository.UnenrollCallback() {
+            @Override
+            public void onSuccess() {
+                unenrollState.postValue(UnenrollUiState.success());
+                loadMyEnrollments();
+            }
+
+            @Override
+            public void onError(String message) {
+                unenrollState.postValue(UnenrollUiState.error(message));
             }
         });
     }

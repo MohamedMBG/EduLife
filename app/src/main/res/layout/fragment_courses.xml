@@ -25,7 +25,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="sans-serif-medium"
-            android:text="All Courses"
+            android:text="My Courses"
             android:textColor="@color/white"
             android:textSize="30sp"
             android:textStyle="bold" />
@@ -34,7 +34,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Explore our full course catalog"
+            android:text="Courses you&#8217;re enrolled in"
             android:textColor="@color/brand_text_on_primary_muted"
             android:textSize="15sp" />
     </LinearLayout>
@@ -132,6 +132,19 @@
         android:textColor="@color/brand_text_secondary"
         android:textSize="13sp"
         tools:text="8 courses available" />
+
+    <!-- EMPTY / ERROR STATE -->
+    <TextView
+        android:id="@+id/coursesEmptyText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="28dp"
+        android:layout_marginTop="48dp"
+        android:layout_marginEnd="28dp"
+        android:gravity="center"
+        android:textColor="@color/brand_text_secondary"
+        android:textSize="14sp"
+        android:visibility="gone" />
 
     <!-- COURSE LIST -->
     <androidx.recyclerview.widget.RecyclerView

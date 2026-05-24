@@ -12,6 +12,7 @@ import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
 import retrofit2.http.POST;
@@ -60,10 +61,18 @@ public interface ApiService {
     Call<EnrollmentResponse> enrollCourse(@Body EnrollRequest request);
 
     /**
-     * Returns the authenticated user's active enrollments with course metadata.
-     * Endpoint: GET /api/v1/enrollments
+     * Soft-deletes an enrollment the caller owns.
+     * Endpoint: DELETE /api/v1/enrollments/{id}
+     * Returns 204 on success, 403 if not owner, 404 if not found.
      */
-    @GET("enrollments")
+    @DELETE("enrollments/{id}")
+    Call<Void> unenroll(@Path("id") String enrollmentId);
+
+    /**
+     * Returns the authenticated user's active enrollments with full course summary.
+     * Endpoint: GET /api/v1/enrollments/me
+     */
+    @GET("enrollments/me")
     Call<List<EnrolledCourse>> getMyEnrollments();
 }
 

@@ -11,5 +11,6 @@ public record EnrolledCourseDto(
         String shortDescription,
         String level,
         String languageCode,
+        String imageUrl,
         Instant enrolledAt
 ) {}

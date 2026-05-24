@@ -55,4 +55,8 @@ public class Enrollment {
     public UUID getCourseId() { return courseId; }
     public Instant getEnrolledAt() { return enrolledAt; }
     public EnrollmentStatus getStatus() { return status; }
+
+    public void cancel() {
+        this.status = EnrollmentStatus.CANCELLED;
+    }
 }

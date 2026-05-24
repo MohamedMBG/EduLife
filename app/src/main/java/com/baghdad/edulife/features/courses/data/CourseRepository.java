@@ -147,6 +147,11 @@ public class CourseRepository {
         void onError(String message);
     }
 
+    public interface UnenrollCallback {
+        void onSuccess();
+        void onError(String message);
+    }
+
     public void enrollCourse(String courseId, EnrollCallback callback) {
         apiService.enrollCourse(new EnrollRequest(courseId)).enqueue(new Callback<EnrollmentResponse>() {
             @Override
@@ -164,6 +169,32 @@ public class CourseRepository {
 
             @Override
             public void onFailure(@NonNull Call<EnrollmentResponse> call, @NonNull Throwable t) {
+                callback.onError("Network error: " + safeMessage(t));
+            }
+        });
+    }
+
+    public void unenroll(String enrollmentId, UnenrollCallback callback) {
+        apiService.unenroll(enrollmentId).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+                if (response.code() == 403) {
+                    callback.onError("You don't have permission to unenroll from this course.");
+                    return;
+                }
+                if (response.code() == 404) {
+                    callback.onError("Enrollment not found.");
+                    return;
+                }
+                if (!response.isSuccessful()) {
+                    callback.onError("Unenroll failed. Status: " + response.code());
+                    return;
+                }
+                callback.onSuccess();
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
                 callback.onError("Network error: " + safeMessage(t));
             }
         });

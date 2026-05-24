@@ -31,11 +31,15 @@ public class HomeFragment extends Fragment {
     private CourseCatalogAdapter courseCatalogAdapter;
 
     private View loadingIndicator;
+    private View stateCard;
     private TextView statusText;
     private TextView retryButton;
     private TextView allFilterButton;
     private TextView beginnerFilterButton;
     private TextView intermediateFilterButton;
+    private TextView welcomeTitle;
+    private TextView welcomeSubtitle;
+    private TextView catalogSummaryText;
 
     public HomeFragment() {
         super(R.layout.fragment_home);
@@ -54,13 +58,17 @@ public class HomeFragment extends Fragment {
             return;
         }
 
-        bindSessionData(view);
-        setupRecyclerView(view);
-        setupFilterButtons(view);
-
+        stateCard = view.findViewById(R.id.stateCard);
         loadingIndicator = view.findViewById(R.id.loadingIndicator);
         statusText = view.findViewById(R.id.statusText);
         retryButton = view.findViewById(R.id.retryButton);
+        welcomeTitle = view.findViewById(R.id.welcomeTitle);
+        welcomeSubtitle = view.findViewById(R.id.welcomeSubtitle);
+        catalogSummaryText = view.findViewById(R.id.catalogSummaryText);
+
+        bindSessionData(view);
+        setupRecyclerView(view);
+        setupFilterButtons(view);
 
         retryButton.setOnClickListener(v -> reloadCurrentFilter());
         view.findViewById(R.id.logoutButton).setOnClickListener(v -> handleLogout(view));
@@ -103,28 +111,36 @@ public class HomeFragment extends Fragment {
         loadingIndicator.setVisibility(state.loading ? View.VISIBLE : View.GONE);
 
         if (state.loading) {
+            stateCard.setVisibility(View.VISIBLE);
             statusText.setVisibility(View.VISIBLE);
             statusText.setText(R.string.catalog_loading);
+            catalogSummaryText.setText(R.string.catalog_summary_loading);
             retryButton.setVisibility(View.GONE);
             courseCatalogAdapter.submitList(Collections.emptyList());
             return;
         }
 
         if (state.errorMessage != null && !state.errorMessage.isBlank()) {
+            stateCard.setVisibility(View.VISIBLE);
             statusText.setVisibility(View.VISIBLE);
             statusText.setText(state.errorMessage);
+            catalogSummaryText.setText(R.string.catalog_summary_error);
             retryButton.setVisibility(View.VISIBLE);
             courseCatalogAdapter.submitList(Collections.emptyList());
             return;
         }
 
+        stateCard.setVisibility(View.GONE);
         retryButton.setVisibility(View.GONE);
 
         if (state.courses.isEmpty()) {
+            stateCard.setVisibility(View.VISIBLE);
             statusText.setVisibility(View.VISIBLE);
             statusText.setText(R.string.catalog_empty);
+            catalogSummaryText.setText(R.string.catalog_summary_empty);
         } else {
             statusText.setVisibility(View.GONE);
+            catalogSummaryText.setText(getString(R.string.catalog_summary_count, state.courses.size()));
         }
 
         courseCatalogAdapter.submitList(state.courses);
@@ -186,6 +202,27 @@ public class HomeFragment extends Fragment {
 
         roleText.setText(getString(R.string.catalog_signed_in_as, role != null ? role : "Student"));
         userIdText.setText(getString(R.string.catalog_internal_id, userId != null ? userId : "Unavailable"));
+        // Keep the home hero personal even when backend sync has not filled the local session yet.
+        welcomeTitle.setText(getString(R.string.home_welcome_title, firstNameFromIdentity(role)));
+        welcomeSubtitle.setText(R.string.home_welcome_subtitle);
+    }
+
+    private String firstNameFromIdentity(String identity) {
+        if (identity == null || identity.isBlank()) {
+            return "Learner";
+        }
+        String sanitized = identity.contains("@")
+                ? identity.substring(0, identity.indexOf('@'))
+                : identity;
+        String[] parts = sanitized.trim().split("\\s+");
+        if (parts.length == 0 || parts[0].isBlank()) {
+            return "Learner";
+        }
+        String first = parts[0].replace('.', ' ').trim();
+        if (first.isBlank()) {
+            return "Learner";
+        }
+        return first.substring(0, 1).toUpperCase() + first.substring(1);
     }
 
     private void openCourseDetail(CourseSummary courseSummary) {

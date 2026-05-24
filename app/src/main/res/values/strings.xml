@@ -34,6 +34,13 @@
     <string name="catalog_logout">Log out</string>
     <string name="catalog_open_course">Open course</string>
     <string name="catalog_course_language">Language: %1$s</string>
+    <string name="home_eyebrow">Learner Dashboard</string>
+    <string name="home_welcome_title">Welcome back, %1$s</string>
+    <string name="home_welcome_subtitle">Continue with a calm, structured learning flow designed to keep momentum high.</string>
+    <string name="catalog_summary_loading">Refreshing your catalog…</string>
+    <string name="catalog_summary_error">We could not refresh your catalog right now.</string>
+    <string name="catalog_summary_empty">No courses match this view yet.</string>
+    <string name="catalog_summary_count">%1$d structured courses ready to explore</string>
     <string name="course_detail_back">Back</string>
     <string name="course_detail_back_label">Course Detail</string>
     <string name="course_detail_section_count">%1$d sections</string>
@@ -65,4 +72,25 @@
     <string name="lesson_player_notes_placeholder">Notes and key takeaways will appear here once the lesson content is loaded.</string>
     <string name="lesson_player_prev">← Previous</string>
     <string name="lesson_player_next">Next →</string>
+
+    <!-- Profile -->
+    <string name="profile_eyebrow">Learning Profile</string>
+    <string name="profile_meta_verified">Verified email</string>
+    <string name="profile_meta_pending">Email verification pending</string>
+    <string name="profile_meta_sync_ready">Backend sync ready</string>
+    <string name="profile_meta_sync_pending">Backend sync pending</string>
+    <string name="profile_stat_role">Role</string>
+    <string name="profile_stat_verification">Access</string>
+    <string name="profile_stat_sync">Sync</string>
+    <string name="profile_value_verified">Verified</string>
+    <string name="profile_value_pending">Pending</string>
+    <string name="profile_value_ready">Ready</string>
+    <string name="profile_value_not_ready">Needs sync</string>
+    <string name="profile_identity_title">Account status</string>
+    <string name="profile_identity_subtitle">Your learner identity is managed by Firebase authentication and synced to the EduLife backend.</string>
+    <string name="profile_internal_id_label">Internal EduLife ID</string>
+    <string name="profile_verification_label">Learning access</string>
+    <string name="profile_access_verified">Protected learner routes available</string>
+    <string name="profile_access_pending">Verify email to unlock protected learner routes</string>
+    <string name="profile_internal_id_missing">Sync required</string>
 </resources>

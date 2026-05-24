@@ -564,6 +564,6 @@
                 android:src="@drawable/ic_arrow_forward"
                 app:tint="@color/brand_primary" />
         </LinearLayout>
- 
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>

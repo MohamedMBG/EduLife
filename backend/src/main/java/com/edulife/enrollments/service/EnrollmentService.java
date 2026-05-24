@@ -60,6 +60,21 @@ public class EnrollmentService {
         );
     }
 
+    @Transactional
+    public void unenroll(UUID enrollmentId) {
+        User user = resolveCurrentUser();
+
+        Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Enrollment not found"));
+
+        if (!enrollment.getUserId().equals(user.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not the owner of this enrollment");
+        }
+
+        enrollment.cancel();
+        enrollmentRepository.save(enrollment);
+    }
+
     public List<EnrolledCourseDto> getMyEnrollments() {
         User user = resolveCurrentUser();
 
@@ -89,6 +104,7 @@ public class EnrollmentService {
                             course.getShortDescription(),
                             course.getLevel(),
                             course.getLanguageCode(),
+                            course.getImageUrl(),
                             e.getEnrolledAt()
                     );
                 })

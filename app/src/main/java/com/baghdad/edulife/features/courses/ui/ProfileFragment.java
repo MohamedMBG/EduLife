@@ -51,17 +51,72 @@ public class ProfileFragment extends Fragment {
         TextView nameView = view.findViewById(R.id.profileName);
         TextView emailView = view.findViewById(R.id.profileEmail);
         TextView roleView = view.findViewById(R.id.profileRole);
+        TextView metaStatusView = view.findViewById(R.id.profileMetaStatus);
+        TextView primaryValueView = view.findViewById(R.id.profileStatPrimaryValue);
+        TextView secondaryValueView = view.findViewById(R.id.profileStatSecondaryValue);
+        TextView tertiaryValueView = view.findViewById(R.id.profileStatTertiaryValue);
+        TextView internalIdValueView = view.findViewById(R.id.profileInternalIdValue);
+        TextView verificationValueView = view.findViewById(R.id.profileVerificationValue);
 
         String displayName = user != null && user.getDisplayName() != null
                 ? user.getDisplayName()
                 : extractNameFromEmail(user);
         String email = user != null && user.getEmail() != null ? user.getEmail() : "—";
         String role = session.getRole() != null ? session.getRole().toUpperCase() : "STUDENT";
+        String displayRole = formatRole(role);
+        boolean emailVerified = user != null && user.isEmailVerified();
+        String internalUserId = session.getUserId();
+        boolean syncReady = internalUserId != null && !internalUserId.isBlank();
 
         nameView.setText(displayName);
         emailView.setText(email);
-        roleView.setText(role);
+        roleView.setText(displayRole.toUpperCase());
         avatarInitials.setText(getInitials(displayName));
+        // Surface real account state instead of placeholder progress numbers so the profile
+        // remains trustworthy before enrollments, progress, and certificates are fully wired.
+        metaStatusView.setText(buildMetaStatus(emailVerified, syncReady));
+        primaryValueView.setText(displayRole);
+        secondaryValueView.setText(getString(emailVerified
+                ? R.string.profile_value_verified
+                : R.string.profile_value_pending));
+        tertiaryValueView.setText(getString(syncReady
+                ? R.string.profile_value_ready
+                : R.string.profile_value_not_ready));
+        internalIdValueView.setText(syncReady
+                ? internalUserId
+                : getString(R.string.profile_internal_id_missing));
+        verificationValueView.setText(getString(emailVerified
+                ? R.string.profile_access_verified
+                : R.string.profile_access_pending));
+    }
+
+    private String buildMetaStatus(boolean emailVerified, boolean syncReady) {
+        String verification = getString(emailVerified
+                ? R.string.profile_meta_verified
+                : R.string.profile_meta_pending);
+        String sync = getString(syncReady
+                ? R.string.profile_meta_sync_ready
+                : R.string.profile_meta_sync_pending);
+        return verification + " • " + sync;
+    }
+
+    private String formatRole(String role) {
+        if (role == null || role.isBlank()) {
+            return "Student";
+        }
+        String normalized = role.replace('_', ' ').trim().toLowerCase();
+        String[] parts = normalized.split("\\s+");
+        StringBuilder builder = new StringBuilder();
+        for (String part : parts) {
+            if (part.isBlank()) {
+                continue;
+            }
+            if (builder.length() > 0) {
+                builder.append(' ');
+            }
+            builder.append(Character.toUpperCase(part.charAt(0))).append(part.substring(1));
+        }
+        return builder.length() == 0 ? "Student" : builder.toString();
     }
 
     private String extractNameFromEmail(FirebaseUser user) {
