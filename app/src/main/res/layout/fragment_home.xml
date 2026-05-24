@@ -144,8 +144,8 @@
             <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingTop="20dp"
-                android:paddingBottom="8dp"
+                android:paddingTop="24dp"
+                android:paddingBottom="4dp"
                 android:scrollbars="none">
 
                 <LinearLayout
@@ -212,9 +212,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="28dp"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="10dp"
                 android:layout_marginEnd="28dp"
-                android:layout_marginBottom="4dp"
+                android:layout_marginBottom="14dp"
                 android:textColor="@color/brand_text_secondary"
                 android:textSize="13sp"
                 tools:text="5 structured courses ready to explore" />
@@ -233,10 +233,10 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:paddingStart="20dp"
-            android:paddingTop="12dp"
-            android:paddingEnd="20dp"
-            android:paddingBottom="40dp" />
+            android:paddingStart="24dp"
+            android:paddingTop="20dp"
+            android:paddingEnd="24dp"
+            android:paddingBottom="56dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
