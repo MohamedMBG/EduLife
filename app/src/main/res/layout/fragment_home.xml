@@ -1,186 +1,232 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:background="@color/brand_background"
-    android:orientation="vertical">
+    android:background="@color/brand_background">
 
-    <!-- Brand header -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/bg_home_header"
-        android:orientation="vertical"
-        android:paddingStart="28dp"
-        android:paddingTop="36dp"
-        android:paddingEnd="28dp"
-        android:paddingBottom="32dp">
-
-        <!-- Title row + logout -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Welcome Back!"
-                    android:textColor="@color/white"
-                    android:textSize="30sp"
-                    android:textStyle="bold" />
-
-            </LinearLayout>
-
-            <Button
-                android:id="@+id/logoutButton"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:layout_marginStart="16dp"
-                android:background="@drawable/bg_logout_on_header"
-                app:backgroundTint="@color/brand_error"
-                android:minWidth="0dp"
-                android:paddingStart="18dp"
-                android:paddingEnd="18dp"
-                android:text="@string/catalog_logout"
-                android:textAllCaps="false"
-                android:textColor="@color/white"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <!-- Session info strip -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:background="@drawable/bg_home_session_strip"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="18dp"
-            android:paddingTop="16dp"
-            android:paddingEnd="18dp"
-            android:paddingBottom="16dp">
-
-            <View
-                android:layout_width="8dp"
-                android:layout_height="8dp"
-                android:layout_marginEnd="14dp"
-                android:background="@drawable/bg_home_online_dot" />
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/roleText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/brand_text_on_primary"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/userIdText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
-                    android:textColor="@color/brand_text_on_primary_muted"
-                    android:textSize="12sp" />
-            </LinearLayout>
-        </LinearLayout>
-    </LinearLayout>
-
-    <!-- Filter strip — no divider, spacing does the work -->
-    <LinearLayout
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/brand_background"
-        android:orientation="vertical">
+        app:elevation="0dp">
 
-        <HorizontalScrollView
+        <!-- Brand header — scrolls away -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingTop="20dp"
-            android:paddingBottom="8dp"
-            android:scrollbars="none">
+            android:background="@drawable/bg_home_header"
+            android:orientation="vertical"
+            android:paddingStart="28dp"
+            android:paddingTop="36dp"
+            android:paddingEnd="28dp"
+            android:paddingBottom="32dp"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed">
 
+            <!-- Title row + logout -->
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingStart="28dp"
-                android:paddingEnd="28dp">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/allFilterButton"
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/homeEyebrow"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:alpha="0.78"
+                        android:fontFamily="sans-serif-medium"
+                        android:text="@string/home_eyebrow"
+                        android:textAllCaps="true"
+                        android:textColor="@color/brand_text_on_primary"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/welcomeTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textColor="@color/white"
+                        android:textSize="30sp"
+                        android:textStyle="bold"
+                        tools:text="Welcome back, Mohamed" />
+
+                    <TextView
+                        android:id="@+id/welcomeSubtitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:lineSpacingMultiplier="1.2"
+                        android:maxWidth="260dp"
+                        android:text="@string/home_welcome_subtitle"
+                        android:textColor="@color/brand_text_on_primary_muted"
+                        android:textSize="14sp" />
+
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/logoutButton"
                     android:layout_width="wrap_content"
-                    android:layout_height="44dp"
-                    android:background="@drawable/bg_catalog_filter_button_active"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:foreground="?attr/selectableItemBackground"
-                    android:gravity="center"
-                    android:paddingStart="26dp"
-                    android:paddingEnd="26dp"
-                    android:text="@string/catalog_all_levels"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="16dp"
+                    android:background="@drawable/bg_logout_on_header"
+                    app:backgroundTint="@color/brand_error"
+                    android:minWidth="0dp"
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp"
+                    android:text="@string/catalog_logout"
+                    android:textAllCaps="false"
                     android:textColor="@color/white"
                     android:textSize="13sp"
                     android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/beginnerFilterButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="44dp"
-                    android:layout_marginStart="10dp"
-                    android:background="@drawable/bg_catalog_filter_button"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:foreground="?attr/selectableItemBackground"
-                    android:gravity="center"
-                    android:paddingStart="26dp"
-                    android:paddingEnd="26dp"
-                    android:text="@string/catalog_beginner"
-                    android:textColor="@color/brand_primary"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/intermediateFilterButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="44dp"
-                    android:layout_marginStart="10dp"
-                    android:background="@drawable/bg_catalog_filter_button"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:foreground="?attr/selectableItemBackground"
-                    android:gravity="center"
-                    android:paddingStart="26dp"
-                    android:paddingEnd="26dp"
-                    android:text="@string/catalog_intermediate"
-                    android:textColor="@color/brand_primary"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
             </LinearLayout>
-        </HorizontalScrollView>
-    </LinearLayout>
+
+            <!-- Session info strip -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/bg_home_session_strip"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="18dp"
+                android:paddingTop="16dp"
+                android:paddingEnd="18dp"
+                android:paddingBottom="16dp">
+
+                <View
+                    android:layout_width="8dp"
+                    android:layout_height="8dp"
+                    android:layout_marginEnd="14dp"
+                    android:background="@drawable/bg_home_online_dot" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/roleText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/brand_text_on_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/userIdText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:textColor="@color/brand_text_on_primary_muted"
+                        android:textSize="12sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Filter strip — sticky, no scroll flags -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/brand_background"
+            android:orientation="vertical">
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="20dp"
+                android:paddingBottom="8dp"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingStart="28dp"
+                    android:paddingEnd="28dp">
+
+                    <TextView
+                        android:id="@+id/allFilterButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_catalog_filter_button_active"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:gravity="center"
+                        android:paddingStart="26dp"
+                        android:paddingEnd="26dp"
+                        android:text="@string/catalog_all_levels"
+                        android:textColor="@color/white"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/beginnerFilterButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:layout_marginStart="10dp"
+                        android:background="@drawable/bg_catalog_filter_button"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:gravity="center"
+                        android:paddingStart="26dp"
+                        android:paddingEnd="26dp"
+                        android:text="@string/catalog_beginner"
+                        android:textColor="@color/brand_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/intermediateFilterButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:layout_marginStart="10dp"
+                        android:background="@drawable/bg_catalog_filter_button"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:gravity="center"
+                        android:paddingStart="26dp"
+                        android:paddingEnd="26dp"
+                        android:text="@string/catalog_intermediate"
+                        android:textColor="@color/brand_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <TextView
+                android:id="@+id/catalogSummaryText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="28dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="28dp"
+                android:layout_marginBottom="4dp"
+                android:textColor="@color/brand_text_secondary"
+                android:textSize="13sp"
+                tools:text="5 structured courses ready to explore" />
+        </LinearLayout>
+
+    </com.google.android.material.appbar.AppBarLayout>
 
     <!-- Content: RecyclerView + loading overlay -->
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/courseRecyclerView"
@@ -199,42 +245,56 @@
             android:orientation="vertical"
             android:padding="40dp">
 
-            <ProgressBar
-                android:id="@+id/loadingIndicator"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:indeterminateTint="@color/brand_primary"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/statusText"
+            <LinearLayout
+                android:id="@+id/stateCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_settings_item"
                 android:gravity="center"
-                android:lineSpacingMultiplier="1.6"
-                android:textColor="@color/brand_text_secondary"
-                android:textSize="15sp"
-                android:visibility="gone" />
+                android:orientation="vertical"
+                android:paddingStart="24dp"
+                android:paddingTop="24dp"
+                android:paddingEnd="24dp"
+                android:paddingBottom="24dp"
+                android:visibility="gone">
 
-            <TextView
-                android:id="@+id/retryButton"
-                android:layout_width="wrap_content"
-                android:layout_height="52dp"
-                android:layout_marginTop="24dp"
-                android:background="@drawable/bg_enroll_cta_button"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground"
-                android:gravity="center"
-                android:paddingStart="36dp"
-                android:paddingEnd="36dp"
-                android:text="@string/catalog_retry"
-                android:textColor="@color/white"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:visibility="gone" />
+                <ProgressBar
+                    android:id="@+id/loadingIndicator"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:indeterminateTint="@color/brand_primary"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/statusText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center"
+                    android:lineSpacingMultiplier="1.6"
+                    android:textColor="@color/brand_text_secondary"
+                    android:textSize="15sp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/retryButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="20dp"
+                    android:background="@drawable/bg_enroll_cta_button"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:gravity="center"
+                    android:paddingStart="36dp"
+                    android:paddingEnd="36dp"
+                    android:text="@string/catalog_retry"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+            </LinearLayout>
         </LinearLayout>
     </FrameLayout>
 
-</LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

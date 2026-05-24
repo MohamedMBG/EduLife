@@ -2,28 +2,34 @@ package com.baghdad.edulife.features.courses.ui;
 
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.navigation.Navigation;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.baghdad.edulife.R;
-import com.baghdad.edulife.features.courses.model.CourseSummary;
+import com.baghdad.edulife.features.courses.model.EnrolledCourse;
+import com.baghdad.edulife.features.courses.model.UnenrollUiState;
+import com.baghdad.edulife.features.courses.viewmodel.EnrollmentViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class CoursesFragment extends Fragment {
 
-    private CourseAdapter adapter;
-    private List<CourseSummary> allCourses;
+    private EnrollmentViewModel enrollmentViewModel;
+    private EnrolledCourseAdapter adapter;
     private String activeFilter = "ALL";
 
     private TextView filterAll, filterBeginner, filterIntermediate, filterAdvanced;
     private TextView courseCountText;
+    private TextView emptyText;
+    private List<EnrolledCourse> allEnrolled = new ArrayList<>();
 
     public CoursesFragment() {
         super(R.layout.fragment_courses);
@@ -33,49 +39,81 @@ public class CoursesFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        allCourses = buildMockCourses();
+        enrollmentViewModel = new ViewModelProvider(this).get(EnrollmentViewModel.class);
 
-        adapter = new CourseAdapter(false);
-        adapter.setOnCourseClickListener(course -> {
-            Bundle args = new Bundle();
-            args.putString("courseId", course.id);
-            args.putString("courseTitle", course.title);
-            args.putString("courseLevel", course.level);
-            args.putString("courseLanguage", course.languageCode);
-            args.putString("courseDesc", course.shortDescription);
-            Navigation.findNavController(view)
-                    .navigate(R.id.action_coursesFragment_to_courseDetailFragment, args);
-        });
+        emptyText = view.findViewById(R.id.coursesEmptyText);
+        courseCountText = view.findViewById(R.id.courseCountText);
 
+        adapter = new EnrolledCourseAdapter(this::handleUnenroll);
         RecyclerView recycler = view.findViewById(R.id.coursesRecycler);
         recycler.setAdapter(adapter);
 
-        courseCountText = view.findViewById(R.id.courseCountText);
         filterAll = view.findViewById(R.id.filterAll);
         filterBeginner = view.findViewById(R.id.filterBeginner);
         filterIntermediate = view.findViewById(R.id.filterIntermediate);
         filterAdvanced = view.findViewById(R.id.filterAdvanced);
 
-        applyFilter("ALL");
-
         filterAll.setOnClickListener(v -> applyFilter("ALL"));
         filterBeginner.setOnClickListener(v -> applyFilter("BEGINNER"));
         filterIntermediate.setOnClickListener(v -> applyFilter("INTERMEDIATE"));
         filterAdvanced.setOnClickListener(v -> applyFilter("ADVANCED"));
+
+        enrollmentViewModel.getMyEnrollments().observe(getViewLifecycleOwner(), courses -> {
+            allEnrolled = courses != null ? courses : new ArrayList<>();
+            applyFilter(activeFilter);
+        });
+
+        enrollmentViewModel.getUnenrollState().observe(getViewLifecycleOwner(), this::handleUnenrollState);
+
+        enrollmentViewModel.loadMyEnrollments();
+        showEmpty("Loading your courses…");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        enrollmentViewModel.loadMyEnrollments();
     }
 
     private void applyFilter(String level) {
         activeFilter = level;
         updateFilterChipStyles();
 
-        List<CourseSummary> filtered = new ArrayList<>();
-        for (CourseSummary c : allCourses) {
+        List<EnrolledCourse> filtered = new ArrayList<>();
+        for (EnrolledCourse c : allEnrolled) {
             if (level.equals("ALL") || level.equalsIgnoreCase(c.level)) {
                 filtered.add(c);
             }
         }
-        adapter.setCourses(filtered);
-        courseCountText.setText(filtered.size() + " course" + (filtered.size() == 1 ? "" : "s") + " available");
+
+        adapter.setItems(filtered);
+
+        if (filtered.isEmpty()) {
+            showEmpty(allEnrolled.isEmpty()
+                    ? "You have no active enrollments yet.\nBrowse courses on the Home tab."
+                    : "No " + level.toLowerCase(Locale.ROOT) + " courses in your enrollments.");
+        } else {
+            emptyText.setVisibility(View.GONE);
+        }
+
+        courseCountText.setText(filtered.size() + " course" + (filtered.size() == 1 ? "" : "s") + " enrolled");
+    }
+
+    private void showEmpty(String message) {
+        emptyText.setText(message);
+        emptyText.setVisibility(View.VISIBLE);
+    }
+
+    private void handleUnenrollState(UnenrollUiState state) {
+        if (state == null) return;
+        if (state.errorMessage != null) {
+            showEmpty(state.errorMessage);
+        }
+    }
+
+    private void handleUnenroll(EnrolledCourse course) {
+        if (course.enrollmentId == null || course.enrollmentId.isBlank()) return;
+        enrollmentViewModel.unenroll(course.enrollmentId);
     }
 
     private void updateFilterChipStyles() {
@@ -89,42 +127,74 @@ public class CoursesFragment extends Fragment {
         chip.setBackgroundResource(active
                 ? R.drawable.bg_category_chip_active
                 : R.drawable.bg_category_chip);
-        chip.setTextColor(active ? 0xFFFFFFFF : 0xFF0F8A68);
+        chip.setTextColor(active
+                ? requireContext().getColor(android.R.color.white)
+                : requireContext().getColor(R.color.brand_primary));
         chip.setTypeface(null, active
                 ? android.graphics.Typeface.BOLD
                 : android.graphics.Typeface.NORMAL);
     }
 
-    private List<CourseSummary> buildMockCourses() {
-        List<CourseSummary> list = new ArrayList<>();
+    // ── Enrolled Course Adapter ───────────────────────────────────────────────
 
-        list.add(makeCourse("1", "Android Development Fundamentals",
-                "Build your first Android app from scratch with Java and Material Design.", "BEGINNER", "en"));
-        list.add(makeCourse("2", "UI/UX Design Principles",
-                "Learn the foundations of great design — typography, color, layout, and user flows.", "BEGINNER", "en"));
-        list.add(makeCourse("3", "Machine Learning with Python",
-                "From linear regression to neural networks. Hands-on projects with scikit-learn and TensorFlow.", "INTERMEDIATE", "en"));
-        list.add(makeCourse("4", "Backend APIs with Node.js",
-                "Design and build RESTful APIs, authentication systems, and database integrations.", "INTERMEDIATE", "en"));
-        list.add(makeCourse("5", "Advanced Kotlin Coroutines",
-                "Master asynchronous programming patterns, Flow, and structured concurrency in Kotlin.", "ADVANCED", "en"));
-        list.add(makeCourse("6", "Data Structures & Algorithms",
-                "Deepen your problem-solving skills with trees, graphs, dynamic programming, and more.", "ADVANCED", "en"));
-        list.add(makeCourse("7", "Web Design with CSS Grid",
-                "Create responsive, modern web layouts using CSS Grid and Flexbox.", "BEGINNER", "en"));
-        list.add(makeCourse("8", "React Native Mobile Apps",
-                "Cross-platform mobile development with React Native, hooks, and native APIs.", "INTERMEDIATE", "en"));
-
-        return list;
+    interface UnenrollAction {
+        void onUnenroll(EnrolledCourse course);
     }
 
-    private CourseSummary makeCourse(String id, String title, String desc, String level, String lang) {
-        CourseSummary c = new CourseSummary();
-        c.id = id;
-        c.title = title;
-        c.shortDescription = desc;
-        c.level = level;
-        c.languageCode = lang;
-        return c;
+    static class EnrolledCourseAdapter extends RecyclerView.Adapter<EnrolledCourseAdapter.VH> {
+
+        private List<EnrolledCourse> items = new ArrayList<>();
+        private final UnenrollAction action;
+
+        EnrolledCourseAdapter(UnenrollAction action) {
+            this.action = action;
+        }
+
+        void setItems(List<EnrolledCourse> list) {
+            items = list;
+            notifyDataSetChanged();
+        }
+
+        @NonNull
+        @Override
+        public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View v = android.view.LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.item_enrolled_course, parent, false);
+            return new VH(v);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull VH holder, int position) {
+            EnrolledCourse course = items.get(position);
+            holder.title.setText(course.title != null ? course.title : "");
+            holder.desc.setText(course.shortDescription != null ? course.shortDescription : "");
+            holder.language.setText(normalizeLabel(course.languageCode));
+            holder.level.setText(course.level != null ? course.level : "");
+            holder.unenrollBtn.setOnClickListener(v -> action.onUnenroll(course));
+        }
+
+        @Override
+        public int getItemCount() {
+            return items.size();
+        }
+
+        static class VH extends RecyclerView.ViewHolder {
+            final TextView title, desc, language, level, unenrollBtn;
+
+            VH(@NonNull View itemView) {
+                super(itemView);
+                title = itemView.findViewById(R.id.enrolledCourseTitle);
+                desc = itemView.findViewById(R.id.enrolledCourseDesc);
+                language = itemView.findViewById(R.id.enrolledCourseLanguage);
+                level = itemView.findViewById(R.id.enrolledLevelBadge);
+                unenrollBtn = itemView.findViewById(R.id.unenrollButton);
+            }
+        }
+
+        private static String normalizeLabel(String raw) {
+            if (raw == null || raw.isBlank()) return "";
+            String s = raw.replace('_', ' ').toLowerCase(Locale.ROOT);
+            return s.substring(0, 1).toUpperCase(Locale.ROOT) + s.substring(1);
+        }
     }
 }
