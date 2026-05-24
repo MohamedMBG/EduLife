@@ -80,6 +80,7 @@ public class CourseService {
                 course.getDescription(),
                 course.getLevel(),
                 course.getLanguageCode(),
+                course.getImageUrl(),
                 course.getPublishedAt(),
                 sections
         );
@@ -93,6 +94,7 @@ public class CourseService {
                 course.getShortDescription(),
                 course.getLevel(),
                 course.getLanguageCode(),
+                course.getImageUrl(),
                 course.getPublishedAt()
         );
     }

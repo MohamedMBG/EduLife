@@ -16,6 +16,7 @@ public record CourseDetailDto(
         String description,
         String level,
         String languageCode,
+        String imageUrl,
         Instant publishedAt,
         List<CourseSectionDto> sections
 ) {

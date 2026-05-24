@@ -35,6 +35,9 @@ public class Course {
     @Column(name = "status", nullable = false, length = 20)
     private CourseStatus status;
 
+    @Column(name = "image_url", columnDefinition = "TEXT")
+    private String imageUrl;
+
     @Column(name = "published_at")
     private Instant publishedAt;
 
@@ -77,6 +80,7 @@ public class Course {
     public String getLanguageCode() { return languageCode; }
     public String getLevel() { return level; }
     public CourseStatus getStatus() { return status; }
+    public String getImageUrl() { return imageUrl; }
     public Instant getPublishedAt() { return publishedAt; }
     public UUID getCreatedByUserId() { return createdByUserId; }
     public Instant getCreatedAt() { return createdAt; }

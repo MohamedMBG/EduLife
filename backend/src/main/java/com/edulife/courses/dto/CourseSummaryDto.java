@@ -14,6 +14,7 @@ public record CourseSummaryDto(
         String shortDescription,
         String level,
         String languageCode,
+        String imageUrl,
         Instant publishedAt
 ) {
 }
