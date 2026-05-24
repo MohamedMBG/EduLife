@@ -16,17 +16,16 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:minHeight="840dp"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp">
+        android:paddingStart="28dp"
+        android:paddingEnd="28dp">
 
-        <!-- Registration mirrors login so learners do not feel like they moved to a different product. -->
         <View
             android:id="@+id/topMintBlob"
             android:layout_width="188dp"
             android:layout_height="188dp"
             android:layout_marginStart="-112dp"
             android:layout_marginTop="-92dp"
-            android:alpha="0.9"
+            android:alpha="0.5"
             android:background="@drawable/bg_login_top_blob"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -37,7 +36,7 @@
             android:layout_height="104dp"
             android:layout_marginTop="36dp"
             android:layout_marginEnd="-4dp"
-            android:alpha="0.56"
+            android:alpha="0.24"
             android:contentDescription="@null"
             android:src="@drawable/bg_login_dot_grid"
             app:layout_constraintEnd_toEndOf="parent"
@@ -47,7 +46,7 @@
             android:id="@+id/brandRow"
             android:layout_width="0dp"
             android:layout_height="52dp"
-            android:layout_marginTop="36dp"
+            android:layout_marginTop="40dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
@@ -81,7 +80,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="sans-serif-medium"
                     android:text="Edu"
-                    android:textColor="@color/login_text_dark"
+                    android:textColor="@color/brand_text_primary"
                     android:textSize="23sp"
                     android:textStyle="bold" />
 
@@ -90,7 +89,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="sans-serif-medium"
                     android:text="Life"
-                    android:textColor="@color/login_primary_green"
+                    android:textColor="@color/brand_primary"
                     android:textSize="23sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -103,7 +102,7 @@
                 android:background="@drawable/bg_auth_eyebrow"
                 android:gravity="center"
                 android:text="Student profile"
-                android:textColor="@color/login_primary_green_dark"
+                android:textColor="@color/brand_primary"
                 android:textSize="12sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -112,48 +111,34 @@
             android:id="@+id/titleText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="30dp"
+            android:layout_marginTop="34dp"
             android:fontFamily="sans-serif-medium"
             android:text="Create your account"
-            android:textColor="@color/login_text_dark"
-            android:textSize="31sp"
+            android:textColor="@color/brand_text_primary"
+            android:textSize="34sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/brandRow" />
 
-        <TextView
-            android:id="@+id/subtitleText"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:lineSpacingExtra="2dp"
-            android:text="Set up a learning profile for course enrollment, progress tracking, exams, and certificates."
-            android:textColor="@color/login_text_body"
-            android:textSize="15sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/titleText" />
-
         <LinearLayout
             android:id="@+id/infoPanel"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
             android:background="@drawable/bg_auth_info_panel"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingStart="14dp"
-            android:paddingTop="12dp"
-            android:paddingEnd="14dp"
-            android:paddingBottom="12dp"
+            android:paddingStart="16dp"
+            android:paddingTop="14dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="14dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/subtitleText">
+            app:layout_constraintTop_toBottomOf="@+id/titleText">
 
             <FrameLayout
-                android:layout_width="34dp"
-                android:layout_height="34dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:background="@drawable/bg_login_icon_container">
 
                 <ImageView
@@ -167,11 +152,11 @@
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="14dp"
                 android:layout_weight="1"
                 android:lineSpacingExtra="2dp"
                 android:text="One account keeps the MVP learning loop simple: enroll, learn, pass, and receive proof."
-                android:textColor="@color/login_text_body"
+                android:textColor="@color/brand_text_body"
                 android:textSize="13sp" />
         </LinearLayout>
 
@@ -179,10 +164,10 @@
             android:id="@+id/fullNameLabel"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
+            android:layout_marginTop="32dp"
             android:fontFamily="sans-serif-medium"
             android:text="Full name"
-            android:textColor="@color/login_text_dark"
+            android:textColor="@color/brand_text_primary"
             android:textSize="13sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -191,21 +176,20 @@
         <LinearLayout
             android:id="@+id/fullNameInputCard"
             android:layout_width="0dp"
-            android:layout_height="58dp"
-            android:layout_marginTop="8dp"
+            android:layout_height="62dp"
+            android:layout_marginTop="10dp"
             android:background="@drawable/bg_login_input"
-            android:elevation="1dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingStart="14dp"
-            android:paddingEnd="14dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/fullNameLabel">
 
             <FrameLayout
-                android:layout_width="34dp"
-                android:layout_height="34dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:background="@drawable/bg_login_icon_container">
 
                 <ImageView
@@ -228,8 +212,8 @@
                 android:inputType="textPersonName|textCapWords"
                 android:padding="0dp"
                 android:singleLine="true"
-                android:textColor="@color/login_text_dark"
-                android:textColorHint="@color/login_text_secondary"
+                android:textColor="@color/brand_text_primary"
+                android:textColorHint="@color/brand_text_secondary"
                 android:textSize="15sp" />
         </LinearLayout>
 
@@ -237,10 +221,10 @@
             android:id="@+id/emailLabel"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="22dp"
             android:fontFamily="sans-serif-medium"
             android:text="Email address"
-            android:textColor="@color/login_text_dark"
+            android:textColor="@color/brand_text_primary"
             android:textSize="13sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -249,21 +233,20 @@
         <LinearLayout
             android:id="@+id/emailInputCard"
             android:layout_width="0dp"
-            android:layout_height="58dp"
-            android:layout_marginTop="8dp"
+            android:layout_height="62dp"
+            android:layout_marginTop="10dp"
             android:background="@drawable/bg_login_input"
-            android:elevation="1dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingStart="14dp"
-            android:paddingEnd="14dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/emailLabel">
 
             <FrameLayout
-                android:layout_width="34dp"
-                android:layout_height="34dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:background="@drawable/bg_login_icon_container">
 
                 <ImageView
@@ -286,8 +269,8 @@
                 android:inputType="textEmailAddress"
                 android:padding="0dp"
                 android:singleLine="true"
-                android:textColor="@color/login_text_dark"
-                android:textColorHint="@color/login_text_secondary"
+                android:textColor="@color/brand_text_primary"
+                android:textColorHint="@color/brand_text_secondary"
                 android:textSize="15sp" />
         </LinearLayout>
 
@@ -295,10 +278,10 @@
             android:id="@+id/passwordLabel"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="22dp"
             android:fontFamily="sans-serif-medium"
             android:text="Password"
-            android:textColor="@color/login_text_dark"
+            android:textColor="@color/brand_text_primary"
             android:textSize="13sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -307,21 +290,20 @@
         <LinearLayout
             android:id="@+id/passwordInputCard"
             android:layout_width="0dp"
-            android:layout_height="58dp"
-            android:layout_marginTop="8dp"
+            android:layout_height="62dp"
+            android:layout_marginTop="10dp"
             android:background="@drawable/bg_login_input"
-            android:elevation="1dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingStart="14dp"
+            android:paddingStart="16dp"
             android:paddingEnd="8dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/passwordLabel">
 
             <FrameLayout
-                android:layout_width="34dp"
-                android:layout_height="34dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:background="@drawable/bg_login_icon_container">
 
                 <ImageView
@@ -344,8 +326,8 @@
                 android:inputType="textPassword"
                 android:padding="0dp"
                 android:singleLine="true"
-                android:textColor="@color/login_text_dark"
-                android:textColorHint="@color/login_text_secondary"
+                android:textColor="@color/brand_text_primary"
+                android:textColorHint="@color/brand_text_secondary"
                 android:textSize="15sp" />
 
             <ImageButton
@@ -362,10 +344,10 @@
             android:id="@+id/confirmPasswordLabel"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="22dp"
             android:fontFamily="sans-serif-medium"
             android:text="Confirm password"
-            android:textColor="@color/login_text_dark"
+            android:textColor="@color/brand_text_primary"
             android:textSize="13sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -374,21 +356,20 @@
         <LinearLayout
             android:id="@+id/confirmPasswordInputCard"
             android:layout_width="0dp"
-            android:layout_height="58dp"
-            android:layout_marginTop="8dp"
+            android:layout_height="62dp"
+            android:layout_marginTop="10dp"
             android:background="@drawable/bg_login_input"
-            android:elevation="1dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingStart="14dp"
+            android:paddingStart="16dp"
             android:paddingEnd="8dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/confirmPasswordLabel">
 
             <FrameLayout
-                android:layout_width="34dp"
-                android:layout_height="34dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 android:background="@drawable/bg_login_icon_container">
 
                 <ImageView
@@ -411,8 +392,8 @@
                 android:inputType="textPassword"
                 android:padding="0dp"
                 android:singleLine="true"
-                android:textColor="@color/login_text_dark"
-                android:textColorHint="@color/login_text_secondary"
+                android:textColor="@color/brand_text_primary"
+                android:textColorHint="@color/brand_text_secondary"
                 android:textSize="15sp" />
 
             <ImageButton
@@ -429,16 +410,16 @@
             android:id="@+id/termsCheckbox"
             android:layout_width="0dp"
             android:layout_height="46dp"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="14dp"
             android:fontFamily="sans-serif"
             android:minWidth="0dp"
             android:minHeight="0dp"
             android:paddingStart="0dp"
             android:paddingEnd="0dp"
             android:text="I agree to the Terms and Privacy Policy"
-            android:textColor="@color/login_text_body"
+            android:textColor="@color/brand_text_body"
             android:textSize="13sp"
-            app:buttonTint="@color/login_primary_green"
+            app:buttonTint="@color/brand_primary"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/confirmPasswordInputCard" />
@@ -446,11 +427,10 @@
         <LinearLayout
             android:id="@+id/createAccountButton"
             android:layout_width="0dp"
-            android:layout_height="58dp"
-            android:layout_marginTop="18dp"
+            android:layout_height="62dp"
+            android:layout_marginTop="24dp"
             android:background="@drawable/bg_login_button_green"
             android:clickable="true"
-            android:elevation="4dp"
             android:focusable="true"
             android:foreground="?attr/selectableItemBackground"
             android:gravity="center"
@@ -469,7 +449,7 @@
                 android:gravity="center"
                 android:text="Create account"
                 android:textColor="@android:color/white"
-                android:textSize="16sp"
+                android:textSize="17sp"
                 android:textStyle="bold" />
 
             <ImageView
@@ -479,11 +459,12 @@
                 android:src="@drawable/ic_arrow_forward" />
         </LinearLayout>
 
+        <!-- OR separator -->
         <LinearLayout
             android:id="@+id/dividerRow"
             android:layout_width="0dp"
-            android:layout_height="26dp"
-            android:layout_marginTop="18dp"
+            android:layout_height="32dp"
+            android:layout_marginTop="20dp"
             android:gravity="center"
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
@@ -494,33 +475,32 @@
                 android:layout_width="0dp"
                 android:layout_height="1dp"
                 android:layout_weight="1"
-                android:background="@color/login_border" />
+                android:background="@color/brand_border" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
                 android:text="OR"
-                android:textColor="@color/login_text_secondary"
-                android:textSize="12sp"
+                android:textColor="@color/brand_text_secondary"
+                android:textSize="11sp"
                 android:textStyle="bold" />
 
             <View
                 android:layout_width="0dp"
                 android:layout_height="1dp"
                 android:layout_weight="1"
-                android:background="@color/login_border" />
+                android:background="@color/brand_border" />
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/googleRegisterButton"
             android:layout_width="0dp"
-            android:layout_height="56dp"
-            android:layout_marginTop="14dp"
+            android:layout_height="62dp"
+            android:layout_marginTop="4dp"
             android:background="@drawable/bg_login_google_button"
             android:clickable="true"
-            android:elevation="2dp"
             android:focusable="true"
             android:foreground="?attr/selectableItemBackground"
             android:gravity="center"
@@ -541,7 +521,7 @@
                 android:layout_marginStart="14dp"
                 android:fontFamily="sans-serif-medium"
                 android:text="Continue with Google"
-                android:textColor="@color/login_text_dark"
+                android:textColor="@color/brand_text_primary"
                 android:textSize="15sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -549,8 +529,8 @@
         <LinearLayout
             android:id="@+id/loginText"
             android:layout_width="wrap_content"
-            android:layout_height="46dp"
-            android:layout_marginTop="18dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="20dp"
             android:clickable="true"
             android:focusable="true"
             android:foreground="?attr/selectableItemBackgroundBorderless"
@@ -564,16 +544,16 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Already learning here? "
-                android:textColor="@color/login_text_secondary"
-                android:textSize="13sp" />
+                android:textColor="@color/brand_text_secondary"
+                android:textSize="14sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-medium"
                 android:text="Log in"
-                android:textColor="@color/login_primary_green"
-                android:textSize="13sp"
+                android:textColor="@color/brand_primary"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <ImageView
@@ -582,41 +562,8 @@
                 android:layout_marginStart="8dp"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_arrow_forward"
-                app:tint="@color/login_primary_green" />
+                app:tint="@color/brand_primary" />
         </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/securityPanel"
-            android:layout_width="0dp"
-            android:layout_height="82dp"
-            android:layout_marginStart="-24dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginEnd="-24dp"
-            android:background="@drawable/bg_auth_footer_band"
-            android:gravity="center"
-            android:orientation="vertical"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/loginText"
-            app:layout_constraintVertical_bias="1">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="sans-serif-medium"
-                android:text="Designed for learner privacy"
-                android:textColor="@color/login_text_dark"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Auth validation will be enforced by the backend when connected."
-                android:textColor="@color/login_text_secondary"
-                android:textSize="11sp" />
-        </LinearLayout>
+ 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>

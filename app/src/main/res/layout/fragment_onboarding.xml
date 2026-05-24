@@ -89,7 +89,6 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@drawable/bg_onboarding_card"
-        android:elevation="16dp"
         android:orientation="vertical"
         android:paddingStart="28dp"
         android:paddingTop="20dp"

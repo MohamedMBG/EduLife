@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    android:background="@color/catalog_background"
+    android:background="@color/brand_background"
     android:orientation="vertical">
 
     <!-- Sticky header -->
@@ -12,13 +12,12 @@
         android:id="@+id/enrollHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/catalog_surface"
-        android:elevation="4dp"
+        android:background="@color/brand_surface"
         android:orientation="vertical"
-        android:paddingStart="20dp"
+        android:paddingStart="24dp"
         android:paddingTop="20dp"
-        android:paddingEnd="20dp"
-        android:paddingBottom="18dp">
+        android:paddingEnd="24dp"
+        android:paddingBottom="24dp">
 
         <!-- Back row -->
         <LinearLayout
@@ -34,15 +33,15 @@
                 android:background="@drawable/bg_enroll_icon_button"
                 android:contentDescription="Back"
                 android:src="@drawable/ic_arrow_back"
-                android:tint="@color/catalog_text_primary" />
+                android:tint="@color/brand_text_primary" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="14dp"
                 android:layout_weight="1"
                 android:text="@string/enroll_header_label"
-                android:textColor="@color/catalog_text_secondary"
+                android:textColor="@color/brand_text_secondary"
                 android:textSize="13sp" />
         </LinearLayout>
 
@@ -51,16 +50,16 @@
             android:id="@+id/enrollCourseTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:textColor="@color/catalog_text_primary"
-            android:textSize="26sp"
+            android:layout_marginTop="18dp"
+            android:textColor="@color/brand_text_primary"
+            android:textSize="28sp"
             android:textStyle="bold" />
 
         <!-- Badges row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="12dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
@@ -69,44 +68,44 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_catalog_badge"
-                android:paddingStart="10dp"
+                android:paddingStart="12dp"
                 android:paddingTop="5dp"
-                android:paddingEnd="10dp"
+                android:paddingEnd="12dp"
                 android:paddingBottom="5dp"
-                android:textColor="@color/catalog_primary"
+                android:textColor="@color/brand_primary"
                 android:textSize="12sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
                 android:text="·"
-                android:textColor="@color/catalog_text_secondary"
+                android:textColor="@color/brand_text_secondary"
                 android:textSize="16sp" />
 
             <TextView
                 android:id="@+id/enrollLanguageBadge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/catalog_text_secondary"
+                android:textColor="@color/brand_text_secondary"
                 android:textSize="13sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
                 android:text="·"
-                android:textColor="@color/catalog_text_secondary"
+                android:textColor="@color/brand_text_secondary"
                 android:textSize="16sp" />
 
             <TextView
                 android:id="@+id/enrollSectionCount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/catalog_text_secondary"
+                android:textColor="@color/brand_text_secondary"
                 android:textSize="13sp" />
         </LinearLayout>
     </LinearLayout>
@@ -124,9 +123,9 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingStart="24dp"
-            android:paddingTop="24dp"
+            android:paddingTop="28dp"
             android:paddingEnd="24dp"
-            android:paddingBottom="24dp">
+            android:paddingBottom="28dp">
 
             <!-- Description card -->
             <LinearLayout
@@ -134,13 +133,13 @@
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_enroll_card"
                 android:orientation="vertical"
-                android:padding="22dp">
+                android:padding="24dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/enroll_about_title"
-                    android:textColor="@color/catalog_text_primary"
+                    android:textColor="@color/brand_text_primary"
                     android:textSize="15sp"
                     android:textStyle="bold" />
 
@@ -148,9 +147,9 @@
                     android:id="@+id/enrollDescription"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:lineSpacingMultiplier="1.5"
-                    android:textColor="@color/catalog_text_secondary"
+                    android:layout_marginTop="10dp"
+                    android:lineSpacingMultiplier="1.6"
+                    android:textColor="@color/brand_text_body"
                     android:textSize="14sp" />
             </LinearLayout>
 
@@ -161,13 +160,13 @@
                 android:layout_marginTop="20dp"
                 android:background="@drawable/bg_enroll_card"
                 android:orientation="vertical"
-                android:padding="22dp">
+                android:padding="24dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/enroll_includes_title"
-                    android:textColor="@color/catalog_text_primary"
+                    android:textColor="@color/brand_text_primary"
                     android:textSize="15sp"
                     android:textStyle="bold" />
 
@@ -175,13 +174,13 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="18dp"
+                    android:layout_marginTop="20dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <LinearLayout
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
                         android:background="@drawable/bg_enroll_perk_icon"
                         android:gravity="center">
 
@@ -189,14 +188,14 @@
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:src="@drawable/ic_book_open"
-                            android:tint="@color/catalog_primary"
+                            android:tint="@color/brand_primary"
                             android:contentDescription="@null" />
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
+                        android:layout_marginStart="16dp"
                         android:layout_weight="1"
                         android:orientation="vertical">
 
@@ -204,7 +203,7 @@
                             android:id="@+id/enrollPerkSections"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/catalog_text_primary"
+                            android:textColor="@color/brand_text_primary"
                             android:textSize="14sp"
                             android:textStyle="bold" />
 
@@ -212,7 +211,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/enroll_perk_sections_sub"
-                            android:textColor="@color/catalog_text_secondary"
+                            android:textColor="@color/brand_text_secondary"
                             android:textSize="12sp" />
                     </LinearLayout>
                 </LinearLayout>
@@ -221,13 +220,13 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="18dp"
+                    android:layout_marginTop="20dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <LinearLayout
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
                         android:background="@drawable/bg_enroll_perk_icon"
                         android:gravity="center">
 
@@ -235,14 +234,14 @@
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:src="@drawable/ic_videocam"
-                            android:tint="@color/catalog_primary"
+                            android:tint="@color/brand_primary"
                             android:contentDescription="@null" />
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
+                        android:layout_marginStart="16dp"
                         android:layout_weight="1"
                         android:orientation="vertical">
 
@@ -250,7 +249,7 @@
                             android:id="@+id/enrollPerkLessons"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/catalog_text_primary"
+                            android:textColor="@color/brand_text_primary"
                             android:textSize="14sp"
                             android:textStyle="bold" />
 
@@ -258,7 +257,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/enroll_perk_lessons_sub"
-                            android:textColor="@color/catalog_text_secondary"
+                            android:textColor="@color/brand_text_secondary"
                             android:textSize="12sp" />
                     </LinearLayout>
                 </LinearLayout>
@@ -267,13 +266,13 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="18dp"
+                    android:layout_marginTop="20dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <LinearLayout
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
                         android:background="@drawable/bg_enroll_perk_icon"
                         android:gravity="center">
 
@@ -281,14 +280,14 @@
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:src="@drawable/ic_workspace_premium"
-                            android:tint="@color/catalog_primary"
+                            android:tint="@color/brand_primary"
                             android:contentDescription="@null" />
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
+                        android:layout_marginStart="16dp"
                         android:layout_weight="1"
                         android:orientation="vertical">
 
@@ -296,7 +295,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/enroll_perk_cert_title"
-                            android:textColor="@color/catalog_text_primary"
+                            android:textColor="@color/brand_text_primary"
                             android:textSize="14sp"
                             android:textStyle="bold" />
 
@@ -304,7 +303,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/enroll_perk_cert_sub"
-                            android:textColor="@color/catalog_text_secondary"
+                            android:textColor="@color/brand_text_secondary"
                             android:textSize="12sp" />
                     </LinearLayout>
                 </LinearLayout>
@@ -318,11 +317,11 @@
                 android:background="@drawable/bg_enroll_card"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="22dp">
+                android:padding="24dp">
 
                 <LinearLayout
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
                     android:background="@drawable/bg_enroll_avatar"
                     android:gravity="center">
 
@@ -338,7 +337,7 @@
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="14dp"
+                    android:layout_marginStart="16dp"
                     android:layout_weight="1"
                     android:orientation="vertical">
 
@@ -346,15 +345,15 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/enroll_instructor_label"
-                        android:textColor="@color/catalog_text_secondary"
+                        android:textColor="@color/brand_text_secondary"
                         android:textSize="12sp" />
 
                     <TextView
                         android:id="@+id/enrollInstructorName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:textColor="@color/catalog_text_primary"
+                        android:layout_marginTop="3dp"
+                        android:textColor="@color/brand_text_primary"
                         android:textSize="15sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -364,10 +363,10 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="28dp"
+                android:layout_marginTop="32dp"
                 android:gravity="center"
                 android:text="@string/enroll_disclaimer"
-                android:textColor="@color/catalog_text_secondary"
+                android:textColor="@color/brand_text_secondary"
                 android:textSize="12sp" />
 
         </LinearLayout>
@@ -377,19 +376,18 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/catalog_surface"
-        android:elevation="8dp"
+        android:background="@color/brand_surface"
         android:orientation="vertical"
-        android:paddingStart="20dp"
-        android:paddingTop="14dp"
-        android:paddingEnd="20dp"
-        android:paddingBottom="24dp">
+        android:paddingStart="24dp"
+        android:paddingTop="16dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="28dp">
 
         <TextView
             android:id="@+id/enrollErrorText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
+            android:layout_marginBottom="12dp"
             android:gravity="center"
             android:textColor="@color/brand_error"
             android:textSize="13sp"
@@ -398,12 +396,12 @@
         <Button
             android:id="@+id/enrollButton"
             android:layout_width="match_parent"
-            android:layout_height="52dp"
+            android:layout_height="56dp"
             android:background="@drawable/bg_enroll_cta_button"
             android:text="@string/enroll_cta"
             android:textAllCaps="false"
             android:textColor="@color/white"
-            android:textSize="15sp"
+            android:textSize="16sp"
             android:textStyle="bold" />
     </LinearLayout>
 

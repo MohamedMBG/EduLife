@@ -12,12 +12,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/bg_home_header"
-        android:elevation="4dp"
         android:orientation="vertical"
-        android:paddingStart="24dp"
-        android:paddingTop="32dp"
-        android:paddingEnd="24dp"
-        android:paddingBottom="28dp">
+        android:paddingStart="28dp"
+        android:paddingTop="36dp"
+        android:paddingEnd="28dp"
+        android:paddingBottom="32dp">
 
         <!-- Title row + logout -->
         <LinearLayout
@@ -37,7 +36,7 @@
                     android:layout_height="wrap_content"
                     android:text="Welcome Back!"
                     android:textColor="@color/white"
-                    android:textSize="28sp"
+                    android:textSize="30sp"
                     android:textStyle="bold" />
 
             </LinearLayout>
@@ -48,13 +47,13 @@
                 android:layout_height="40dp"
                 android:layout_marginStart="16dp"
                 android:background="@drawable/bg_logout_on_header"
-                app:backgroundTint="@android:color/holo_red_light"
+                app:backgroundTint="@color/brand_error"
                 android:minWidth="0dp"
                 android:paddingStart="18dp"
                 android:paddingEnd="18dp"
                 android:text="@string/catalog_logout"
                 android:textAllCaps="false"
-                android:textColor="#EEFFFFFF"
+                android:textColor="@color/white"
                 android:textSize="13sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -63,19 +62,19 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="24dp"
             android:background="@drawable/bg_home_session_strip"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingStart="16dp"
-            android:paddingTop="14dp"
-            android:paddingEnd="16dp"
-            android:paddingBottom="14dp">
+            android:paddingStart="18dp"
+            android:paddingTop="16dp"
+            android:paddingEnd="18dp"
+            android:paddingBottom="16dp">
 
             <View
                 android:layout_width="8dp"
                 android:layout_height="8dp"
-                android:layout_marginEnd="12dp"
+                android:layout_marginEnd="14dp"
                 android:background="@drawable/bg_home_online_dot" />
 
             <LinearLayout
@@ -88,7 +87,7 @@
                     android:id="@+id/roleText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="#EEFFFFFF"
+                    android:textColor="@color/brand_text_on_primary"
                     android:textSize="14sp"
                     android:textStyle="bold" />
 
@@ -97,45 +96,44 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="3dp"
-                    android:textColor="#99FFFFFF"
+                    android:textColor="@color/brand_text_on_primary_muted"
                     android:textSize="12sp" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 
-    <!-- Filter strip -->
+    <!-- Filter strip — no divider, spacing does the work -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/brand_surface"
-        android:elevation="1dp"
+        android:background="@color/brand_background"
         android:orientation="vertical">
 
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingTop="14dp"
-            android:paddingBottom="14dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="8dp"
             android:scrollbars="none">
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp">
+                android:paddingStart="28dp"
+                android:paddingEnd="28dp">
 
                 <TextView
                     android:id="@+id/allFilterButton"
                     android:layout_width="wrap_content"
-                    android:layout_height="42dp"
+                    android:layout_height="44dp"
                     android:background="@drawable/bg_catalog_filter_button_active"
                     android:clickable="true"
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground"
                     android:gravity="center"
-                    android:paddingStart="24dp"
-                    android:paddingEnd="24dp"
+                    android:paddingStart="26dp"
+                    android:paddingEnd="26dp"
                     android:text="@string/catalog_all_levels"
                     android:textColor="@color/white"
                     android:textSize="13sp"
@@ -144,15 +142,15 @@
                 <TextView
                     android:id="@+id/beginnerFilterButton"
                     android:layout_width="wrap_content"
-                    android:layout_height="42dp"
+                    android:layout_height="44dp"
                     android:layout_marginStart="10dp"
                     android:background="@drawable/bg_catalog_filter_button"
                     android:clickable="true"
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground"
                     android:gravity="center"
-                    android:paddingStart="24dp"
-                    android:paddingEnd="24dp"
+                    android:paddingStart="26dp"
+                    android:paddingEnd="26dp"
                     android:text="@string/catalog_beginner"
                     android:textColor="@color/brand_primary"
                     android:textSize="13sp"
@@ -161,26 +159,21 @@
                 <TextView
                     android:id="@+id/intermediateFilterButton"
                     android:layout_width="wrap_content"
-                    android:layout_height="42dp"
+                    android:layout_height="44dp"
                     android:layout_marginStart="10dp"
                     android:background="@drawable/bg_catalog_filter_button"
                     android:clickable="true"
                     android:focusable="true"
                     android:foreground="?attr/selectableItemBackground"
                     android:gravity="center"
-                    android:paddingStart="24dp"
-                    android:paddingEnd="24dp"
+                    android:paddingStart="26dp"
+                    android:paddingEnd="26dp"
                     android:text="@string/catalog_intermediate"
                     android:textColor="@color/brand_primary"
                     android:textSize="13sp"
                     android:textStyle="bold" />
             </LinearLayout>
         </HorizontalScrollView>
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/brand_border" />
     </LinearLayout>
 
     <!-- Content: RecyclerView + loading overlay -->
@@ -195,9 +188,9 @@
             android:layout_height="match_parent"
             android:clipToPadding="false"
             android:paddingStart="20dp"
-            android:paddingTop="20dp"
+            android:paddingTop="12dp"
             android:paddingEnd="20dp"
-            android:paddingBottom="32dp" />
+            android:paddingBottom="40dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -227,15 +220,15 @@
             <TextView
                 android:id="@+id/retryButton"
                 android:layout_width="wrap_content"
-                android:layout_height="48dp"
-                android:layout_marginTop="20dp"
+                android:layout_height="52dp"
+                android:layout_marginTop="24dp"
                 android:background="@drawable/bg_enroll_cta_button"
                 android:clickable="true"
                 android:focusable="true"
                 android:foreground="?attr/selectableItemBackground"
                 android:gravity="center"
-                android:paddingStart="32dp"
-                android:paddingEnd="32dp"
+                android:paddingStart="36dp"
+                android:paddingEnd="36dp"
                 android:text="@string/catalog_retry"
                 android:textColor="@color/white"
                 android:textSize="14sp"

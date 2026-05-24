@@ -8,7 +8,17 @@
       "Bash(findstr /C:\"IPv4\")",
       "Bash(gh issue *)",
       "Bash(git checkout *)",
-      "Bash(./gradlew.bat installDebug)"
+      "Bash(./gradlew.bat installDebug)",
+      "Read(//c/Users/pc/.gradle/jdks/jetbrains_s_r_o_-21-amd64-windows.2/bin/**)",
+      "Read(//c/Users/pc/AndroidStudioProjects/AdminLoyalty/.idea/**)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\pc\\\\AndroidStudioProjects\\\\EduLife\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(gh auth *)",
+      "Bash(gh repo *)",
+      "Bash(gh project *)",
+      "Bash(gh label *)",
+      "PowerShell(gh project *)",
+      "PowerShell(gh *)"
     ]
   }
 }

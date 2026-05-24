@@ -4,30 +4,33 @@
     <color name="white">#FFFFFFFF</color>
 
     <!-- ══ BRAND TOKENS ══════════════════════════════════════════════ -->
-    <!-- Single authoritative palette. All screen-specific names below
-         alias these values so the whole app stays in sync. -->
+    <!-- Light theme. Deep forest green accent. -->
 
-    <!-- Green — primary action, logo, CTAs -->
-    <color name="brand_primary">#0D7D5F</color>
-    <color name="brand_primary_dark">#0A6750</color>
-    <color name="brand_primary_surface">#E5F4EE</color>
-    <color name="brand_primary_border">#BFDBCF</color>
+    <!-- Forest green — primary action, logo, CTAs -->
+    <color name="brand_primary">#1B5E3A</color>
+    <color name="brand_primary_dark">#134328</color>
+    <color name="brand_primary_surface">#E8F2EC</color>
+    <color name="brand_primary_border">#BFDBCB</color>
 
     <!-- Backgrounds -->
     <color name="brand_background">#F4F8F6</color>
     <color name="brand_surface">#FFFFFF</color>
     <color name="brand_surface_muted">#F0F6F3</color>
-    <color name="brand_surface_alt">#E5F4EE</color>
+    <color name="brand_surface_alt">#E8F2EC</color>
 
     <!-- Text -->
-    <color name="brand_text_primary">#0D1E28</color>
-    <color name="brand_text_body">#3C4D58</color>
-    <color name="brand_text_secondary">#6A7A87</color>
-    <color name="brand_text_muted">#96A3AD</color>
+    <color name="brand_text_primary">#0D1E14</color>
+    <color name="brand_text_body">#3C4D43</color>
+    <color name="brand_text_secondary">#6A7A72</color>
+    <color name="brand_text_muted">#96A3A0</color>
+
+    <!-- Text on colored (green) surfaces -->
+    <color name="brand_text_on_primary">#EEFFFFFF</color>
+    <color name="brand_text_on_primary_muted">#99FFFFFF</color>
 
     <!-- Borders / dividers -->
     <color name="brand_border">#D2E2DA</color>
-    <color name="brand_border_strong">#BDD0C8</color>
+    <color name="brand_border_strong">#BFCFC8</color>
 
     <!-- Destructive / warning -->
     <color name="brand_error">#C44040</color>
@@ -42,7 +45,7 @@
     <color name="onboarding_text_secondary">@color/brand_text_body</color>
     <color name="onboarding_text_muted">@color/brand_text_secondary</color>
     <color name="onboarding_border">@color/brand_border</color>
-    <color name="onboarding_dot_inactive">#D8E0E4</color>
+    <color name="onboarding_dot_inactive">#D8E0DC</color>
     <color name="onboarding_page1_bg">#DFF0E8</color>
     <color name="onboarding_page2_bg">#E5EBF8</color>
     <color name="onboarding_page3_bg">#F8EDDE</color>
@@ -57,7 +60,7 @@
     <color name="login_text_secondary">@color/brand_text_secondary</color>
     <color name="login_border">@color/brand_border</color>
     <color name="login_border_strong">@color/brand_border_strong</color>
-    <color name="login_light_mint">@color/brand_surface_alt</color>
+    <color name="login_light_mint">@color/brand_primary_surface</color>
     <color name="login_icon_mint">@color/brand_primary_surface</color>
     <color name="login_dot_mint">@color/brand_primary_border</color>
     <color name="login_surface">@color/brand_surface</color>
@@ -69,7 +72,6 @@
     <color name="home_card_bg">@color/brand_surface</color>
 
     <!-- ══ LEVEL BADGES ═══════════════════════════════════════════════ -->
-    <!-- Beginner uses brand green; Intermediate/Advanced keep semantic colour -->
     <color name="level_beginner_bg">@color/brand_primary_surface</color>
     <color name="level_beginner_text">@color/brand_primary</color>
     <color name="level_intermediate_bg">#FFF3E5</color>
