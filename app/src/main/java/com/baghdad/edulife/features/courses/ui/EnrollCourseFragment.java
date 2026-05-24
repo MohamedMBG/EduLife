@@ -58,7 +58,8 @@ public class EnrollCourseFragment extends Fragment {
             applyState(view, enrollButton, state);
 
             if (state.enrolled) {
-                Navigation.findNavController(view).popBackStack();
+                Navigation.findNavController(view)
+                        .navigate(R.id.action_enrollCourseFragment_to_coursesFragment);
             }
         });
 

@@ -141,6 +141,11 @@
             android:name="lessonCount"
             app:argType="integer"
             android:defaultValue="0" />
+        <action
+            android:id="@+id/action_enrollCourseFragment_to_coursesFragment"
+            app:destination="@id/coursesFragment"
+            app:popUpTo="@id/homeFragment"
+            app:popUpToInclusive="false" />
     </fragment>
 
     <fragment
