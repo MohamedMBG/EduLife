@@ -29,7 +29,10 @@ public class CourseCatalogViewModel extends AndroidViewModel {
     }
 
     public void loadCourses(String category) {
-        uiState.setValue(CourseCatalogUiState.loading(category));
+        // Show the seeded fallback catalog immediately so the home screen is never blank
+        // while OkHttp waits up to 35s for an unreachable backend.
+        uiState.setValue(CourseCatalogUiState.success(
+                CourseRepository.fallbackCourses(category), category));
 
         // The first Android catalog slice intentionally keeps paging fixed to page 0 so
         // the UI can prove the backend contract before adding infinite scroll complexity.
@@ -41,7 +44,10 @@ public class CourseCatalogViewModel extends AndroidViewModel {
 
             @Override
             public void onError(String message) {
-                uiState.postValue(CourseCatalogUiState.error(message, category));
+                // Repository already falls back internally, but keep the catalog populated
+                // in case a future error path bypasses that fallback.
+                uiState.postValue(CourseCatalogUiState.success(
+                        CourseRepository.fallbackCourses(category), category));
             }
         });
     }

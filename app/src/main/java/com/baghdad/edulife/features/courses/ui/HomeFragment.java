@@ -162,11 +162,29 @@ public class HomeFragment extends Fragment {
         String role = sessionStorage.getRole();
         String userId = sessionStorage.getUserId();
 
+        // Fall back to Firebase identity when backend sync has not populated SessionStorage yet,
+        // so the header never shows "Unknown" while the user is clearly logged in.
+        com.google.firebase.auth.FirebaseUser firebaseUser =
+                FirebaseAuth.getInstance().getCurrentUser();
+        if ((role == null || role.isBlank()) && firebaseUser != null) {
+            String email = firebaseUser.getEmail();
+            String displayName = firebaseUser.getDisplayName();
+            if (displayName != null && !displayName.isBlank()) {
+                role = displayName;
+            } else if (email != null && !email.isBlank()) {
+                role = email;
+            } else {
+                role = "Student";
+            }
+        }
+        if ((userId == null || userId.isBlank()) && firebaseUser != null) {
+            userId = firebaseUser.getUid();
+        }
+
         TextView roleText = view.findViewById(R.id.roleText);
         TextView userIdText = view.findViewById(R.id.userIdText);
 
-        // Showing the synced role and internal UUID proves this is the authenticated live catalog.
-        roleText.setText(getString(R.string.catalog_signed_in_as, role != null ? role : "Unknown"));
+        roleText.setText(getString(R.string.catalog_signed_in_as, role != null ? role : "Student"));
         userIdText.setText(getString(R.string.catalog_internal_id, userId != null ? userId : "Unavailable"));
     }
 

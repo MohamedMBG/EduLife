@@ -3,7 +3,12 @@
     "allow": [
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\pc\\\\AndroidStudioProjects\\\\EduLife\" -Force)",
       "Bash(Select-Object Name, FullName)",
-      "Bash(Get-ChildItem -Force)"
+      "Bash(Get-ChildItem -Force)",
+      "Bash(ipconfig)",
+      "Bash(findstr /C:\"IPv4\")",
+      "Bash(gh issue *)",
+      "Bash(git checkout *)",
+      "Bash(./gradlew.bat installDebug)"
     ]
   }
 }

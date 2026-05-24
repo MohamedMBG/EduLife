@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="@color/brand_background"
     android:orientation="vertical">
 
@@ -33,21 +34,11 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/catalog_title"
+                    android:text="Welcome Back!"
                     android:textColor="@color/white"
                     android:textSize="26sp"
                     android:textStyle="bold" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:ellipsize="end"
-                    android:lineSpacingMultiplier="1.3"
-                    android:maxLines="2"
-                    android:text="@string/catalog_subtitle"
-                    android:textColor="#CCFFFFFF"
-                    android:textSize="13sp" />
             </LinearLayout>
 
             <Button
@@ -56,6 +47,7 @@
                 android:layout_height="36dp"
                 android:layout_marginStart="14dp"
                 android:background="@drawable/bg_logout_on_header"
+                app:backgroundTint="@android:color/holo_red_light"
                 android:minWidth="0dp"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
