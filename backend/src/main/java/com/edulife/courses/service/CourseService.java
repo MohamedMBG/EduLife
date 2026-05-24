@@ -43,6 +43,8 @@ public class CourseService {
     }
 
     @Transactional(readOnly = true)
+    // Read-only transaction keeps the discovery slice safe from accidental writes while still
+    // allowing the service to orchestrate repositories and DTO mapping in one place.
     public Page<CourseSummaryDto> getPublishedCourses(String category, Pageable pageable) {
         Pageable sanitizedPageable = sanitizePageable(pageable);
 
@@ -63,6 +65,8 @@ public class CourseService {
     }
 
     @Transactional(readOnly = true)
+    // Detail reads remain published-only so learners cannot enumerate draft content simply by
+    // guessing IDs before teacher/admin flows are added later.
     public CourseDetailDto getPublishedCourseDetail(UUID courseId) {
         Course course = courseRepository.findByIdAndStatus(courseId, CourseStatus.PUBLISHED)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
@@ -87,6 +91,7 @@ public class CourseService {
     }
 
     private CourseSummaryDto toCourseSummary(Course course) {
+        // DTO mapping keeps entity shape decoupled from the public API contract expected by Android.
         return new CourseSummaryDto(
                 course.getId(),
                 course.getSlug(),
