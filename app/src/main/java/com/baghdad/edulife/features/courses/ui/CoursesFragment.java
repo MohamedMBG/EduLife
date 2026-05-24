@@ -1,5 +1,6 @@
 package com.baghdad.edulife.features.courses.ui;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -113,7 +114,14 @@ public class CoursesFragment extends Fragment {
 
     private void handleUnenroll(EnrolledCourse course) {
         if (course.enrollmentId == null || course.enrollmentId.isBlank()) return;
-        enrollmentViewModel.unenroll(course.enrollmentId);
+        String title = course.title != null ? course.title : "this course";
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Unenroll from course?")
+                .setMessage("You will lose access to \"" + title + "\". This cannot be undone.")
+                .setPositiveButton("Unenroll", (dialog, which) ->
+                        enrollmentViewModel.unenroll(course.enrollmentId))
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     private void updateFilterChipStyles() {
