@@ -14,6 +14,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     @Bean
+    // The filter is exposed as a bean so the same Firebase validation rule is reused across
+    // all protected API modules instead of being duplicated per controller or test slice.
     public FirebaseTokenFilter firebaseTokenFilter(FirebaseAuth firebaseAuth, ApiErrorWriter apiErrorWriter) {
         return new FirebaseTokenFilter(firebaseAuth, apiErrorWriter);
     }
@@ -26,6 +28,8 @@ public class SecurityConfig {
     ) throws Exception {
 
         return http
+                // EduLife mobile clients use Bearer tokens only, so CSRF protection for cookie
+                // sessions would add noise without improving the current threat model.
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth

@@ -45,6 +45,8 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
         String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
         if (authorizationHeader == null || authorizationHeader.isBlank()) {
+            // Spring Security will convert missing credentials into the shared 401 contract via
+            // the configured authentication entry point, so the filter should not write here.
             filterChain.doFilter(request, response);
             return;
         }
@@ -62,6 +64,8 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
             Boolean emailVerified = decodedToken.isEmailVerified();
 
             if (!Boolean.TRUE.equals(emailVerified)) {
+                // Verified email is a locked learner-flow rule from Sprint 1, so discovery
+                // cannot proceed even if the token itself is otherwise valid.
                 apiErrorWriter.write(response, HttpStatus.FORBIDDEN, "Email is not verified");
                 return;
             }
@@ -72,6 +76,8 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
             FirebaseAuthentication authentication =
                     new FirebaseAuthentication(firebaseUid, email);
 
+            // Only trusted Firebase claims are copied into the security context. Client-supplied
+            // user IDs or roles are never accepted here.
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             filterChain.doFilter(request, response);

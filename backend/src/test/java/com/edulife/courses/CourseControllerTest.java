@@ -58,6 +58,7 @@ class CourseControllerTest {
                 "A structured algebra refresher for Moroccan Bac Sciences Math students.",
                 "BEGINNER",
                 "fr",
+                "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&q=80",
                 Instant.parse("2026-05-01T10:00:00Z")
         );
 
@@ -125,6 +126,7 @@ class CourseControllerTest {
                 "Build core confidence in equations, functions, and algebraic methods used across Bac Sciences Math coursework.",
                 "BEGINNER",
                 "fr",
+                "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&q=80",
                 Instant.parse("2026-05-01T10:00:00Z"),
                 List.of(
                         new CourseSectionDto(
