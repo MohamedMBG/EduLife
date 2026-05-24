@@ -58,8 +58,9 @@ public class EnrollCourseFragment extends Fragment {
             applyState(view, enrollButton, state);
 
             if (state.enrolled) {
-                Navigation.findNavController(view)
-                        .navigate(R.id.action_enrollCourseFragment_to_coursesFragment);
+                com.google.android.material.bottomnavigation.BottomNavigationView bottomNav =
+                        requireActivity().findViewById(R.id.bottomNavView);
+                bottomNav.setSelectedItemId(R.id.coursesFragment);
             }
         });
 
