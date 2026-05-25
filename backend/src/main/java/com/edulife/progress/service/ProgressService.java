@@ -16,8 +16,10 @@ import com.edulife.users.entity.User;
 import com.edulife.users.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -81,27 +83,28 @@ public class ProgressService {
         }
 
         List<CourseSection> sections = sectionRepository.findAllByCourseIdOrderByDisplayOrderAsc(courseId);
-        Set<UUID> completedIds = lessonProgressRepository
-                .findCompletedLessonIdsByUserIdAndCourseId(user.getId(), courseId);
-
-        int totalLessons = 0;
-        int completedLessons = 0;
+        Map<UUID, LessonProgress> completedMap = lessonProgressRepository
+                .findAllByUserIdAndCourseId(user.getId(), courseId)
+                .stream()
+                .collect(Collectors.toMap(LessonProgress::getLessonId, Function.identity()));
 
         List<CourseProgressDto.SectionProgressDto> sectionDtos = sections.stream().map(section -> {
             List<Lesson> lessons = lessonRepository
                     .findAllByCourseSectionIdOrderByDisplayOrderAsc(section.getId());
 
-            List<CourseProgressDto.LessonProgressDto> lessonDtos = lessons.stream().map(l ->
-                    new CourseProgressDto.LessonProgressDto(
-                            l.getId(),
-                            l.getTitle(),
-                            l.getLessonType(),
-                            l.getEstimatedDurationMinutes(),
-                            l.getDisplayOrder(),
-                            l.isPreview(),
-                            completedIds.contains(l.getId())
-                    )
-            ).toList();
+            List<CourseProgressDto.LessonProgressDto> lessonDtos = lessons.stream().map(l -> {
+                LessonProgress lp = completedMap.get(l.getId());
+                return new CourseProgressDto.LessonProgressDto(
+                        l.getId(),
+                        l.getTitle(),
+                        l.getLessonType(),
+                        l.getEstimatedDurationMinutes(),
+                        l.getDisplayOrder(),
+                        l.isPreview(),
+                        lp != null,
+                        lp != null ? lp.getCompletedAt() : null
+                );
+            }).toList();
 
             return new CourseProgressDto.SectionProgressDto(
                     section.getId(),
@@ -111,18 +114,14 @@ public class ProgressService {
             );
         }).toList();
 
-        // Recount from the built DTO to stay consistent with what we return
-        int total = sectionDtos.stream()
-                .mapToInt(s -> s.lessons().size())
-                .sum();
-        int completed = sectionDtos.stream()
+        int total = sectionDtos.stream().mapToInt(s -> s.lessons().size()).sum();
+        int completed = (int) sectionDtos.stream()
                 .flatMap(s -> s.lessons().stream())
-                .mapToInt(l -> l.completed() ? 1 : 0)
-                .sum();
+                .filter(CourseProgressDto.LessonProgressDto::completed)
+                .count();
+        double percentComplete = total == 0 ? 0.0 : Math.round((completed * 1000.0) / total) / 10.0;
 
-        int percentage = total == 0 ? 0 : (int) Math.round((completed * 100.0) / total);
-
-        return new CourseProgressDto(courseId, completed, total, percentage, sectionDtos);
+        return new CourseProgressDto(courseId, completed, total, percentComplete, sectionDtos);
     }
 
     private void syncCourseProgress(UUID userId, UUID courseId) {
