@@ -40,6 +40,12 @@ public class Lesson {
     @Column(name = "is_preview", nullable = false)
     private boolean preview;
 
+    @Column(name = "content_url", length = 2048)
+    private String contentUrl;
+
+    @Column(name = "content_body", columnDefinition = "TEXT")
+    private String contentBody;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -74,6 +80,8 @@ public class Lesson {
     public Integer getEstimatedDurationMinutes() { return estimatedDurationMinutes; }
     public Integer getDisplayOrder() { return displayOrder; }
     public boolean isPreview() { return preview; }
+    public String getContentUrl() { return contentUrl; }
+    public String getContentBody() { return contentBody; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
 }

@@ -74,5 +74,16 @@ public interface ApiService {
      */
     @GET("enrollments/me")
     Call<List<EnrolledCourse>> getMyEnrollments();
+
+    /**
+     * Marks a lesson as complete for the authenticated user. Idempotent.
+     * Endpoint: POST /api/v1/courses/{courseId}/lessons/{lessonId}/complete
+     * Returns 204 on success, 403 if not enrolled, 404 if lesson not found.
+     */
+    @POST("courses/{courseId}/lessons/{lessonId}/complete")
+    Call<Void> markLessonComplete(
+            @Path("courseId") String courseId,
+            @Path("lessonId") String lessonId
+    );
 }
 

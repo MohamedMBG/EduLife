@@ -1,0 +1,29 @@
+package com.edulife.progress.dto;
+
+import java.util.List;
+import java.util.UUID;
+
+public record CourseProgressDto(
+        UUID courseId,
+        int completedLessons,
+        int totalLessons,
+        int percentageComplete,
+        List<SectionProgressDto> sections
+) {
+    public record SectionProgressDto(
+            UUID sectionId,
+            String sectionTitle,
+            int displayOrder,
+            List<LessonProgressDto> lessons
+    ) {}
+
+    public record LessonProgressDto(
+            UUID lessonId,
+            String title,
+            String lessonType,
+            Integer durationMinutes,
+            int displayOrder,
+            boolean preview,
+            boolean completed
+    ) {}
+}

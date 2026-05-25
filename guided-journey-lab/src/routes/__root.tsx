@@ -72,14 +72,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "EduLife — One clear path to learn, pass, and grow" },
+      { name: "description", content: "EduLife is a mobile-first learning platform for Moroccan learners. Discover courses, track progress, pass exams, and earn verified certificates." },
+      { name: "author", content: "EduLife" },
+      { property: "og:title", content: "EduLife — Structured learning for real progress" },
+      { property: "og:description", content: "One guided path from course to certificate. Built for Moroccan learners in Darija, French, and English." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:site", content: "@EduLifeApp" },
     ],
     links: [
       {
