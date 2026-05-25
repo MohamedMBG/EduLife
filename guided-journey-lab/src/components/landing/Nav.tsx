@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { GraduationCap, Menu, X, Sun, Moon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "@tanstack/react-router";
 
 const links = [
   { href: "#journey", label: "Journey" },
@@ -47,6 +48,12 @@ export function Nav() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <Link
+            to="/login"
+            className="hidden md:inline-flex h-9 items-center rounded-full border border-border bg-surface-elevated px-4 text-sm font-medium text-foreground hover:bg-accent transition-colors"
+          >
+            Sign In
+          </Link>
           <a
             href="#cta"
             className="inline-flex h-9 items-center rounded-full bg-foreground text-background px-4 text-sm font-medium hover:opacity-90 transition-opacity"
@@ -86,11 +93,25 @@ export function Nav() {
                   key={href}
                   href={href}
                   onClick={() => setOpen(false)}
-                  className="py-4 text-base text-muted-foreground hover:text-foreground transition-colors border-b border-border/40 last:border-0"
+                  className="py-4 text-base text-muted-foreground hover:text-foreground transition-colors border-b border-border/40"
                 >
                   {label}
                 </a>
               ))}
+              <Link
+                to="/login"
+                onClick={() => setOpen(false)}
+                className="py-4 text-base text-muted-foreground hover:text-foreground transition-colors border-b border-border/40"
+              >
+                Sign In
+              </Link>
+              <a
+                href="#cta"
+                onClick={() => setOpen(false)}
+                className="mt-3 mb-2 inline-flex h-10 w-full items-center justify-center rounded-full bg-foreground text-background text-sm font-medium hover:opacity-90 transition-opacity"
+              >
+                Get Early Access
+              </a>
             </nav>
           </motion.div>
         )}

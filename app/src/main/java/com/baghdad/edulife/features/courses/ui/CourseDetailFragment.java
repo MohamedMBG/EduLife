@@ -114,9 +114,10 @@ public class CourseDetailFragment extends Fragment {
 
         sectionContainer.removeAllViews();
         int lessonCount = 0;
+        String courseId = getArguments() != null ? getArguments().getString("courseId", "") : "";
         if (courseDetail.sections != null) {
             for (CourseSection section : courseDetail.sections) {
-                sectionContainer.addView(createSectionView(section));
+                sectionContainer.addView(createSectionView(courseId, section));
                 if (section.lessons != null) lessonCount += section.lessons.size();
             }
         }
@@ -143,7 +144,7 @@ public class CourseDetailFragment extends Fragment {
         });
     }
 
-    private View createSectionView(CourseSection section) {
+    private View createSectionView(String courseId, CourseSection section) {
         LinearLayout sectionLayout = new LinearLayout(requireContext());
         sectionLayout.setOrientation(LinearLayout.VERTICAL);
         sectionLayout.setPadding(0, 0, 0, dp(20));
@@ -166,14 +167,14 @@ public class CourseDetailFragment extends Fragment {
         List<LessonSummary> lessons = section.lessons;
         if (lessons != null) {
             for (LessonSummary lesson : lessons) {
-                sectionLayout.addView(createLessonView(lesson));
+                sectionLayout.addView(createLessonView(courseId, lesson, section.title));
             }
         }
 
         return sectionLayout;
     }
 
-    private View createLessonView(LessonSummary lesson) {
+    private View createLessonView(String courseId, LessonSummary lesson, String sectionTitle) {
         LinearLayout lessonLayout = new LinearLayout(requireContext());
         lessonLayout.setOrientation(LinearLayout.VERTICAL);
         lessonLayout.setBackgroundResource(R.drawable.bg_catalog_lesson_row);
@@ -192,11 +193,11 @@ public class CourseDetailFragment extends Fragment {
         lessonTitle.setTextColor(requireContext().getColor(R.color.catalog_text_primary));
         lessonTitle.setTypeface(lessonTitle.getTypeface(), Typeface.BOLD);
 
-        TextView lessonSummary = new TextView(requireContext());
-        lessonSummary.setText(lesson.summary);
-        lessonSummary.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-        lessonSummary.setTextColor(requireContext().getColor(R.color.catalog_text_secondary));
-        lessonSummary.setPadding(0, dp(6), 0, dp(8));
+        TextView lessonSummaryView = new TextView(requireContext());
+        lessonSummaryView.setText(lesson.summary);
+        lessonSummaryView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        lessonSummaryView.setTextColor(requireContext().getColor(R.color.catalog_text_secondary));
+        lessonSummaryView.setPadding(0, dp(6), 0, dp(8));
 
         TextView lessonMeta = new TextView(requireContext());
         lessonMeta.setText(getString(
@@ -216,11 +217,25 @@ public class CourseDetailFragment extends Fragment {
         accessText.setPadding(0, dp(8), 0, 0);
         accessText.setTypeface(accessText.getTypeface(), Typeface.BOLD);
 
-        // Sprint 2 shows preview vs locked lessons without implementing enrollment gates early.
         lessonLayout.addView(lessonTitle);
-        lessonLayout.addView(lessonSummary);
+        lessonLayout.addView(lessonSummaryView);
         lessonLayout.addView(lessonMeta);
         lessonLayout.addView(accessText);
+
+        lessonLayout.setOnClickListener(v -> {
+            Bundle navArgs = new Bundle();
+            navArgs.putString("courseId",        courseId);
+            navArgs.putString("lessonId",        lesson.id != null ? lesson.id : "");
+            navArgs.putString("lessonTitle",     lesson.title != null ? lesson.title : "");
+            navArgs.putString("lessonSummary",   lesson.summary != null ? lesson.summary : "");
+            navArgs.putString("lessonType",      lesson.lessonType != null ? lesson.lessonType : "");
+            navArgs.putInt("durationMinutes",    lesson.estimatedDurationMinutes);
+            navArgs.putBoolean("isPreview",      lesson.preview);
+            navArgs.putString("sectionTitle",    sectionTitle != null ? sectionTitle : "");
+            navArgs.putInt("orderInSection",     lesson.displayOrder);
+            Navigation.findNavController(requireView())
+                    .navigate(R.id.action_courseDetailFragment_to_lessonPlayerFragment, navArgs);
+        });
 
         return lessonLayout;
     }

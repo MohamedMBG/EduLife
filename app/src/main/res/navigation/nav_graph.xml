@@ -148,6 +148,10 @@
         android:name="com.baghdad.edulife.features.courses.ui.LessonPlayerFragment"
         android:label="Lesson">
         <argument
+            android:name="courseId"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
             android:name="lessonId"
             app:argType="string"
             android:defaultValue="" />

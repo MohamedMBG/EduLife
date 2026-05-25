@@ -70,6 +70,8 @@
     <string name="lesson_player_about_label">About this lesson</string>
     <string name="lesson_player_notes_title">Lesson Notes</string>
     <string name="lesson_player_notes_placeholder">Notes and key takeaways will appear here once the lesson content is loaded.</string>
+    <string name="lesson_player_mark_complete">Mark as Done</string>
+    <string name="lesson_player_completed">✓ Completed</string>
     <string name="lesson_player_prev">← Previous</string>
     <string name="lesson_player_next">Next →</string>
 
