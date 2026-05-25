@@ -1,5 +1,6 @@
 package com.edulife.profiles.service;
 
+import com.edulife.certificates.repository.CertificateRepository;
 import com.edulife.enrollments.model.EnrollmentStatus;
 import com.edulife.enrollments.repository.EnrollmentRepository;
 import com.edulife.profiles.dto.ProfileDto;
@@ -25,16 +26,19 @@ public class ProfileService {
     private final UserRepository userRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final LessonProgressRepository lessonProgressRepository;
+    private final CertificateRepository certificateRepository;
 
     public ProfileService(
             ProfileRepository profileRepository,
             UserRepository userRepository,
             EnrollmentRepository enrollmentRepository,
-            LessonProgressRepository lessonProgressRepository) {
+            LessonProgressRepository lessonProgressRepository,
+            CertificateRepository certificateRepository) {
         this.profileRepository = profileRepository;
         this.userRepository = userRepository;
         this.enrollmentRepository = enrollmentRepository;
         this.lessonProgressRepository = lessonProgressRepository;
+        this.certificateRepository = certificateRepository;
     }
 
     public ProfileDto getProfile() {
@@ -60,6 +64,7 @@ public class ProfileService {
     private ProfileDto toDto(User user, Profile profile) {
         int enrolled = (int) enrollmentRepository.countByUserIdAndStatus(user.getId(), EnrollmentStatus.ACTIVE);
         int completed = (int) lessonProgressRepository.countByUserId(user.getId());
+        int certificates = (int) certificateRepository.countByUserId(user.getId());
 
         return new ProfileDto(
                 user.getId(),
@@ -69,7 +74,7 @@ public class ProfileService {
                 profile.getAvatarUrl(),
                 enrolled,
                 completed,
-                0
+                certificates
         );
     }
 
