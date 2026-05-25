@@ -84,6 +84,9 @@
     <string name="profile_stat_role">Role</string>
     <string name="profile_stat_verification">Access</string>
     <string name="profile_stat_sync">Sync</string>
+    <string name="profile_stat_enrolled">Courses</string>
+    <string name="profile_stat_lessons">Lessons</string>
+    <string name="profile_stat_certificates">Certificates</string>
     <string name="profile_value_verified">Verified</string>
     <string name="profile_value_pending">Pending</string>
     <string name="profile_value_ready">Ready</string>
