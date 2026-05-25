@@ -1,5 +1,6 @@
 package com.edulife.progress.dto;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -7,12 +8,12 @@ public record CourseProgressDto(
         UUID courseId,
         int completedLessons,
         int totalLessons,
-        int percentageComplete,
+        double percentComplete,
         List<SectionProgressDto> sections
 ) {
     public record SectionProgressDto(
             UUID sectionId,
-            String sectionTitle,
+            String title,
             int displayOrder,
             List<LessonProgressDto> lessons
     ) {}
@@ -24,6 +25,7 @@ public record CourseProgressDto(
             Integer durationMinutes,
             int displayOrder,
             boolean preview,
-            boolean completed
+            boolean completed,
+            Instant completedAt
     ) {}
 }
