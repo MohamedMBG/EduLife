@@ -138,7 +138,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="@string/profile_stat_role"
+                    android:text="@string/profile_stat_enrolled"
                     android:textColor="@color/brand_text_secondary"
                     android:textSize="12sp" />
             </LinearLayout>
@@ -165,7 +165,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="@string/profile_stat_verification"
+                    android:text="@string/profile_stat_lessons"
                     android:textColor="@color/brand_text_secondary"
                     android:textSize="12sp" />
             </LinearLayout>
@@ -192,7 +192,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="@string/profile_stat_sync"
+                    android:text="@string/profile_stat_certificates"
                     android:textColor="@color/brand_text_secondary"
                     android:textSize="12sp" />
             </LinearLayout>

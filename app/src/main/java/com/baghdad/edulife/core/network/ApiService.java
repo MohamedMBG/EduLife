@@ -7,6 +7,7 @@ import com.baghdad.edulife.features.courses.model.CourseSummary;
 import com.baghdad.edulife.features.courses.model.EnrolledCourse;
 import com.baghdad.edulife.features.courses.model.EnrollmentResponse;
 import com.baghdad.edulife.features.courses.model.EnrollRequest;
+import com.baghdad.edulife.features.profile.model.ProfileResponse;
 
 import java.util.List;
 
@@ -85,5 +86,8 @@ public interface ApiService {
             @Path("courseId") String courseId,
             @Path("lessonId") String lessonId
     );
+
+    @GET("profile")
+    Call<ProfileResponse> getProfile();
 }
 

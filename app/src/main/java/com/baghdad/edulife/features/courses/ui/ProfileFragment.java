@@ -16,12 +16,15 @@ import androidx.navigation.Navigation;
 import com.baghdad.edulife.R;
 import com.baghdad.edulife.core.storage.SessionStorage;
 import com.baghdad.edulife.features.auth.viewmodel.AuthViewModel;
+import com.baghdad.edulife.features.profile.model.ProfileResponse;
+import com.baghdad.edulife.features.profile.viewmodel.ProfileViewModel;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 public class ProfileFragment extends Fragment {
 
     private AuthViewModel authViewModel;
+    private ProfileViewModel profileViewModel;
 
     public ProfileFragment() {
         super(R.layout.fragment_profile);
@@ -32,6 +35,7 @@ public class ProfileFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+        profileViewModel = new ViewModelProvider(this).get(ProfileViewModel.class);
         SessionStorage sessionStorage = new SessionStorage(requireContext());
 
         View profileHeader = view.findViewById(R.id.profileHeaderLayout);
@@ -43,7 +47,9 @@ public class ProfileFragment extends Fragment {
             return WindowInsetsCompat.CONSUMED;
         });
 
-        bindUserInfo(view, sessionStorage);
+        bindStaticUserInfo(view, sessionStorage);
+        observeProfile(view);
+        profileViewModel.loadProfile();
 
         view.findViewById(R.id.logoutButton).setOnClickListener(v -> {
             authViewModel.signOut();
@@ -55,7 +61,7 @@ public class ProfileFragment extends Fragment {
         });
     }
 
-    private void bindUserInfo(View view, SessionStorage session) {
+    private void bindStaticUserInfo(View view, SessionStorage session) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
         TextView avatarInitials = view.findViewById(R.id.avatarInitials);
@@ -63,9 +69,6 @@ public class ProfileFragment extends Fragment {
         TextView emailView = view.findViewById(R.id.profileEmail);
         TextView roleView = view.findViewById(R.id.profileRole);
         TextView metaStatusView = view.findViewById(R.id.profileMetaStatus);
-        TextView primaryValueView = view.findViewById(R.id.profileStatPrimaryValue);
-        TextView secondaryValueView = view.findViewById(R.id.profileStatSecondaryValue);
-        TextView tertiaryValueView = view.findViewById(R.id.profileStatTertiaryValue);
         TextView internalIdValueView = view.findViewById(R.id.profileInternalIdValue);
         TextView verificationValueView = view.findViewById(R.id.profileVerificationValue);
 
@@ -74,31 +77,48 @@ public class ProfileFragment extends Fragment {
                 : extractNameFromEmail(user);
         String email = user != null && user.getEmail() != null ? user.getEmail() : "—";
         String role = session.getRole() != null ? session.getRole().toUpperCase() : "STUDENT";
-        String displayRole = formatRole(role);
         boolean emailVerified = user != null && user.isEmailVerified();
         String internalUserId = session.getUserId();
         boolean syncReady = internalUserId != null && !internalUserId.isBlank();
 
         nameView.setText(displayName);
         emailView.setText(email);
-        roleView.setText(displayRole.toUpperCase());
+        roleView.setText(formatRole(role).toUpperCase());
         avatarInitials.setText(getInitials(displayName));
-        // Surface real account state instead of placeholder progress numbers so the profile
-        // remains trustworthy before enrollments, progress, and certificates are fully wired.
         metaStatusView.setText(buildMetaStatus(emailVerified, syncReady));
-        primaryValueView.setText(displayRole);
-        secondaryValueView.setText(getString(emailVerified
-                ? R.string.profile_value_verified
-                : R.string.profile_value_pending));
-        tertiaryValueView.setText(getString(syncReady
-                ? R.string.profile_value_ready
-                : R.string.profile_value_not_ready));
         internalIdValueView.setText(syncReady
                 ? internalUserId
                 : getString(R.string.profile_internal_id_missing));
         verificationValueView.setText(getString(emailVerified
                 ? R.string.profile_access_verified
                 : R.string.profile_access_pending));
+
+        // Show placeholder zeros until API responds
+        view.<TextView>findViewById(R.id.profileStatPrimaryValue).setText("—");
+        view.<TextView>findViewById(R.id.profileStatSecondaryValue).setText("—");
+        view.<TextView>findViewById(R.id.profileStatTertiaryValue).setText("—");
+    }
+
+    private void observeProfile(View view) {
+        TextView nameView = view.findViewById(R.id.profileName);
+        TextView avatarInitials = view.findViewById(R.id.avatarInitials);
+        TextView enrolledView = view.findViewById(R.id.profileStatPrimaryValue);
+        TextView lessonsView = view.findViewById(R.id.profileStatSecondaryValue);
+        TextView certView = view.findViewById(R.id.profileStatTertiaryValue);
+
+        profileViewModel.profile.observe(getViewLifecycleOwner(), (ProfileResponse profile) -> {
+            if (profile == null) return;
+
+            // Prefer server-side displayName over Firebase fallback
+            if (profile.displayName != null && !profile.displayName.isBlank()) {
+                nameView.setText(profile.displayName);
+                avatarInitials.setText(getInitials(profile.displayName));
+            }
+
+            enrolledView.setText(String.valueOf(profile.enrolledCourses));
+            lessonsView.setText(String.valueOf(profile.completedLessons));
+            certView.setText(String.valueOf(profile.certificates));
+        });
     }
 
     private String buildMetaStatus(boolean emailVerified, boolean syncReady) {
@@ -112,19 +132,13 @@ public class ProfileFragment extends Fragment {
     }
 
     private String formatRole(String role) {
-        if (role == null || role.isBlank()) {
-            return "Student";
-        }
+        if (role == null || role.isBlank()) return "Student";
         String normalized = role.replace('_', ' ').trim().toLowerCase();
         String[] parts = normalized.split("\\s+");
         StringBuilder builder = new StringBuilder();
         for (String part : parts) {
-            if (part.isBlank()) {
-                continue;
-            }
-            if (builder.length() > 0) {
-                builder.append(' ');
-            }
+            if (part.isBlank()) continue;
+            if (builder.length() > 0) builder.append(' ');
             builder.append(Character.toUpperCase(part.charAt(0))).append(part.substring(1));
         }
         return builder.length() == 0 ? "Student" : builder.toString();
