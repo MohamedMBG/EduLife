@@ -6,6 +6,8 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavOptions;
@@ -31,6 +33,15 @@ public class ProfileFragment extends Fragment {
 
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
         SessionStorage sessionStorage = new SessionStorage(requireContext());
+
+        View profileHeader = view.findViewById(R.id.profileHeaderLayout);
+        final int origProfileHeaderTop = profileHeader.getPaddingTop();
+        ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
+            int top = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
+            profileHeader.setPadding(profileHeader.getPaddingLeft(), origProfileHeaderTop + top,
+                    profileHeader.getPaddingRight(), profileHeader.getPaddingBottom());
+            return WindowInsetsCompat.CONSUMED;
+        });
 
         bindUserInfo(view, sessionStorage);
 

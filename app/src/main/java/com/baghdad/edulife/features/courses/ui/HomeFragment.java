@@ -6,6 +6,8 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavOptions;
@@ -57,6 +59,15 @@ public class HomeFragment extends Fragment {
             redirectToLogin(view);
             return;
         }
+
+        View homeHeader = view.findViewById(R.id.homeHeaderLayout);
+        final int origHeaderTop = homeHeader.getPaddingTop();
+        ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
+            int top = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
+            homeHeader.setPadding(homeHeader.getPaddingLeft(), origHeaderTop + top,
+                    homeHeader.getPaddingRight(), homeHeader.getPaddingBottom());
+            return WindowInsetsCompat.CONSUMED;
+        });
 
         stateCard = view.findViewById(R.id.stateCard);
         loadingIndicator = view.findViewById(R.id.loadingIndicator);

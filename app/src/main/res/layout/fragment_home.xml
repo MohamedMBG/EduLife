@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
+    android:fitsSystemWindows="false"
     android:background="@color/brand_background">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -15,6 +15,7 @@
 
         <!-- Brand header — scrolls away -->
         <LinearLayout
+            android:id="@+id/homeHeaderLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_home_header"
@@ -236,7 +237,7 @@
             android:paddingStart="24dp"
             android:paddingTop="20dp"
             android:paddingEnd="24dp"
-            android:paddingBottom="56dp" />
+            android:paddingBottom="88dp" />
 
         <LinearLayout
             android:layout_width="match_parent"

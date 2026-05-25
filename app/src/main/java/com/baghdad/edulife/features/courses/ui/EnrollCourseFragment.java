@@ -9,6 +9,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.NavController;
+import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 
 import com.baghdad.edulife.R;
@@ -58,9 +60,13 @@ public class EnrollCourseFragment extends Fragment {
             applyState(view, enrollButton, state);
 
             if (state.enrolled) {
-                com.google.android.material.bottomnavigation.BottomNavigationView bottomNav =
-                        requireActivity().findViewById(R.id.bottomNavView);
-                bottomNav.setSelectedItemId(R.id.coursesFragment);
+                NavController nav = Navigation.findNavController(view);
+                NavOptions opts = new NavOptions.Builder()
+                        .setLaunchSingleTop(true)
+                        .setRestoreState(true)
+                        .setPopUpTo(R.id.homeFragment, false, true)
+                        .build();
+                nav.navigate(R.id.coursesFragment, null, opts);
             }
         });
 

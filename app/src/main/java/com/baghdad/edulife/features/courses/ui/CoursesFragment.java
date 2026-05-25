@@ -8,6 +8,8 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
@@ -42,6 +44,15 @@ public class CoursesFragment extends Fragment {
 
         enrollmentViewModel = new ViewModelProvider(this).get(EnrollmentViewModel.class);
 
+        View coursesHeader = view.findViewById(R.id.coursesHeaderLayout);
+        final int origCoursesHeaderTop = coursesHeader.getPaddingTop();
+        ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
+            int top = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
+            coursesHeader.setPadding(coursesHeader.getPaddingLeft(), origCoursesHeaderTop + top,
+                    coursesHeader.getPaddingRight(), coursesHeader.getPaddingBottom());
+            return WindowInsetsCompat.CONSUMED;
+        });
+
         emptyText = view.findViewById(R.id.coursesEmptyText);
         courseCountText = view.findViewById(R.id.courseCountText);
 
@@ -66,7 +77,6 @@ public class CoursesFragment extends Fragment {
 
         enrollmentViewModel.getUnenrollState().observe(getViewLifecycleOwner(), this::handleUnenrollState);
 
-        enrollmentViewModel.loadMyEnrollments();
         showEmpty("Loading your courses…");
     }
 

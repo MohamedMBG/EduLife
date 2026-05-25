@@ -10,14 +10,16 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.NavGraph;
+import androidx.navigation.NavOptions;
 import androidx.navigation.fragment.NavHostFragment;
-import androidx.navigation.ui.NavigationUI;
 
 import com.baghdad.edulife.core.storage.SessionStorage;
 import com.baghdad.edulife.features.onboarding.data.OnboardingPreferences;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+
+import kotlin.Unit;
+import me.ibrahimsn.lib.SmoothBottomBar;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -27,15 +29,16 @@ public class MainActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
-        BottomNavigationView bottomNav = findViewById(R.id.bottomNavView);
+        SmoothBottomBar bottomNav = findViewById(R.id.bottomNavView);
         View mainContainer = findViewById(R.id.mainContainer);
         View navHostView = findViewById(R.id.main);
 
         ViewCompat.setOnApplyWindowInsetsListener(mainContainer, (v, insets) -> {
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            // no top padding — fragments handle status bar insets themselves
             navHostView.setPadding(bars.left, 0, bars.right, 0);
             bottomNav.setPadding(bars.left, 0, bars.right, bars.bottom);
-            return insets;
+            return insets; // propagate so fitsSystemWindows fragments receive insets
         });
 
         if (savedInstanceState == null) {
@@ -44,18 +47,34 @@ public class MainActivity extends AppCompatActivity {
 
         NavHostFragment navHostFragment =
                 (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.main);
-        if (navHostFragment != null) {
-            NavController navController = navHostFragment.getNavController();
-            NavigationUI.setupWithNavController(bottomNav, navController);
+        if (navHostFragment == null) return;
 
-            navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
-                int id = destination.getId();
-                boolean isMainTab = id == R.id.homeFragment
-                        || id == R.id.coursesFragment
-                        || id == R.id.profileFragment;
-                bottomNav.setVisibility(isMainTab ? View.VISIBLE : View.GONE);
-            });
-        }
+        NavController navController = navHostFragment.getNavController();
+
+        int[] tabDestinations = {R.id.homeFragment, R.id.coursesFragment, R.id.profileFragment};
+        NavOptions tabOptions = new NavOptions.Builder()
+                .setLaunchSingleTop(true)
+                .setRestoreState(true)
+                .setPopUpTo(R.id.homeFragment, false, true)
+                .build();
+
+        bottomNav.setOnItemSelected((kotlin.jvm.functions.Function1<Integer, Unit>) position -> {
+            if (position >= 0 && position < tabDestinations.length) {
+                navController.navigate(tabDestinations[position], null, tabOptions);
+            }
+            return Unit.INSTANCE;
+        });
+
+        navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
+            int id = destination.getId();
+            boolean isMainTab = id == R.id.homeFragment
+                    || id == R.id.coursesFragment
+                    || id == R.id.profileFragment;
+            bottomNav.setVisibility(isMainTab ? View.VISIBLE : View.GONE);
+            if (id == R.id.homeFragment)       bottomNav.setItemActiveIndex(0);
+            else if (id == R.id.coursesFragment) bottomNav.setItemActiveIndex(1);
+            else if (id == R.id.profileFragment) bottomNav.setItemActiveIndex(2);
+        });
     }
 
     private void configureNavigationStartDestination() {
@@ -70,7 +89,6 @@ public class MainActivity extends AppCompatActivity {
         SessionStorage sessionStorage = new SessionStorage(this);
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
-        // Start inside the authenticated shell only when Firebase and backend sync state both exist.
         if (firebaseUser != null && sessionStorage.hasSession()) {
             navGraph.setStartDestination(R.id.homeFragment);
         } else if (onboardingPreferences.hasSeenOnboarding()) {

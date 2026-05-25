@@ -108,6 +108,9 @@ dependencies {
     // ViewPager2
     implementation("androidx.viewpager2:viewpager2:1.0.0")
 
+    // SmoothBottomBar
+    implementation("com.github.ibrahimsn98:SmoothBottomBar:1.7.9")
+
     // RecyclerView for course catalog and featured lists
     implementation("androidx.recyclerview:recyclerview:1.3.2")
 
