@@ -1,0 +1,49 @@
+graph TB
+    subgraph Client["🌐 Client Layer"]
+        Browser["Browser<br/>User Device"]
+    end
+
+    subgraph Edge["⚡ Edge Layer<br/>Cloudflare Workers"]
+        SSR["TanStack Start<br/>Server-Side Rendering"]
+        Router["TanStack Router<br/>File-based Routes"]
+    end
+
+    subgraph Components["⚛️ Component Layer"]
+        Pages["Pages<br/>index.tsx | login.tsx<br/>dashboard.tsx | courses.tsx"]
+        UI["UI Components<br/>Radix UI + Tailwind CSS"]
+    end
+
+    subgraph State["📦 State Management"]
+        Query["TanStack Query<br/>Data Cache & Sync"]
+        Hooks["React Hooks<br/>UI State"]
+    end
+
+    subgraph API["🔐 API Layer"]
+        Firebase["Firebase Auth<br/>Token Management"]
+        Fetch["Fetch Client<br/>Bearer Token"]
+    end
+
+    subgraph Backend["🖥️ Backend Spring Boot"]
+        Endpoints["API Endpoints<br/>GET /courses<br/>POST /enrollments<br/>GET /progress"]
+    end
+
+    subgraph Database["💾 Data Layer"]
+        DB["PostgreSQL<br/>Users, Courses, Enrollments"]
+    end
+
+    Browser -->|HTTP/HTTPS| SSR
+    SSR -->|Hydration| Pages
+    Pages -->|Render| UI
+    UI -->|Re-render| Browser
+
+    UI -->|useQuery/useMutation| Query
+    Query -->|Cache hits| Hooks
+    Query -->|Fetch API| Fetch
+
+    Browser -->|Firebase.auth| Firebase
+    Firebase -->|ID Token| Fetch
+    Fetch -->|Authorization: Bearer| Endpoints
+
+    Endpoints -->|SQL Query| DB
+    DB -->|Response| Endpoints
+    Endpoints -->|JSON Response| Fetch

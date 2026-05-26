@@ -1,0 +1,90 @@
+graph TB
+    subgraph Browser["🌐 Browser Runtime"]
+        BrowserUI["HTML5 | CSS3 | JavaScript<br/>User Interaction Layer"]
+    end
+
+    subgraph Edge["⚡ Edge Runtime<br/>Cloudflare Workers"]
+        SSR["TanStack Start<br/>Server-Side Rendering<br/>Node.js Runtime"]
+        Routing["TanStack Router<br/>File-based Routes<br/>Type-safe Navigation"]
+    end
+
+    subgraph React_Layer["⚛️ React Component Layer"]
+        Pages["Pages<br/>index.tsx | login.tsx<br/>dashboard.tsx | courses.tsx<br/>profile.tsx"]
+
+        Components["UI Components<br/>Radix UI Foundation<br/>Button | Card | Dialog<br/>Form | Tabs | Accordion"]
+
+        Styling["Tailwind CSS<br/>Utility Classes<br/>Responsive Design<br/>Dark Mode Support"]
+    end
+
+    subgraph State_Layer["📦 State Management Layer"]
+        Query["TanStack React Query<br/>useQuery | useMutation<br/>Caching & Deduplication<br/>Stale-while-revalidate"]
+
+        Hooks["React Hooks<br/>useState | useContext<br/>useEffect | useReducer"]
+    end
+
+    subgraph Forms["📝 Forms & Validation"]
+        HookForm["React Hook Form<br/>Form State Management<br/>Efficient Rendering"]
+
+        Zod["Zod<br/>TypeScript-first Validation<br/>Runtime Type Checking"]
+    end
+
+    subgraph Animation["✨ Animation & Charts"]
+        Framer["Framer Motion<br/>Smooth Animations<br/>Page Transitions"]
+
+        Recharts["Recharts<br/>Interactive Charts<br/>Progress Visualization"]
+    end
+
+    subgraph API_Layer["🔐 API Communication"]
+        Firebase["Firebase Auth SDK<br/>Login/Register<br/>Token Refresh<br/>Session Management"]
+
+        Fetch["Fetch API<br/>REST Client<br/>Error Handling<br/>Retry Logic"]
+    end
+
+    subgraph Build_Deploy["🚀 Build & Deployment"]
+        Vite["Vite<br/>Lightning-fast Build<br/>HMR Dev Server<br/>Code Splitting"]
+
+        Wrangler["Wrangler CLI<br/>Deploy to Edge<br/>Environment Management"]
+
+        Cloudflare["Cloudflare Workers<br/>Global Edge Network<br/>Zero Cold Starts<br/>Pay-per-request"]
+    end
+
+    subgraph DevTools["🛠️ Development Tools"]
+        TypeScript["TypeScript<br/>Type Safety<br/>IntelliSense<br/>Compile-time Checks"]
+
+        ESLint["ESLint + Prettier<br/>Code Quality<br/>Formatting"]
+    end
+
+    BrowserUI -->|SSR HTML| Edge
+    SSR -->|React Hydration| Pages
+    Pages -->|Render| Components
+    Components -->|Apply Styles| Styling
+    Components -->|Manage State| Query
+    Components -->|Local State| Hooks
+
+    Query -->|Fetch Data| Fetch
+    Hooks -->|Form State| HookForm
+    HookForm -->|Validate| Zod
+    Components -->|Animate| Framer
+    Components -->|Display Charts| Recharts
+
+    Firebase -->|ID Token| Fetch
+    Fetch -->|REST Calls| API_Layer
+
+    Routing -->|Navigate| Pages
+    Styling -->|Classes| Components
+
+    TypeScript -->|Type Check| Pages
+    TypeScript -->|Type Check| Components
+    ESLint -->|Lint & Format| Pages
+
+    Vite -->|Bundle| Cloudflare
+    Wrangler -->|Deploy| Cloudflare
+    Cloudflare -->|Serve| BrowserUI
+
+    style Browser fill:#fff3e0
+    style Edge fill:#f3e5f5
+    style React_Layer fill:#e3f2fd
+    style State_Layer fill:#e8f5e9
+    style API_Layer fill:#fce4ec
+    style Build_Deploy fill:#f1f8e9
+    style DevTools fill:#ede7f6

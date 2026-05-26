@@ -1,0 +1,57 @@
+graph LR
+    subgraph Clients["📱 Client Platforms"]
+        Android["Android App<br/>Kotlin/MVVM<br/>OkHttp + Retrofit"]
+        Web["Web App<br/>React + TanStack<br/>Cloudflare Workers"]
+    end
+
+    subgraph Auth["🔐 Authentication<br/>Shared Layer"]
+        Firebase["Firebase Auth<br/>OAuth 2.0<br/>JWT Tokens"]
+    end
+
+    subgraph Backend["🖥️ Spring Boot Backend<br/>API Gateway /api/v1"]
+        Security["Security Layer<br/>Firebase Validation<br/>RBAC"]
+        Auth_API["Auth Module<br/>POST /auth/sync"]
+        Course_API["Course Module<br/>GET /courses<br/>GET /courses/{id}"]
+        Enroll_API["Enrollment Module<br/>POST /enrollments<br/>GET /enrollments"]
+        Progress_API["Progress Module<br/>POST /progress<br/>GET /progress"]
+    end
+
+    subgraph Data["💾 Data Layer<br/>Single Source of Truth"]
+        DB["PostgreSQL<br/>users | courses<br/>enrollments | progress<br/>lessons | sections"]
+        Cache["Redis Cache<br/>Session Data<br/>User State"]
+    end
+
+    Android -->|Firebase Auth| Firebase
+    Web -->|Firebase Auth| Firebase
+
+    Firebase -->|ID Token| Android
+    Firebase -->|ID Token| Web
+
+    Android -->|REST + Bearer Token| Security
+    Web -->|REST + Bearer Token| Security
+
+    Security -->|Route & Validate| Auth_API
+    Security -->|Route & Validate| Course_API
+    Security -->|Route & Validate| Enroll_API
+    Security -->|Route & Validate| Progress_API
+
+    Auth_API -->|Query/Update| DB
+    Course_API -->|Query| DB
+    Enroll_API -->|Query/Create| DB
+    Progress_API -->|Query/Update| DB
+
+    Auth_API -->|Cache Session| Cache
+    Course_API -->|Cache Courses| Cache
+
+    DB -->|Response| Auth_API
+    DB -->|Response| Course_API
+    DB -->|Response| Enroll_API
+    DB -->|Response| Progress_API
+
+    Auth_API -->|JSON Response| Security
+    Course_API -->|JSON Response| Security
+    Enroll_API -->|JSON Response| Security
+    Progress_API -->|JSON Response| Security
+
+    Security -->|Same Response| Android
+    Security -->|Same Response| Web
