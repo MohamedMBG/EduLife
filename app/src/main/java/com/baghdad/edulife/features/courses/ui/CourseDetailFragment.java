@@ -142,6 +142,16 @@ public class CourseDetailFragment extends Fragment {
             Navigation.findNavController(requireView())
                     .navigate(R.id.action_courseDetailFragment_to_enrollCourseFragment, navArgs);
         });
+
+        Button startExamBtn = requireView().findViewById(R.id.startExamButton);
+        startExamBtn.setVisibility(View.VISIBLE);
+        startExamBtn.setOnClickListener(v -> {
+            Bundle examArgs = new Bundle();
+            examArgs.putString("courseId", courseDetail.id != null ? courseDetail.id : "");
+            examArgs.putString("examTitle", courseDetail.title != null ? courseDetail.title : "Exam");
+            Navigation.findNavController(requireView())
+                    .navigate(R.id.action_courseDetailFragment_to_examFragment, examArgs);
+        });
     }
 
     private View createSectionView(String courseId, CourseSection section) {

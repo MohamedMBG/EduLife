@@ -462,6 +462,28 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- ── CERTIFICATES SECTION ── -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="36dp"
+            android:fontFamily="sans-serif-medium"
+            android:text="@string/cert_section_title"
+            android:textAllCaps="true"
+            android:textColor="@color/brand_text_secondary"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:id="@+id/certificatesContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="24dp"
+            android:orientation="vertical" />
+
         <!-- ── LOG OUT BUTTON ── -->
         <LinearLayout
             android:id="@+id/logoutButton"

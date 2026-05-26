@@ -1,7 +1,10 @@
 package com.baghdad.edulife.features.courses.ui;
 
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.util.TypedValue;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -16,15 +19,20 @@ import androidx.navigation.Navigation;
 import com.baghdad.edulife.R;
 import com.baghdad.edulife.core.storage.SessionStorage;
 import com.baghdad.edulife.features.auth.viewmodel.AuthViewModel;
+import com.baghdad.edulife.features.certificates.data.CertificateRepository;
+import com.baghdad.edulife.features.certificates.model.CertificateDto;
 import com.baghdad.edulife.features.profile.model.ProfileResponse;
 import com.baghdad.edulife.features.profile.viewmodel.ProfileViewModel;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import java.util.List;
+
 public class ProfileFragment extends Fragment {
 
     private AuthViewModel authViewModel;
     private ProfileViewModel profileViewModel;
+    private CertificateRepository certificateRepository;
 
     public ProfileFragment() {
         super(R.layout.fragment_profile);
@@ -36,6 +44,7 @@ public class ProfileFragment extends Fragment {
 
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
         profileViewModel = new ViewModelProvider(this).get(ProfileViewModel.class);
+        certificateRepository = new CertificateRepository();
         SessionStorage sessionStorage = new SessionStorage(requireContext());
 
         View profileHeader = view.findViewById(R.id.profileHeaderLayout);
@@ -50,6 +59,7 @@ public class ProfileFragment extends Fragment {
         bindStaticUserInfo(view, sessionStorage);
         observeProfile(view);
         profileViewModel.loadProfile();
+        loadCertificates(view);
 
         view.findViewById(R.id.logoutButton).setOnClickListener(v -> {
             authViewModel.signOut();
@@ -163,5 +173,100 @@ public class ProfileFragment extends Fragment {
                     + String.valueOf(parts[1].charAt(0)).toUpperCase();
         }
         return String.valueOf(name.charAt(0)).toUpperCase();
+    }
+
+    private void loadCertificates(View view) {
+        certificateRepository.loadMyCertificates(new CertificateRepository.CertificatesCallback() {
+            @Override
+            public void onSuccess(List<CertificateDto> certificates) {
+                if (!isAdded()) return;
+                requireActivity().runOnUiThread(() -> renderCertificates(view, certificates));
+            }
+
+            @Override
+            public void onError(String message) {
+                // Silent fail — certs section stays empty
+            }
+        });
+    }
+
+    private void renderCertificates(View view, List<CertificateDto> certificates) {
+        LinearLayout container = view.findViewById(R.id.certificatesContainer);
+        container.removeAllViews();
+
+        if (certificates == null || certificates.isEmpty()) {
+            TextView empty = new TextView(requireContext());
+            empty.setText(R.string.cert_empty);
+            empty.setTextColor(requireContext().getColor(R.color.brand_text_secondary));
+            empty.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f);
+            empty.setLineSpacing(0f, 1.4f);
+            LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            p.bottomMargin = dp(8);
+            empty.setLayoutParams(p);
+            container.addView(empty);
+            return;
+        }
+
+        for (CertificateDto cert : certificates) {
+            container.addView(buildCertCard(cert));
+        }
+    }
+
+    private View buildCertCard(CertificateDto cert) {
+        LinearLayout card = new LinearLayout(requireContext());
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setBackgroundResource(R.drawable.bg_settings_item);
+        card.setPadding(dp(20), dp(16), dp(20), dp(16));
+
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        params.bottomMargin = dp(10);
+        card.setLayoutParams(params);
+
+        TextView numberLabel = new TextView(requireContext());
+        numberLabel.setText(getString(R.string.cert_number_label).toUpperCase());
+        numberLabel.setTextColor(requireContext().getColor(R.color.brand_text_secondary));
+        numberLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f);
+        numberLabel.setTypeface(numberLabel.getTypeface(), Typeface.BOLD);
+
+        TextView numberValue = new TextView(requireContext());
+        numberValue.setText(cert.certificateNumber != null ? cert.certificateNumber : "—");
+        numberValue.setTextColor(requireContext().getColor(R.color.brand_text_primary));
+        numberValue.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f);
+        numberValue.setTypeface(numberValue.getTypeface(), Typeface.BOLD);
+        numberValue.setPadding(0, dp(4), 0, dp(10));
+
+        TextView issuedLabel = new TextView(requireContext());
+        issuedLabel.setText(getString(R.string.cert_issued_label).toUpperCase());
+        issuedLabel.setTextColor(requireContext().getColor(R.color.brand_text_secondary));
+        issuedLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f);
+        issuedLabel.setTypeface(issuedLabel.getTypeface(), Typeface.BOLD);
+
+        TextView issuedValue = new TextView(requireContext());
+        issuedValue.setText(formatIsoDate(cert.issuedAt));
+        issuedValue.setTextColor(requireContext().getColor(R.color.brand_text_body));
+        issuedValue.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f);
+        issuedValue.setPadding(0, dp(4), 0, 0);
+
+        card.addView(numberLabel);
+        card.addView(numberValue);
+        card.addView(issuedLabel);
+        card.addView(issuedValue);
+        return card;
+    }
+
+    private String formatIsoDate(String iso) {
+        if (iso == null || iso.length() < 10) return "—";
+        // ISO 8601: 2026-05-26T17:13:45.123Z → "2026-05-26"
+        return iso.substring(0, 10);
+    }
+
+    private int dp(int value) {
+        return (int) TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, value,
+                requireContext().getResources().getDisplayMetrics());
     }
 }

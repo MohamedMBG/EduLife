@@ -107,6 +107,9 @@
         <action
             android:id="@+id/action_courseDetailFragment_to_lessonPlayerFragment"
             app:destination="@id/lessonPlayerFragment" />
+        <action
+            android:id="@+id/action_courseDetailFragment_to_examFragment"
+            app:destination="@id/examFragment" />
     </fragment>
 
     <fragment
@@ -183,6 +186,49 @@
             android:name="orderInSection"
             app:argType="integer"
             android:defaultValue="1" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/examFragment"
+        android:name="com.baghdad.edulife.features.exam.ui.ExamFragment"
+        android:label="Exam">
+        <argument
+            android:name="courseId"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="examTitle"
+            app:argType="string"
+            android:defaultValue="Exam" />
+        <action
+            android:id="@+id/action_examFragment_to_examResultFragment"
+            app:destination="@id/examResultFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/examResultFragment"
+        android:name="com.baghdad.edulife.features.exam.ui.ExamResultFragment"
+        android:label="Exam Result">
+        <argument
+            android:name="score"
+            app:argType="integer"
+            android:defaultValue="0" />
+        <argument
+            android:name="passScore"
+            app:argType="integer"
+            android:defaultValue="60" />
+        <argument
+            android:name="passed"
+            app:argType="boolean"
+            android:defaultValue="false" />
+        <argument
+            android:name="certificateNumber"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="courseId"
+            app:argType="string"
+            android:defaultValue="" />
     </fragment>
 
 </navigation>

@@ -98,4 +98,29 @@
     <string name="profile_access_verified">Protected learner routes available</string>
     <string name="profile_access_pending">Verify email to unlock protected learner routes</string>
     <string name="profile_internal_id_missing">Sync required</string>
+
+    <!-- Exam -->
+    <string name="exam_loading">Loading exam…</string>
+    <string name="exam_pass_score">Pass score: %d%%</string>
+    <string name="exam_time_limit">Time limit: %d min</string>
+    <string name="exam_question_count">%d questions</string>
+    <string name="exam_submit">Submit Answers</string>
+    <string name="exam_answer_all">Answer all questions before submitting.</string>
+    <string name="exam_submitting">Submitting…</string>
+    <string name="exam_start_button">Start Exam</string>
+
+    <!-- Exam result -->
+    <string name="exam_result_score">%d%%</string>
+    <string name="exam_result_passed">Passed!</string>
+    <string name="exam_result_failed">Not quite — keep studying</string>
+    <string name="exam_result_pass_threshold">Pass threshold: %d%%</string>
+    <string name="exam_result_cert_label">Certificate number</string>
+    <string name="exam_result_back">Back to Course</string>
+    <string name="exam_result_retry">Try Again</string>
+
+    <!-- Certificates -->
+    <string name="cert_section_title">My Certificates</string>
+    <string name="cert_number_label">Certificate No.</string>
+    <string name="cert_issued_label">Issued</string>
+    <string name="cert_empty">No certificates yet.\nComplete an exam to earn one.</string>
 </resources>

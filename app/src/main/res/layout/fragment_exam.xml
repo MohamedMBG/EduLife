@@ -20,7 +20,7 @@
         android:paddingBottom="16dp">
 
         <ImageButton
-            android:id="@+id/backButton"
+            android:id="@+id/examBackButton"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@drawable/bg_enroll_icon_button"
@@ -29,28 +29,28 @@
             android:tint="@color/brand_text_primary" />
 
         <TextView
+            android:id="@+id/examTitleText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="14dp"
             android:layout_weight="1"
-            android:text="@string/course_detail_back_label"
             android:textColor="@color/brand_text_primary"
             android:textSize="17sp"
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- Loading -->
+    <!-- Loading indicator -->
     <ProgressBar
-        android:id="@+id/detailLoadingIndicator"
+        android:id="@+id/examLoadingIndicator"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="56dp"
         android:visibility="gone" />
 
-    <!-- Status / error text -->
+    <!-- Status / error -->
     <TextView
-        android:id="@+id/detailStatusText"
+        android:id="@+id/examStatusText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
@@ -61,9 +61,9 @@
         android:textSize="14sp"
         android:visibility="gone" />
 
-    <!-- Scrollable content -->
+    <!-- Exam content -->
     <ScrollView
-        android:id="@+id/detailScrollView"
+        android:id="@+id/examScrollView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -74,120 +74,81 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingStart="28dp"
-            android:paddingTop="36dp"
-            android:paddingEnd="28dp"
-            android:paddingBottom="40dp">
+            android:paddingStart="24dp"
+            android:paddingTop="28dp"
+            android:paddingEnd="24dp"
+            android:paddingBottom="24dp">
 
-            <TextView
-                android:id="@+id/courseTitleText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/brand_text_primary"
-                android:textSize="30sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/courseShortDescriptionText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:lineSpacingMultiplier="1.6"
-                android:textColor="@color/brand_text_body"
-                android:textSize="15sp" />
-
+            <!-- Exam meta strip -->
             <LinearLayout
+                android:id="@+id/examMetaStrip"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginBottom="28dp"
+                android:background="@drawable/bg_course_card"
                 android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:padding="20dp">
 
                 <TextView
-                    android:id="@+id/courseLevelText"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/examPassScoreText"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/bg_catalog_badge"
-                    android:paddingStart="12dp"
-                    android:paddingTop="6dp"
-                    android:paddingEnd="12dp"
-                    android:paddingBottom="6dp"
-                    android:textColor="@color/brand_primary"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/courseLanguageText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
                     android:textColor="@color/brand_text_secondary"
                     android:textSize="13sp" />
 
                 <TextView
-                    android:id="@+id/courseSectionCountText"
+                    android:id="@+id/examQuestionCountText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
                     android:textColor="@color/brand_text_secondary"
                     android:textSize="13sp" />
             </LinearLayout>
 
-            <!-- Full description — spacious separation via margin, no divider -->
-            <TextView
-                android:id="@+id/courseDescriptionText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:lineSpacingMultiplier="1.7"
-                android:textColor="@color/brand_text_body"
-                android:textSize="15sp" />
-
+            <!-- Questions injected programmatically -->
             <LinearLayout
-                android:id="@+id/sectionContainer"
+                android:id="@+id/examQuestionsContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
                 android:orientation="vertical" />
+
         </LinearLayout>
     </ScrollView>
 
-    <!-- Enroll CTA footer -->
+    <!-- Submit footer -->
     <LinearLayout
-        android:id="@+id/enrollCtaFooter"
+        android:id="@+id/examSubmitFooter"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/brand_surface"
         android:orientation="vertical"
         android:paddingStart="24dp"
-        android:paddingTop="16dp"
+        android:paddingTop="12dp"
         android:paddingEnd="24dp"
         android:paddingBottom="28dp"
         android:visibility="gone">
 
+        <TextView
+            android:id="@+id/examValidationText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:gravity="center"
+            android:textColor="@color/brand_error"
+            android:textSize="13sp"
+            android:visibility="gone" />
+
         <Button
-            android:id="@+id/enrollCtaButton"
+            android:id="@+id/examSubmitButton"
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:background="@drawable/bg_enroll_cta_button"
-            android:text="@string/enroll_cta"
+            android:text="@string/exam_submit"
             android:textAllCaps="false"
             android:textColor="@color/white"
             android:textSize="16sp"
             android:textStyle="bold" />
-
-        <Button
-            android:id="@+id/startExamButton"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/bg_lesson_nav_button_outline"
-            android:text="@string/exam_start_button"
-            android:textAllCaps="false"
-            android:textColor="@color/brand_primary"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:visibility="gone" />
     </LinearLayout>
 
 </LinearLayout>
