@@ -53,3 +53,14 @@ replay_pid*
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Claude Code local config and worktrees are machine-specific.
+.claude/
+
+# Throwaway scripts with hardcoded API keys — never commit.
+test-gemini.mjs
+test-gemini-image.mjs
+list-models.mjs
+
+# PFA report lives in its own repo (github.com/MohamedMBG/rapport-PFA).
+rapport PFA/

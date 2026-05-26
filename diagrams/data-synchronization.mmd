@@ -1,0 +1,58 @@
+graph TB
+    User1["👤 User on Web<br/>Browser Session"]
+    User2["👤 Same User on Mobile<br/>Android App<br/>Same Firebase Account"]
+
+    subgraph Web["🌐 Web Client"]
+        WebUI["React UI<br/>Dashboard<br/>Course Catalog"]
+        WebCache["TanStack Query<br/>Cache Layer"]
+    end
+
+    subgraph Mobile["📱 Mobile Client"]
+        MobileUI["Android UI<br/>Fragments<br/>Screens"]
+        MobileCache["ViewModel<br/>LiveData<br/>Local Cache"]
+    end
+
+    subgraph Backend["🖥️ Shared Backend<br/>Spring Boot /api/v1"]
+        Auth["Auth Service"]
+        Courses["Course Service"]
+        Enrollments["Enrollment Service"]
+        Progress["Progress Service"]
+    end
+
+    subgraph DB["💾 Single Database<br/>PostgreSQL"]
+        Users["users table<br/>user_id | firebase_uid | email"]
+        Enroll_Table["enrollments table<br/>user_id | course_id | enrolled_at"]
+        Progress_Table["progress table<br/>user_id | lesson_id | watched"]
+    end
+
+    User1 -->|Logs in| WebUI
+    User2 -->|Logs in| MobileUI
+
+    WebUI -->|Query /enrollments| WebCache
+    MobileUI -->|Query /enrollments| MobileCache
+
+    WebCache -->|GET /enrollments| Enrollments
+    MobileCache -->|GET /enrollments| Enrollments
+
+    Enrollments -->|Enroll in Course A| Enroll_Table
+
+    Enrollments -->|Response: Enrollment Created| WebCache
+    Enrollments -->|Response: Enrollment Created| MobileCache
+
+    WebCache -->|Display| WebUI
+    MobileCache -->|Display| MobileUI
+
+    WebUI -->|Both see:<br/>Course A enrolled| User1
+    MobileUI -->|Both see:<br/>Course A enrolled| User2
+
+    Progress -->|POST /progress<br/>lesson_id watched| Progress_Table
+    Progress -->|GET /progress| MobileCache
+    Progress -->|GET /progress| WebCache
+
+    WebCache -->|Refresh| WebUI
+    MobileCache -->|Update LiveData| MobileUI
+
+    style DB fill:#e1f5ff
+    style Backend fill:#f3e5f5
+    style Web fill:#fff3e0
+    style Mobile fill:#e8f5e9
