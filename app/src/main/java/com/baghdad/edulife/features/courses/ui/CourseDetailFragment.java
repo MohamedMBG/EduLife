@@ -234,15 +234,9 @@ public class CourseDetailFragment extends Fragment {
 
         lessonLayout.setOnClickListener(v -> {
             Bundle navArgs = new Bundle();
-            navArgs.putString("courseId",        courseId);
-            navArgs.putString("lessonId",        lesson.id != null ? lesson.id : "");
-            navArgs.putString("lessonTitle",     lesson.title != null ? lesson.title : "");
-            navArgs.putString("lessonSummary",   lesson.summary != null ? lesson.summary : "");
-            navArgs.putString("lessonType",      lesson.lessonType != null ? lesson.lessonType : "");
-            navArgs.putInt("durationMinutes",    lesson.estimatedDurationMinutes);
-            navArgs.putBoolean("isPreview",      lesson.preview);
-            navArgs.putString("sectionTitle",    sectionTitle != null ? sectionTitle : "");
-            navArgs.putInt("orderInSection",     lesson.displayOrder);
+            // Pass only stable identifiers so the lesson screen reloads the canonical backend data.
+            navArgs.putString("courseId", courseId);
+            navArgs.putString("lessonId", lesson.id != null ? lesson.id : "");
             Navigation.findNavController(requireView())
                     .navigate(R.id.action_courseDetailFragment_to_lessonPlayerFragment, navArgs);
         });

@@ -8,6 +8,7 @@ import com.baghdad.edulife.features.courses.model.CourseSummary;
 import com.baghdad.edulife.features.courses.model.EnrolledCourse;
 import com.baghdad.edulife.features.courses.model.EnrollmentResponse;
 import com.baghdad.edulife.features.courses.model.EnrollRequest;
+import com.baghdad.edulife.features.courses.model.LessonDetail;
 import com.baghdad.edulife.features.exam.model.ExamDto;
 import com.baghdad.edulife.features.exam.model.ExamResultDto;
 import com.baghdad.edulife.features.exam.model.SubmitExamRequest;
@@ -57,6 +58,16 @@ public interface ApiService {
      */
     @GET("courses/{courseId}")
     Call<CourseDetail> getCourseDetail(@Path("courseId") String courseId);
+
+    /**
+     * Loads the canonical lesson detail from the backend so the player does not rely on
+     * navigation-passed placeholders once the real learner flow is available.
+     */
+    @GET("courses/{courseId}/lessons/{lessonId}")
+    Call<LessonDetail> getLessonDetail(
+            @Path("courseId") String courseId,
+            @Path("lessonId") String lessonId
+    );
 
     /**
      * Enrolls the authenticated user in a course.

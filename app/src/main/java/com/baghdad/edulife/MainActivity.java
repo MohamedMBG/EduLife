@@ -3,11 +3,12 @@ package com.baghdad.edulife;
 import android.os.Bundle;
 import android.view.View;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.NavGraph;
 import androidx.navigation.NavOptions;
@@ -26,8 +27,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+
+        enableImmersiveFullscreen();
 
         SmoothBottomBar bottomNav = findViewById(R.id.bottomNavView);
         View mainContainer = findViewById(R.id.mainContainer);
@@ -75,6 +77,29 @@ public class MainActivity extends AppCompatActivity {
             else if (id == R.id.coursesFragment) bottomNav.setItemActiveIndex(1);
             else if (id == R.id.profileFragment) bottomNav.setItemActiveIndex(2);
         });
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            enableImmersiveFullscreen();
+        }
+    }
+
+    private void enableImmersiveFullscreen() {
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        WindowInsetsControllerCompat windowInsetsController =
+                WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+
+        if (windowInsetsController == null) {
+            return;
+        }
+
+        // Hide the phone system bars so the learner flow stays in true fullscreen mode.
+        windowInsetsController.setSystemBarsBehavior(
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+        windowInsetsController.hide(WindowInsetsCompat.Type.systemBars());
     }
 
     private void configureNavigationStartDestination() {

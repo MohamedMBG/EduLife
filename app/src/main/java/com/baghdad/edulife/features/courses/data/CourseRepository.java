@@ -10,9 +10,8 @@ import com.baghdad.edulife.features.courses.model.CourseSummary;
 import com.baghdad.edulife.features.courses.model.EnrolledCourse;
 import com.baghdad.edulife.features.courses.model.EnrollmentResponse;
 import com.baghdad.edulife.features.courses.model.EnrollRequest;
+import com.baghdad.edulife.features.courses.model.LessonDetail;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -30,56 +29,6 @@ public class CourseRepository {
         this.apiService = ApiClient.getClient().create(ApiService.class);
     }
 
-    // Mirrors backend Flyway V3__seed_courses.sql so the catalog still has content
-    // when the backend is unreachable (offline dev, no LAN, network errors).
-    private static final List<CourseSummary> FALLBACK_COURSES = Collections.unmodifiableList(Arrays.asList(
-            buildFallback("11111111-1111-1111-1111-111111111111", "math-bac-sm-algebra-foundations",
-                    "Math Bac SM - Algebra Foundations",
-                    "A structured algebra refresher for Moroccan Bac Sciences Math students.",
-                    "BEGINNER", "fr"),
-            buildFallback("22222222-2222-2222-2222-222222222222", "physics-motion-and-forces",
-                    "Physics - Motion and Forces",
-                    "Learn the mechanics basics needed for secondary school physics success.",
-                    "INTERMEDIATE", "fr"),
-            buildFallback("33333333-3333-3333-3333-333333333333", "english-communication-essentials",
-                    "English Communication Essentials",
-                    "Improve reading, listening, and classroom communication with practical lessons.",
-                    "BEGINNER", "en"),
-            buildFallback("44444444-4444-4444-4444-444444444444", "french-expression-and-writing",
-                    "French Expression and Writing",
-                    "Strengthen written French through structure, clarity, and revision habits.",
-                    "INTERMEDIATE", "fr"),
-            buildFallback("55555555-5555-5555-5555-555555555555", "digital-skills-study-productivity",
-                    "Digital Skills for Study Productivity",
-                    "Use practical digital habits to organize study time and course materials.",
-                    "BEGINNER", "en")
-    ));
-
-    private static CourseSummary buildFallback(String id, String slug, String title,
-                                               String shortDescription, String level, String lang) {
-        CourseSummary course = new CourseSummary();
-        course.id = id;
-        course.slug = slug;
-        course.title = title;
-        course.shortDescription = shortDescription;
-        course.level = level;
-        course.languageCode = lang;
-        return course;
-    }
-
-    public static List<CourseSummary> fallbackCourses(String category) {
-        if (category == null || category.isBlank()) {
-            return FALLBACK_COURSES;
-        }
-        List<CourseSummary> filtered = new ArrayList<>();
-        for (CourseSummary course : FALLBACK_COURSES) {
-            if (category.equalsIgnoreCase(course.level)) {
-                filtered.add(course);
-            }
-        }
-        return filtered;
-    }
-
     public interface CourseCatalogCallback {
         void onSuccess(List<CourseSummary> courses);
         void onError(String message);
@@ -87,6 +36,17 @@ public class CourseRepository {
 
     public interface CourseDetailCallback {
         void onSuccess(CourseDetail courseDetail);
+        void onError(String message);
+    }
+
+    public interface LessonDetailCallback {
+        void onSuccess(LessonDetail lessonDetail);
+        void onError(String message);
+    }
+
+    public interface MarkLessonCompleteCallback {
+        void onSuccess();
+        void onForbidden();
         void onError(String message);
     }
 
@@ -98,7 +58,7 @@ public class CourseRepository {
                     @NonNull Response<CoursePageResponse<CourseSummary>> response
             ) {
                 if (!response.isSuccessful()) {
-                    callback.onSuccess(fallbackCourses(category));
+                    callback.onError("Course catalog failed to load. Status: " + response.code());
                     return;
                 }
 
@@ -106,14 +66,12 @@ public class CourseRepository {
                 List<CourseSummary> courses = body != null && body.content != null
                         ? body.content
                         : Collections.emptyList();
-
-                // Empty backend response still gets the seeded fallback so the catalog never looks broken.
-                callback.onSuccess(courses.isEmpty() ? fallbackCourses(category) : courses);
+                callback.onSuccess(courses);
             }
 
             @Override
             public void onFailure(@NonNull Call<CoursePageResponse<CourseSummary>> call, @NonNull Throwable t) {
-                callback.onSuccess(fallbackCourses(category));
+                callback.onError("Course catalog network error: " + safeMessage(t));
             }
         });
     }
@@ -133,6 +91,49 @@ public class CourseRepository {
             @Override
             public void onFailure(@NonNull Call<CourseDetail> call, @NonNull Throwable t) {
                 callback.onError("Course detail network error: " + safeMessage(t));
+            }
+        });
+    }
+
+    public void loadLessonDetail(String courseId, String lessonId, LessonDetailCallback callback) {
+        apiService.getLessonDetail(courseId, lessonId).enqueue(new Callback<LessonDetail>() {
+            @Override
+            public void onResponse(@NonNull Call<LessonDetail> call, @NonNull Response<LessonDetail> response) {
+                if (!response.isSuccessful() || response.body() == null) {
+                    callback.onError("Lesson detail failed to load. Status: " + response.code());
+                    return;
+                }
+
+                callback.onSuccess(response.body());
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<LessonDetail> call, @NonNull Throwable t) {
+                callback.onError("Lesson detail network error: " + safeMessage(t));
+            }
+        });
+    }
+
+    public void markLessonComplete(String courseId, String lessonId, MarkLessonCompleteCallback callback) {
+        apiService.markLessonComplete(courseId, lessonId).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+                if (response.isSuccessful()) {
+                    callback.onSuccess();
+                    return;
+                }
+
+                if (response.code() == 403) {
+                    callback.onForbidden();
+                    return;
+                }
+
+                callback.onError("Could not save progress. Status: " + response.code());
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
+                callback.onError("Network error: " + safeMessage(t));
             }
         });
     }
