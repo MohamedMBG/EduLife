@@ -1,23 +1,30 @@
 package com.edulife.security;
 
 import com.edulife.common.error.ApiErrorWriter;
+import com.edulife.users.repository.UserRepository;
 import com.google.firebase.auth.FirebaseAuth;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
     // The filter is exposed as a bean so the same Firebase validation rule is reused across
     // all protected API modules instead of being duplicated per controller or test slice.
-    public FirebaseTokenFilter firebaseTokenFilter(FirebaseAuth firebaseAuth, ApiErrorWriter apiErrorWriter) {
-        return new FirebaseTokenFilter(firebaseAuth, apiErrorWriter);
+    public FirebaseTokenFilter firebaseTokenFilter(
+            FirebaseAuth firebaseAuth,
+            ApiErrorWriter apiErrorWriter,
+            UserRepository userRepository
+    ) {
+        return new FirebaseTokenFilter(firebaseAuth, apiErrorWriter, userRepository);
     }
 
     @Bean

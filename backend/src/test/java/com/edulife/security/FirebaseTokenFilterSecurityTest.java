@@ -2,6 +2,7 @@ package com.edulife.security;
 
 import com.edulife.common.error.ApiErrorWriter;
 import com.edulife.common.error.GlobalApiExceptionHandler;
+import com.edulife.users.repository.UserRepository;
 import com.google.firebase.ErrorCode;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
@@ -28,6 +29,9 @@ class FirebaseTokenFilterSecurityTest {
 
     @MockBean
     private FirebaseAuth firebaseAuth;
+
+    @MockBean
+    private UserRepository userRepository;
 
     @Test
     void authenticatesProtectedEndpointWhenFirebaseTokenIsValid() throws Exception {

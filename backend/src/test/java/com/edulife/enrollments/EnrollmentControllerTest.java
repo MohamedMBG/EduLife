@@ -7,6 +7,7 @@ import com.edulife.enrollments.dto.EnrolledCourseDto;
 import com.edulife.enrollments.dto.EnrollmentResponse;
 import com.edulife.enrollments.service.EnrollmentService;
 import com.edulife.security.SecurityConfig;
+import com.edulife.users.repository.UserRepository;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
 import java.time.Instant;
@@ -45,6 +46,9 @@ class EnrollmentControllerTest {
 
     @MockBean
     private FirebaseAuth firebaseAuth;
+
+    @MockBean
+    private UserRepository userRepository;
 
     // ── POST /api/v1/enrollments ──────────────────────────────────────────────
 

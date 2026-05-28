@@ -6,6 +6,7 @@ import com.edulife.progress.controller.ProgressController;
 import com.edulife.progress.dto.CourseProgressDto;
 import com.edulife.progress.service.ProgressService;
 import com.edulife.security.SecurityConfig;
+import com.edulife.users.repository.UserRepository;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
 import java.util.UUID;
@@ -39,6 +40,9 @@ class ProgressControllerMarkCompleteTest {
 
     @MockBean
     private FirebaseAuth firebaseAuth;
+
+    @MockBean
+    private UserRepository userRepository;
 
     private static final UUID COURSE_ID = UUID.fromString("aaaaaaaa-0000-0000-0000-aaaaaaaaaaaa");
     private static final UUID LESSON_ID = UUID.fromString("11111111-0000-0000-0000-111111111111");

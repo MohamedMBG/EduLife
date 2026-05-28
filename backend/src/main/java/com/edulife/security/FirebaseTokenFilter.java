@@ -1,6 +1,8 @@
 package com.edulife.security;
 
 import com.edulife.common.error.ApiErrorWriter;
+import com.edulife.users.entity.User;
+import com.edulife.users.repository.UserRepository;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
@@ -8,8 +10,10 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.List;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.OrRequestMatcher;
@@ -29,10 +33,16 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
 
     private final FirebaseAuth firebaseAuth;
     private final ApiErrorWriter apiErrorWriter;
+    private final UserRepository userRepository;
 
-    public FirebaseTokenFilter(FirebaseAuth firebaseAuth, ApiErrorWriter apiErrorWriter) {
+    public FirebaseTokenFilter(
+            FirebaseAuth firebaseAuth,
+            ApiErrorWriter apiErrorWriter,
+            UserRepository userRepository
+    ) {
         this.firebaseAuth = firebaseAuth;
         this.apiErrorWriter = apiErrorWriter;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -79,8 +89,11 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
             String firebaseUid = decodedToken.getUid();
             String email = decodedToken.getEmail();
 
-            FirebaseAuthentication authentication =
-                    new FirebaseAuthentication(firebaseUid, email);
+            // Role resolution must come from the trusted users table, not from the Firebase token.
+            // Unsynced users get no role authorities so role-gated endpoints return 403 until /auth/sync runs.
+            FirebaseAuthentication authentication = userRepository.findByFirebaseUid(firebaseUid)
+                    .map(user -> new FirebaseAuthentication(firebaseUid, email, authoritiesFor(user)))
+                    .orElseGet(() -> new FirebaseAuthentication(firebaseUid, email));
 
             // Only trusted Firebase claims are copied into the security context. Client-supplied
             // user IDs or roles are never accepted here.
@@ -92,5 +105,11 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
             SecurityContextHolder.clearContext();
             apiErrorWriter.write(response, HttpStatus.UNAUTHORIZED, "Invalid or expired Firebase token");
         }
+    }
+
+    private static List<SimpleGrantedAuthority> authoritiesFor(User user) {
+        // Spring Security's hasRole() expects the ROLE_ prefix, so the authority must include it
+        // explicitly to match @PreAuthorize("hasAnyRole('TEACHER','ADMIN')") expressions.
+        return List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
     }
 }
