@@ -220,8 +220,8 @@ const navLinks = [
   { icon: Home,     label: "Home",         to: "/dashboard" as const },
   { icon: BookOpen, label: "My Courses",   to: "/courses"   as const },
   { icon: Compass,  label: "Explore",      to: "/explore"   as const },
-  { icon: Award,    label: "Certificates", to: "/dashboard" as const },
-  { icon: Settings, label: "Settings",     to: "/dashboard" as const },
+  { icon: Award,    label: "Certificates", to: "/certificates" as const },
+  { icon: Settings, label: "Settings",     to: "/profile"      as const },
 ];
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
