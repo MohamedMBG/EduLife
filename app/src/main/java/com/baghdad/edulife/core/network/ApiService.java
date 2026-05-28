@@ -100,5 +100,14 @@ public interface ApiService {
 
     @GET("profile")
     Call<ProfileResponse> getProfile();
+
+    /**
+     * Self-service account deletion (Play Store mandate).
+     * Endpoint: DELETE /api/v1/account
+     * Returns 204 on success. The server anonymizes the user row, deletes the Firebase account,
+     * and revokes the in-flight session, so the same Bearer token will not work afterwards.
+     */
+    @DELETE("account")
+    Call<Void> deleteAccount();
 }
 
