@@ -64,6 +64,16 @@ public class Profile {
         this.avatarUrl = avatarUrl;
     }
 
+    /**
+     * Strips profile PII for a self-deleted account. The row stays so cascade-safe references
+     * (none today, but future stats may join through user_id) remain valid.
+     */
+    public void anonymize() {
+        this.displayName = "DELETED_USER";
+        this.bio = null;
+        this.avatarUrl = null;
+    }
+
     public UUID getId() { return id; }
     public UUID getUserId() { return userId; }
     public String getDisplayName() { return displayName; }

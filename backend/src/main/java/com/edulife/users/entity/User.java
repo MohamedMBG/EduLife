@@ -20,10 +20,12 @@ public class User {
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
 
-    @Column(name = "firebase_uid", nullable = false, unique = true, updatable = false, length = 128)
+    // V12 relaxes NOT NULL on these columns so a self-deleted user can have PII stripped while
+    // the row stays alive for audit-bound references (certificates, exam attempts).
+    @Column(name = "firebase_uid", unique = true, length = 128)
     private String firebaseUid;
 
-    @Column(name = "email", nullable = false, unique = true, length = 255)
+    @Column(name = "email", unique = true, length = 255)
     private String email;
 
     @Enumerated(EnumType.STRING)
@@ -66,5 +68,14 @@ public class User {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    /**
+     * Strips identifying fields for a self-deleted account. The row stays alive so audit-bound
+     * references (certificates, exam attempts) keep a stable user_id; only PII is cleared.
+     */
+    public void anonymize() {
+        this.email = null;
+        this.firebaseUid = null;
     }
 }
