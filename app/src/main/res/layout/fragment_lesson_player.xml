@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    android:background="@color/brand_background"
+    android:background="@color/brand_background">
+
+<LinearLayout
+    android:id="@+id/lessonSummaryContainer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:orientation="vertical">
 
     <!-- Video / Media area -->
@@ -292,3 +297,68 @@
     </LinearLayout>
 
 </LinearLayout>
+
+    <!-- In-app viewer overlay. Hidden by default; revealed when the user taps the play CTA so
+         PDF / video / article content opens inside the app instead of handing off to Chrome. -->
+    <LinearLayout
+        android:id="@+id/lessonViewerContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/brand_background"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/brand_surface"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="14dp"
+            android:paddingTop="12dp"
+            android:paddingEnd="14dp"
+            android:paddingBottom="12dp">
+
+            <ImageButton
+                android:id="@+id/lessonViewerCloseButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_lesson_back_button"
+                android:contentDescription="@string/lesson_viewer_close"
+                android:src="@drawable/ic_arrow_back"
+                android:tint="@color/brand_text_primary" />
+
+            <TextView
+                android:id="@+id/lessonViewerTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/brand_text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <WebView
+                android:id="@+id/lessonViewerWebView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <ProgressBar
+                android:id="@+id/lessonViewerProgress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:indeterminateTint="@color/brand_primary"
+                android:visibility="gone" />
+        </FrameLayout>
+    </LinearLayout>
+
+</FrameLayout>
