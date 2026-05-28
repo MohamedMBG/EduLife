@@ -5,11 +5,16 @@ import org.springframework.http.HttpStatus;
 
 public record ApiError(
         int status,
+        String code,
         String message,
         Instant timestamp
 ) {
 
     public static ApiError of(HttpStatus status, String message) {
-        return new ApiError(status.value(), message, Instant.now());
+        return of(status, ApiErrorCode.forStatus(status), message);
+    }
+
+    public static ApiError of(HttpStatus status, ApiErrorCode code, String message) {
+        return new ApiError(status.value(), code.name(), message, Instant.now());
     }
 }
