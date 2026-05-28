@@ -74,6 +74,9 @@
     <string name="lesson_player_completed">✓ Completed</string>
     <string name="lesson_player_prev">← Previous</string>
     <string name="lesson_player_next">Next →</string>
+    <string name="lesson_viewer_close">Close lesson viewer</string>
+    <string name="lesson_viewer_no_content">This lesson has no playable content yet.</string>
+    <string name="lesson_viewer_load_error">Could not load the lesson content. Check your connection.</string>
 
     <!-- Profile -->
     <string name="profile_eyebrow">Learning Profile</string>

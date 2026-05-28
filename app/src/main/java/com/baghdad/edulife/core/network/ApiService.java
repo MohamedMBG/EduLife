@@ -7,6 +7,7 @@ import com.baghdad.edulife.features.courses.model.CourseSummary;
 import com.baghdad.edulife.features.courses.model.EnrolledCourse;
 import com.baghdad.edulife.features.courses.model.EnrollmentResponse;
 import com.baghdad.edulife.features.courses.model.EnrollRequest;
+import com.baghdad.edulife.features.courses.model.LessonDetail;
 import com.baghdad.edulife.features.profile.model.ProfileResponse;
 
 import java.util.List;
@@ -75,6 +76,16 @@ public interface ApiService {
      */
     @GET("enrollments/me")
     Call<List<EnrolledCourse>> getMyEnrollments();
+
+    /**
+     * Loads a single lesson with the content URL, body, and completion state.
+     * Endpoint: GET /api/v1/courses/{courseId}/lessons/{lessonId}
+     */
+    @GET("courses/{courseId}/lessons/{lessonId}")
+    Call<LessonDetail> getLessonDetail(
+            @Path("courseId") String courseId,
+            @Path("lessonId") String lessonId
+    );
 
     /**
      * Marks a lesson as complete for the authenticated user. Idempotent.
