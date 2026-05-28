@@ -12,6 +12,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -19,7 +20,12 @@ import java.io.IOException;
 
 public class FirebaseTokenFilter extends OncePerRequestFilter {
 
-    private static final RequestMatcher PUBLIC_ENDPOINTS = new AntPathRequestMatcher("/actuator/health");
+    private static final RequestMatcher PUBLIC_ENDPOINTS = new OrRequestMatcher(
+            new AntPathRequestMatcher("/actuator/health"),
+            // Avatar files are public assets served by URL to img tags and the web cache, so
+            // the Firebase filter must not block them with a malformed-header response.
+            new AntPathRequestMatcher("/uploads/avatars/**")
+    );
 
     private final FirebaseAuth firebaseAuth;
     private final ApiErrorWriter apiErrorWriter;

@@ -3,10 +3,12 @@ package com.edulife.profiles.service;
 import com.edulife.certificates.repository.CertificateRepository;
 import com.edulife.enrollments.model.EnrollmentStatus;
 import com.edulife.enrollments.repository.EnrollmentRepository;
+import com.edulife.profiles.dto.AvatarUploadResponse;
 import com.edulife.profiles.dto.ProfileDto;
 import com.edulife.profiles.dto.UpdateProfileRequest;
 import com.edulife.profiles.entity.Profile;
 import com.edulife.profiles.repository.ProfileRepository;
+import com.edulife.profiles.storage.AvatarStorage;
 import com.edulife.progress.repository.LessonProgressRepository;
 import com.edulife.security.FirebaseAuthentication;
 import com.edulife.users.entity.User;
@@ -17,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -27,18 +30,21 @@ public class ProfileService {
     private final EnrollmentRepository enrollmentRepository;
     private final LessonProgressRepository lessonProgressRepository;
     private final CertificateRepository certificateRepository;
+    private final AvatarStorage avatarStorage;
 
     public ProfileService(
             ProfileRepository profileRepository,
             UserRepository userRepository,
             EnrollmentRepository enrollmentRepository,
             LessonProgressRepository lessonProgressRepository,
-            CertificateRepository certificateRepository) {
+            CertificateRepository certificateRepository,
+            AvatarStorage avatarStorage) {
         this.profileRepository = profileRepository;
         this.userRepository = userRepository;
         this.enrollmentRepository = enrollmentRepository;
         this.lessonProgressRepository = lessonProgressRepository;
         this.certificateRepository = certificateRepository;
+        this.avatarStorage = avatarStorage;
     }
 
     public ProfileDto getProfile() {
@@ -54,6 +60,23 @@ public class ProfileService {
         profile.update(request.displayName(), request.bio());
         profileRepository.save(profile);
         return toDto(user, profile);
+    }
+
+    @Transactional
+    public AvatarUploadResponse uploadAvatar(MultipartFile file) {
+        User user = resolveCurrentUser();
+        Profile profile = findOrCreateProfile(user.getId());
+        String previousAvatarUrl = profile.getAvatarUrl();
+
+        AvatarStorage.StoredAvatar stored = avatarStorage.store(user.getId(), file);
+        profile.updateAvatarUrl(stored.publicUrl());
+        profileRepository.save(profile);
+
+        // Delete the prior file only after the new one is persisted so a write failure cannot
+        // leave the profile pointing at a missing avatar.
+        avatarStorage.deleteIfStored(previousAvatarUrl);
+
+        return new AvatarUploadResponse(stored.publicUrl());
     }
 
     private Profile findOrCreateProfile(UUID userId) {

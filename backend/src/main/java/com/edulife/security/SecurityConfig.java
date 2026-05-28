@@ -34,6 +34,10 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health").permitAll()
+                        // Avatar files are served as plain URLs to clients that may not carry the
+                        // Firebase token (img tags, web cache). Filenames are UUID-based, so the
+                        // directory is not practically enumerable.
+                        .requestMatchers("/uploads/avatars/**").permitAll()
                         // Sprint 2 discovery stays behind Firebase auth so course browsing remains
                         // part of the verified learner flow defined in the current execution plan.
                         .requestMatchers("/api/v1/**").authenticated()
