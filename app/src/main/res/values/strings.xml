@@ -63,6 +63,14 @@
     <string name="enroll_disclaimer">Free to enroll. Certificate requires passing the final exam.</string>
     <string name="enroll_cta">Enroll Now — It\'s Free</string>
     <string name="enrolling">Enrolling…</string>
+    <string name="enroll_success">You\'re enrolled.</string>
+    <string name="enroll_already_enrolled">You\'re already enrolled in this course.</string>
+
+    <!-- My Courses transient states -->
+    <string name="courses_loading">Loading your courses…</string>
+    <string name="courses_load_error">Couldn\'t refresh your courses. Check your connection.</string>
+    <string name="courses_unenroll_error">Couldn\'t unenroll. Try again.</string>
+    <string name="courses_unenroll_success">Unenrolled.</string>
 
     <!-- Lesson player -->
     <string name="lesson_player_tap_to_play">Tap to play</string>

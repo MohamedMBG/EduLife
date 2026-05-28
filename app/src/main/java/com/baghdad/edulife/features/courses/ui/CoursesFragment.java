@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -75,9 +76,23 @@ public class CoursesFragment extends Fragment {
             applyFilter(activeFilter);
         });
 
+        enrollmentViewModel.getMyEnrollmentsError().observe(getViewLifecycleOwner(), error -> {
+            if (error == null || error.isBlank()) return;
+            // The fetch error is transient; surface it via Toast so the empty state below the
+            // list stays meaningful instead of being overwritten with the network error string.
+            Toast.makeText(requireContext(),
+                    getString(R.string.courses_load_error), Toast.LENGTH_SHORT).show();
+        });
+
+        enrollmentViewModel.getMyEnrollmentsLoading().observe(getViewLifecycleOwner(), loading -> {
+            if (Boolean.TRUE.equals(loading) && allEnrolled.isEmpty()) {
+                showEmpty(getString(R.string.courses_loading));
+            }
+        });
+
         enrollmentViewModel.getUnenrollState().observe(getViewLifecycleOwner(), this::handleUnenrollState);
 
-        showEmpty("Loading your courses…");
+        showEmpty(getString(R.string.courses_loading));
     }
 
     @Override
@@ -118,7 +133,17 @@ public class CoursesFragment extends Fragment {
     private void handleUnenrollState(UnenrollUiState state) {
         if (state == null) return;
         if (state.errorMessage != null) {
-            showEmpty(state.errorMessage);
+            // Errors no longer overwrite the empty-state TextView (which serves "loading" /
+            // "no courses") because that conflated two unrelated UI states.
+            Toast.makeText(requireContext(),
+                    getString(R.string.courses_unenroll_error), Toast.LENGTH_SHORT).show();
+            enrollmentViewModel.clearUnenrollState();
+            return;
+        }
+        if (state.unenrolled) {
+            Toast.makeText(requireContext(),
+                    getString(R.string.courses_unenroll_success), Toast.LENGTH_SHORT).show();
+            enrollmentViewModel.clearUnenrollState();
         }
     }
 

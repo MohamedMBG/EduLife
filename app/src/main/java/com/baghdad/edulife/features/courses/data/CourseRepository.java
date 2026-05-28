@@ -139,6 +139,12 @@ public class CourseRepository {
 
     public interface EnrollCallback {
         void onSuccess(EnrollmentResponse response);
+        /**
+         * Triggered when the backend returns 409 — learner is already enrolled. Surfacing this
+         * separately lets the UI show "already enrolled" instead of pretending a fresh enrol
+         * happened and lets My Courses skip the optimistic count bump.
+         */
+        void onAlreadyEnrolled(EnrollmentResponse response);
         void onError(String message);
     }
 
@@ -157,7 +163,7 @@ public class CourseRepository {
             @Override
             public void onResponse(@NonNull Call<EnrollmentResponse> call, @NonNull Response<EnrollmentResponse> response) {
                 if (response.code() == 409) {
-                    callback.onSuccess(response.body());
+                    callback.onAlreadyEnrolled(response.body());
                     return;
                 }
                 if (!response.isSuccessful() || response.body() == null) {
