@@ -10,6 +10,7 @@ import com.baghdad.edulife.features.courses.model.CourseSummary;
 import com.baghdad.edulife.features.courses.model.EnrolledCourse;
 import com.baghdad.edulife.features.courses.model.EnrollmentResponse;
 import com.baghdad.edulife.features.courses.model.EnrollRequest;
+import com.baghdad.edulife.features.courses.model.LessonDetail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -196,6 +197,60 @@ public class CourseRepository {
             @Override
             public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
                 callback.onError("Network error: " + safeMessage(t));
+            }
+        });
+    }
+
+    public interface LessonDetailCallback {
+        void onSuccess(LessonDetail detail);
+        void onError(String message);
+    }
+
+    /**
+     * Reason for a mark-complete failure so the UI can pick a specific message instead of
+     * stringly-typing HTTP status codes inside the fragment.
+     */
+    public enum MarkCompleteFailure { NOT_ENROLLED, NETWORK, OTHER }
+
+    public interface MarkCompleteCallback {
+        void onSuccess();
+        void onError(MarkCompleteFailure reason);
+    }
+
+    public void loadLessonDetail(String courseId, String lessonId, LessonDetailCallback callback) {
+        apiService.getLessonDetail(courseId, lessonId).enqueue(new Callback<LessonDetail>() {
+            @Override
+            public void onResponse(@NonNull Call<LessonDetail> call, @NonNull Response<LessonDetail> response) {
+                if (!response.isSuccessful() || response.body() == null) {
+                    callback.onError("Lesson detail failed. Status: " + response.code());
+                    return;
+                }
+                callback.onSuccess(response.body());
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<LessonDetail> call, @NonNull Throwable t) {
+                callback.onError("Lesson detail network error: " + safeMessage(t));
+            }
+        });
+    }
+
+    public void markLessonComplete(String courseId, String lessonId, MarkCompleteCallback callback) {
+        apiService.markLessonComplete(courseId, lessonId).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+                if (response.isSuccessful()) {
+                    callback.onSuccess();
+                    return;
+                }
+                callback.onError(response.code() == 403
+                        ? MarkCompleteFailure.NOT_ENROLLED
+                        : MarkCompleteFailure.OTHER);
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
+                callback.onError(MarkCompleteFailure.NETWORK);
             }
         });
     }
