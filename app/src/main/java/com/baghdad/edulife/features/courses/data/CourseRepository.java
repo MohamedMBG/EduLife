@@ -98,7 +98,9 @@ public class CourseRepository {
                     @NonNull Response<CoursePageResponse<CourseSummary>> response
             ) {
                 if (!response.isSuccessful()) {
-                    callback.onSuccess(fallbackCourses(category));
+                    // A real backend error surfaces to the UI so the learner sees a Retry CTA
+                    // instead of a misleading "stale seeded list" pretending the call worked.
+                    callback.onError("Catalog failed to load. Status: " + response.code());
                     return;
                 }
 
@@ -106,14 +108,14 @@ public class CourseRepository {
                 List<CourseSummary> courses = body != null && body.content != null
                         ? body.content
                         : Collections.emptyList();
-
-                // Empty backend response still gets the seeded fallback so the catalog never looks broken.
-                callback.onSuccess(courses.isEmpty() ? fallbackCourses(category) : courses);
+                // Empty response is a legitimate state — no published courses match the filter.
+                // The UI distinguishes empty from error via the existing catalog_empty string.
+                callback.onSuccess(courses);
             }
 
             @Override
             public void onFailure(@NonNull Call<CoursePageResponse<CourseSummary>> call, @NonNull Throwable t) {
-                callback.onSuccess(fallbackCourses(category));
+                callback.onError("Catalog network error: " + safeMessage(t));
             }
         });
     }
