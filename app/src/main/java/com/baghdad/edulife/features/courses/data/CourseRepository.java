@@ -6,6 +6,7 @@ import com.baghdad.edulife.core.network.ApiClient;
 import com.baghdad.edulife.core.network.ApiService;
 import com.baghdad.edulife.features.courses.model.CourseDetail;
 import com.baghdad.edulife.features.courses.model.CoursePageResponse;
+import com.baghdad.edulife.features.courses.model.CourseProgress;
 import com.baghdad.edulife.features.courses.model.CourseSummary;
 import com.baghdad.edulife.features.courses.model.EnrolledCourse;
 import com.baghdad.edulife.features.courses.model.EnrollmentResponse;
@@ -36,6 +37,11 @@ public class CourseRepository {
 
     public interface CourseDetailCallback {
         void onSuccess(CourseDetail courseDetail);
+        void onError(String message);
+    }
+
+    public interface CourseProgressCallback {
+        void onSuccess(CourseProgress progress);
         void onError(String message);
     }
 
@@ -110,6 +116,25 @@ public class CourseRepository {
             @Override
             public void onFailure(@NonNull Call<LessonDetail> call, @NonNull Throwable t) {
                 callback.onError("Lesson detail network error: " + safeMessage(t));
+            }
+        });
+    }
+
+    public void loadCourseProgress(String courseId, CourseProgressCallback callback) {
+        apiService.getCourseProgress(courseId).enqueue(new Callback<CourseProgress>() {
+            @Override
+            public void onResponse(@NonNull Call<CourseProgress> call, @NonNull Response<CourseProgress> response) {
+                if (!response.isSuccessful() || response.body() == null) {
+                    callback.onError("Course progress failed to load. Status: " + response.code());
+                    return;
+                }
+
+                callback.onSuccess(response.body());
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<CourseProgress> call, @NonNull Throwable t) {
+                callback.onError("Course progress network error: " + safeMessage(t));
             }
         });
     }

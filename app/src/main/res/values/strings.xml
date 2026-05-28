@@ -34,6 +34,7 @@
     <string name="catalog_logout">Log out</string>
     <string name="catalog_open_course">Open course</string>
     <string name="catalog_course_language">Language: %1$s</string>
+    <string name="catalog_course_count">%1$d course%2$s enrolled</string>
     <string name="home_eyebrow">Learner Dashboard</string>
     <string name="home_welcome_title">Welcome back, %1$s</string>
     <string name="home_welcome_subtitle">Continue with a calm, structured learning flow designed to keep momentum high.</string>
@@ -49,6 +50,9 @@
     <string name="course_detail_locked">Enrollment required later</string>
     <string name="course_detail_missing_id">Course detail could not open because the course ID was missing.</string>
     <string name="course_detail_loading">Loading course detail...</string>
+    <string name="course_detail_exam_locked">Finish all lessons to unlock the final exam</string>
+    <string name="course_detail_exam_unavailable">Enroll and complete the course to unlock the final exam</string>
+    <string name="course_detail_progress_loading">Checking lesson progress...</string>
 
     <!-- Enroll screen -->
     <string name="enroll_header_label">Course Enrollment</string>
@@ -74,6 +78,20 @@
     <string name="lesson_player_completed">✓ Completed</string>
     <string name="lesson_player_prev">← Previous</string>
     <string name="lesson_player_next">Next →</string>
+    <string name="lesson_player_loading_title">Loading lesson...</string>
+    <string name="lesson_player_loading_body">Fetching lesson content from the backend...</string>
+    <string name="lesson_player_unavailable_title">Lesson unavailable</string>
+    <string name="lesson_player_missing_ids">Lesson detail could not open because the course or lesson ID was missing.</string>
+    <string name="lesson_player_default_title">Lesson</string>
+    <string name="lesson_player_section_format">From: %1$s</string>
+    <string name="lesson_player_order_format">Lesson %1$d</string>
+    <string name="lesson_player_duration_format">%1$d min</string>
+    <string name="lesson_player_resource_ready">Open lesson resource</string>
+    <string name="lesson_player_resource_missing">Lesson content appears below</string>
+    <string name="lesson_player_resource_unavailable">No external lesson resource is available for this lesson yet.</string>
+    <string name="lesson_player_prev_unavailable">This is the first lesson in the course.</string>
+    <string name="lesson_player_next_unavailable">This is the last lesson in the course.</string>
+    <string name="lesson_player_section_error">Could not load the course outline for lesson navigation.</string>
 
     <!-- Profile -->
     <string name="profile_eyebrow">Learning Profile</string>
@@ -98,6 +116,31 @@
     <string name="profile_access_verified">Protected learner routes available</string>
     <string name="profile_access_pending">Verify email to unlock protected learner routes</string>
     <string name="profile_internal_id_missing">Sync required</string>
+    <string name="profile_account_section">Account</string>
+    <string name="profile_app_section">App</string>
+    <string name="profile_edit_profile">Edit profile</string>
+    <string name="profile_notifications">Notifications</string>
+    <string name="profile_language">Language</string>
+    <string name="profile_language_value">English</string>
+    <string name="profile_privacy">Privacy policy</string>
+    <string name="profile_about">About EduLife</string>
+    <string name="profile_logout">Log out</string>
+    <string name="profile_edit_title">Edit profile</string>
+    <string name="profile_edit_name">Display name</string>
+    <string name="profile_edit_bio">Bio</string>
+    <string name="profile_edit_save">Save changes</string>
+    <string name="profile_edit_cancel">Cancel</string>
+    <string name="profile_edit_name_required">Display name is required.</string>
+    <string name="profile_edit_success">Profile updated successfully.</string>
+    <string name="profile_notifications_hidden">Notifications are deferred until a later MVP phase, so this action stays hidden for now.</string>
+    <string name="profile_language_title">Learning languages</string>
+    <string name="profile_language_message">EduLife currently ships the app shell in English while course content supports Darija, French, and English.</string>
+    <string name="profile_privacy_title">Privacy policy</string>
+    <string name="profile_privacy_message">EduLife uses Firebase Authentication for sign-in, keeps backend access behind verified email, and stores only the internal learner UUID in the mobile session.</string>
+    <string name="profile_about_title">About EduLife</string>
+    <string name="profile_about_message">EduLife guides learners through one structured loop: discover a course, enroll, study lessons, pass the final exam, and earn a certificate.</string>
+    <string name="profile_dialog_close">Close</string>
+    <string name="profile_placeholder_value">—</string>
 
     <!-- Exam -->
     <string name="exam_loading">Loading exam…</string>
@@ -123,4 +166,21 @@
     <string name="cert_number_label">Certificate No.</string>
     <string name="cert_issued_label">Issued</string>
     <string name="cert_empty">No certificates yet.\nComplete an exam to earn one.</string>
+    <string name="cert_loading_error">Certificates could not be refreshed right now.</string>
+
+    <!-- Auth -->
+    <string name="auth_email_required">Email is required</string>
+    <string name="auth_password_required">Password is required</string>
+    <string name="auth_full_name_required">Full name is required</string>
+    <string name="auth_password_length">Password must be at least 6 characters</string>
+    <string name="auth_password_mismatch">Passwords do not match</string>
+    <string name="auth_terms_required">Please accept the terms before continuing.</string>
+    <string name="auth_signing_in">Signing in...</string>
+    <string name="auth_log_in">Log in</string>
+    <string name="auth_creating_account">Creating account...</string>
+    <string name="auth_account_created_verify">Account created. Please verify your email before logging in.</string>
+    <string name="auth_email_only_mode">Email/password only in this MVP</string>
+    <string name="auth_reset_email_prompt">Enter your email above, then tap Forgot password again to receive a reset link.</string>
+    <string name="auth_reset_email_sent">Password reset email sent.</string>
+    <string name="auth_reset_email_failed">Could not send reset email. Check the address and try again.</string>
 </resources>

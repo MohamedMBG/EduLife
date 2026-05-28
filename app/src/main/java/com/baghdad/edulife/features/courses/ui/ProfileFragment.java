@@ -1,11 +1,15 @@
 package com.baghdad.edulife.features.courses.ui;
 
+import android.app.AlertDialog;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.TypedValue;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -48,16 +52,21 @@ public class ProfileFragment extends Fragment {
         SessionStorage sessionStorage = new SessionStorage(requireContext());
 
         View profileHeader = view.findViewById(R.id.profileHeaderLayout);
-        final int origProfileHeaderTop = profileHeader.getPaddingTop();
+        final int originalProfileHeaderTop = profileHeader.getPaddingTop();
         ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
             int top = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
-            profileHeader.setPadding(profileHeader.getPaddingLeft(), origProfileHeaderTop + top,
-                    profileHeader.getPaddingRight(), profileHeader.getPaddingBottom());
+            profileHeader.setPadding(
+                    profileHeader.getPaddingLeft(),
+                    originalProfileHeaderTop + top,
+                    profileHeader.getPaddingRight(),
+                    profileHeader.getPaddingBottom()
+            );
             return WindowInsetsCompat.CONSUMED;
         });
 
         bindStaticUserInfo(view, sessionStorage);
         observeProfile(view);
+        wireActionRows(view);
         profileViewModel.loadProfile();
         loadCertificates(view);
 
@@ -71,7 +80,7 @@ public class ProfileFragment extends Fragment {
         });
     }
 
-    private void bindStaticUserInfo(View view, SessionStorage session) {
+    private void bindStaticUserInfo(View view, SessionStorage sessionStorage) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
         TextView avatarInitials = view.findViewById(R.id.avatarInitials);
@@ -85,10 +94,12 @@ public class ProfileFragment extends Fragment {
         String displayName = user != null && user.getDisplayName() != null
                 ? user.getDisplayName()
                 : extractNameFromEmail(user);
-        String email = user != null && user.getEmail() != null ? user.getEmail() : "—";
-        String role = session.getRole() != null ? session.getRole().toUpperCase() : "STUDENT";
+        String email = user != null && user.getEmail() != null
+                ? user.getEmail()
+                : getString(R.string.profile_placeholder_value);
+        String role = sessionStorage.getRole() != null ? sessionStorage.getRole().toUpperCase() : "STUDENT";
         boolean emailVerified = user != null && user.isEmailVerified();
-        String internalUserId = session.getUserId();
+        String internalUserId = sessionStorage.getUserId();
         boolean syncReady = internalUserId != null && !internalUserId.isBlank();
 
         nameView.setText(displayName);
@@ -103,10 +114,9 @@ public class ProfileFragment extends Fragment {
                 ? R.string.profile_access_verified
                 : R.string.profile_access_pending));
 
-        // Show placeholder zeros until API responds
-        view.<TextView>findViewById(R.id.profileStatPrimaryValue).setText("—");
-        view.<TextView>findViewById(R.id.profileStatSecondaryValue).setText("—");
-        view.<TextView>findViewById(R.id.profileStatTertiaryValue).setText("—");
+        view.<TextView>findViewById(R.id.profileStatPrimaryValue).setText(R.string.profile_placeholder_value);
+        view.<TextView>findViewById(R.id.profileStatSecondaryValue).setText(R.string.profile_placeholder_value);
+        view.<TextView>findViewById(R.id.profileStatTertiaryValue).setText(R.string.profile_placeholder_value);
     }
 
     private void observeProfile(View view) {
@@ -114,12 +124,13 @@ public class ProfileFragment extends Fragment {
         TextView avatarInitials = view.findViewById(R.id.avatarInitials);
         TextView enrolledView = view.findViewById(R.id.profileStatPrimaryValue);
         TextView lessonsView = view.findViewById(R.id.profileStatSecondaryValue);
-        TextView certView = view.findViewById(R.id.profileStatTertiaryValue);
+        TextView certificatesView = view.findViewById(R.id.profileStatTertiaryValue);
 
-        profileViewModel.profile.observe(getViewLifecycleOwner(), (ProfileResponse profile) -> {
-            if (profile == null) return;
+        profileViewModel.profile.observe(getViewLifecycleOwner(), profile -> {
+            if (profile == null) {
+                return;
+            }
 
-            // Prefer server-side displayName over Firebase fallback
             if (profile.displayName != null && !profile.displayName.isBlank()) {
                 nameView.setText(profile.displayName);
                 avatarInitials.setText(getInitials(profile.displayName));
@@ -127,8 +138,37 @@ public class ProfileFragment extends Fragment {
 
             enrolledView.setText(String.valueOf(profile.enrolledCourses));
             lessonsView.setText(String.valueOf(profile.completedLessons));
-            certView.setText(String.valueOf(profile.certificates));
+            certificatesView.setText(String.valueOf(profile.certificates));
         });
+
+        profileViewModel.error.observe(getViewLifecycleOwner(), message -> {
+            if (message == null || message.isBlank() || !isAdded()) {
+                return;
+            }
+
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+        });
+
+        profileViewModel.saveMessage.observe(getViewLifecycleOwner(), message -> {
+            if (message == null || message.isBlank() || !isAdded()) {
+                return;
+            }
+
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void wireActionRows(View view) {
+        // Notifications are explicitly deferred in the EduLife MVP plan, so remove the dead row from the active UI.
+        view.findViewById(R.id.settingsNotifications).setVisibility(View.GONE);
+
+        view.findViewById(R.id.settingsEditProfile).setOnClickListener(v -> showEditProfileDialog());
+        view.findViewById(R.id.settingsLanguage).setOnClickListener(v ->
+                showInfoDialog(R.string.profile_language_title, R.string.profile_language_message));
+        view.findViewById(R.id.settingsPrivacy).setOnClickListener(v ->
+                showInfoDialog(R.string.profile_privacy_title, R.string.profile_privacy_message));
+        view.findViewById(R.id.settingsAbout).setOnClickListener(v ->
+                showInfoDialog(R.string.profile_about_title, R.string.profile_about_message));
     }
 
     private String buildMetaStatus(boolean emailVerified, boolean syncReady) {
@@ -142,31 +182,44 @@ public class ProfileFragment extends Fragment {
     }
 
     private String formatRole(String role) {
-        if (role == null || role.isBlank()) return "Student";
+        if (role == null || role.isBlank()) {
+            return "Student";
+        }
+
         String normalized = role.replace('_', ' ').trim().toLowerCase();
         String[] parts = normalized.split("\\s+");
         StringBuilder builder = new StringBuilder();
         for (String part : parts) {
-            if (part.isBlank()) continue;
-            if (builder.length() > 0) builder.append(' ');
+            if (part.isBlank()) {
+                continue;
+            }
+            if (builder.length() > 0) {
+                builder.append(' ');
+            }
             builder.append(Character.toUpperCase(part.charAt(0))).append(part.substring(1));
         }
         return builder.length() == 0 ? "Student" : builder.toString();
     }
 
     private String extractNameFromEmail(FirebaseUser user) {
-        if (user == null || user.getEmail() == null) return "Learner";
+        if (user == null || user.getEmail() == null) {
+            return "Learner";
+        }
+
         String email = user.getEmail();
-        int atIdx = email.indexOf('@');
-        if (atIdx > 0) {
-            String local = email.substring(0, atIdx);
+        int atIndex = email.indexOf('@');
+        if (atIndex > 0) {
+            String local = email.substring(0, atIndex);
             return local.substring(0, 1).toUpperCase() + local.substring(1);
         }
         return "Learner";
     }
 
     private String getInitials(String name) {
-        if (name == null || name.isEmpty()) return "?";
+        if (name == null || name.isEmpty()) {
+            return "?";
+        }
+
         String[] parts = name.trim().split("\\s+");
         if (parts.length >= 2) {
             return String.valueOf(parts[0].charAt(0)).toUpperCase()
@@ -179,13 +232,19 @@ public class ProfileFragment extends Fragment {
         certificateRepository.loadMyCertificates(new CertificateRepository.CertificatesCallback() {
             @Override
             public void onSuccess(List<CertificateDto> certificates) {
-                if (!isAdded()) return;
+                if (!isAdded()) {
+                    return;
+                }
                 requireActivity().runOnUiThread(() -> renderCertificates(view, certificates));
             }
 
             @Override
             public void onError(String message) {
-                // Silent fail — certs section stays empty
+                if (!isAdded()) {
+                    return;
+                }
+                requireActivity().runOnUiThread(() ->
+                        Toast.makeText(requireContext(), R.string.cert_loading_error, Toast.LENGTH_SHORT).show());
             }
         });
     }
@@ -200,21 +259,22 @@ public class ProfileFragment extends Fragment {
             empty.setTextColor(requireContext().getColor(R.color.brand_text_secondary));
             empty.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f);
             empty.setLineSpacing(0f, 1.4f);
-            LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
-            p.bottomMargin = dp(8);
-            empty.setLayoutParams(p);
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            params.bottomMargin = dp(8);
+            empty.setLayoutParams(params);
             container.addView(empty);
             return;
         }
 
-        for (CertificateDto cert : certificates) {
-            container.addView(buildCertCard(cert));
+        for (CertificateDto certificate : certificates) {
+            container.addView(buildCertificateCard(certificate));
         }
     }
 
-    private View buildCertCard(CertificateDto cert) {
+    private View buildCertificateCard(CertificateDto certificate) {
         LinearLayout card = new LinearLayout(requireContext());
         card.setOrientation(LinearLayout.VERTICAL);
         card.setBackgroundResource(R.drawable.bg_settings_item);
@@ -222,7 +282,8 @@ public class ProfileFragment extends Fragment {
 
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
         params.bottomMargin = dp(10);
         card.setLayoutParams(params);
 
@@ -233,7 +294,9 @@ public class ProfileFragment extends Fragment {
         numberLabel.setTypeface(numberLabel.getTypeface(), Typeface.BOLD);
 
         TextView numberValue = new TextView(requireContext());
-        numberValue.setText(cert.certificateNumber != null ? cert.certificateNumber : "—");
+        numberValue.setText(certificate.certificateNumber != null
+                ? certificate.certificateNumber
+                : getString(R.string.profile_placeholder_value));
         numberValue.setTextColor(requireContext().getColor(R.color.brand_text_primary));
         numberValue.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f);
         numberValue.setTypeface(numberValue.getTypeface(), Typeface.BOLD);
@@ -246,7 +309,7 @@ public class ProfileFragment extends Fragment {
         issuedLabel.setTypeface(issuedLabel.getTypeface(), Typeface.BOLD);
 
         TextView issuedValue = new TextView(requireContext());
-        issuedValue.setText(formatIsoDate(cert.issuedAt));
+        issuedValue.setText(formatIsoDate(certificate.issuedAt));
         issuedValue.setTextColor(requireContext().getColor(R.color.brand_text_body));
         issuedValue.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f);
         issuedValue.setPadding(0, dp(4), 0, 0);
@@ -258,15 +321,75 @@ public class ProfileFragment extends Fragment {
         return card;
     }
 
+    private void showEditProfileDialog() {
+        LinearLayout container = new LinearLayout(requireContext());
+        container.setOrientation(LinearLayout.VERTICAL);
+        container.setPadding(dp(24), dp(16), dp(24), 0);
+
+        EditText displayNameInput = new EditText(requireContext());
+        displayNameInput.setHint(R.string.profile_edit_name);
+
+        ProfileResponse currentProfile = profileViewModel.profile.getValue();
+        String currentDisplayName = currentProfile != null && currentProfile.displayName != null
+                ? currentProfile.displayName
+                : ((TextView) requireView().findViewById(R.id.profileName)).getText().toString();
+        String currentBio = currentProfile != null && currentProfile.bio != null ? currentProfile.bio : "";
+
+        displayNameInput.setText(currentDisplayName);
+
+        EditText bioInput = new EditText(requireContext());
+        bioInput.setHint(R.string.profile_edit_bio);
+        bioInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        bioInput.setMinLines(3);
+        bioInput.setText(currentBio);
+
+        container.addView(displayNameInput);
+        container.addView(bioInput);
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.profile_edit_title)
+                .setView(container)
+                .setNegativeButton(R.string.profile_edit_cancel, null)
+                .setPositiveButton(R.string.profile_edit_save, null)
+                .create();
+
+        dialog.setOnShowListener(unused -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            String displayName = displayNameInput.getText().toString().trim();
+            String bio = bioInput.getText().toString().trim();
+
+            if (displayName.isBlank()) {
+                displayNameInput.setError(getString(R.string.profile_edit_name_required));
+                return;
+            }
+
+            // Profile updates must flow through the backend so learner identity stays consistent across devices.
+            profileViewModel.updateProfile(displayName, bio);
+            dialog.dismiss();
+        }));
+
+        dialog.show();
+    }
+
+    private void showInfoDialog(int titleResId, int messageResId) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle(titleResId)
+                .setMessage(messageResId)
+                .setPositiveButton(R.string.profile_dialog_close, null)
+                .show();
+    }
+
     private String formatIsoDate(String iso) {
-        if (iso == null || iso.length() < 10) return "—";
-        // ISO 8601: 2026-05-26T17:13:45.123Z → "2026-05-26"
+        if (iso == null || iso.length() < 10) {
+            return getString(R.string.profile_placeholder_value);
+        }
         return iso.substring(0, 10);
     }
 
     private int dp(int value) {
         return (int) TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, value,
-                requireContext().getResources().getDisplayMetrics());
+                TypedValue.COMPLEX_UNIT_DIP,
+                value,
+                requireContext().getResources().getDisplayMetrics()
+        );
     }
 }
