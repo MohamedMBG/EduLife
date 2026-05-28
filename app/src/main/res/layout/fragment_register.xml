@@ -461,7 +461,7 @@
 
         <!-- OR separator -->
         <LinearLayout
-            android:id="@+id/dividerRow"
+            android:id="@+id/registerDividerRow"
             android:layout_width="0dp"
             android:layout_height="32dp"
             android:layout_marginTop="20dp"
@@ -507,7 +507,7 @@
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/dividerRow">
+            app:layout_constraintTop_toBottomOf="@id/registerDividerRow">
 
             <ImageView
                 android:layout_width="24dp"
@@ -520,7 +520,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="14dp"
                 android:fontFamily="sans-serif-medium"
-                android:text="Continue with Google"
+                android:text="@string/auth_email_only_mode"
                 android:textColor="@color/brand_text_primary"
                 android:textSize="15sp"
                 android:textStyle="bold" />

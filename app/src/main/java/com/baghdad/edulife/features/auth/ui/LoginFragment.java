@@ -51,13 +51,12 @@ public class LoginFragment extends Fragment {
 
         loginButton.setOnClickListener(v -> handleLogin());
 
-        view.findViewById(R.id.googleButton).setOnClickListener(v ->
-                // Google sign-in needs OAuth configuration, so this screen only exposes a visual placeholder.
-                Toast.makeText(requireContext(), "Google sign-in coming soon", Toast.LENGTH_SHORT).show());
+        // The MVP ships only email/password auth, so unsupported OAuth buttons stay hidden instead of behaving like dead links.
+        view.findViewById(R.id.loginDividerRow).setVisibility(View.GONE);
+        view.findViewById(R.id.googleButton).setVisibility(View.GONE);
 
         view.findViewById(R.id.forgotPasswordText).setOnClickListener(v ->
-                // Password recovery will be wired when the auth module receives reset endpoints.
-                Toast.makeText(requireContext(), "Password recovery coming soon", Toast.LENGTH_SHORT).show());
+                sendPasswordResetEmail());
 
         view.findViewById(R.id.registerRow).setOnClickListener(v ->
                 // Navigate to the register screen so users who land on login can create an account.
@@ -72,12 +71,12 @@ public class LoginFragment extends Fragment {
         String password = passwordEditText.getText().toString();
 
         if (email.isEmpty()) {
-            emailEditText.setError("Email is required");
+            emailEditText.setError(getString(R.string.auth_email_required));
             return;
         }
 
         if (password.isEmpty()) {
-            passwordEditText.setError("Password is required");
+            passwordEditText.setError(getString(R.string.auth_password_required));
             return;
         }
 
@@ -93,7 +92,9 @@ public class LoginFragment extends Fragment {
         emailEditText.setEnabled(!state.loading);
         passwordEditText.setEnabled(!state.loading);
         // Mirror the backend-sync wait state in the button text so users know the request is still being processed.
-        loginButtonText.setText(state.loading ? "Signing in..." : "Log in");
+        loginButtonText.setText(state.loading
+                ? R.string.auth_signing_in
+                : R.string.auth_log_in);
 
         if (state.loading) {
             hideError();
@@ -114,6 +115,27 @@ public class LoginFragment extends Fragment {
         if (state.message != null && !state.message.isBlank()) {
             showError(friendlyMessage(state.message));
         }
+    }
+
+    private void sendPasswordResetEmail() {
+        String email = emailEditText.getText().toString().trim();
+        if (email.isEmpty()) {
+            emailEditText.setError(getString(R.string.auth_email_required));
+            Toast.makeText(requireContext(), R.string.auth_reset_email_prompt, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        authViewModel.sendPasswordResetEmail(email, (success, message) -> {
+            if (!isAdded()) {
+                return;
+            }
+
+            Toast.makeText(
+                    requireContext(),
+                    success ? R.string.auth_reset_email_sent : R.string.auth_reset_email_failed,
+                    Toast.LENGTH_SHORT
+            ).show();
+        });
     }
 
     private void showError(String message) {

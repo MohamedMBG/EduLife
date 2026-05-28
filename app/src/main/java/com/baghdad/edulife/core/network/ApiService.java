@@ -9,10 +9,12 @@ import com.baghdad.edulife.features.courses.model.EnrolledCourse;
 import com.baghdad.edulife.features.courses.model.EnrollmentResponse;
 import com.baghdad.edulife.features.courses.model.EnrollRequest;
 import com.baghdad.edulife.features.courses.model.LessonDetail;
+import com.baghdad.edulife.features.courses.model.CourseProgress;
 import com.baghdad.edulife.features.exam.model.ExamDto;
 import com.baghdad.edulife.features.exam.model.ExamResultDto;
 import com.baghdad.edulife.features.exam.model.SubmitExamRequest;
 import com.baghdad.edulife.features.profile.model.ProfileResponse;
+import com.baghdad.edulife.features.profile.model.UpdateProfileRequest;
 
 import java.util.List;
 
@@ -22,6 +24,7 @@ import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Query;
 
 /**
@@ -102,8 +105,18 @@ public interface ApiService {
             @Path("lessonId") String lessonId
     );
 
+    /**
+     * Returns the authenticated learner's course progress so lesson and exam CTAs can follow
+     * the real backend rules instead of optimistic placeholder state.
+     */
+    @GET("courses/{courseId}/progress")
+    Call<CourseProgress> getCourseProgress(@Path("courseId") String courseId);
+
     @GET("profile")
     Call<ProfileResponse> getProfile();
+
+    @PUT("profile")
+    Call<ProfileResponse> updateProfile(@Body UpdateProfileRequest request);
 
     /**
      * Returns the exam for a course (questions with shuffled choices, no isCorrect field).

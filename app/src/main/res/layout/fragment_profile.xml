@@ -275,7 +275,7 @@
             android:layout_marginStart="24dp"
             android:layout_marginTop="44dp"
             android:fontFamily="sans-serif-medium"
-            android:text="Account"
+            android:text="@string/profile_account_section"
             android:textColor="@color/brand_text_secondary"
             android:textSize="11sp"
             android:textStyle="bold"
@@ -309,7 +309,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Edit Profile"
+                    android:text="@string/profile_edit_profile"
                     android:textColor="@color/brand_text_primary"
                     android:textSize="15sp" />
 
@@ -336,7 +336,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Notifications"
+                    android:text="@string/profile_notifications"
                     android:textColor="@color/brand_text_primary"
                     android:textSize="15sp" />
 
@@ -363,7 +363,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Language"
+                    android:text="@string/profile_language"
                     android:textColor="@color/brand_text_primary"
                     android:textSize="15sp" />
 
@@ -371,7 +371,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
-                    android:text="English"
+                    android:id="@+id/settingsLanguageValue"
+                    android:text="@string/profile_language_value"
                     android:textColor="@color/brand_text_secondary"
                     android:textSize="13sp" />
 
@@ -390,7 +391,7 @@
             android:layout_marginStart="24dp"
             android:layout_marginTop="36dp"
             android:fontFamily="sans-serif-medium"
-            android:text="App"
+            android:text="@string/profile_app_section"
             android:textColor="@color/brand_text_secondary"
             android:textSize="11sp"
             android:textStyle="bold"
@@ -423,7 +424,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Privacy Policy"
+                    android:text="@string/profile_privacy"
                     android:textColor="@color/brand_text_primary"
                     android:textSize="15sp" />
 
@@ -450,7 +451,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="About EduLife"
+                    android:text="@string/profile_about"
                     android:textColor="@color/brand_text_primary"
                     android:textSize="15sp" />
 
@@ -504,7 +505,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-medium"
-                android:text="Log Out"
+                android:text="@string/profile_logout"
                 android:textColor="@color/brand_error"
                 android:textSize="15sp"
                 android:textStyle="bold" />

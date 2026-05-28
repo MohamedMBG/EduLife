@@ -60,8 +60,9 @@ public class RegisterFragment extends Fragment {
 
         createAccountButton.setOnClickListener(v -> handleRegister());
 
-        googleRegisterButton.setOnClickListener(v ->
-                Toast.makeText(requireContext(), "Google sign-up coming soon", Toast.LENGTH_SHORT).show());
+        // The MVP auth scope is email/password only, so unsupported OAuth actions are hidden.
+        view.findViewById(R.id.registerDividerRow).setVisibility(View.GONE);
+        googleRegisterButton.setVisibility(View.GONE);
 
         loginText.setOnClickListener(v ->
                 // Navigate back to the login screen; popUpTo in the nav graph action removes the register screen.
@@ -81,32 +82,32 @@ public class RegisterFragment extends Fragment {
         String confirmPassword = confirmPasswordInput.getText().toString();
 
         if (fullName.isEmpty()) {
-            fullNameInput.setError("Full name is required");
+            fullNameInput.setError(getString(R.string.auth_full_name_required));
             return;
         }
 
         if (email.isEmpty()) {
-            emailInput.setError("Email is required");
+            emailInput.setError(getString(R.string.auth_email_required));
             return;
         }
 
         if (password.isEmpty()) {
-            passwordInput.setError("Password is required");
+            passwordInput.setError(getString(R.string.auth_password_required));
             return;
         }
 
         if (password.length() < 6) {
-            passwordInput.setError("Password must be at least 6 characters");
+            passwordInput.setError(getString(R.string.auth_password_length));
             return;
         }
 
         if (!password.equals(confirmPassword)) {
-            confirmPasswordInput.setError("Passwords do not match");
+            confirmPasswordInput.setError(getString(R.string.auth_password_mismatch));
             return;
         }
 
         if (!termsCheckbox.isChecked()) {
-            Toast.makeText(requireContext(), "Please accept the terms before continuing.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), R.string.auth_terms_required, Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -119,14 +120,14 @@ public class RegisterFragment extends Fragment {
         createAccountButton.setEnabled(!state.loading);
 
         if (state.loading) {
-            Toast.makeText(requireContext(), "Creating account...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), R.string.auth_creating_account, Toast.LENGTH_SHORT).show();
             return;
         }
 
         if (state.emailVerificationRequired) {
             Toast.makeText(
                     requireContext(),
-                    "Account created. Please verify your email before logging in.",
+                    R.string.auth_account_created_verify,
                     Toast.LENGTH_LONG
             ).show();
             return;

@@ -8,6 +8,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -17,9 +18,11 @@ import androidx.navigation.Navigation;
 
 import com.baghdad.edulife.R;
 import com.baghdad.edulife.features.courses.model.CourseDetail;
+import com.baghdad.edulife.features.courses.model.CourseProgressUiState;
 import com.baghdad.edulife.features.courses.model.CourseDetailUiState;
 import com.baghdad.edulife.features.courses.model.CourseSection;
 import com.baghdad.edulife.features.courses.model.LessonSummary;
+import com.baghdad.edulife.features.courses.viewmodel.CourseProgressViewModel;
 import com.baghdad.edulife.features.courses.viewmodel.CourseDetailViewModel;
 
 import java.util.List;
@@ -28,10 +31,13 @@ import java.util.Locale;
 public class CourseDetailFragment extends Fragment {
 
     private CourseDetailViewModel courseDetailViewModel;
+    private CourseProgressViewModel courseProgressViewModel;
     private View loadingIndicator;
     private TextView statusText;
     private ScrollView detailScrollView;
     private LinearLayout sectionContainer;
+    private Button startExamButton;
+    private String currentCourseId;
 
     public CourseDetailFragment() {
         super(R.layout.fragment_course_detail);
@@ -42,25 +48,37 @@ public class CourseDetailFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         courseDetailViewModel = new ViewModelProvider(this).get(CourseDetailViewModel.class);
+        courseProgressViewModel = new ViewModelProvider(this).get(CourseProgressViewModel.class);
         loadingIndicator = view.findViewById(R.id.detailLoadingIndicator);
         statusText = view.findViewById(R.id.detailStatusText);
         detailScrollView = view.findViewById(R.id.detailScrollView);
         sectionContainer = view.findViewById(R.id.sectionContainer);
+        startExamButton = view.findViewById(R.id.startExamButton);
 
         view.findViewById(R.id.backButton).setOnClickListener(v ->
                 Navigation.findNavController(view).popBackStack());
 
-        String courseId = getArguments() != null ? getArguments().getString("courseId") : null;
-        if (courseId == null || courseId.isBlank()) {
+        currentCourseId = getArguments() != null ? getArguments().getString("courseId") : null;
+        if (currentCourseId == null || currentCourseId.isBlank()) {
             renderError(getString(R.string.course_detail_missing_id));
             return;
         }
 
         courseDetailViewModel.getUiState().observe(getViewLifecycleOwner(), this::renderState);
+        courseProgressViewModel.getUiState().observe(getViewLifecycleOwner(), this::renderProgressState);
 
         CourseDetailUiState currentState = courseDetailViewModel.getUiState().getValue();
         if (currentState == null || currentState.courseDetail == null) {
-            courseDetailViewModel.loadCourseDetail(courseId);
+            courseDetailViewModel.loadCourseDetail(currentCourseId);
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (currentCourseId != null && !currentCourseId.isBlank()) {
+            // Progress can change after the learner completes a lesson, so refresh the exam gate on return.
+            courseProgressViewModel.loadCourseProgress(currentCourseId);
         }
     }
 
@@ -86,6 +104,37 @@ public class CourseDetailFragment extends Fragment {
         if (state.courseDetail != null) {
             bindCourseDetail(state.courseDetail);
         }
+    }
+
+    private void renderProgressState(CourseProgressUiState state) {
+        if (state == null || startExamButton == null) {
+            return;
+        }
+
+        if (state.loading) {
+            startExamButton.setEnabled(false);
+            startExamButton.setText(R.string.course_detail_progress_loading);
+            return;
+        }
+
+        if (state.errorMessage != null && !state.errorMessage.isBlank()) {
+            startExamButton.setEnabled(false);
+            startExamButton.setText(R.string.course_detail_exam_unavailable);
+            return;
+        }
+
+        if (state.progress == null) {
+            startExamButton.setEnabled(false);
+            startExamButton.setText(R.string.course_detail_exam_unavailable);
+            return;
+        }
+
+        boolean examUnlocked = state.progress.totalLessons > 0
+                && state.progress.completedLessons >= state.progress.totalLessons;
+        startExamButton.setEnabled(examUnlocked);
+        startExamButton.setText(examUnlocked
+                ? R.string.exam_start_button
+                : R.string.course_detail_exam_locked);
     }
 
     private void renderError(String message) {
@@ -143,15 +192,25 @@ public class CourseDetailFragment extends Fragment {
                     .navigate(R.id.action_courseDetailFragment_to_enrollCourseFragment, navArgs);
         });
 
-        Button startExamBtn = requireView().findViewById(R.id.startExamButton);
-        startExamBtn.setVisibility(View.VISIBLE);
-        startExamBtn.setOnClickListener(v -> {
+        startExamButton.setVisibility(View.VISIBLE);
+        startExamButton.setEnabled(false);
+        startExamButton.setText(R.string.course_detail_progress_loading);
+        startExamButton.setOnClickListener(v -> {
+            if (!startExamButton.isEnabled()) {
+                Toast.makeText(requireContext(), startExamButton.getText(), Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             Bundle examArgs = new Bundle();
             examArgs.putString("courseId", courseDetail.id != null ? courseDetail.id : "");
             examArgs.putString("examTitle", courseDetail.title != null ? courseDetail.title : "Exam");
             Navigation.findNavController(requireView())
                     .navigate(R.id.action_courseDetailFragment_to_examFragment, examArgs);
         });
+
+        if (courseDetail.id != null && !courseDetail.id.isBlank()) {
+            courseProgressViewModel.loadCourseProgress(courseDetail.id);
+        }
     }
 
     private View createSectionView(String courseId, CourseSection section) {

@@ -39,6 +39,10 @@ public class AuthRepository {
         void onResult(AuthResult result);
     }
 
+    public interface PasswordResetCallback {
+        void onComplete(boolean success, String message);
+    }
+
     /**
      * Signs the user out of Firebase and clears the local session.
      * Both steps are always performed together to prevent stale identity from persisting.
@@ -100,6 +104,16 @@ public class AuthRepository {
     public boolean isCurrentUserEmailVerified() {
         FirebaseUser user = firebaseAuth.getCurrentUser();
         return user != null && user.isEmailVerified();
+    }
+
+    public void sendPasswordResetEmail(String email, PasswordResetCallback callback) {
+        // Password reset stays inside Firebase Auth because the MVP does not own credential recovery on the backend.
+        firebaseAuth.sendPasswordResetEmail(email)
+                .addOnSuccessListener(unused -> callback.onComplete(true, "Password reset email sent."))
+                .addOnFailureListener(error -> callback.onComplete(
+                        false,
+                        error.getMessage() != null ? error.getMessage() : "Could not send reset email."
+                ));
     }
 
     /**
