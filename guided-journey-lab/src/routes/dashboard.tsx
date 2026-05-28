@@ -96,8 +96,8 @@ const navLinks = [
   { icon: Home,     label: "Home",         to: "/dashboard" as const, active: true  },
   { icon: BookOpen, label: "My Courses",   to: "/courses"   as const, active: false },
   { icon: Compass,  label: "Explore",      to: "/explore"   as const, active: false },
-  { icon: Award,    label: "Certificates", to: "/dashboard" as const, active: false },
-  { icon: Settings, label: "Settings",     to: "/dashboard" as const, active: false },
+  { icon: Award,    label: "Certificates", to: "/certificates" as const, active: false },
+  { icon: Settings, label: "Settings",     to: "/profile"      as const, active: false },
 ];
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
