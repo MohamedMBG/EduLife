@@ -1,11 +1,15 @@
 package com.baghdad.edulife.features.courses.ui;
 
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
@@ -58,6 +62,69 @@ public class ProfileFragment extends Fragment {
                     .build();
             Navigation.findNavController(view)
                     .navigate(R.id.action_profileFragment_to_loginFragment, null, options);
+        });
+
+        view.findViewById(R.id.deleteAccountButton)
+                .setOnClickListener(v -> showDeleteAccountDialog(view));
+
+        observeAccountDeletion(view);
+    }
+
+    private void showDeleteAccountDialog(View view) {
+        EditText confirmInput = new EditText(requireContext());
+        confirmInput.setHint(R.string.profile_delete_account_dialog_hint);
+        // Single-line + no suggestions so the typed string is not silently mangled into
+        // "Delete" or autocompleted before the equality check.
+        confirmInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+        confirmInput.setSingleLine(true);
+        int padPx = (int) (requireContext().getResources().getDisplayMetrics().density * 24);
+        confirmInput.setPadding(padPx, padPx / 2, padPx, padPx / 2);
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.profile_delete_account_dialog_title)
+                .setMessage(R.string.profile_delete_account_dialog_body)
+                .setView(confirmInput)
+                .setNegativeButton(R.string.profile_delete_account_dialog_cancel, null)
+                .setPositiveButton(R.string.profile_delete_account_dialog_confirm, null)
+                .create();
+
+        dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                .setOnClickListener(btn -> {
+                    String typed = confirmInput.getText() == null ? "" : confirmInput.getText().toString();
+                    if (!"DELETE".equals(typed)) {
+                        // Stay on the dialog so the learner can correct; toast carries the exact
+                        // requirement so we don't depend on the label alone.
+                        Toast.makeText(requireContext(),
+                                R.string.profile_delete_account_confirm_required,
+                                Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    dialog.dismiss();
+                    profileViewModel.deleteAccount();
+                }));
+
+        dialog.show();
+    }
+
+    private void observeAccountDeletion(View view) {
+        profileViewModel.accountDeleted.observe(getViewLifecycleOwner(), deleted -> {
+            if (!Boolean.TRUE.equals(deleted)) return;
+            // Local sign-out clears Firebase + SessionStorage so the orphaned Bearer token
+            // cannot be replayed even if it is still cached locally.
+            authViewModel.signOut();
+            Toast.makeText(requireContext(),
+                    R.string.profile_delete_account_success, Toast.LENGTH_SHORT).show();
+            NavOptions options = new NavOptions.Builder()
+                    .setPopUpTo(R.id.nav_graph, true)
+                    .build();
+            Navigation.findNavController(view)
+                    .navigate(R.id.action_profileFragment_to_loginFragment, null, options);
+        });
+
+        profileViewModel.deleteError.observe(getViewLifecycleOwner(), msg -> {
+            if (msg == null || msg.isBlank()) return;
+            Toast.makeText(requireContext(),
+                    R.string.profile_delete_account_error, Toast.LENGTH_SHORT).show();
         });
     }
 

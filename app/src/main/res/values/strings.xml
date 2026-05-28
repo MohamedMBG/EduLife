@@ -98,4 +98,13 @@
     <string name="profile_access_verified">Protected learner routes available</string>
     <string name="profile_access_pending">Verify email to unlock protected learner routes</string>
     <string name="profile_internal_id_missing">Sync required</string>
+    <string name="profile_delete_account_button">Delete account</string>
+    <string name="profile_delete_account_dialog_title">Delete your account?</string>
+    <string name="profile_delete_account_dialog_body">This permanently removes your EduLife account, your Firebase login, and all profile data. Certificates and enrollment history remain in anonymized form. This cannot be undone.\n\nType DELETE to confirm.</string>
+    <string name="profile_delete_account_dialog_hint">Type DELETE</string>
+    <string name="profile_delete_account_dialog_confirm">Delete forever</string>
+    <string name="profile_delete_account_dialog_cancel">Cancel</string>
+    <string name="profile_delete_account_confirm_required">Type DELETE exactly to confirm.</string>
+    <string name="profile_delete_account_success">Account deleted.</string>
+    <string name="profile_delete_account_error">Could not delete account. Try again.</string>
 </resources>

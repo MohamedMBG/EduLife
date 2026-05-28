@@ -17,6 +17,11 @@ public class ProfileRepository {
         void onError(String message);
     }
 
+    public interface DeleteAccountCallback {
+        void onSuccess();
+        void onError(String message);
+    }
+
     private final ApiService apiService;
 
     public ProfileRepository() {
@@ -37,6 +42,24 @@ public class ProfileRepository {
 
             @Override
             public void onFailure(@NonNull Call<ProfileResponse> call, @NonNull Throwable t) {
+                callback.onError(t.getMessage() != null ? t.getMessage() : "Network error");
+            }
+        });
+    }
+
+    public void deleteAccount(DeleteAccountCallback callback) {
+        apiService.deleteAccount().enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+                if (response.isSuccessful()) {
+                    callback.onSuccess();
+                    return;
+                }
+                callback.onError("Account deletion failed. Status: " + response.code());
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
                 callback.onError(t.getMessage() != null ? t.getMessage() : "Network error");
             }
         });

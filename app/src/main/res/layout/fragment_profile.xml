@@ -470,7 +470,6 @@
             android:layout_marginStart="24dp"
             android:layout_marginTop="32dp"
             android:layout_marginEnd="24dp"
-            android:layout_marginBottom="48dp"
             android:background="@drawable/bg_home_logout_button"
             android:clickable="true"
             android:focusable="true"
@@ -487,6 +486,23 @@
                 android:textSize="15sp"
                 android:textStyle="bold" />
         </LinearLayout>
+
+        <!-- Delete account stays a tertiary text action so it never competes with the primary
+             sign-out CTA but remains discoverable per the Play Store mandate. -->
+        <TextView
+            android:id="@+id/deleteAccountButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="48dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="12dp"
+            android:text="@string/profile_delete_account_button"
+            android:textColor="@color/brand_error"
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

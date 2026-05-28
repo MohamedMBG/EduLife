@@ -17,6 +17,17 @@ public class ProfileViewModel extends ViewModel {
     private final MutableLiveData<String> _error = new MutableLiveData<>();
     public final LiveData<String> error = _error;
 
+    // Single-shot signal so the fragment can drive sign-out + nav exactly once per success.
+    private final MutableLiveData<Boolean> _accountDeleted = new MutableLiveData<>();
+    public final LiveData<Boolean> accountDeleted = _accountDeleted;
+
+    private final MutableLiveData<Boolean> _deleting = new MutableLiveData<>(false);
+    public final LiveData<Boolean> deleting = _deleting;
+
+    // Separate error stream so delete failures stay distinct from profile-load failures.
+    private final MutableLiveData<String> _deleteError = new MutableLiveData<>();
+    public final LiveData<String> deleteError = _deleteError;
+
     public void loadProfile() {
         repository.loadProfile(new ProfileRepository.ProfileCallback() {
             @Override
@@ -27,6 +38,23 @@ public class ProfileViewModel extends ViewModel {
             @Override
             public void onError(String message) {
                 _error.postValue(message);
+            }
+        });
+    }
+
+    public void deleteAccount() {
+        _deleting.postValue(true);
+        repository.deleteAccount(new ProfileRepository.DeleteAccountCallback() {
+            @Override
+            public void onSuccess() {
+                _deleting.postValue(false);
+                _accountDeleted.postValue(true);
+            }
+
+            @Override
+            public void onError(String message) {
+                _deleting.postValue(false);
+                _deleteError.postValue(message);
             }
         });
     }
