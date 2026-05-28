@@ -23,22 +23,26 @@ public class ApiClient {
     public static Retrofit getClient() {
         if (retrofit == null) {
 
-            // Logging interceptor (for debugging)
+            // Body-level logging leaks profile PII and request bodies into logcat, so it must
+            // never be enabled in release builds. BASIC keeps the URL + status line so release
+            // crash reports still carry useful diagnostic context.
             HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
-            // Firebase ID tokens must never be printed to logcat because log files are often shared during debugging.
             loggingInterceptor.redactHeader("Authorization");
-            loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+            loggingInterceptor.setLevel(BuildConfig.DEBUG
+                    ? HttpLoggingInterceptor.Level.BODY
+                    : HttpLoggingInterceptor.Level.BASIC);
 
-            // OkHttp client with Firebase interceptor
             OkHttpClient okHttpClient = new OkHttpClient.Builder()
                     .addInterceptor(new FirebaseAuthInterceptor()) // attaches Bearer token
-                    .addInterceptor(loggingInterceptor)            // optional (debug only)
-                    // Fail fast when the backend IP is unreachable so the login screen can recover instead of
-                    // leaving the learner stuck in loading during /auth/sync.
-                    .connectTimeout(30, TimeUnit.SECONDS)
+                    .addInterceptor(loggingInterceptor)
+                    // Fail fast when the backend is unreachable so the login screen can recover
+                    // instead of leaving the learner stuck in loading during /auth/sync. The
+                    // call timeout caps total round-trip time, including token refresh.
+                    .connectTimeout(15, TimeUnit.SECONDS)
                     .writeTimeout(15, TimeUnit.SECONDS)
-                    .readTimeout(30, TimeUnit.SECONDS)
-                    .callTimeout(35, TimeUnit.SECONDS)
+                    .readTimeout(20, TimeUnit.SECONDS)
+                    .callTimeout(25, TimeUnit.SECONDS)
+                    .retryOnConnectionFailure(true)
                     .authenticator(new FirebaseTokenAuthenticator())
                     .build();
 

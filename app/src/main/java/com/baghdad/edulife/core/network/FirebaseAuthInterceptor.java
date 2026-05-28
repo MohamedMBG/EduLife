@@ -6,12 +6,18 @@ import com.google.firebase.auth.FirebaseUser;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
 
 public class FirebaseAuthInterceptor implements Interceptor {
+
+    // getIdToken(false) returns the cached token instantly when it is still valid; the timeout
+    // only matters when Firebase needs a network round-trip. Keep it short so a stalled fetch
+    // fails fast instead of holding an OkHttp dispatcher thread for 10s.
+    private static final long TOKEN_TIMEOUT_SECONDS = 5;
 
     private final FirebaseAuth firebaseAuth;
 
@@ -24,30 +30,40 @@ public class FirebaseAuthInterceptor implements Interceptor {
         Request originalRequest = chain.request();
 
         FirebaseUser currentUser = firebaseAuth.getCurrentUser();
-
         if (currentUser == null) {
+            // No signed-in user; let the request proceed without a Bearer header so the
+            // server returns a clean 401 rather than the client masking the state.
             return chain.proceed(originalRequest);
         }
 
+        String token;
         try {
-            String token = Tasks.await(
+            token = Tasks.await(
                     currentUser.getIdToken(false),
-                    10,
+                    TOKEN_TIMEOUT_SECONDS,
                     TimeUnit.SECONDS
             ).getToken();
-
-            if (token == null || token.isBlank()) {
-                return chain.proceed(originalRequest);
-            }
-
-            Request authenticatedRequest = originalRequest.newBuilder()
-                    .header("Authorization", "Bearer " + token)
-                    .build();
-
-            return chain.proceed(authenticatedRequest);
-
+        } catch (TimeoutException e) {
+            // Hard failures must surface as IOException so onFailure paths show a real network
+            // error instead of a misleading 401 from an unauthenticated retry.
+            throw new IOException("Firebase token fetch timed out", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Firebase token fetch interrupted", e);
         } catch (Exception e) {
+            throw new IOException("Firebase token fetch failed", e);
+        }
+
+        if (token == null || token.isBlank()) {
+            // Rare race: signed-in user but no token. Proceed without the header so the server
+            // returns 401 and FirebaseTokenAuthenticator drives a forced refresh exactly once.
             return chain.proceed(originalRequest);
         }
+
+        Request authenticatedRequest = originalRequest.newBuilder()
+                .header("Authorization", "Bearer " + token)
+                .build();
+
+        return chain.proceed(authenticatedRequest);
     }
 }
