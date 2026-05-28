@@ -60,6 +60,10 @@ public class Profile {
         this.bio = bio;
     }
 
+    public void updateAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
+
     public UUID getId() { return id; }
     public UUID getUserId() { return userId; }
     public String getDisplayName() { return displayName; }

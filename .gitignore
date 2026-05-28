@@ -64,3 +64,7 @@ list-models.mjs
 
 # PFA report lives in its own repo (github.com/MohamedMBG/rapport-PFA).
 rapport PFA/
+
+# User-uploaded media (avatars, etc) — runtime data, not source.
+uploads/
+backend/uploads/
