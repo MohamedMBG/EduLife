@@ -13,6 +13,7 @@ import com.baghdad.edulife.features.courses.model.EnrollmentResponse;
 import com.baghdad.edulife.features.courses.model.EnrollUiState;
 import com.baghdad.edulife.features.courses.model.UnenrollUiState;
 
+import java.util.Collections;
 import java.util.List;
 
 public class EnrollmentViewModel extends AndroidViewModel {
@@ -27,6 +28,14 @@ public class EnrollmentViewModel extends AndroidViewModel {
 
     private final MutableLiveData<List<EnrolledCourse>> myEnrollments =
             new MutableLiveData<>();
+
+    /**
+     * Separate signal so a failed enrollment fetch doesn't masquerade as "you have no
+     * courses". CoursesFragment renders the empty list and this error independently.
+     */
+    private final MutableLiveData<String> myEnrollmentsError = new MutableLiveData<>();
+
+    private final MutableLiveData<Boolean> myEnrollmentsLoading = new MutableLiveData<>(false);
 
     public EnrollmentViewModel(@NonNull Application application) {
         super(application);
@@ -45,6 +54,14 @@ public class EnrollmentViewModel extends AndroidViewModel {
         return myEnrollments;
     }
 
+    public LiveData<String> getMyEnrollmentsError() {
+        return myEnrollmentsError;
+    }
+
+    public LiveData<Boolean> getMyEnrollmentsLoading() {
+        return myEnrollmentsLoading;
+    }
+
     public void enroll(String courseId) {
         enrollState.setValue(EnrollUiState.loading());
 
@@ -55,10 +72,25 @@ public class EnrollmentViewModel extends AndroidViewModel {
             }
 
             @Override
+            public void onAlreadyEnrolled(EnrollmentResponse response) {
+                // 409 from the backend still means the learner can access the course; surface
+                // it so the UI shows "already enrolled" rather than a misleading success toast.
+                enrollState.postValue(EnrollUiState.alreadyEnrolled());
+            }
+
+            @Override
             public void onError(String message) {
                 enrollState.postValue(EnrollUiState.error(message));
             }
         });
+    }
+
+    /**
+     * Consumed by the fragment after navigation so re-entering the enroll screen does not
+     * re-trigger the "enrolled" branch and immediately bounce the learner away again.
+     */
+    public void clearEnrollState() {
+        enrollState.setValue(EnrollUiState.idle());
     }
 
     public void unenroll(String enrollmentId) {
@@ -78,16 +110,32 @@ public class EnrollmentViewModel extends AndroidViewModel {
         });
     }
 
+    public void clearUnenrollState() {
+        unenrollState.setValue(UnenrollUiState.idle());
+    }
+
     public void loadMyEnrollments() {
+        myEnrollmentsLoading.postValue(true);
+        // Clear any stale error before the new fetch so a transient failure does not linger
+        // on screen once a follow-up refresh succeeds.
+        myEnrollmentsError.postValue(null);
+
         courseRepository.getMyEnrollments(new CourseRepository.MyEnrollmentsCallback() {
             @Override
             public void onSuccess(List<EnrolledCourse> courses) {
+                myEnrollmentsLoading.postValue(false);
                 myEnrollments.postValue(courses);
             }
 
             @Override
             public void onError(String message) {
-                myEnrollments.postValue(null);
+                myEnrollmentsLoading.postValue(false);
+                // Never post null — observers should always receive a list and a separate error
+                // signal so the empty-list view stays distinguishable from a failed fetch.
+                if (myEnrollments.getValue() == null) {
+                    myEnrollments.postValue(Collections.emptyList());
+                }
+                myEnrollmentsError.postValue(message);
             }
         });
     }
