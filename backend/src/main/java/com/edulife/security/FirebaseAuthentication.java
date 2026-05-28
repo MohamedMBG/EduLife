@@ -1,7 +1,9 @@
 package com.edulife.security;
 
-import org.springframework.security.authentication.AbstractAuthenticationToken;
+import java.util.Collection;
 import java.util.List;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
 
 public class FirebaseAuthentication extends AbstractAuthenticationToken {
 
@@ -9,8 +11,17 @@ public class FirebaseAuthentication extends AbstractAuthenticationToken {
     private final String email;
 
     public FirebaseAuthentication(String firebaseUid, String email) {
-        // Authorities stay empty here because role resolution must come from trusted backend data, not from request payloads or an assumed default.
-        super(List.of());
+        // Authorities default to empty for paths that do not need role gating; the token filter
+        // promotes this to a role-aware authentication once the user is resolved from the DB.
+        this(firebaseUid, email, List.of());
+    }
+
+    public FirebaseAuthentication(
+            String firebaseUid,
+            String email,
+            Collection<? extends GrantedAuthority> authorities
+    ) {
+        super(authorities);
         this.firebaseUid = firebaseUid;
         this.email = email;
         setAuthenticated(true);

@@ -1,5 +1,7 @@
 package com.edulife.users.model;
 
 public enum UserRole {
-    LEARNER
+    LEARNER,
+    TEACHER,
+    ADMIN
 }

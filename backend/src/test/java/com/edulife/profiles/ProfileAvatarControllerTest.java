@@ -6,6 +6,7 @@ import com.edulife.profiles.controller.ProfileController;
 import com.edulife.profiles.dto.AvatarUploadResponse;
 import com.edulife.profiles.service.ProfileService;
 import com.edulife.security.SecurityConfig;
+import com.edulife.users.repository.UserRepository;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,9 @@ class ProfileAvatarControllerTest {
 
     @MockBean
     private FirebaseAuth firebaseAuth;
+
+    @MockBean
+    private UserRepository userRepository;
 
     @Test
     void uploadAvatarReturnsPublicUrlOnSuccess() throws Exception {

@@ -9,6 +9,7 @@ import com.edulife.courses.dto.CourseSummaryDto;
 import com.edulife.courses.dto.LessonSummaryDto;
 import com.edulife.courses.service.CourseService;
 import com.edulife.security.SecurityConfig;
+import com.edulife.users.repository.UserRepository;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
 import java.time.Instant;
@@ -46,6 +47,9 @@ class CourseControllerTest {
 
     @MockBean
     private FirebaseAuth firebaseAuth;
+
+    @MockBean
+    private UserRepository userRepository;
 
     @Test
     void returnsPaginatedPublishedCoursesWhenFirebaseTokenIsValid() throws Exception {

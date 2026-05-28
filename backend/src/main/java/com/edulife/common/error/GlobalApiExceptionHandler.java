@@ -5,6 +5,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
@@ -43,6 +45,24 @@ public class GlobalApiExceptionHandler {
                 : reason;
 
         return build(status, message);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException exception) {
+        // @PreAuthorize denials would otherwise bubble to the generic 500 handler; instead they
+        // share the same 403 contract as the SecurityFilterChain's accessDeniedHandler.
+        return build(HttpStatus.FORBIDDEN, "Access denied");
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException exception) {
+        // Bean Validation failures should surface as 400 with the first field error so clients
+        // get a stable, actionable message instead of a 500 stack trace.
+        String message = exception.getBindingResult().getFieldErrors().stream()
+                .findFirst()
+                .map(err -> err.getField() + ": " + err.getDefaultMessage())
+                .orElse("Invalid request");
+        return build(HttpStatus.BAD_REQUEST, message);
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
