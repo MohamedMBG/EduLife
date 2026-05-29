@@ -11,6 +11,7 @@ import com.baghdad.edulife.features.auth.model.AuthResult;
 import com.baghdad.edulife.features.auth.model.AuthSyncResponse;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -49,7 +50,7 @@ public class AuthRepository {
         sessionStorage.clearSession();
     }
 
-    public void register(String email, String password, AuthCallback callback) {
+    public void register(String fullName, String email, String password, AuthCallback callback) {
         firebaseAuth.createUserWithEmailAndPassword(email, password)
                 .addOnSuccessListener(authResult -> {
                     FirebaseUser user = firebaseAuth.getCurrentUser();
@@ -59,21 +60,29 @@ public class AuthRepository {
                         return;
                     }
 
-                    user.sendEmailVerification()
-                            .addOnSuccessListener(unused ->
-                                    callback.onResult(new AuthResult(
-                                            true,
-                                            "Account created. Please verify your email.",
-                                            true
-                                    ))
-                            )
-                            .addOnFailureListener(e ->
-                                    callback.onResult(new AuthResult(
-                                            false,
-                                            e.getMessage(),
-                                            false
-                                    ))
-                            );
+                    // Persist the typed full name as the Firebase displayName so /auth/sync and
+                    // the profile endpoint receive a real identity instead of falling back to
+                    // the email local-part. The verification email is still sent regardless of
+                    // whether the display-name update succeeds because verification gates login.
+                    UserProfileChangeRequest profileUpdate = new UserProfileChangeRequest.Builder()
+                            .setDisplayName(fullName)
+                            .build();
+                    user.updateProfile(profileUpdate)
+                            .addOnCompleteListener(profileTask -> user.sendEmailVerification()
+                                    .addOnSuccessListener(unused ->
+                                            callback.onResult(new AuthResult(
+                                                    true,
+                                                    "Account created. Please verify your email.",
+                                                    true
+                                            ))
+                                    )
+                                    .addOnFailureListener(e ->
+                                            callback.onResult(new AuthResult(
+                                                    false,
+                                                    e.getMessage(),
+                                                    false
+                                            ))
+                                    ));
                 })
                 .addOnFailureListener(e ->
                         callback.onResult(new AuthResult(false, e.getMessage(), false))

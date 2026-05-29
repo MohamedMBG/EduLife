@@ -61,7 +61,8 @@ public class RegisterFragment extends Fragment {
         createAccountButton.setOnClickListener(v -> handleRegister());
 
         googleRegisterButton.setOnClickListener(v ->
-                Toast.makeText(requireContext(), "Google sign-up coming soon", Toast.LENGTH_SHORT).show());
+                Toast.makeText(requireContext(),
+                        R.string.auth_google_unavailable, Toast.LENGTH_SHORT).show());
 
         loginText.setOnClickListener(v ->
                 // Navigate back to the login screen; popUpTo in the nav graph action removes the register screen.
@@ -81,36 +82,39 @@ public class RegisterFragment extends Fragment {
         String confirmPassword = confirmPasswordInput.getText().toString();
 
         if (fullName.isEmpty()) {
-            fullNameInput.setError("Full name is required");
+            fullNameInput.setError(getString(R.string.auth_full_name_required));
             return;
         }
 
         if (email.isEmpty()) {
-            emailInput.setError("Email is required");
+            emailInput.setError(getString(R.string.auth_email_required));
             return;
         }
 
         if (password.isEmpty()) {
-            passwordInput.setError("Password is required");
+            passwordInput.setError(getString(R.string.auth_password_required));
             return;
         }
 
         if (password.length() < 6) {
-            passwordInput.setError("Password must be at least 6 characters");
+            passwordInput.setError(getString(R.string.auth_password_min_length));
             return;
         }
 
         if (!password.equals(confirmPassword)) {
-            confirmPasswordInput.setError("Passwords do not match");
+            confirmPasswordInput.setError(getString(R.string.auth_passwords_do_not_match));
             return;
         }
 
         if (!termsCheckbox.isChecked()) {
-            Toast.makeText(requireContext(), "Please accept the terms before continuing.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(),
+                    R.string.auth_terms_required, Toast.LENGTH_SHORT).show();
             return;
         }
 
-        authViewModel.register(email, password);
+        // fullName is forwarded so the backend / Firebase profile carries the learner's typed
+        // name instead of falling back to the email local-part.
+        authViewModel.register(fullName, email, password);
     }
 
     private void renderAuthState(AuthUiState state) {
@@ -119,16 +123,14 @@ public class RegisterFragment extends Fragment {
         createAccountButton.setEnabled(!state.loading);
 
         if (state.loading) {
-            Toast.makeText(requireContext(), "Creating account...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(),
+                    R.string.auth_creating_account, Toast.LENGTH_SHORT).show();
             return;
         }
 
         if (state.emailVerificationRequired) {
-            Toast.makeText(
-                    requireContext(),
-                    "Account created. Please verify your email before logging in.",
-                    Toast.LENGTH_LONG
-            ).show();
+            Toast.makeText(requireContext(),
+                    R.string.auth_register_verify_email, Toast.LENGTH_LONG).show();
             return;
         }
 

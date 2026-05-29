@@ -34,10 +34,10 @@ public class AuthViewModel extends AndroidViewModel {
         return authState;
     }
 
-    public void register(String email, String password) {
+    public void register(String fullName, String email, String password) {
         authState.setValue(AuthUiState.loading());
 
-        authRepository.register(email, password, result -> {
+        authRepository.register(fullName, email, password, result -> {
             if (result.success) {
                 authState.postValue(AuthUiState.verificationRequired(result.message));
             } else {
