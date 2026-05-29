@@ -28,6 +28,13 @@ public class ExamQuestion {
 
     protected ExamQuestion() {}
 
+    /** Constructor for CMS exam authoring. orderIndex starts at 1. */
+    public ExamQuestion(UUID examId, String questionText, int orderIndex) {
+        this.examId = examId;
+        this.questionText = questionText;
+        this.orderIndex = orderIndex;
+    }
+
     public UUID getId() { return id; }
     public UUID getExamId() { return examId; }
     public String getQuestionText() { return questionText; }

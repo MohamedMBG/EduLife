@@ -55,6 +55,36 @@ public class Lesson {
     protected Lesson() {
     }
 
+    /** Factory constructor for CMS lesson creation. lessonType must be VIDEO, ARTICLE, or RESOURCE. */
+    public Lesson(UUID id, UUID courseSectionId, String title, String summary,
+                  String lessonType, Integer estimatedDurationMinutes, int displayOrder,
+                  boolean preview, String contentUrl, String contentBody) {
+        this.id = id;
+        this.courseSectionId = courseSectionId;
+        this.title = title;
+        this.summary = summary;
+        this.lessonType = lessonType;
+        this.estimatedDurationMinutes = estimatedDurationMinutes;
+        this.displayOrder = displayOrder;
+        this.preview = preview;
+        this.contentUrl = contentUrl;
+        this.contentBody = contentBody;
+    }
+
+    /** CMS update — all mutable lesson fields can be changed. */
+    public void update(String title, String summary, String lessonType,
+                       Integer estimatedDurationMinutes, Integer displayOrder,
+                       Boolean preview, String contentUrl, String contentBody) {
+        if (title != null) this.title = title;
+        if (summary != null) this.summary = summary;
+        if (lessonType != null) this.lessonType = lessonType;
+        if (estimatedDurationMinutes != null) this.estimatedDurationMinutes = estimatedDurationMinutes;
+        if (displayOrder != null) this.displayOrder = displayOrder;
+        if (preview != null) this.preview = preview;
+        if (contentUrl != null) this.contentUrl = contentUrl;
+        if (contentBody != null) this.contentBody = contentBody;
+    }
+
     // The migration defines defaults, but entity lifecycle hooks keep timestamps aligned
     // when lessons are created or updated through JPA instead of raw SQL.
     @PrePersist

@@ -45,8 +45,15 @@ public class CourseService {
     @Transactional(readOnly = true)
     // Read-only transaction keeps the discovery slice safe from accidental writes while still
     // allowing the service to orchestrate repositories and DTO mapping in one place.
-    public Page<CourseSummaryDto> getPublishedCourses(String category, Pageable pageable) {
+    public Page<CourseSummaryDto> getPublishedCourses(String category, String query, Pageable pageable) {
         Pageable sanitizedPageable = sanitizePageable(pageable);
+
+        // Full-text search takes priority over category filter when both are provided.
+        // Using plainto_tsquery on the Postgres side handles multi-word phrases correctly.
+        if (query != null && !query.isBlank()) {
+            return courseRepository.searchPublished(query.trim(), sanitizedPageable)
+                    .map(this::toCourseSummary);
+        }
 
         // The current Sprint 2 schema stores this catalog bucket in the `level` column.
         // The API uses `category` now so Android can move forward without waiting for a

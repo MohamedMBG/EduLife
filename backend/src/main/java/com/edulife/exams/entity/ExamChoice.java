@@ -28,6 +28,13 @@ public class ExamChoice {
 
     protected ExamChoice() {}
 
+    /** Constructor for CMS exam authoring. Exactly one choice per question should have correct=true. */
+    public ExamChoice(UUID questionId, String choiceText, boolean correct) {
+        this.questionId = questionId;
+        this.choiceText = choiceText;
+        this.correct = correct;
+    }
+
     public UUID getId() { return id; }
     public UUID getQuestionId() { return questionId; }
     public String getChoiceText() { return choiceText; }

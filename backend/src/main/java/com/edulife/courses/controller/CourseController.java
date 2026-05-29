@@ -24,9 +24,11 @@ public class CourseController {
     // separate from the discovery business rules that belong in CourseService.
     public Page<CourseSummaryDto> listCourses(
             @RequestParam(required = false) String category,
+            @RequestParam(required = false) String q,
             @PageableDefault(size = 20) Pageable pageable
     ) {
-        return courseService.getPublishedCourses(category, pageable);
+        // `q` triggers Postgres full-text search; `category` filters by level when `q` is absent.
+        return courseService.getPublishedCourses(category, q, pageable);
     }
 
     @GetMapping("/{courseId}")
