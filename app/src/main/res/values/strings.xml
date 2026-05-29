@@ -103,6 +103,14 @@
     <string name="lesson_player_completed">✓ Completed</string>
     <string name="lesson_player_prev">← Previous</string>
     <string name="lesson_player_next">Next →</string>
+    <string name="lesson_player_order">Lesson %1$d</string>
+    <string name="lesson_player_duration_minutes">%1$d min</string>
+    <string name="lesson_player_section_from">From: %1$s</string>
+    <string name="lesson_player_prev_unavailable">Navigate to previous lesson — coming next sprint!</string>
+    <string name="lesson_player_next_unavailable">Navigate to next lesson — coming next sprint!</string>
+    <string name="lesson_player_complete_not_enrolled">You need to enroll in this course first.</string>
+    <string name="lesson_player_complete_network_error">Network error. Check your connection.</string>
+    <string name="lesson_player_complete_error">Could not save progress. Try again.</string>
     <string name="lesson_viewer_close">Close lesson viewer</string>
     <string name="lesson_viewer_no_content">This lesson has no playable content yet.</string>
     <string name="lesson_viewer_load_error">Could not load the lesson content. Check your connection.</string>
