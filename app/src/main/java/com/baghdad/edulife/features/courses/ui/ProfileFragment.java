@@ -73,6 +73,12 @@ public class ProfileFragment extends Fragment {
     private void showDeleteAccountDialog(View view) {
         EditText confirmInput = new EditText(requireContext());
         confirmInput.setHint(R.string.profile_delete_account_dialog_hint);
+        // The confirmation only ever compares against the literal "DELETE", so capping the
+        // input prevents a paste-bomb from reaching the network layer and short-circuits any
+        // accidental over-length input before the equality check.
+        confirmInput.setFilters(new android.text.InputFilter[] {
+                new android.text.InputFilter.LengthFilter(16)
+        });
         // Single-line + no suggestions so the typed string is not silently mangled into
         // "Delete" or autocompleted before the equality check.
         confirmInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
@@ -119,12 +125,15 @@ public class ProfileFragment extends Fragment {
                     .build();
             Navigation.findNavController(view)
                     .navigate(R.id.action_profileFragment_to_loginFragment, null, options);
+            // Consume the signal so a re-attached observer cannot re-fire sign-out + nav.
+            profileViewModel.clearAccountDeleted();
         });
 
         profileViewModel.deleteError.observe(getViewLifecycleOwner(), msg -> {
             if (msg == null || msg.isBlank()) return;
             Toast.makeText(requireContext(),
                     R.string.profile_delete_account_error, Toast.LENGTH_SHORT).show();
+            profileViewModel.clearDeleteError();
         });
     }
 
@@ -215,20 +224,28 @@ public class ProfileFragment extends Fragment {
         if (user == null || user.getEmail() == null) return "Learner";
         String email = user.getEmail();
         int atIdx = email.indexOf('@');
-        if (atIdx > 0) {
-            String local = email.substring(0, atIdx);
-            return local.substring(0, 1).toUpperCase() + local.substring(1);
-        }
-        return "Learner";
+        if (atIdx <= 0) return "Learner";
+        // Defensive: a malformed Firebase email could leave local empty after the substring,
+        // so guard substring(1) which would otherwise crash on a single-char local part.
+        String local = email.substring(0, atIdx);
+        if (local.isEmpty()) return "Learner";
+        if (local.length() == 1) return local.toUpperCase();
+        return local.substring(0, 1).toUpperCase() + local.substring(1);
     }
 
     private String getInitials(String name) {
-        if (name == null || name.isEmpty()) return "?";
-        String[] parts = name.trim().split("\\s+");
-        if (parts.length >= 2) {
-            return String.valueOf(parts[0].charAt(0)).toUpperCase()
-                    + String.valueOf(parts[1].charAt(0)).toUpperCase();
+        if (name == null) return "?";
+        String trimmed = name.trim();
+        if (trimmed.isEmpty()) return "?";
+        String[] parts = trimmed.split("\\s+");
+        // Use the first two non-blank parts (split on a leading space can leave an empty
+        // string in parts[0] on certain inputs, so guard before charAt).
+        StringBuilder out = new StringBuilder(2);
+        for (String part : parts) {
+            if (part.isEmpty()) continue;
+            out.append(Character.toUpperCase(part.charAt(0)));
+            if (out.length() == 2) break;
         }
-        return String.valueOf(name.charAt(0)).toUpperCase();
+        return out.length() == 0 ? "?" : out.toString();
     }
 }
