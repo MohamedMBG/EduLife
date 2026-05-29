@@ -55,6 +55,25 @@ public class Course {
     protected Course() {
     }
 
+    /**
+     * Factory constructor used by CMS course creation. Sets status to DRAFT and leaves
+     * publishedAt null until an ADMIN explicitly publishes the course.
+     */
+    public Course(UUID id, String slug, String title, String shortDescription,
+                  String description, String languageCode, String level,
+                  String imageUrl, UUID createdByUserId) {
+        this.id = id;
+        this.slug = slug;
+        this.title = title;
+        this.shortDescription = shortDescription;
+        this.description = description;
+        this.languageCode = languageCode;
+        this.level = level;
+        this.status = CourseStatus.DRAFT;
+        this.imageUrl = imageUrl;
+        this.createdByUserId = createdByUserId;
+    }
+
     // JPA updates should keep the audit timestamp aligned even when the database default
     // is only applied during the first insert.
     @PrePersist
@@ -70,6 +89,29 @@ public class Course {
     @PreUpdate
     void onUpdate() {
         updatedAt = Instant.now();
+    }
+
+    /** CMS update — only mutable metadata fields; status and slug are not changed here. */
+    public void updateMetadata(String title, String shortDescription, String description,
+                               String languageCode, String level, String imageUrl) {
+        this.title = title;
+        this.shortDescription = shortDescription;
+        this.description = description;
+        this.languageCode = languageCode;
+        this.level = level;
+        this.imageUrl = imageUrl;
+    }
+
+    /** Transitions DRAFT → PUBLISHED and stamps publishedAt. Only ADMIN may call this. */
+    public void publish() {
+        if (this.status == CourseStatus.PUBLISHED) return;
+        this.status = CourseStatus.PUBLISHED;
+        this.publishedAt = Instant.now();
+    }
+
+    /** Transitions PUBLISHED → ARCHIVED. Learners can no longer discover or enroll. */
+    public void archive() {
+        this.status = CourseStatus.ARCHIVED;
     }
 
     public UUID getId() { return id; }

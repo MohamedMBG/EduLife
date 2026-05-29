@@ -31,6 +31,14 @@ public class Exam {
 
     protected Exam() {}
 
+    /** Constructor for CMS exam authoring. passScore is a percentage (0–100). */
+    public Exam(UUID courseId, String title, int passScore, Integer timeLimitMinutes) {
+        this.courseId = courseId;
+        this.title = title;
+        this.passScore = passScore;
+        this.timeLimitMinutes = timeLimitMinutes;
+    }
+
     public UUID getId() { return id; }
     public UUID getCourseId() { return courseId; }
     public String getTitle() { return title; }

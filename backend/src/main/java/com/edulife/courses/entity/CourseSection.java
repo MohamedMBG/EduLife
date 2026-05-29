@@ -40,6 +40,24 @@ public class CourseSection {
     protected CourseSection() {
     }
 
+    /** Factory constructor for CMS section creation. displayOrder must be > 0 per DB constraint. */
+    public CourseSection(UUID id, UUID courseId, String title, String description, int displayOrder) {
+        this.id = id;
+        this.courseId = courseId;
+        this.title = title;
+        this.description = description;
+        this.displayOrder = displayOrder;
+    }
+
+    /** CMS update — all mutable fields can change together, including reorder. */
+    public void update(String title, String description, Integer displayOrder) {
+        this.title = title;
+        this.description = description;
+        if (displayOrder != null) {
+            this.displayOrder = displayOrder;
+        }
+    }
+
     // The migration provides database defaults, but JPA lifecycle hooks keep timestamps
     // consistent when sections are created or updated through the application layer.
     @PrePersist

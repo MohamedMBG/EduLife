@@ -70,6 +70,11 @@ public class User {
         return createdAt;
     }
 
+    /** Admin role assignment. LEARNER is the only safe default so promotion must be explicit. */
+    public void setRole(UserRole role) {
+        this.role = role;
+    }
+
     /**
      * Strips identifying fields for a self-deleted account. The row stays alive so audit-bound
      * references (certificates, exam attempts) keep a stable user_id; only PII is cleared.

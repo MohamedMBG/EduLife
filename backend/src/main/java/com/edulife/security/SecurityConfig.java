@@ -1,6 +1,7 @@
 package com.edulife.security;
 
 import com.edulife.common.error.ApiErrorWriter;
+import com.edulife.config.RateLimitFilter;
 import com.edulife.users.repository.UserRepository;
 import com.google.firebase.auth.FirebaseAuth;
 import java.time.Duration;
@@ -36,6 +37,14 @@ public class SecurityConfig {
     }
 
     @Bean
+    // RateLimitFilter is NOT @Component to avoid double-registration as a servlet filter.
+    // It is instantiated here and added explicitly after FirebaseTokenFilter so that
+    // SecurityContext is already populated when rate limit keys are resolved.
+    public RateLimitFilter rateLimitFilter(ApiErrorWriter apiErrorWriter) {
+        return new RateLimitFilter(apiErrorWriter);
+    }
+
+    @Bean
     public CorsConfigurationSource corsConfigurationSource(CorsProperties properties) {
         CorsConfiguration config = new CorsConfiguration();
         // Explicit allowlist only; never wildcard. An empty list means CORS is effectively closed
@@ -54,6 +63,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             FirebaseTokenFilter firebaseTokenFilter,
+            RateLimitFilter rateLimitFilter,
             ApiErrorWriter apiErrorWriter,
             CorsConfigurationSource corsConfigurationSource
     ) throws Exception {
@@ -93,6 +103,9 @@ public class SecurityConfig {
                         .anyRequest().denyAll()
                 )
                 .addFilterBefore(firebaseTokenFilter, UsernamePasswordAuthenticationFilter.class)
+                // Rate limiting runs after Firebase auth so the SecurityContext is populated
+                // and user identity can be used as the bucket key instead of a raw IP address.
+                .addFilterAfter(rateLimitFilter, FirebaseTokenFilter.class)
                 .exceptionHandling(ex -> ex
                         // Missing credentials are security errors outside MVC, so write the shared API error contract here.
                         .authenticationEntryPoint((request, response, authException) ->
