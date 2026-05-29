@@ -2,6 +2,7 @@ package com.baghdad.edulife;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,6 +14,7 @@ import androidx.navigation.NavGraph;
 import androidx.navigation.NavOptions;
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.baghdad.edulife.core.session.SessionEventBus;
 import com.baghdad.edulife.core.storage.SessionStorage;
 import com.baghdad.edulife.features.onboarding.data.OnboardingPreferences;
 import com.google.firebase.auth.FirebaseAuth;
@@ -74,6 +76,33 @@ public class MainActivity extends AppCompatActivity {
             if (id == R.id.homeFragment)       bottomNav.setItemActiveIndex(0);
             else if (id == R.id.coursesFragment) bottomNav.setItemActiveIndex(1);
             else if (id == R.id.profileFragment) bottomNav.setItemActiveIndex(2);
+        });
+
+        observeSessionExpiry(navController);
+    }
+
+    /**
+     * Drains the SessionEventBus and runs sign-out + nav from a single point so transient
+     * network failures inside OkHttp no longer log the learner out from multiple call sites.
+     */
+    private void observeSessionExpiry(NavController navController) {
+        SessionEventBus.sessionExpired().observe(this, expired -> {
+            if (!Boolean.TRUE.equals(expired)) return;
+
+            FirebaseAuth.getInstance().signOut();
+            new SessionStorage(this).clearSession();
+
+            Toast.makeText(this,
+                    R.string.session_expired_message, Toast.LENGTH_LONG).show();
+
+            NavOptions toLogin = new NavOptions.Builder()
+                    .setPopUpTo(R.id.nav_graph, true)
+                    .build();
+            navController.navigate(R.id.loginFragment, null, toLogin);
+
+            // Consume the signal so a re-attached observer (e.g. after rotation) cannot
+            // re-fire sign-out + nav.
+            SessionEventBus.clear();
         });
     }
 
