@@ -111,4 +111,22 @@
     <string name="profile_delete_account_confirm_required">Type DELETE exactly to confirm.</string>
     <string name="profile_delete_account_success">Account deleted.</string>
     <string name="profile_delete_account_error">Could not delete account. Try again.</string>
+
+    <!-- Exam -->
+    <string name="exam_title_default">Final Exam</string>
+    <string name="exam_pass_score_label">Pass score: %1$d%%</string>
+    <string name="exam_question_count">%1$d questions</string>
+    <string name="exam_progress">%1$d of %2$d answered</string>
+    <string name="exam_submit">Submit Exam</string>
+    <string name="exam_loading">Loading exam…</string>
+    <string name="exam_result_passed">Passed!</string>
+    <string name="exam_result_failed">Failed</string>
+    <string name="exam_result_required_score">Required: %1$d%%</string>
+    <string name="exam_result_cert_label">Certificate Issued</string>
+    <string name="exam_result_cert_number">Certificate: %1$s</string>
+    <string name="exam_result_cert_hint">Go to your profile to download your certificate.</string>
+    <string name="exam_result_retry_hint">You can retry this exam. After 2 consecutive failures, a 72-hour cooldown applies before you can try again.</string>
+    <string name="exam_result_done">Back to Course</string>
+    <string name="exam_take_cta">Take Final Exam</string>
+    <string name="exam_question_label">Question %1$d</string>
 </resources>

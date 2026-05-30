@@ -7,7 +7,10 @@ import com.baghdad.edulife.features.courses.model.CourseSummary;
 import com.baghdad.edulife.features.courses.model.EnrolledCourse;
 import com.baghdad.edulife.features.courses.model.EnrollmentResponse;
 import com.baghdad.edulife.features.courses.model.EnrollRequest;
+import com.baghdad.edulife.features.courses.model.ExamResponse;
+import com.baghdad.edulife.features.courses.model.ExamResultResponse;
 import com.baghdad.edulife.features.courses.model.LessonDetail;
+import com.baghdad.edulife.features.courses.model.SubmitExamRequest;
 import com.baghdad.edulife.features.profile.model.ProfileResponse;
 
 import java.util.List;
@@ -109,5 +112,14 @@ public interface ApiService {
      */
     @DELETE("account")
     Call<Void> deleteAccount();
+
+    @GET("courses/{courseId}/exam")
+    Call<ExamResponse> getExam(@Path("courseId") String courseId);
+
+    @POST("courses/{courseId}/exam/submit")
+    Call<ExamResultResponse> submitExam(
+            @Path("courseId") String courseId,
+            @Body SubmitExamRequest request
+    );
 }
 

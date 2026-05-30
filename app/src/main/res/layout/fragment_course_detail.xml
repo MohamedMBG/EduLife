@@ -175,6 +175,16 @@
             android:textColor="@color/white"
             android:textSize="16sp"
             android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/takeExamButton"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="@string/exam_take_cta"
+            android:textAllCaps="false"
+            android:textColor="@color/brand_text_secondary"
+            android:backgroundTint="@color/brand_surface_muted"
+            android:layout_marginTop="8dp" />
     </LinearLayout>
 
 </LinearLayout>
