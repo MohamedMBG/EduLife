@@ -101,6 +101,10 @@
             android:name="courseDesc"
             app:argType="string"
             android:defaultValue="" />
+        <argument
+            android:name="isEnrolled"
+            app:argType="boolean"
+            android:defaultValue="false" />
         <action
             android:id="@+id/action_courseDetailFragment_to_enrollCourseFragment"
             app:destination="@id/enrollCourseFragment" />

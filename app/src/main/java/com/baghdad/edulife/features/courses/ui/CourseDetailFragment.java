@@ -112,12 +112,14 @@ public class CourseDetailFragment extends Fragment {
         sectionCountText.setText(getString(R.string.course_detail_section_count, sectionCount));
         descriptionText.setText(courseDetail.description);
 
+        boolean isEnrolled = getArguments() != null && getArguments().getBoolean("isEnrolled", false);
+
         sectionContainer.removeAllViews();
         int lessonCount = 0;
         String courseId = getArguments() != null ? getArguments().getString("courseId", "") : "";
         if (courseDetail.sections != null) {
             for (CourseSection section : courseDetail.sections) {
-                sectionContainer.addView(createSectionView(courseId, section));
+                sectionContainer.addView(createSectionView(courseId, section, isEnrolled));
                 if (section.lessons != null) lessonCount += section.lessons.size();
             }
         }
@@ -129,30 +131,38 @@ public class CourseDetailFragment extends Fragment {
 
         View footer = requireView().findViewById(R.id.enrollCtaFooter);
         footer.setVisibility(View.VISIBLE);
-        Button enrollBtn = requireView().findViewById(R.id.enrollCtaButton);
-        enrollBtn.setOnClickListener(v -> {
-            Bundle navArgs = new Bundle();
-            navArgs.putString("courseId", courseDetail.id != null ? courseDetail.id : "");
-            navArgs.putString("courseTitle", courseDetail.title != null ? courseDetail.title : "");
-            navArgs.putString("courseLevel", courseDetail.level != null ? courseDetail.level : "");
-            navArgs.putString("courseLanguage", courseDetail.languageCode != null ? courseDetail.languageCode : "");
-            navArgs.putString("courseDesc", courseDetail.description != null ? courseDetail.description : "");
-            navArgs.putInt("sectionCount", finalSectionCount);
-            navArgs.putInt("lessonCount", finalLessonCount);
-            Navigation.findNavController(requireView())
-                    .navigate(R.id.action_courseDetailFragment_to_enrollCourseFragment, navArgs);
-        });
 
+        Button enrollBtn = requireView().findViewById(R.id.enrollCtaButton);
         Button takeExamBtn = requireView().findViewById(R.id.takeExamButton);
-        takeExamBtn.setOnClickListener(v -> {
-            Bundle examArgs = new Bundle();
-            examArgs.putString("courseId", courseDetail.id != null ? courseDetail.id : "");
-            Navigation.findNavController(requireView())
-                    .navigate(R.id.action_courseDetailFragment_to_examFragment, examArgs);
-        });
+
+        if (isEnrolled) {
+            enrollBtn.setVisibility(View.GONE);
+            takeExamBtn.setVisibility(View.VISIBLE);
+            takeExamBtn.setOnClickListener(v -> {
+                Bundle examArgs = new Bundle();
+                examArgs.putString("courseId", courseDetail.id != null ? courseDetail.id : "");
+                Navigation.findNavController(requireView())
+                        .navigate(R.id.action_courseDetailFragment_to_examFragment, examArgs);
+            });
+        } else {
+            takeExamBtn.setVisibility(View.GONE);
+            enrollBtn.setVisibility(View.VISIBLE);
+            enrollBtn.setOnClickListener(v -> {
+                Bundle navArgs = new Bundle();
+                navArgs.putString("courseId", courseDetail.id != null ? courseDetail.id : "");
+                navArgs.putString("courseTitle", courseDetail.title != null ? courseDetail.title : "");
+                navArgs.putString("courseLevel", courseDetail.level != null ? courseDetail.level : "");
+                navArgs.putString("courseLanguage", courseDetail.languageCode != null ? courseDetail.languageCode : "");
+                navArgs.putString("courseDesc", courseDetail.description != null ? courseDetail.description : "");
+                navArgs.putInt("sectionCount", finalSectionCount);
+                navArgs.putInt("lessonCount", finalLessonCount);
+                Navigation.findNavController(requireView())
+                        .navigate(R.id.action_courseDetailFragment_to_enrollCourseFragment, navArgs);
+            });
+        }
     }
 
-    private View createSectionView(String courseId, CourseSection section) {
+    private View createSectionView(String courseId, CourseSection section, boolean isEnrolled) {
         LinearLayout sectionLayout = new LinearLayout(requireContext());
         sectionLayout.setOrientation(LinearLayout.VERTICAL);
         sectionLayout.setPadding(0, 0, 0, dp(20));
@@ -175,14 +185,14 @@ public class CourseDetailFragment extends Fragment {
         List<LessonSummary> lessons = section.lessons;
         if (lessons != null) {
             for (LessonSummary lesson : lessons) {
-                sectionLayout.addView(createLessonView(courseId, lesson, section.title));
+                sectionLayout.addView(createLessonView(courseId, lesson, section.title, isEnrolled));
             }
         }
 
         return sectionLayout;
     }
 
-    private View createLessonView(String courseId, LessonSummary lesson, String sectionTitle) {
+    private View createLessonView(String courseId, LessonSummary lesson, String sectionTitle, boolean isEnrolled) {
         LinearLayout lessonLayout = new LinearLayout(requireContext());
         lessonLayout.setOrientation(LinearLayout.VERTICAL);
         lessonLayout.setBackgroundResource(R.drawable.bg_catalog_lesson_row);
@@ -216,12 +226,19 @@ public class CourseDetailFragment extends Fragment {
         lessonMeta.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
         lessonMeta.setTextColor(requireContext().getColor(R.color.catalog_text_secondary));
 
+        boolean accessible = isEnrolled || lesson.preview;
+
         TextView accessText = new TextView(requireContext());
-        accessText.setText(lesson.preview ? R.string.course_detail_preview : R.string.course_detail_locked);
+        if (isEnrolled) {
+            accessText.setText(R.string.course_detail_preview);
+            accessText.setTextColor(requireContext().getColor(R.color.catalog_primary));
+        } else {
+            accessText.setText(lesson.preview ? R.string.course_detail_preview : R.string.course_detail_locked);
+            accessText.setTextColor(requireContext().getColor(lesson.preview
+                    ? R.color.catalog_primary
+                    : R.color.catalog_warning));
+        }
         accessText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        accessText.setTextColor(requireContext().getColor(lesson.preview
-                ? R.color.catalog_primary
-                : R.color.catalog_warning));
         accessText.setPadding(0, dp(8), 0, 0);
         accessText.setTypeface(accessText.getTypeface(), Typeface.BOLD);
 
@@ -230,20 +247,24 @@ public class CourseDetailFragment extends Fragment {
         lessonLayout.addView(lessonMeta);
         lessonLayout.addView(accessText);
 
-        lessonLayout.setOnClickListener(v -> {
-            Bundle navArgs = new Bundle();
-            navArgs.putString("courseId",        courseId);
-            navArgs.putString("lessonId",        lesson.id != null ? lesson.id : "");
-            navArgs.putString("lessonTitle",     lesson.title != null ? lesson.title : "");
-            navArgs.putString("lessonSummary",   lesson.summary != null ? lesson.summary : "");
-            navArgs.putString("lessonType",      lesson.lessonType != null ? lesson.lessonType : "");
-            navArgs.putInt("durationMinutes",    lesson.estimatedDurationMinutes);
-            navArgs.putBoolean("isPreview",      lesson.preview);
-            navArgs.putString("sectionTitle",    sectionTitle != null ? sectionTitle : "");
-            navArgs.putInt("orderInSection",     lesson.displayOrder);
-            Navigation.findNavController(requireView())
-                    .navigate(R.id.action_courseDetailFragment_to_lessonPlayerFragment, navArgs);
-        });
+        if (accessible) {
+            lessonLayout.setOnClickListener(v -> {
+                Bundle navArgs = new Bundle();
+                navArgs.putString("courseId",        courseId);
+                navArgs.putString("lessonId",        lesson.id != null ? lesson.id : "");
+                navArgs.putString("lessonTitle",     lesson.title != null ? lesson.title : "");
+                navArgs.putString("lessonSummary",   lesson.summary != null ? lesson.summary : "");
+                navArgs.putString("lessonType",      lesson.lessonType != null ? lesson.lessonType : "");
+                navArgs.putInt("durationMinutes",    lesson.estimatedDurationMinutes);
+                navArgs.putBoolean("isPreview",      lesson.preview);
+                navArgs.putString("sectionTitle",    sectionTitle != null ? sectionTitle : "");
+                navArgs.putInt("orderInSection",     lesson.displayOrder);
+                Navigation.findNavController(requireView())
+                        .navigate(R.id.action_courseDetailFragment_to_lessonPlayerFragment, navArgs);
+            });
+        } else {
+            lessonLayout.setAlpha(0.55f);
+        }
 
         return lessonLayout;
     }
