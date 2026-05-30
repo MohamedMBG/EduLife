@@ -97,6 +97,9 @@ public class SecurityConfig {
                         // Firebase token (img tags, web cache). Filenames are UUID-based, so the
                         // directory is not practically enumerable.
                         .requestMatchers("/uploads/avatars/**").permitAll()
+                        // Certificate verification is public so employers and institutions can
+                        // confirm a certificate without a Firebase account.
+                        .requestMatchers("/api/v1/certificates/verify/**").permitAll()
                         // Sprint 2 discovery stays behind Firebase auth so course browsing remains
                         // part of the verified learner flow defined in the current execution plan.
                         .requestMatchers("/api/v1/**").authenticated()
