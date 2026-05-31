@@ -124,6 +124,24 @@ public class ExamFragment extends Fragment {
             return;
         }
 
+        if (state.alreadyPassed) {
+            submitButton.setEnabled(false);
+            scrollView.setVisibility(View.GONE);
+            submitFooter.setVisibility(View.GONE);
+            statusText.setVisibility(View.VISIBLE);
+            statusText.setText(R.string.exam_already_passed);
+            return;
+        }
+
+        if (state.cooldownEndsAt != null) {
+            submitButton.setEnabled(false);
+            scrollView.setVisibility(View.GONE);
+            submitFooter.setVisibility(View.GONE);
+            statusText.setVisibility(View.VISIBLE);
+            statusText.setText(getString(R.string.exam_cooldown_active, state.cooldownEndsAt));
+            return;
+        }
+
         if (state.errorMessage != null && !state.errorMessage.isBlank()) {
             submitButton.setEnabled(true);
             Toast.makeText(requireContext(), state.errorMessage, Toast.LENGTH_LONG).show();
@@ -138,6 +156,8 @@ public class ExamFragment extends Fragment {
             args.putInt("passScore", state.result.passScore);
             args.putBoolean("passed", state.result.passed);
             args.putString("certificateNumber", state.result.certificateNumber != null ? state.result.certificateNumber : "");
+            args.putInt("attemptsUsed", state.result.attemptsUsed);
+            args.putString("cooldownEndsAt", state.result.cooldownEndsAt != null ? state.result.cooldownEndsAt : "");
             Navigation.findNavController(requireView())
                     .navigate(R.id.action_examFragment_to_examResultFragment, args);
         }

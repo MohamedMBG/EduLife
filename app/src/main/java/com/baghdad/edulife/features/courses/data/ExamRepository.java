@@ -2,9 +2,13 @@ package com.baghdad.edulife.features.courses.data;
 
 import com.baghdad.edulife.core.network.ApiClient;
 import com.baghdad.edulife.core.network.ApiService;
+import com.baghdad.edulife.features.courses.model.ExamCooldownError;
 import com.baghdad.edulife.features.courses.model.ExamResponse;
 import com.baghdad.edulife.features.courses.model.ExamResultResponse;
 import com.baghdad.edulife.features.courses.model.SubmitExamRequest;
+import com.google.gson.Gson;
+
+import java.io.IOException;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -25,6 +29,8 @@ public class ExamRepository {
 
     public interface SubmitCallback {
         void onSuccess(ExamResultResponse result);
+        void onAlreadyPassed();
+        void onCooldown(String cooldownEndsAt);
         void onError(String message);
     }
 
@@ -62,8 +68,20 @@ public class ExamRepository {
                     callback.onError("You must be enrolled to submit this exam.");
                     return;
                 }
+                if (response.code() == 409) {
+                    callback.onAlreadyPassed();
+                    return;
+                }
                 if (response.code() == 429) {
-                    callback.onError("Too many failed attempts. Please wait 72 hours before trying again.");
+                    String cooldownEndsAt = null;
+                    if (response.errorBody() != null) {
+                        try {
+                            String body = response.errorBody().string();
+                            ExamCooldownError err = new Gson().fromJson(body, ExamCooldownError.class);
+                            if (err != null) cooldownEndsAt = err.cooldownEndsAt;
+                        } catch (IOException ignored) {}
+                    }
+                    callback.onCooldown(cooldownEndsAt);
                     return;
                 }
                 if (!response.isSuccessful() || response.body() == null) {

@@ -20,17 +20,24 @@ import com.baghdad.edulife.core.storage.SessionStorage;
 import com.baghdad.edulife.features.auth.viewmodel.AuthViewModel;
 import com.baghdad.edulife.features.courses.model.CourseCatalogUiState;
 import com.baghdad.edulife.features.courses.model.CourseSummary;
+import com.baghdad.edulife.features.courses.model.EnrolledCourse;
 import com.baghdad.edulife.features.courses.viewmodel.CourseCatalogViewModel;
+import com.baghdad.edulife.features.courses.viewmodel.EnrollmentViewModel;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class HomeFragment extends Fragment {
 
     private AuthViewModel authViewModel;
     private CourseCatalogViewModel courseCatalogViewModel;
+    private EnrollmentViewModel enrollmentViewModel;
     private SessionStorage sessionStorage;
     private CourseCatalogAdapter courseCatalogAdapter;
+    private final Set<String> enrolledCourseIds = new HashSet<>();
 
     private View loadingIndicator;
     private View stateCard;
@@ -53,6 +60,7 @@ public class HomeFragment extends Fragment {
 
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
         courseCatalogViewModel = new ViewModelProvider(this).get(CourseCatalogViewModel.class);
+        enrollmentViewModel = new ViewModelProvider(this).get(EnrollmentViewModel.class);
         sessionStorage = new SessionStorage(requireContext());
 
         if (!isSessionValid()) {
@@ -83,6 +91,16 @@ public class HomeFragment extends Fragment {
 
         retryButton.setOnClickListener(v -> reloadCurrentFilter());
         view.findViewById(R.id.logoutButton).setOnClickListener(v -> handleLogout(view));
+
+        enrollmentViewModel.getMyEnrollments().observe(getViewLifecycleOwner(), courses -> {
+            enrolledCourseIds.clear();
+            if (courses != null) {
+                for (EnrolledCourse c : courses) {
+                    if (c.courseId != null) enrolledCourseIds.add(c.courseId);
+                }
+            }
+        });
+        enrollmentViewModel.loadMyEnrollments();
 
         courseCatalogViewModel.getUiState().observe(getViewLifecycleOwner(), this::renderCatalogState);
 
@@ -239,6 +257,7 @@ public class HomeFragment extends Fragment {
     private void openCourseDetail(CourseSummary courseSummary) {
         Bundle args = new Bundle();
         args.putString("courseId", courseSummary.id);
+        args.putBoolean("isEnrolled", enrolledCourseIds.contains(courseSummary.id));
         Navigation.findNavController(requireView())
                 .navigate(R.id.action_homeFragment_to_courseDetailFragment, args);
     }

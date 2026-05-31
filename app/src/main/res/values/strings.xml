@@ -177,6 +177,11 @@
     <string name="exam_result_cert_number">Certificate: %1$s</string>
     <string name="exam_result_cert_hint">Go to your profile to download your certificate.</string>
     <string name="exam_result_retry_hint">You can retry this exam. After 2 consecutive failures, a 72-hour cooldown applies before you can try again.</string>
+    <string name="exam_result_attempts_hint">Failed attempt %1$d of %2$d. One more failure triggers a 72-hour cooldown.</string>
+    <string name="exam_result_cooldown_hint">Cooldown active. You can retake this exam after %1$s.</string>
+    <string name="exam_result_cooldown_active">Cooldown active. You cannot retake this exam yet.</string>
+    <string name="exam_already_passed">You have already passed this exam.</string>
+    <string name="exam_cooldown_active">Cooldown active. You can retake this exam after %1$s.</string>
     <string name="exam_result_done">Back to Course</string>
     <string name="exam_take_cta">Take Final Exam</string>
     <string name="exam_question_label">Question %1$d</string>

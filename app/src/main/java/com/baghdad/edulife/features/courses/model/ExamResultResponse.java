@@ -6,4 +6,6 @@ public class ExamResultResponse {
     public int passScore;
     public boolean passed;
     public String certificateNumber;
+    public int attemptsUsed;
+    public String cooldownEndsAt;
 }

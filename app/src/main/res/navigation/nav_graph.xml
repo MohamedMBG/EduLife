@@ -199,6 +199,14 @@
             android:name="certificateNumber"
             app:argType="string"
             android:defaultValue="" />
+        <argument
+            android:name="attemptsUsed"
+            app:argType="integer"
+            android:defaultValue="0" />
+        <argument
+            android:name="cooldownEndsAt"
+            app:argType="string"
+            android:defaultValue="" />
     </fragment>
 
     <fragment

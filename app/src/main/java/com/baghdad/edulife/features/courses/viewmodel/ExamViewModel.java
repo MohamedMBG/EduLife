@@ -59,6 +59,16 @@ public class ExamViewModel extends AndroidViewModel {
             }
 
             @Override
+            public void onAlreadyPassed() {
+                submitState.postValue(ExamSubmitUiState.alreadyPassed());
+            }
+
+            @Override
+            public void onCooldown(String cooldownEndsAt) {
+                submitState.postValue(ExamSubmitUiState.cooldown(cooldownEndsAt));
+            }
+
+            @Override
             public void onError(String message) {
                 submitState.postValue(ExamSubmitUiState.error(message));
             }
