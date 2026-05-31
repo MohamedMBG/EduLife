@@ -4,6 +4,10 @@ import com.edulife.certificates.exception.CertificateAccessDeniedException;
 import com.edulife.certificates.exception.CertificateAlreadyExistsException;
 import com.edulife.certificates.exception.CertificateGenerationException;
 import com.edulife.certificates.exception.CertificateNotFoundException;
+import com.edulife.teacherrequests.exception.AlreadyTeacherOrAdminException;
+import com.edulife.teacherrequests.exception.TeacherRequestAlreadyPendingException;
+import com.edulife.teacherrequests.exception.TeacherRequestNotFoundException;
+import com.edulife.teacherrequests.exception.TeacherRequestNotPendingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -40,6 +44,26 @@ public class GlobalApiExceptionHandler {
     public ResponseEntity<ApiError> handleCertificateGeneration(CertificateGenerationException ex) {
         log.error("Certificate generation failed.", ex);
         return build(HttpStatus.INTERNAL_SERVER_ERROR, "Certificate generation failed");
+    }
+
+    @ExceptionHandler(TeacherRequestNotFoundException.class)
+    public ResponseEntity<ApiError> handleTeacherRequestNotFound(TeacherRequestNotFoundException ex) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(TeacherRequestAlreadyPendingException.class)
+    public ResponseEntity<ApiError> handleTeacherRequestAlreadyPending(TeacherRequestAlreadyPendingException ex) {
+        return build(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(AlreadyTeacherOrAdminException.class)
+    public ResponseEntity<ApiError> handleAlreadyTeacherOrAdmin(AlreadyTeacherOrAdminException ex) {
+        return build(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(TeacherRequestNotPendingException.class)
+    public ResponseEntity<ApiError> handleTeacherRequestNotPending(TeacherRequestNotPendingException ex) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
