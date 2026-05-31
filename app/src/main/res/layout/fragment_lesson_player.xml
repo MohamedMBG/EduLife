@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
@@ -37,7 +38,7 @@
                     android:layout_width="32dp"
                     android:layout_height="32dp"
                     android:src="@drawable/ic_play_arrow"
-                    android:tint="@color/brand_primary"
+                    app:tint="@color/brand_primary"
                     android:contentDescription="@null" />
             </LinearLayout>
 
@@ -70,7 +71,7 @@
                 android:layout_height="14dp"
                 android:layout_marginEnd="5dp"
                 android:src="@drawable/ic_timer"
-                android:tint="@color/white"
+                app:tint="@color/white"
                 android:contentDescription="@null" />
 
             <TextView
@@ -92,7 +93,7 @@
             android:background="@drawable/bg_lesson_back_button"
             android:contentDescription="Back"
             android:src="@drawable/ic_arrow_back"
-            android:tint="@color/white" />
+            app:tint="@color/white" />
     </FrameLayout>
 
     <!-- Lesson type + order strip -->
@@ -218,7 +219,7 @@
                         android:layout_height="18dp"
                         android:layout_marginEnd="8dp"
                         android:src="@drawable/ic_notes"
-                        android:tint="@color/brand_primary"
+                        app:tint="@color/brand_primary"
                         android:contentDescription="@null" />
 
                     <TextView
@@ -326,7 +327,7 @@
                 android:background="@drawable/bg_lesson_back_button"
                 android:contentDescription="@string/lesson_viewer_close"
                 android:src="@drawable/ic_arrow_back"
-                android:tint="@color/brand_text_primary" />
+                app:tint="@color/brand_text_primary" />
 
             <TextView
                 android:id="@+id/lessonViewerTitle"

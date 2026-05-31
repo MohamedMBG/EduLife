@@ -271,8 +271,12 @@ public class LessonPlayerFragment extends Fragment {
         if (looksLikePdf) {
             // Google Docs viewer embeds the PDF inside the WebView so we keep the user in-app
             // instead of handing off to a system PDF reader.
-            String encoded = URLEncoder.encode(contentUrl, StandardCharsets.UTF_8);
-            return "https://docs.google.com/gview?embedded=true&url=" + encoded;
+            try {
+                String encoded = URLEncoder.encode(contentUrl, StandardCharsets.UTF_8.name());
+                return "https://docs.google.com/gview?embedded=true&url=" + encoded;
+            } catch (java.io.UnsupportedEncodingException e) {
+                return contentUrl;
+            }
         }
         return contentUrl;
     }

@@ -107,7 +107,7 @@
                         android:layout_width="14dp"
                         android:layout_height="14dp"
                         android:src="@drawable/ic_star"
-                        android:tint="#FFD24A"
+                        app:tint="#FFD24A"
                         android:contentDescription="@null" />
 
                     <TextView
