@@ -2,6 +2,7 @@ package com.edulife.exams.controller;
 
 import com.edulife.exams.dto.ExamDto;
 import com.edulife.exams.dto.ExamResultDto;
+import com.edulife.exams.dto.ExamStatusDto;
 import com.edulife.exams.dto.SubmitExamRequest;
 import com.edulife.exams.service.ExamService;
 import jakarta.validation.Valid;
@@ -26,6 +27,11 @@ public class ExamController {
     @GetMapping
     public ExamDto getExam(@PathVariable UUID courseId) {
         return examService.getExam(courseId);
+    }
+
+    @GetMapping("/status")
+    public ExamStatusDto getExamStatus(@PathVariable UUID courseId) {
+        return examService.getExamStatus(courseId);
     }
 
     @PostMapping("/submit")

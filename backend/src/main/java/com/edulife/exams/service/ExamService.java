@@ -6,6 +6,7 @@ import com.edulife.enrollments.model.EnrollmentStatus;
 import com.edulife.enrollments.repository.EnrollmentRepository;
 import com.edulife.exams.dto.ExamDto;
 import com.edulife.exams.dto.ExamResultDto;
+import com.edulife.exams.dto.ExamStatusDto;
 import com.edulife.exams.dto.SubmitExamRequest;
 import com.edulife.exams.entity.Exam;
 import com.edulife.exams.entity.ExamAttempt;
@@ -95,6 +96,38 @@ public class ExamService {
 
         return new ExamDto(exam.getId(), exam.getCourseId(), exam.getTitle(),
                 exam.getPassScore(), exam.getTimeLimitMinutes(), questionDtos);
+    }
+
+    public ExamStatusDto getExamStatus(UUID courseId) {
+        User user = resolveCurrentUser();
+
+        boolean enrolled = enrollmentRepository.existsByUserIdAndCourseIdAndStatus(
+                user.getId(), courseId, EnrollmentStatus.ACTIVE);
+        if (!enrolled) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Enroll in this course to view exam status");
+        }
+
+        Exam exam = examRepository.findByCourseId(courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No exam found for this course"));
+
+        boolean passed = attemptRepository.existsByUserIdAndExamIdAndPassedTrue(user.getId(), exam.getId());
+        long failedAttempts = attemptRepository.countByUserIdAndExamIdAndPassedFalse(user.getId(), exam.getId());
+
+        boolean inCooldown = false;
+        Instant cooldownEndsAt = null;
+
+        if (!passed && failedAttempts >= 2) {
+            ExamAttempt lastFailure = attemptRepository
+                    .findTopByUserIdAndExamIdAndPassedFalseOrderByTakenAtDesc(user.getId(), exam.getId())
+                    .orElseThrow();
+            Instant expiry = lastFailure.getTakenAt().plus(72, ChronoUnit.HOURS);
+            if (Instant.now().isBefore(expiry)) {
+                inCooldown = true;
+                cooldownEndsAt = expiry;
+            }
+        }
+
+        return new ExamStatusDto(exam.getId(), passed, (int) failedAttempts, 2, inCooldown, cooldownEndsAt);
     }
 
     @Transactional
