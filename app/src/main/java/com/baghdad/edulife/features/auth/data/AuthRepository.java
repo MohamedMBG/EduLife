@@ -7,8 +7,10 @@ import android.os.Looper;
 import com.baghdad.edulife.core.network.ApiClient;
 import com.baghdad.edulife.core.network.ApiService;
 import com.baghdad.edulife.core.storage.SessionStorage;
+import com.baghdad.edulife.features.auth.model.AuthSyncRequest;
 import com.baghdad.edulife.features.auth.model.AuthResult;
 import com.baghdad.edulife.features.auth.model.AuthSyncResponse;
+import com.baghdad.edulife.features.auth.model.RegisterRequest;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
@@ -50,8 +52,8 @@ public class AuthRepository {
         sessionStorage.clearSession();
     }
 
-    public void register(String fullName, String email, String password, AuthCallback callback) {
-        firebaseAuth.createUserWithEmailAndPassword(email, password)
+    public void register(RegisterRequest request, AuthCallback callback) {
+        firebaseAuth.createUserWithEmailAndPassword(request.email, request.password)
                 .addOnSuccessListener(authResult -> {
                     FirebaseUser user = firebaseAuth.getCurrentUser();
 
@@ -60,12 +62,16 @@ public class AuthRepository {
                         return;
                     }
 
+                    // Persist the selected role now because email verification usually happens before
+                    // the first backend sync, often after the app is backgrounded or restarted.
+                    sessionStorage.savePendingRegistrationRole(request.intendedRole);
+
                     // Persist the typed full name as the Firebase displayName so /auth/sync and
                     // the profile endpoint receive a real identity instead of falling back to
                     // the email local-part. The verification email is still sent regardless of
                     // whether the display-name update succeeds because verification gates login.
                     UserProfileChangeRequest profileUpdate = new UserProfileChangeRequest.Builder()
-                            .setDisplayName(fullName)
+                            .setDisplayName(request.fullName)
                             .build();
                     user.updateProfile(profileUpdate)
                             .addOnCompleteListener(profileTask -> user.sendEmailVerification()
@@ -154,7 +160,10 @@ public class AuthRepository {
      * Saves the session on success; clears it on any error path.
      */
     private void callBackendSync(AuthCallback callback) {
-        Call<AuthSyncResponse> syncCall = apiService.syncUser();
+        String pendingRole = sessionStorage.getPendingRegistrationRole();
+        Call<AuthSyncResponse> syncCall = pendingRole == null || pendingRole.isBlank()
+                ? apiService.syncUser()
+                : apiService.syncUser(new AuthSyncRequest(pendingRole));
         AtomicBoolean callbackDelivered = new AtomicBoolean(false);
         Runnable timeoutRunnable = () -> {
             if (!callbackDelivered.compareAndSet(false, true)) {
@@ -200,6 +209,9 @@ public class AuthRepository {
 
                     // Persist userId and role; this is the only place where session is written
                     sessionStorage.saveSession(body.userId, body.role);
+                    // The backend only honors intendedRole on first sync, so the pending copy is
+                    // no longer needed after any successful sync response.
+                    sessionStorage.clearPendingRegistrationRole();
                     callback.onResult(new AuthResult(true, "Sync successful.", false));
 
                 } else {

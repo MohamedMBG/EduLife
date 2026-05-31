@@ -4,17 +4,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
     android:background="@drawable/bg_auth_screen"
     android:clipToPadding="false"
     android:fillViewport="true"
+    android:fitsSystemWindows="true"
     android:overScrollMode="never"
     android:paddingBottom="18dp"
     tools:context=".features.auth.ui.RegisterFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:minHeight="840dp"
         android:paddingStart="28dp"
         android:paddingEnd="28dp">
@@ -79,7 +79,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="sans-serif-medium"
-                    android:text="Edu"
+                    android:text="@string/app_name_prefix"
                     android:textColor="@color/brand_text_primary"
                     android:textSize="23sp"
                     android:textStyle="bold" />
@@ -88,7 +88,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="sans-serif-medium"
-                    android:text="Life"
+                    android:text="@string/app_name_suffix"
                     android:textColor="@color/brand_primary"
                     android:textSize="23sp"
                     android:textStyle="bold" />
@@ -101,30 +101,46 @@
                 android:layout_marginStart="12dp"
                 android:background="@drawable/bg_auth_eyebrow"
                 android:gravity="center"
-                android:text="Student profile"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:text="@string/register_role_eyebrow"
                 android:textColor="@color/brand_primary"
                 android:textSize="12sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
         <TextView
-            android:id="@+id/titleText"
+            android:id="@+id/stepIndicatorText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="34dp"
-            android:fontFamily="sans-serif-medium"
-            android:text="Create your account"
-            android:textColor="@color/brand_text_primary"
-            android:textSize="34sp"
+            android:layout_marginTop="30dp"
+            android:text="@string/register_role_step_indicator"
+            android:textColor="@color/brand_primary"
+            android:textSize="12sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/brandRow" />
 
+        <TextView
+            android:id="@+id/titleText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="sans-serif-medium"
+            android:text="@string/register_role_title"
+            android:textColor="@color/brand_text_primary"
+            android:textSize="34sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/stepIndicatorText" />
+
         <LinearLayout
             android:id="@+id/infoPanel"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:background="@drawable/bg_auth_info_panel"
             android:gravity="center_vertical"
             android:orientation="horizontal"
@@ -134,7 +150,7 @@
             android:paddingBottom="14dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/titleText">
+            app:layout_constraintTop_toBottomOf="@id/titleText">
 
             <FrameLayout
                 android:layout_width="36dp"
@@ -150,380 +166,515 @@
             </FrameLayout>
 
             <TextView
+                android:id="@+id/infoMessageText"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="14dp"
                 android:layout_weight="1"
                 android:lineSpacingExtra="2dp"
-                android:text="One account keeps the MVP learning loop simple: enroll, learn, pass, and receive proof."
+                android:text="@string/register_role_info"
                 android:textColor="@color/brand_text_body"
                 android:textSize="13sp" />
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/fullNameLabel"
+        <LinearLayout
+            android:id="@+id/formContentContainer"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:fontFamily="sans-serif-medium"
-            android:text="Full name"
-            android:textColor="@color/brand_text_primary"
-            android:textSize="13sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/infoPanel" />
-
-        <LinearLayout
-            android:id="@+id/fullNameInputCard"
-            android:layout_width="0dp"
-            android:layout_height="62dp"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/bg_login_input"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/fullNameLabel">
-
-            <FrameLayout
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:background="@drawable/bg_login_icon_container">
-
-                <ImageView
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:layout_gravity="center"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_login_user" />
-            </FrameLayout>
-
-            <EditText
-                android:id="@+id/fullNameInput"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="14dp"
-                android:layout_weight="1"
-                android:background="@android:color/transparent"
-                android:hint="Your full name"
-                android:imeOptions="actionNext"
-                android:inputType="textPersonName|textCapWords"
-                android:padding="0dp"
-                android:singleLine="true"
-                android:textColor="@color/brand_text_primary"
-                android:textColorHint="@color/brand_text_secondary"
-                android:textSize="15sp" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/emailLabel"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            android:fontFamily="sans-serif-medium"
-            android:text="Email address"
-            android:textColor="@color/brand_text_primary"
-            android:textSize="13sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/fullNameInputCard" />
-
-        <LinearLayout
-            android:id="@+id/emailInputCard"
-            android:layout_width="0dp"
-            android:layout_height="62dp"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/bg_login_input"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/emailLabel">
-
-            <FrameLayout
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:background="@drawable/bg_login_icon_container">
-
-                <ImageView
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:layout_gravity="center"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_login_mail" />
-            </FrameLayout>
-
-            <EditText
-                android:id="@+id/emailInput"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="14dp"
-                android:layout_weight="1"
-                android:background="@android:color/transparent"
-                android:hint="name@example.com"
-                android:imeOptions="actionNext"
-                android:inputType="textEmailAddress"
-                android:padding="0dp"
-                android:singleLine="true"
-                android:textColor="@color/brand_text_primary"
-                android:textColorHint="@color/brand_text_secondary"
-                android:textSize="15sp" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/passwordLabel"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            android:fontFamily="sans-serif-medium"
-            android:text="Password"
-            android:textColor="@color/brand_text_primary"
-            android:textSize="13sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/emailInputCard" />
-
-        <LinearLayout
-            android:id="@+id/passwordInputCard"
-            android:layout_width="0dp"
-            android:layout_height="62dp"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/bg_login_input"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="16dp"
-            android:paddingEnd="8dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/passwordLabel">
-
-            <FrameLayout
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:background="@drawable/bg_login_icon_container">
-
-                <ImageView
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:layout_gravity="center"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_login_lock" />
-            </FrameLayout>
-
-            <EditText
-                android:id="@+id/passwordInput"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="14dp"
-                android:layout_weight="1"
-                android:background="@android:color/transparent"
-                android:hint="Create password"
-                android:imeOptions="actionNext"
-                android:inputType="textPassword"
-                android:padding="0dp"
-                android:singleLine="true"
-                android:textColor="@color/brand_text_primary"
-                android:textColorHint="@color/brand_text_secondary"
-                android:textSize="15sp" />
-
-            <ImageButton
-                android:id="@+id/passwordVisibilityToggle"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Show password"
-                android:padding="10dp"
-                android:src="@drawable/ic_login_eye" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/confirmPasswordLabel"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            android:fontFamily="sans-serif-medium"
-            android:text="Confirm password"
-            android:textColor="@color/brand_text_primary"
-            android:textSize="13sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/passwordInputCard" />
-
-        <LinearLayout
-            android:id="@+id/confirmPasswordInputCard"
-            android:layout_width="0dp"
-            android:layout_height="62dp"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/bg_login_input"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="16dp"
-            android:paddingEnd="8dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/confirmPasswordLabel">
-
-            <FrameLayout
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:background="@drawable/bg_login_icon_container">
-
-                <ImageView
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:layout_gravity="center"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_login_lock" />
-            </FrameLayout>
-
-            <EditText
-                android:id="@+id/confirmPasswordInput"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="14dp"
-                android:layout_weight="1"
-                android:background="@android:color/transparent"
-                android:hint="Repeat password"
-                android:imeOptions="actionDone"
-                android:inputType="textPassword"
-                android:padding="0dp"
-                android:singleLine="true"
-                android:textColor="@color/brand_text_primary"
-                android:textColorHint="@color/brand_text_secondary"
-                android:textSize="15sp" />
-
-            <ImageButton
-                android:id="@+id/confirmPasswordVisibilityToggle"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Show confirm password"
-                android:padding="10dp"
-                android:src="@drawable/ic_login_eye" />
-        </LinearLayout>
-
-        <com.google.android.material.checkbox.MaterialCheckBox
-            android:id="@+id/termsCheckbox"
-            android:layout_width="0dp"
-            android:layout_height="46dp"
-            android:layout_marginTop="14dp"
-            android:fontFamily="sans-serif"
-            android:minWidth="0dp"
-            android:minHeight="0dp"
-            android:paddingStart="0dp"
-            android:paddingEnd="0dp"
-            android:text="I agree to the Terms and Privacy Policy"
-            android:textColor="@color/brand_text_body"
-            android:textSize="13sp"
-            app:buttonTint="@color/brand_primary"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/confirmPasswordInputCard" />
-
-        <LinearLayout
-            android:id="@+id/createAccountButton"
-            android:layout_width="0dp"
-            android:layout_height="62dp"
             android:layout_marginTop="24dp"
-            android:background="@drawable/bg_login_button_green"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackground"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:paddingStart="22dp"
-            android:paddingEnd="16dp"
+            android:orientation="vertical"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/termsCheckbox">
+            app:layout_constraintTop_toBottomOf="@id/infoPanel">
 
-            <TextView
-                android:layout_width="0dp"
+            <LinearLayout
+                android:id="@+id/roleStepContainer"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:fontFamily="sans-serif-medium"
-                android:gravity="center"
-                android:text="Create account"
-                android:textColor="@android:color/white"
-                android:textSize="17sp"
-                android:textStyle="bold" />
+                android:orientation="vertical">
 
-            <ImageView
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_arrow_forward" />
-        </LinearLayout>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="14dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="@string/register_role_prompt"
+                    android:textColor="@color/brand_text_primary"
+                    android:textSize="14sp" />
 
-        <!-- OR separator -->
-        <LinearLayout
-            android:id="@+id/dividerRow"
-            android:layout_width="0dp"
-            android:layout_height="32dp"
-            android:layout_marginTop="20dp"
-            android:gravity="center"
-            android:orientation="horizontal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/createAccountButton">
+                <LinearLayout
+                    android:id="@+id/learnerRoleCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_auth_role_option"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:orientation="vertical"
+                    android:padding="18dp">
 
-            <View
-                android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:layout_weight="1"
-                android:background="@color/brand_border" />
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-medium"
+                        android:text="@string/register_role_student_title"
+                        android:textColor="@color/brand_text_primary"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
 
-            <TextView
-                android:layout_width="wrap_content"
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="@string/register_role_student_desc"
+                        android:textColor="@color/brand_text_secondary"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/teacherRoleCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_auth_role_option"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:orientation="vertical"
+                    android:padding="18dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-medium"
+                        android:text="@string/register_role_teacher_title"
+                        android:textColor="@color/brand_text_primary"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="@string/register_role_teacher_desc"
+                        android:textColor="@color/brand_text_secondary"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/groupAdminRoleCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_auth_role_option"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:orientation="vertical"
+                    android:padding="18dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-medium"
+                        android:text="@string/register_role_group_admin_title"
+                        android:textColor="@color/brand_text_primary"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="@string/register_role_group_admin_desc"
+                        android:textColor="@color/brand_text_secondary"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/continueRoleButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="62dp"
+                    android:layout_marginTop="22dp"
+                    android:background="@drawable/bg_login_button_green"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingStart="22dp"
+                    android:paddingEnd="16dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:text="@string/register_role_continue"
+                        android:textColor="@android:color/white"
+                        android:textSize="17sp"
+                        android:textStyle="bold" />
+
+                    <ImageView
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_arrow_forward" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/credentialsStepContainer"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:text="OR"
-                android:textColor="@color/brand_text_secondary"
-                android:textSize="11sp"
-                android:textStyle="bold" />
+                android:orientation="vertical"
+                android:visibility="gone">
 
-            <View
-                android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:layout_weight="1"
-                android:background="@color/brand_border" />
-        </LinearLayout>
+                <LinearLayout
+                    android:id="@+id/backToRoleButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="54dp"
+                    android:background="@drawable/bg_secondary_button"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp">
 
-        <LinearLayout
-            android:id="@+id/googleRegisterButton"
-            android:layout_width="0dp"
-            android:layout_height="62dp"
-            android:layout_marginTop="4dp"
-            android:background="@drawable/bg_login_google_button"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackground"
-            android:gravity="center"
-            android:orientation="horizontal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/dividerRow">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-medium"
+                        android:text="@string/register_back_to_roles"
+                        android:textColor="@color/brand_text_primary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
 
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_google_g" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="@string/register_full_name_label"
+                    android:textColor="@color/brand_text_primary"
+                    android:textSize="13sp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="14dp"
-                android:fontFamily="sans-serif-medium"
-                android:text="Continue with Google"
-                android:textColor="@color/brand_text_primary"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="62dp"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_login_input"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp">
+
+                    <FrameLayout
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:background="@drawable/bg_login_icon_container">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_login_user" />
+                    </FrameLayout>
+
+                    <EditText
+                        android:id="@+id/fullNameInput"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="14dp"
+                        android:layout_weight="1"
+                        android:background="@android:color/transparent"
+                        android:hint="@string/register_full_name_hint"
+                        android:imeOptions="actionNext"
+                        android:inputType="textPersonName|textCapWords"
+                        android:padding="0dp"
+                        android:singleLine="true"
+                        android:textColor="@color/brand_text_primary"
+                        android:textColorHint="@color/brand_text_secondary"
+                        android:textSize="15sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="22dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="@string/register_email_label"
+                    android:textColor="@color/brand_text_primary"
+                    android:textSize="13sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="62dp"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_login_input"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp">
+
+                    <FrameLayout
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:background="@drawable/bg_login_icon_container">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_login_mail" />
+                    </FrameLayout>
+
+                    <EditText
+                        android:id="@+id/emailInput"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="14dp"
+                        android:layout_weight="1"
+                        android:background="@android:color/transparent"
+                        android:hint="@string/register_email_hint"
+                        android:imeOptions="actionNext"
+                        android:inputType="textEmailAddress"
+                        android:padding="0dp"
+                        android:singleLine="true"
+                        android:textColor="@color/brand_text_primary"
+                        android:textColorHint="@color/brand_text_secondary"
+                        android:textSize="15sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="22dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="@string/register_password_label"
+                    android:textColor="@color/brand_text_primary"
+                    android:textSize="13sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="62dp"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_login_input"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="8dp">
+
+                    <FrameLayout
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:background="@drawable/bg_login_icon_container">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_login_lock" />
+                    </FrameLayout>
+
+                    <EditText
+                        android:id="@+id/passwordInput"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="14dp"
+                        android:layout_weight="1"
+                        android:background="@android:color/transparent"
+                        android:hint="@string/register_password_hint"
+                        android:imeOptions="actionNext"
+                        android:inputType="textPassword"
+                        android:padding="0dp"
+                        android:singleLine="true"
+                        android:textColor="@color/brand_text_primary"
+                        android:textColorHint="@color/brand_text_secondary"
+                        android:textSize="15sp" />
+
+                    <ImageButton
+                        android:id="@+id/passwordVisibilityToggle"
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/register_password_toggle"
+                        android:padding="10dp"
+                        android:src="@drawable/ic_login_eye" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="22dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="@string/register_confirm_password_label"
+                    android:textColor="@color/brand_text_primary"
+                    android:textSize="13sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="62dp"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_login_input"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="8dp">
+
+                    <FrameLayout
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:background="@drawable/bg_login_icon_container">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_login_lock" />
+                    </FrameLayout>
+
+                    <EditText
+                        android:id="@+id/confirmPasswordInput"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="14dp"
+                        android:layout_weight="1"
+                        android:background="@android:color/transparent"
+                        android:hint="@string/register_confirm_password_hint"
+                        android:imeOptions="actionDone"
+                        android:inputType="textPassword"
+                        android:padding="0dp"
+                        android:singleLine="true"
+                        android:textColor="@color/brand_text_primary"
+                        android:textColorHint="@color/brand_text_secondary"
+                        android:textSize="15sp" />
+
+                    <ImageButton
+                        android:id="@+id/confirmPasswordVisibilityToggle"
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/register_confirm_password_toggle"
+                        android:padding="10dp"
+                        android:src="@drawable/ic_login_eye" />
+                </LinearLayout>
+
+                <com.google.android.material.checkbox.MaterialCheckBox
+                    android:id="@+id/termsCheckbox"
+                    android:layout_width="match_parent"
+                    android:layout_height="46dp"
+                    android:layout_marginTop="14dp"
+                    android:fontFamily="sans-serif"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:paddingStart="0dp"
+                    android:paddingEnd="0dp"
+                    android:text="@string/register_terms_text"
+                    android:textColor="@color/brand_text_body"
+                    android:textSize="13sp"
+                    app:buttonTint="@color/brand_primary" />
+
+                <LinearLayout
+                    android:id="@+id/createAccountButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="62dp"
+                    android:layout_marginTop="24dp"
+                    android:background="@drawable/bg_login_button_green"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingStart="22dp"
+                    android:paddingEnd="16dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:fontFamily="sans-serif-medium"
+                        android:gravity="center"
+                        android:text="@string/register_create_button"
+                        android:textColor="@android:color/white"
+                        android:textSize="17sp"
+                        android:textStyle="bold" />
+
+                    <ImageView
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_arrow_forward" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/dividerRow"
+                    android:layout_width="match_parent"
+                    android:layout_height="32dp"
+                    android:layout_marginTop="20dp"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_weight="1"
+                        android:background="@color/brand_border" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingStart="20dp"
+                        android:paddingEnd="20dp"
+                        android:text="@string/register_or"
+                        android:textColor="@color/brand_text_secondary"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_weight="1"
+                        android:background="@color/brand_border" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/googleRegisterButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="62dp"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/bg_login_google_button"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_google_g" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp"
+                        android:fontFamily="sans-serif-medium"
+                        android:text="@string/register_google_cta"
+                        android:textColor="@color/brand_text_primary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
         </LinearLayout>
 
         <LinearLayout
@@ -531,19 +682,21 @@
             android:layout_width="wrap_content"
             android:layout_height="52dp"
             android:layout_marginTop="20dp"
+            android:layout_marginBottom="24dp"
             android:clickable="true"
             android:focusable="true"
             android:foreground="?attr/selectableItemBackgroundBorderless"
             android:gravity="center"
             android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/googleRegisterButton">
+            app:layout_constraintTop_toBottomOf="@id/formContentContainer">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Already learning here? "
+                android:text="@string/register_login_prompt"
                 android:textColor="@color/brand_text_secondary"
                 android:textSize="14sp" />
 
@@ -551,7 +704,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-medium"
-                android:text="Log in"
+                android:text="@string/onboarding_login"
                 android:textColor="@color/brand_primary"
                 android:textSize="14sp"
                 android:textStyle="bold" />
