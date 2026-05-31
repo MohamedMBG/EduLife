@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
@@ -23,14 +24,20 @@ import com.baghdad.edulife.R;
 import com.baghdad.edulife.features.courses.model.ExamChoice;
 import com.baghdad.edulife.features.courses.model.ExamQuestion;
 import com.baghdad.edulife.features.courses.model.ExamResponse;
+import com.baghdad.edulife.features.courses.model.ExamStatusResponse;
+import com.baghdad.edulife.features.courses.model.ExamStatusUiState;
 import com.baghdad.edulife.features.courses.model.ExamSubmitUiState;
 import com.baghdad.edulife.features.courses.model.ExamUiState;
 import com.baghdad.edulife.features.courses.model.SubmitExamRequest;
 import com.baghdad.edulife.features.courses.viewmodel.ExamViewModel;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class ExamFragment extends Fragment {
@@ -38,6 +45,12 @@ public class ExamFragment extends Fragment {
     private ExamViewModel examViewModel;
     private ProgressBar loadingIndicator;
     private TextView statusText;
+    private FrameLayout examGateContainer;
+    private TextView examGateEyebrow;
+    private TextView examGateTitle;
+    private TextView examGateBody;
+    private TextView examGateMeta;
+    private Button examGateButton;
     private ScrollView scrollView;
     private LinearLayout questionsContainer;
     private LinearLayout submitFooter;
@@ -60,6 +73,12 @@ public class ExamFragment extends Fragment {
 
         loadingIndicator = view.findViewById(R.id.examLoadingIndicator);
         statusText = view.findViewById(R.id.examStatusText);
+        examGateContainer = view.findViewById(R.id.examGateContainer);
+        examGateEyebrow = view.findViewById(R.id.examGateEyebrow);
+        examGateTitle = view.findViewById(R.id.examGateTitle);
+        examGateBody = view.findViewById(R.id.examGateBody);
+        examGateMeta = view.findViewById(R.id.examGateMeta);
+        examGateButton = view.findViewById(R.id.examGateButton);
         scrollView = view.findViewById(R.id.examScrollView);
         questionsContainer = view.findViewById(R.id.examQuestionsContainer);
         submitFooter = view.findViewById(R.id.examSubmitFooter);
@@ -68,9 +87,12 @@ public class ExamFragment extends Fragment {
 
         view.findViewById(R.id.examBackButton).setOnClickListener(v ->
                 Navigation.findNavController(view).popBackStack());
+        examGateButton.setOnClickListener(v ->
+                Navigation.findNavController(view).popBackStack());
 
         courseId = getArguments() != null ? getArguments().getString("courseId", "") : "";
 
+        examViewModel.getExamStatusState().observe(getViewLifecycleOwner(), this::renderExamStatusState);
         examViewModel.getExamState().observe(getViewLifecycleOwner(), this::renderExamState);
         examViewModel.getSubmitState().observe(getViewLifecycleOwner(), this::renderSubmitState);
 
@@ -83,8 +105,57 @@ public class ExamFragment extends Fragment {
             examViewModel.submitExam(courseId, answers);
         });
 
-        ExamUiState currentState = examViewModel.getExamState().getValue();
-        if (currentState == null || currentState.exam == null) {
+        ExamStatusUiState currentStatusState = examViewModel.getExamStatusState().getValue();
+        if (currentStatusState == null || currentStatusState.status == null) {
+            // Access is checked first so users in cooldown never see answer inputs they cannot submit.
+            examViewModel.loadExamStatus(courseId);
+        }
+    }
+
+    private void renderExamStatusState(ExamStatusUiState state) {
+        if (state == null) return;
+
+        if (state.loading) {
+            showInlineStatus(getString(R.string.exam_status_loading), true);
+            return;
+        }
+
+        if (state.errorMessage != null && !state.errorMessage.isBlank()) {
+            showInlineStatus(state.errorMessage, false);
+            return;
+        }
+
+        if (state.status == null) return;
+
+        ExamStatusResponse status = state.status;
+        if (status.passed) {
+            // The learner loop awards a certificate after passing, so the exam should lock here
+            // instead of letting the user re-enter the question flow.
+            showGateState(
+                    getString(R.string.exam_gate_passed_eyebrow),
+                    getString(R.string.exam_gate_passed_title),
+                    getString(R.string.exam_gate_passed_body),
+                    getString(R.string.exam_gate_passed_meta)
+            );
+            return;
+        }
+
+        if (status.inCooldown) {
+            showGateState(
+                    getString(R.string.exam_gate_cooldown_eyebrow),
+                    getString(R.string.exam_gate_cooldown_title),
+                    getString(R.string.exam_gate_cooldown_body, formatInstant(status.cooldownEndsAt)),
+                    getString(
+                            R.string.exam_gate_cooldown_meta,
+                            status.failedAttempts,
+                            status.maxAttemptsBeforeCooldown
+                    )
+            );
+            return;
+        }
+
+        ExamUiState currentExamState = examViewModel.getExamState().getValue();
+        if (currentExamState == null || currentExamState.exam == null) {
             examViewModel.loadExam(courseId);
         }
     }
@@ -95,18 +166,12 @@ public class ExamFragment extends Fragment {
         loadingIndicator.setVisibility(state.loading ? View.VISIBLE : View.GONE);
 
         if (state.loading) {
-            scrollView.setVisibility(View.GONE);
-            submitFooter.setVisibility(View.GONE);
-            statusText.setVisibility(View.VISIBLE);
-            statusText.setText(R.string.exam_loading);
+            showInlineStatus(getString(R.string.exam_loading), true);
             return;
         }
 
         if (state.errorMessage != null && !state.errorMessage.isBlank()) {
-            scrollView.setVisibility(View.GONE);
-            submitFooter.setVisibility(View.GONE);
-            statusText.setVisibility(View.VISIBLE);
-            statusText.setText(state.errorMessage);
+            showInlineStatus(state.errorMessage, false);
             return;
         }
 
@@ -126,19 +191,23 @@ public class ExamFragment extends Fragment {
 
         if (state.alreadyPassed) {
             submitButton.setEnabled(false);
-            scrollView.setVisibility(View.GONE);
-            submitFooter.setVisibility(View.GONE);
-            statusText.setVisibility(View.VISIBLE);
-            statusText.setText(R.string.exam_already_passed);
+            showGateState(
+                    getString(R.string.exam_gate_passed_eyebrow),
+                    getString(R.string.exam_gate_passed_title),
+                    getString(R.string.exam_gate_passed_body),
+                    getString(R.string.exam_gate_passed_meta)
+            );
             return;
         }
 
         if (state.cooldownEndsAt != null) {
             submitButton.setEnabled(false);
-            scrollView.setVisibility(View.GONE);
-            submitFooter.setVisibility(View.GONE);
-            statusText.setVisibility(View.VISIBLE);
-            statusText.setText(getString(R.string.exam_cooldown_active, state.cooldownEndsAt));
+            showGateState(
+                    getString(R.string.exam_gate_cooldown_eyebrow),
+                    getString(R.string.exam_gate_cooldown_title),
+                    getString(R.string.exam_gate_cooldown_body, formatInstant(state.cooldownEndsAt)),
+                    getString(R.string.exam_gate_cooldown_meta_generic)
+            );
             return;
         }
 
@@ -175,6 +244,7 @@ public class ExamFragment extends Fragment {
 
         renderQuestions(exam);
 
+        examGateContainer.setVisibility(View.GONE);
         statusText.setVisibility(View.GONE);
         scrollView.setVisibility(View.VISIBLE);
         submitFooter.setVisibility(View.VISIBLE);
@@ -259,6 +329,49 @@ public class ExamFragment extends Fragment {
         int answered = selectedChoices.size();
         progressText.setText(getString(R.string.exam_progress, answered, totalQuestions));
         submitButton.setEnabled(answered == totalQuestions && totalQuestions > 0);
+    }
+
+    private void showInlineStatus(String message, boolean showLoading) {
+        loadingIndicator.setVisibility(showLoading ? View.VISIBLE : View.GONE);
+        examGateContainer.setVisibility(View.GONE);
+        scrollView.setVisibility(View.GONE);
+        submitFooter.setVisibility(View.GONE);
+        statusText.setVisibility(View.VISIBLE);
+        statusText.setText(message);
+    }
+
+    private void showGateState(String eyebrow, String title, String body, String meta) {
+        loadingIndicator.setVisibility(View.GONE);
+        statusText.setVisibility(View.GONE);
+        scrollView.setVisibility(View.GONE);
+        submitFooter.setVisibility(View.GONE);
+        examGateContainer.setVisibility(View.VISIBLE);
+
+        examGateEyebrow.setText(eyebrow);
+        examGateTitle.setText(title);
+        examGateBody.setText(body);
+
+        if (meta == null || meta.isBlank()) {
+            examGateMeta.setVisibility(View.GONE);
+        } else {
+            examGateMeta.setVisibility(View.VISIBLE);
+            examGateMeta.setText(meta);
+        }
+    }
+
+    private String formatInstant(String isoInstant) {
+        if (isoInstant == null || isoInstant.isBlank()) {
+            return getString(R.string.exam_status_unknown_time);
+        }
+        try {
+            Instant instant = Instant.parse(isoInstant);
+            DateTimeFormatter formatter = DateTimeFormatter
+                    .ofPattern("MMM d, yyyy 'at' h:mm a", Locale.getDefault())
+                    .withZone(ZoneId.systemDefault());
+            return formatter.format(instant);
+        } catch (Exception e) {
+            return isoInstant;
+        }
     }
 
     private int dp(int value) {

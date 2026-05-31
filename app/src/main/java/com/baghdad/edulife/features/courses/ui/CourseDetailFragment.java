@@ -23,8 +23,11 @@ import com.baghdad.edulife.features.courses.model.CourseSection;
 import com.baghdad.edulife.features.courses.model.LessonSummary;
 import com.baghdad.edulife.features.courses.viewmodel.CourseDetailViewModel;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class CourseDetailFragment extends Fragment {
 
@@ -39,6 +42,8 @@ public class CourseDetailFragment extends Fragment {
      * fragile if the fragment is ever recreated with cleared args.
      */
     private String courseId = "";
+    private boolean isEnrolled;
+    private Map<String, Boolean> lessonCompletionMap = new HashMap<>();
 
     public CourseDetailFragment() {
         super(R.layout.fragment_course_detail);
@@ -66,12 +71,33 @@ public class CourseDetailFragment extends Fragment {
             return;
         }
         courseId = argId;
+        isEnrolled = getArguments() != null && getArguments().getBoolean("isEnrolled", false);
 
         courseDetailViewModel.getUiState().observe(getViewLifecycleOwner(), this::renderState);
+        courseDetailViewModel.getLessonCompletionState().observe(getViewLifecycleOwner(), completionMap -> {
+            lessonCompletionMap = completionMap != null ? completionMap : Collections.emptyMap();
+            CourseDetailUiState current = courseDetailViewModel.getUiState().getValue();
+            if (current != null && current.courseDetail != null) {
+                bindCourseDetail(current.courseDetail);
+            }
+        });
 
         CourseDetailUiState currentState = courseDetailViewModel.getUiState().getValue();
         if (currentState == null || currentState.courseDetail == null) {
             courseDetailViewModel.loadCourseDetail(courseId);
+        }
+        if (isEnrolled) {
+            courseDetailViewModel.loadLessonCompletion(courseId);
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (isEnrolled && !courseId.isBlank()) {
+            // Returning from the lesson player should refresh completion markers immediately so
+            // the course outline reflects the learner's latest progress without a full reload.
+            courseDetailViewModel.loadLessonCompletion(courseId);
         }
     }
 
@@ -122,8 +148,6 @@ public class CourseDetailFragment extends Fragment {
         int sectionCount = courseDetail.sections != null ? courseDetail.sections.size() : 0;
         sectionCountText.setText(getString(R.string.course_detail_section_count, sectionCount));
         descriptionText.setText(courseDetail.description);
-
-        boolean isEnrolled = getArguments() != null && getArguments().getBoolean("isEnrolled", false);
 
         sectionContainer.removeAllViews();
         int lessonCount = 0;
@@ -239,8 +263,13 @@ public class CourseDetailFragment extends Fragment {
         boolean accessible = isEnrolled || lesson.preview;
 
         TextView accessText = new TextView(requireContext());
+        boolean isCompleted = lesson.id != null && Boolean.TRUE.equals(lessonCompletionMap.get(lesson.id));
         if (isEnrolled) {
-            accessText.setText(R.string.course_detail_preview);
+            // Enrolled lessons stay accessible, but completed lessons need a clear visual marker
+            // so learners can scan the outline without reopening each lesson.
+            accessText.setText(isCompleted
+                    ? R.string.lesson_player_completed
+                    : R.string.course_detail_open_lesson);
             accessText.setTextColor(requireContext().getColor(R.color.catalog_primary));
         } else {
             accessText.setText(lesson.preview ? R.string.course_detail_preview : R.string.course_detail_locked);

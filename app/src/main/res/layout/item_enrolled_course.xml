@@ -74,6 +74,16 @@
                 android:textColor="@color/brand_text_secondary"
                 android:textSize="12sp"
                 tools:text="French" />
+
+            <TextView
+                android:id="@+id/enrolledCourseProgress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="@color/brand_primary"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                tools:text="3 / 8 lessons · 38%" />
         </LinearLayout>
     </LinearLayout>
 

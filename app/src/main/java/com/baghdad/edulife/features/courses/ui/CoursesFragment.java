@@ -14,17 +14,24 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.baghdad.edulife.R;
+import com.baghdad.edulife.features.courses.model.CourseProgressSummary;
 import com.baghdad.edulife.features.courses.model.EnrolledCourse;
 import com.baghdad.edulife.features.courses.model.UnenrollUiState;
 import com.baghdad.edulife.features.courses.viewmodel.EnrollmentViewModel;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 public class CoursesFragment extends Fragment {
 
@@ -35,7 +42,10 @@ public class CoursesFragment extends Fragment {
     private TextView filterAll, filterBeginner, filterIntermediate, filterAdvanced;
     private TextView courseCountText;
     private TextView emptyText;
+    private Button browseButton;
     private List<EnrolledCourse> allEnrolled = new ArrayList<>();
+    private Map<String, CourseProgressSummary> courseProgressMap = new HashMap<>();
+    private Set<String> courseProgressFailedIds = new HashSet<>();
 
     public CoursesFragment() {
         super(R.layout.fragment_courses);
@@ -58,6 +68,8 @@ public class CoursesFragment extends Fragment {
 
         emptyText = view.findViewById(R.id.coursesEmptyText);
         courseCountText = view.findViewById(R.id.courseCountText);
+        browseButton = view.findViewById(R.id.coursesBrowseButton);
+        browseButton.setOnClickListener(v -> navigateToHome());
 
         adapter = new EnrolledCourseAdapter(this::handleOpenCourse, this::handleUnenroll);
         RecyclerView recycler = view.findViewById(R.id.coursesRecycler);
@@ -78,6 +90,16 @@ public class CoursesFragment extends Fragment {
             applyFilter(activeFilter);
         });
 
+        enrollmentViewModel.getMyCourseProgress().observe(getViewLifecycleOwner(), progressMap -> {
+            courseProgressMap = progressMap != null ? progressMap : Collections.emptyMap();
+            adapter.setProgressState(courseProgressMap, courseProgressFailedIds);
+        });
+
+        enrollmentViewModel.getMyCourseProgressFailedIds().observe(getViewLifecycleOwner(), failedIds -> {
+            courseProgressFailedIds = failedIds != null ? failedIds : Collections.emptySet();
+            adapter.setProgressState(courseProgressMap, courseProgressFailedIds);
+        });
+
         enrollmentViewModel.getMyEnrollmentsError().observe(getViewLifecycleOwner(), error -> {
             if (error == null || error.isBlank()) return;
             // The fetch error is transient; surface it via Toast so the empty state below the
@@ -88,13 +110,13 @@ public class CoursesFragment extends Fragment {
 
         enrollmentViewModel.getMyEnrollmentsLoading().observe(getViewLifecycleOwner(), loading -> {
             if (Boolean.TRUE.equals(loading) && allEnrolled.isEmpty()) {
-                showEmpty(getString(R.string.courses_loading));
+                showEmpty(getString(R.string.courses_loading), false);
             }
         });
 
         enrollmentViewModel.getUnenrollState().observe(getViewLifecycleOwner(), this::handleUnenrollState);
 
-        showEmpty(getString(R.string.courses_loading));
+        showEmpty(getString(R.string.courses_loading), false);
     }
 
     @Override
@@ -117,19 +139,24 @@ public class CoursesFragment extends Fragment {
         adapter.setItems(filtered);
 
         if (filtered.isEmpty()) {
-            showEmpty(allEnrolled.isEmpty()
-                    ? "You have no active enrollments yet.\nBrowse courses on the Home tab."
-                    : "No " + level.toLowerCase(Locale.ROOT) + " courses in your enrollments.");
+            if (allEnrolled.isEmpty()) {
+                showEmpty(getString(R.string.courses_empty_unenrolled), true);
+            } else {
+                showEmpty(getString(R.string.courses_empty_filtered,
+                        level.toLowerCase(Locale.ROOT)), false);
+            }
         } else {
             emptyText.setVisibility(View.GONE);
+            browseButton.setVisibility(View.GONE);
         }
 
         courseCountText.setText(filtered.size() + " course" + (filtered.size() == 1 ? "" : "s") + " enrolled");
     }
 
-    private void showEmpty(String message) {
+    private void showEmpty(String message, boolean showBrowseButton) {
         emptyText.setText(message);
         emptyText.setVisibility(View.VISIBLE);
+        browseButton.setVisibility(showBrowseButton ? View.VISIBLE : View.GONE);
     }
 
     private void handleOpenCourse(EnrolledCourse course) {
@@ -177,6 +204,18 @@ public class CoursesFragment extends Fragment {
         setChipActive(filterAdvanced, "ADVANCED".equals(activeFilter));
     }
 
+    private void navigateToHome() {
+        NavOptions options = new NavOptions.Builder()
+                .setLaunchSingleTop(true)
+                .setRestoreState(true)
+                .setPopUpTo(R.id.homeFragment, false, true)
+                .build();
+        // Re-enrollment already works from Home. This CTA makes that path explicit instead of
+        // forcing the learner to infer which tab contains the enrollment entry point.
+        Navigation.findNavController(requireView())
+                .navigate(R.id.homeFragment, null, options);
+    }
+
     private void setChipActive(TextView chip, boolean active) {
         chip.setBackgroundResource(active
                 ? R.drawable.bg_category_chip_active
@@ -202,6 +241,8 @@ public class CoursesFragment extends Fragment {
     static class EnrolledCourseAdapter extends RecyclerView.Adapter<EnrolledCourseAdapter.VH> {
 
         private List<EnrolledCourse> items = new ArrayList<>();
+        private Map<String, CourseProgressSummary> progressByCourseId = Collections.emptyMap();
+        private Set<String> failedProgressCourseIds = Collections.emptySet();
         private final OpenCourseAction openAction;
         private final UnenrollAction unenrollAction;
 
@@ -212,6 +253,17 @@ public class CoursesFragment extends Fragment {
 
         void setItems(List<EnrolledCourse> list) {
             items = list;
+            notifyDataSetChanged();
+        }
+
+        void setProgressState(Map<String, CourseProgressSummary> progressByCourseId,
+                              Set<String> failedProgressCourseIds) {
+            this.progressByCourseId = progressByCourseId != null
+                    ? progressByCourseId
+                    : Collections.emptyMap();
+            this.failedProgressCourseIds = failedProgressCourseIds != null
+                    ? failedProgressCourseIds
+                    : Collections.emptySet();
             notifyDataSetChanged();
         }
 
@@ -230,6 +282,7 @@ public class CoursesFragment extends Fragment {
             holder.desc.setText(course.shortDescription != null ? course.shortDescription : "");
             holder.language.setText(normalizeLabel(course.languageCode));
             holder.level.setText(course.level != null ? course.level : "");
+            holder.progress.setText(resolveProgressLabel(holder, course));
             holder.continueBtn.setOnClickListener(v -> openAction.onOpen(course));
             holder.unenrollBtn.setOnClickListener(v -> unenrollAction.onUnenroll(course));
         }
@@ -240,7 +293,7 @@ public class CoursesFragment extends Fragment {
         }
 
         static class VH extends RecyclerView.ViewHolder {
-            final TextView title, desc, language, level, unenrollBtn;
+            final TextView title, desc, language, level, progress, unenrollBtn;
             final Button continueBtn;
 
             VH(@NonNull View itemView) {
@@ -249,9 +302,33 @@ public class CoursesFragment extends Fragment {
                 desc = itemView.findViewById(R.id.enrolledCourseDesc);
                 language = itemView.findViewById(R.id.enrolledCourseLanguage);
                 level = itemView.findViewById(R.id.enrolledLevelBadge);
+                progress = itemView.findViewById(R.id.enrolledCourseProgress);
                 continueBtn = itemView.findViewById(R.id.continueLearningButton);
                 unenrollBtn = itemView.findViewById(R.id.unenrollButton);
             }
+        }
+
+        private String resolveProgressLabel(VH holder, EnrolledCourse course) {
+            if (course.courseId == null || course.courseId.isBlank()) {
+                return holder.itemView.getContext().getString(R.string.courses_progress_unavailable);
+            }
+
+            if (failedProgressCourseIds.contains(course.courseId)) {
+                return holder.itemView.getContext().getString(R.string.courses_progress_unavailable);
+            }
+
+            CourseProgressSummary progress = progressByCourseId.get(course.courseId);
+            if (progress == null) {
+                return holder.itemView.getContext().getString(R.string.courses_progress_loading);
+            }
+
+            int percent = (int) Math.round(progress.percentComplete);
+            return holder.itemView.getContext().getString(
+                    R.string.courses_progress_format,
+                    progress.completedLessons,
+                    progress.totalLessons,
+                    percent
+            );
         }
 
         private static String normalizeLabel(String raw) {

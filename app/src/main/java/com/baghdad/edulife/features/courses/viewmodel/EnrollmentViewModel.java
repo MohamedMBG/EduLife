@@ -9,12 +9,17 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.baghdad.edulife.features.courses.data.CourseRepository;
 import com.baghdad.edulife.features.courses.model.EnrolledCourse;
+import com.baghdad.edulife.features.courses.model.CourseProgressSummary;
 import com.baghdad.edulife.features.courses.model.EnrollmentResponse;
 import com.baghdad.edulife.features.courses.model.EnrollUiState;
 import com.baghdad.edulife.features.courses.model.UnenrollUiState;
 
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class EnrollmentViewModel extends AndroidViewModel {
 
@@ -36,6 +41,12 @@ public class EnrollmentViewModel extends AndroidViewModel {
     private final MutableLiveData<String> myEnrollmentsError = new MutableLiveData<>();
 
     private final MutableLiveData<Boolean> myEnrollmentsLoading = new MutableLiveData<>(false);
+
+    private final MutableLiveData<Map<String, CourseProgressSummary>> myCourseProgress =
+            new MutableLiveData<>(new LinkedHashMap<>());
+
+    private final MutableLiveData<Set<String>> myCourseProgressFailedIds =
+            new MutableLiveData<>(new LinkedHashSet<>());
 
     public EnrollmentViewModel(@NonNull Application application) {
         super(application);
@@ -60,6 +71,14 @@ public class EnrollmentViewModel extends AndroidViewModel {
 
     public LiveData<Boolean> getMyEnrollmentsLoading() {
         return myEnrollmentsLoading;
+    }
+
+    public LiveData<Map<String, CourseProgressSummary>> getMyCourseProgress() {
+        return myCourseProgress;
+    }
+
+    public LiveData<Set<String>> getMyCourseProgressFailedIds() {
+        return myCourseProgressFailedIds;
     }
 
     public void enroll(String courseId) {
@@ -125,6 +144,7 @@ public class EnrollmentViewModel extends AndroidViewModel {
             public void onSuccess(List<EnrolledCourse> courses) {
                 myEnrollmentsLoading.postValue(false);
                 myEnrollments.postValue(courses);
+                loadCourseProgressFor(courses);
             }
 
             @Override
@@ -135,8 +155,54 @@ public class EnrollmentViewModel extends AndroidViewModel {
                 if (myEnrollments.getValue() == null) {
                     myEnrollments.postValue(Collections.emptyList());
                 }
+                myCourseProgress.postValue(new LinkedHashMap<>());
+                myCourseProgressFailedIds.postValue(new LinkedHashSet<>());
                 myEnrollmentsError.postValue(message);
             }
         });
+    }
+
+    private void loadCourseProgressFor(List<EnrolledCourse> courses) {
+        myCourseProgress.setValue(new LinkedHashMap<>());
+        myCourseProgressFailedIds.setValue(new LinkedHashSet<>());
+
+        if (courses == null || courses.isEmpty()) {
+            return;
+        }
+
+        for (EnrolledCourse course : courses) {
+            if (course == null || course.courseId == null || course.courseId.isBlank()) {
+                continue;
+            }
+
+            // Each card loads progress independently so one failing course-progress request does
+            // not block the rest of the learner's enrolled catalog from rendering normally.
+            courseRepository.getCourseProgress(course.courseId, new CourseRepository.CourseProgressCallback() {
+                @Override
+                public void onSuccess(CourseProgressSummary progress) {
+                    Map<String, CourseProgressSummary> updated =
+                            new LinkedHashMap<>(safeProgressMap());
+                    updated.put(course.courseId, progress);
+                    myCourseProgress.postValue(updated);
+                }
+
+                @Override
+                public void onError(String message) {
+                    Set<String> failedIds = new LinkedHashSet<>(safeFailedProgressIds());
+                    failedIds.add(course.courseId);
+                    myCourseProgressFailedIds.postValue(failedIds);
+                }
+            });
+        }
+    }
+
+    private Map<String, CourseProgressSummary> safeProgressMap() {
+        Map<String, CourseProgressSummary> current = myCourseProgress.getValue();
+        return current != null ? current : new LinkedHashMap<>();
+    }
+
+    private Set<String> safeFailedProgressIds() {
+        Set<String> current = myCourseProgressFailedIds.getValue();
+        return current != null ? current : new LinkedHashSet<>();
     }
 }
