@@ -169,6 +169,17 @@ cd EduLife
 
 Run in Android Studio.
 
+### Website Demo Without Backend
+
+```bash
+cd guided-journey-lab
+copy .env.example .env
+npm install
+npm run dev
+```
+
+Open the local Vite URL and sign in with any email/password. `VITE_DEMO_MODE=true` keeps the web app fully browser-local for demos.
+
 ---
 
 ## 👤 Author
