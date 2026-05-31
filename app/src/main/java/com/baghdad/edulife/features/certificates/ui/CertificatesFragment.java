@@ -1,8 +1,13 @@
 package com.baghdad.edulife.features.certificates.ui;
 
 import android.app.DownloadManager;
+import android.content.ActivityNotFoundException;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
@@ -31,6 +36,8 @@ public class CertificatesFragment extends Fragment {
 
     private CertificateViewModel viewModel;
     private CertificateAdapter adapter;
+    private BroadcastReceiver downloadReceiver;
+    private long pendingDownloadId = -1;
 
     public CertificatesFragment() {
         super(R.layout.fragment_certificates);
@@ -60,8 +67,8 @@ public class CertificatesFragment extends Fragment {
         recycler.setAdapter(adapter);
 
         ProgressBar progress = view.findViewById(R.id.certsProgress);
-        TextView emptyView    = view.findViewById(R.id.certsEmpty);
-        TextView errorView    = view.findViewById(R.id.certsError);
+        View        emptyView = view.findViewById(R.id.certsEmpty);
+        TextView    errorView = view.findViewById(R.id.certsError);
 
         viewModel.isLoading().observe(getViewLifecycleOwner(), loading -> {
             progress.setVisibility(Boolean.TRUE.equals(loading) ? View.VISIBLE : View.GONE);
@@ -112,7 +119,9 @@ public class CertificatesFragment extends Fragment {
 
             DownloadManager dm = (DownloadManager) requireContext()
                     .getSystemService(Context.DOWNLOAD_SERVICE);
-            dm.enqueue(request);
+            pendingDownloadId = dm.enqueue(request);
+
+            registerDownloadReceiver(dm);
 
             Toast.makeText(requireContext(),
                     R.string.cert_download_started, Toast.LENGTH_SHORT).show();
@@ -120,5 +129,44 @@ public class CertificatesFragment extends Fragment {
             Toast.makeText(requireContext(),
                     R.string.cert_download_auth_error, Toast.LENGTH_SHORT).show()
         );
+    }
+
+    private void registerDownloadReceiver(DownloadManager dm) {
+        if (downloadReceiver != null) {
+            requireContext().unregisterReceiver(downloadReceiver);
+        }
+        downloadReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
+                if (id != pendingDownloadId) return;
+                Uri uri = dm.getUriForDownloadedFile(id);
+                if (uri == null) return;
+                Intent open = new Intent(Intent.ACTION_VIEW);
+                open.setDataAndType(uri, "application/pdf");
+                open.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                try {
+                    startActivity(open);
+                } catch (ActivityNotFoundException e) {
+                    Toast.makeText(context,
+                            R.string.cert_no_pdf_viewer, Toast.LENGTH_LONG).show();
+                }
+            }
+        };
+        IntentFilter filter = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requireContext().registerReceiver(downloadReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            requireContext().registerReceiver(downloadReceiver, filter);
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (downloadReceiver != null) {
+            requireContext().unregisterReceiver(downloadReceiver);
+            downloadReceiver = null;
+        }
     }
 }

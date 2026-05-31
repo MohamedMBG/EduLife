@@ -160,6 +160,7 @@
     <string name="cert_download_started">Downloading certificate…</string>
     <string name="cert_download_auth_error">Could not authenticate. Try again.</string>
     <string name="cert_download_notification_title">Certificate — %1$s</string>
+    <string name="cert_no_pdf_viewer">No PDF viewer installed. File saved to Downloads.</string>
     <string name="profile_view_certificates">My Certificates</string>
 
     <!-- Exam -->
