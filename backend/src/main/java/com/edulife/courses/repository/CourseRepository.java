@@ -31,6 +31,8 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
     // plainto_tsquery converts a raw user query into a tsquery without requiring special
     // syntax from the caller (unlike to_tsquery which needs explicit AND/OR operators).
     // The separate countQuery is required by Spring Data JPA for native paginated queries.
+    long countByStatus(CourseStatus status);
+
     @Query(
         value = "SELECT * FROM courses WHERE status = 'PUBLISHED' " +
                 "AND search_vector @@ plainto_tsquery('simple', :query) " +

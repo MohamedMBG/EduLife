@@ -1,8 +1,10 @@
 package com.edulife.auth.service;
 
+import com.edulife.auth.dto.AuthSyncRequest;
 import com.edulife.auth.dto.AuthSyncResponse;
 import com.edulife.security.FirebaseAuthentication;
 import com.edulife.users.entity.User;
+import com.edulife.users.model.UserRole;
 import com.edulife.users.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.security.core.Authentication;
@@ -19,10 +21,9 @@ public class AuthSyncService {
     }
 
     @Transactional
-    public AuthSyncResponse syncCurrentUser() {
+    public AuthSyncResponse syncCurrentUser(AuthSyncRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        // Only the Firebase filter is allowed to populate identity for auth sync, so reject any unexpected auth type.
         if (!(authentication instanceof FirebaseAuthentication firebaseAuth)) {
             throw new IllegalStateException("Firebase authentication is required for auth sync.");
         }
@@ -30,7 +31,6 @@ public class AuthSyncService {
         String firebaseUid = firebaseAuth.getFirebaseUid();
         String email = firebaseAuth.getEmail();
 
-        // These values must come from Firebase Admin token verification; missing values indicate a broken security context.
         if (firebaseUid == null || firebaseUid.isBlank()) {
             throw new IllegalStateException("Firebase UID is missing from authentication context.");
         }
@@ -39,11 +39,26 @@ public class AuthSyncService {
             throw new IllegalStateException("Firebase email is missing from authentication context.");
         }
 
-        // Keep sync idempotent: repeated logins for the same Firebase user must reuse the same internal UUID.
         User user = userRepository.findByFirebaseUid(firebaseUid)
-                .orElseGet(() -> userRepository.save(new User(firebaseUid, email)));
+                .orElseGet(() -> {
+                    User newUser = new User(firebaseUid, email);
+                    // intendedRole is only applied on first sync. ADMIN cannot be self-assigned.
+                    UserRole role = resolveIntendedRole(request);
+                    newUser.setRole(role);
+                    return userRepository.save(newUser);
+                });
 
-        // Never expose firebaseUid in API responses; Android should use only EduLife's internal UUID and role.
         return new AuthSyncResponse(user.getId(), user.getRole());
+    }
+
+    private UserRole resolveIntendedRole(AuthSyncRequest request) {
+        if (request == null || request.intendedRole() == null) {
+            return UserRole.LEARNER;
+        }
+        // ADMIN cannot be self-assigned through registration.
+        if (request.intendedRole() == UserRole.ADMIN) {
+            return UserRole.LEARNER;
+        }
+        return request.intendedRole();
     }
 }

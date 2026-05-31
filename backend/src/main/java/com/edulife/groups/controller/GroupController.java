@@ -21,8 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/groups")
-// All group management endpoints sit behind TEACHER/ADMIN so LEARNERs cannot create or mutate cohorts.
-@PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
+// GROUP_ADMIN manages institute groups; TEACHER manages their own cohorts; ADMIN can manage all.
+@PreAuthorize("hasAnyRole('TEACHER','GROUP_ADMIN','ADMIN')")
 public class GroupController {
 
     private final GroupService groupService;

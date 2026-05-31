@@ -15,9 +15,11 @@ export interface PageResponse<T> {
   empty: boolean;
 }
 
+export type UserRole = "LEARNER" | "TEACHER" | "GROUP_ADMIN" | "ADMIN";
+
 export interface AuthSyncResponse {
   userId: string;
-  role: string;
+  role: UserRole;
 }
 
 export interface CourseSummary {

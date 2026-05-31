@@ -103,11 +103,9 @@ public class GroupService {
         Group group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Group not found"));
 
-        boolean isAdmin = currentUser.getRole() == UserRole.ADMIN;
+        boolean isPlatformAdmin = currentUser.getRole() == UserRole.ADMIN;
         boolean isCreator = group.getCreatedBy().equals(currentUser.getId());
-        if (!isAdmin && !isCreator) {
-            // Method-level @PreAuthorize gates role; this additional check enforces per-group
-            // ownership so a TEACHER cannot manage another teacher's cohort.
+        if (!isPlatformAdmin && !isCreator) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not the group owner");
         }
         return group;

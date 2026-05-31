@@ -21,4 +21,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     // Admin user list — role filter stays in the repository so paginated counts remain correct.
     Page<User> findAllByRole(UserRole role, Pageable pageable);
+
+    long countByRole(UserRole role);
 }

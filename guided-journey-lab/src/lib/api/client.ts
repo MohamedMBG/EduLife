@@ -2,6 +2,7 @@ import { appEnv, getEnvConfigurationError } from "../env";
 import type {
   ApiErrorPayload,
   AuthSyncResponse,
+  UserRole,
   CourseDetail,
   Certificate,
   CourseProgress,
@@ -128,13 +129,17 @@ async function makeRequest<T>(path: string, options: RequestOptions = {}) {
   return (await response.json()) as T;
 }
 
-export function syncAuth(getAccessToken: RequestOptions["getAccessToken"]) {
+export function syncAuth(
+  getAccessToken: RequestOptions["getAccessToken"],
+  intendedRole?: UserRole,
+) {
   if (appEnv.demoMode) {
     return demoSyncAuth();
   }
 
   return makeRequest<AuthSyncResponse>("api/v1/auth/sync", {
     method: "POST",
+    body: intendedRole ? { intendedRole } : undefined,
     getAccessToken,
   });
 }
