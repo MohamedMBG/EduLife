@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
-  GraduationCap, Home, BookOpen, Compass, Award, Settings,
+  GraduationCap, Home, BookOpen, Compass, Award,
   LogOut, Shield, Zap, Target, Trophy, Crown, Lock,
   Star, Flame, CheckCircle, ArrowLeft, TrendingUp, Menu, X,
   ChevronUp, ChevronDown, Minus, Swords, Scroll, Sparkles,
@@ -92,11 +92,10 @@ const weeklyXp = [
 const streakDays = ["M","T","W","T","F","S","S"];
 
 const navLinks = [
-  { icon: Home,     label: "Home",         to: "/dashboard" as const },
-  { icon: BookOpen, label: "My Courses",   to: "/courses"   as const },
-  { icon: Compass,  label: "Explore",      to: "/explore"   as const },
-  { icon: Award,    label: "Certificates", to: "/dashboard" as const },
-  { icon: Settings, label: "Settings",     to: "/dashboard" as const },
+  { icon: Home,     label: "Home",         to: "/dashboard"     as const },
+  { icon: BookOpen, label: "My Courses",   to: "/courses"       as const },
+  { icon: Compass,  label: "Explore",      to: "/explore"       as const },
+  { icon: Award,    label: "Certificates", to: "/certificates"  as const },
 ];
 
 const rarityConfig: Record<BadgeRarity, { label: string; color: string; bg: string; border: string; glow: string }> = {

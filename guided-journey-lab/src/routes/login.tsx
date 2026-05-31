@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { GraduationCap, Eye, EyeOff, ArrowRight, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
+import { useAuth } from "../lib/auth/auth-context";
+import { appEnv } from "../lib/env";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -20,12 +22,30 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
+  const auth = useAuth();
 
-  function handleSubmit(e: React.FormEvent) {
+  useEffect(() => {
+    if (auth.status === "authenticated") {
+      navigate({ to: "/dashboard" });
+    }
+  }, [auth.status, navigate]);
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // TODO: wire to /api/auth/login
-    navigate({ to: "/dashboard" });
+    setSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      await auth.login(email, password);
+      navigate({ to: "/dashboard" });
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "Unable to sign in.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -61,7 +81,9 @@ function LoginPage() {
             Welcome back
           </h1>
           <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-            Sign in to continue your learning journey.
+            {appEnv.demoMode
+              ? "Demo mode runs entirely in the browser. Use any email and password to open the learner flow locally."
+              : "Sign in with Firebase, then the website will sync your EduLife learner profile with the backend."}
           </p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
@@ -127,11 +149,18 @@ function LoginPage() {
 
             <button
               type="submit"
+              disabled={submitting || (!auth.configured && !appEnv.demoMode)}
               className="group w-full h-12 inline-flex items-center justify-center gap-2 rounded-full bg-foreground text-background text-sm font-medium shadow-elevated hover:opacity-90 active:scale-[0.98] transition-all"
             >
-              Sign In
+              {submitting ? "Signing in..." : "Sign In"}
               <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
             </button>
+
+            {(submitError || auth.error) && (
+              <div className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+                {submitError || auth.error}
+              </div>
+            )}
           </form>
 
           <div className="mt-8 pt-6 border-t border-border text-center">

@@ -2,6 +2,8 @@ import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { GraduationCap, Eye, EyeOff, ArrowRight, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
+import { useAuth } from "../lib/auth/auth-context";
+import { appEnv } from "../lib/env";
 
 export const Route = createFileRoute("/register")({
   component: RegisterPage,
@@ -20,7 +22,11 @@ function RegisterPage() {
   const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
+  const auth = useAuth();
 
   const passwordMismatch = form.confirm.length > 0 && form.confirm !== form.password;
 
@@ -28,11 +34,29 @@ function RegisterPage() {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (passwordMismatch) return;
-    // TODO: wire to /api/auth/register
-    navigate({ to: "/dashboard" });
+
+    setSubmitting(true);
+    setSubmitError(null);
+    setSuccessMessage(null);
+
+    try {
+      await auth.register({
+        name: form.name,
+        email: form.email,
+        password: form.password,
+      });
+      setSuccessMessage(
+        "Account created. Verify your email first, then sign in so the backend can unlock your learner routes.",
+      );
+      navigate({ to: "/login" });
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "Unable to create the account.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -68,7 +92,9 @@ function RegisterPage() {
             Start your journey
           </h1>
           <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-            Create an account and take your first step.
+            {appEnv.demoMode
+              ? "Create a local demo account to explore the website without Firebase or backend services."
+              : "Create your Firebase account first. Verified email is required before the backend allows course access."}
           </p>
 
           <form onSubmit={handleSubmit} className="mt-5 space-y-4">
@@ -186,12 +212,24 @@ function RegisterPage() {
 
             <button
               type="submit"
-              disabled={passwordMismatch}
+              disabled={passwordMismatch || submitting || (!auth.configured && !appEnv.demoMode)}
               className="group w-full h-12 inline-flex items-center justify-center gap-2 rounded-full bg-foreground text-background text-sm font-medium shadow-elevated hover:opacity-90 active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none transition-all"
             >
-              Create Account
+              {submitting ? "Creating account..." : "Create Account"}
               <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
             </button>
+
+            {(submitError || auth.error || successMessage) && (
+              <div
+                className={`rounded-2xl border px-4 py-3 text-sm ${
+                  submitError || auth.error
+                    ? "border-destructive/20 bg-destructive/5 text-destructive"
+                    : "border-primary/20 bg-primary/5 text-primary"
+                }`}
+              >
+                {submitError || auth.error || successMessage}
+              </div>
+            )}
           </form>
 
           <div className="mt-5 pt-5 border-t border-border text-center">
