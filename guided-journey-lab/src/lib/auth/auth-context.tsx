@@ -10,6 +10,7 @@ import {
 import { useNavigate } from "@tanstack/react-router";
 import type { User as FirebaseUser } from "firebase/auth";
 import { ApiClientError, syncAuth } from "../api/client";
+import type { UserRole } from "../api/types";
 import { appEnv } from "../env";
 import { demoLogin, demoLogout, demoRegister, getDemoSession } from "../api/demo";
 import { getFirebaseAuth, getFirebaseAuthModule, getFirebaseConfigurationError } from "./firebase";
@@ -23,10 +24,13 @@ export interface AuthSession {
 
 type AuthStatus = "loading" | "authenticated" | "anonymous";
 
+const INTENDED_ROLE_KEY = "edulife_intended_role";
+
 interface RegisterInput {
   name: string;
   email: string;
   password: string;
+  intendedRole?: UserRole;
 }
 
 interface AuthContextValue {
@@ -130,7 +134,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const sync = await syncAuth(async (forceRefresh) => firebaseUser.getIdToken(forceRefresh));
+    const storedRole = localStorage.getItem(INTENDED_ROLE_KEY) as UserRole | null;
+    const sync = await syncAuth(
+      async (forceRefresh) => firebaseUser.getIdToken(forceRefresh),
+      storedRole ?? undefined,
+    );
+    // Clear after first use — subsequent syncs must not re-apply the registration intent.
+    localStorage.removeItem(INTENDED_ROLE_KEY);
 
     commitAuthenticated({
       userId: sync.userId,
@@ -236,8 +246,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await firebaseAuth.updateProfile(credential.user, { displayName: input.name.trim() });
     }
 
-    // Registration stops at email verification because protected backend routes enforce
-    // verified Firebase identities before the learner flow can continue.
+    // Persist intended role so it is passed to /auth/sync after email verification and sign-in.
+    if (input.intendedRole && input.intendedRole !== "LEARNER") {
+      localStorage.setItem(INTENDED_ROLE_KEY, input.intendedRole);
+    }
+
     await firebaseAuth.sendEmailVerification(credential.user);
     await auth.signOut();
     commitAnonymous(

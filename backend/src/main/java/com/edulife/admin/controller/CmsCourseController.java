@@ -20,8 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/cms/courses")
-// TEACHER and ADMIN can create/edit courses; per-course ownership is enforced in the service layer.
-@PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
+// TEACHER, GROUP_ADMIN, and ADMIN can create/edit courses; per-course ownership is enforced in the service layer.
+@PreAuthorize("hasAnyRole('TEACHER','GROUP_ADMIN','ADMIN')")
 public class CmsCourseController {
 
     private final CmsCourseService cmsCourseService;

@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/cms/courses/{courseId}/sections")
 // Section management requires the same role gate as course management.
-@PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
+@PreAuthorize("hasAnyRole('TEACHER','GROUP_ADMIN','ADMIN')")
 public class CmsSectionController {
 
     private final CmsSectionService cmsSectionService;

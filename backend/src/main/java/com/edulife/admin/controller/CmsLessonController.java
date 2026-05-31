@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/cms/sections/{sectionId}/lessons")
-@PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
+@PreAuthorize("hasAnyRole('TEACHER','GROUP_ADMIN','ADMIN')")
 public class CmsLessonController {
 
     private final CmsLessonService cmsLessonService;
