@@ -8,6 +8,7 @@ import com.edulife.enrollments.dto.EnrollmentResponse;
 import com.edulife.enrollments.entity.Enrollment;
 import com.edulife.enrollments.model.EnrollmentStatus;
 import com.edulife.enrollments.repository.EnrollmentRepository;
+import com.edulife.progress.service.ProgressService;
 import com.edulife.security.FirebaseAuthentication;
 import com.edulife.users.entity.User;
 import com.edulife.users.repository.UserRepository;
@@ -30,14 +31,17 @@ public class EnrollmentService {
     private final EnrollmentRepository enrollmentRepository;
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
+    private final ProgressService progressService;
 
     public EnrollmentService(
             EnrollmentRepository enrollmentRepository,
             CourseRepository courseRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            ProgressService progressService) {
         this.enrollmentRepository = enrollmentRepository;
         this.courseRepository = courseRepository;
         this.userRepository = userRepository;
+        this.progressService = progressService;
     }
 
     @Transactional
@@ -62,6 +66,8 @@ public class EnrollmentService {
         } else {
             enrollment = enrollmentRepository.save(new Enrollment(user.getId(), courseId));
         }
+
+        progressService.initializeCourseProgress(user.getId(), courseId);
 
         return new EnrollmentResponse(
                 enrollment.getId(),

@@ -124,6 +124,11 @@ public class ProgressService {
         return new CourseProgressDto(courseId, completed, total, percentComplete, sectionDtos);
     }
 
+    @Transactional
+    public void initializeCourseProgress(UUID userId, UUID courseId) {
+        syncCourseProgress(userId, courseId);
+    }
+
     private void syncCourseProgress(UUID userId, UUID courseId) {
         long total     = lessonRepository.countByCourseId(courseId);
         long completed = lessonProgressRepository.countByUserIdAndCourseId(userId, courseId);
