@@ -67,7 +67,7 @@ class CourseControllerTest {
         );
 
         // Keep the response paginated so Android can rely on the same structure for list rendering.
-        given(courseService.getPublishedCourses(eq("BEGINNER"), any(Pageable.class)))
+        given(courseService.getPublishedCourses(eq("BEGINNER"), any(), any(Pageable.class)))
                 .willReturn(new PageImpl<>(List.of(course), PageRequest.of(0, 20), 1));
 
         mockMvc.perform(get("/api/v1/courses")
@@ -103,7 +103,7 @@ class CourseControllerTest {
     void returnsEmptyPaginatedListWhenNoCoursesExist() throws Exception {
         mockValidFirebaseToken();
 
-        given(courseService.getPublishedCourses(eq(null), any(Pageable.class)))
+        given(courseService.getPublishedCourses(eq(null), any(), any(Pageable.class)))
                 .willReturn(new PageImpl<>(List.of(), PageRequest.of(0, 20), 0));
 
         mockMvc.perform(get("/api/v1/courses")
