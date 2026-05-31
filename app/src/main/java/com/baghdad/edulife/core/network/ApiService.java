@@ -1,6 +1,7 @@
 package com.baghdad.edulife.core.network;
 
 import com.baghdad.edulife.features.auth.model.AuthSyncResponse;
+import com.baghdad.edulife.features.certificates.model.CertificateSummary;
 import com.baghdad.edulife.features.courses.model.CourseDetail;
 import com.baghdad.edulife.features.courses.model.CoursePageResponse;
 import com.baghdad.edulife.features.courses.model.CourseSummary;
@@ -121,5 +122,8 @@ public interface ApiService {
             @Path("courseId") String courseId,
             @Body SubmitExamRequest request
     );
+
+    @GET("certificates/me")
+    Call<List<CertificateSummary>> getMyCertificates();
 }
 

@@ -55,6 +55,10 @@ public class ProfileFragment extends Fragment {
         observeProfile(view);
         profileViewModel.loadProfile();
 
+        view.findViewById(R.id.profileCertificatesRow).setOnClickListener(v ->
+                Navigation.findNavController(v)
+                        .navigate(R.id.action_profileFragment_to_certificatesFragment));
+
         view.findViewById(R.id.logoutButton).setOnClickListener(v -> {
             authViewModel.signOut();
             NavOptions options = new NavOptions.Builder()

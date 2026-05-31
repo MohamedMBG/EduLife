@@ -75,7 +75,15 @@
             app:destination="@id/loginFragment"
             app:popUpTo="@id/nav_graph"
             app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_profileFragment_to_certificatesFragment"
+            app:destination="@id/certificatesFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/certificatesFragment"
+        android:name="com.baghdad.edulife.features.certificates.ui.CertificatesFragment"
+        android:label="Certificates" />
 
     <fragment
         android:id="@+id/courseDetailFragment"

@@ -149,6 +149,19 @@
     <string name="profile_delete_account_success">Account deleted.</string>
     <string name="profile_delete_account_error">Could not delete account. Try again.</string>
 
+    <!-- Certificates -->
+    <string name="certs_eyebrow">Achievements</string>
+    <string name="certs_title">My Certificates</string>
+    <string name="certs_subtitle">Proof of your completed learning journeys.</string>
+    <string name="certs_empty_title">No certificates yet</string>
+    <string name="certs_empty_subtitle">Complete a course exam with a passing score to earn your first certificate.</string>
+    <string name="cert_issued_label">Issued</string>
+    <string name="cert_download_pdf">Download PDF</string>
+    <string name="cert_download_started">Downloading certificate…</string>
+    <string name="cert_download_auth_error">Could not authenticate. Try again.</string>
+    <string name="cert_download_notification_title">Certificate — %1$s</string>
+    <string name="profile_view_certificates">My Certificates</string>
+
     <!-- Exam -->
     <string name="exam_title_default">Final Exam</string>
     <string name="exam_pass_score_label">Pass score: %1$d%%</string>
