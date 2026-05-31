@@ -5,6 +5,7 @@ import com.baghdad.edulife.core.network.ApiService;
 import com.baghdad.edulife.features.courses.model.ExamCooldownError;
 import com.baghdad.edulife.features.courses.model.ExamResponse;
 import com.baghdad.edulife.features.courses.model.ExamResultResponse;
+import com.baghdad.edulife.features.courses.model.ExamStatusResponse;
 import com.baghdad.edulife.features.courses.model.SubmitExamRequest;
 import com.google.gson.Gson;
 
@@ -24,6 +25,11 @@ public class ExamRepository {
 
     public interface ExamCallback {
         void onSuccess(ExamResponse exam);
+        void onError(String message);
+    }
+
+    public interface ExamStatusCallback {
+        void onSuccess(ExamStatusResponse status);
         void onError(String message);
     }
 
@@ -55,6 +61,32 @@ public class ExamRepository {
 
             @Override
             public void onFailure(Call<ExamResponse> call, Throwable t) {
+                callback.onError("Network error: " + t.getMessage());
+            }
+        });
+    }
+
+    public void getExamStatus(String courseId, ExamStatusCallback callback) {
+        apiService.getExamStatus(courseId).enqueue(new Callback<ExamStatusResponse>() {
+            @Override
+            public void onResponse(Call<ExamStatusResponse> call, Response<ExamStatusResponse> response) {
+                if (response.code() == 403) {
+                    callback.onError("You must be enrolled to take this exam.");
+                    return;
+                }
+                if (response.code() == 404) {
+                    callback.onError("No exam found for this course.");
+                    return;
+                }
+                if (!response.isSuccessful() || response.body() == null) {
+                    callback.onError("Failed to load exam status. Status: " + response.code());
+                    return;
+                }
+                callback.onSuccess(response.body());
+            }
+
+            @Override
+            public void onFailure(Call<ExamStatusResponse> call, Throwable t) {
                 callback.onError("Network error: " + t.getMessage());
             }
         });

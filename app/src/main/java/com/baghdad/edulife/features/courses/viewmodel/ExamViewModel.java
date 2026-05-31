@@ -9,6 +9,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.baghdad.edulife.features.courses.data.ExamRepository;
 import com.baghdad.edulife.features.courses.model.ExamResultResponse;
+import com.baghdad.edulife.features.courses.model.ExamStatusUiState;
 import com.baghdad.edulife.features.courses.model.ExamSubmitUiState;
 import com.baghdad.edulife.features.courses.model.ExamUiState;
 import com.baghdad.edulife.features.courses.model.SubmitExamRequest;
@@ -18,6 +19,8 @@ import java.util.List;
 public class ExamViewModel extends AndroidViewModel {
 
     private final ExamRepository examRepository;
+    private final MutableLiveData<ExamStatusUiState> examStatusState =
+            new MutableLiveData<>(ExamStatusUiState.idle());
     private final MutableLiveData<ExamUiState> examState = new MutableLiveData<>(ExamUiState.idle());
     private final MutableLiveData<ExamSubmitUiState> submitState = new MutableLiveData<>(ExamSubmitUiState.idle());
 
@@ -26,12 +29,33 @@ public class ExamViewModel extends AndroidViewModel {
         this.examRepository = new ExamRepository();
     }
 
+    public LiveData<ExamStatusUiState> getExamStatusState() {
+        return examStatusState;
+    }
+
     public LiveData<ExamUiState> getExamState() {
         return examState;
     }
 
     public LiveData<ExamSubmitUiState> getSubmitState() {
         return submitState;
+    }
+
+    public void loadExamStatus(String courseId) {
+        examStatusState.setValue(ExamStatusUiState.loading());
+        examRepository.getExamStatus(courseId, new ExamRepository.ExamStatusCallback() {
+            @Override
+            public void onSuccess(com.baghdad.edulife.features.courses.model.ExamStatusResponse status) {
+                // Status gates the entire exam screen, so it has its own LiveData instead of being
+                // merged into question loading state.
+                examStatusState.postValue(ExamStatusUiState.success(status));
+            }
+
+            @Override
+            public void onError(String message) {
+                examStatusState.postValue(ExamStatusUiState.error(message));
+            }
+        });
     }
 
     public void loadExam(String courseId) {
