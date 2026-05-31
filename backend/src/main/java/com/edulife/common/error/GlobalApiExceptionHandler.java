@@ -4,6 +4,8 @@ import com.edulife.certificates.exception.CertificateAccessDeniedException;
 import com.edulife.certificates.exception.CertificateAlreadyExistsException;
 import com.edulife.certificates.exception.CertificateGenerationException;
 import com.edulife.certificates.exception.CertificateNotFoundException;
+import com.edulife.exams.exception.ExamAlreadyPassedException;
+import com.edulife.exams.exception.ExamCooldownException;
 import com.edulife.teacherrequests.exception.AlreadyTeacherOrAdminException;
 import com.edulife.teacherrequests.exception.TeacherRequestAlreadyPendingException;
 import com.edulife.teacherrequests.exception.TeacherRequestNotFoundException;
@@ -44,6 +46,18 @@ public class GlobalApiExceptionHandler {
     public ResponseEntity<ApiError> handleCertificateGeneration(CertificateGenerationException ex) {
         log.error("Certificate generation failed.", ex);
         return build(HttpStatus.INTERNAL_SERVER_ERROR, "Certificate generation failed");
+    }
+
+    @ExceptionHandler(ExamAlreadyPassedException.class)
+    public ResponseEntity<ApiError> handleExamAlreadyPassed(ExamAlreadyPassedException ex) {
+        return build(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(ExamCooldownException.class)
+    public ResponseEntity<ExamCooldownError> handleExamCooldown(ExamCooldownException ex) {
+        return ResponseEntity
+                .status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(ExamCooldownError.of(ex.getMessage(), ex.getCooldownEndsAt()));
     }
 
     @ExceptionHandler(TeacherRequestNotFoundException.class)

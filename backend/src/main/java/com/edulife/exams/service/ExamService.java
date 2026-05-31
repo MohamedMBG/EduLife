@@ -11,6 +11,8 @@ import com.edulife.exams.entity.Exam;
 import com.edulife.exams.entity.ExamAttempt;
 import com.edulife.exams.entity.ExamChoice;
 import com.edulife.exams.entity.ExamQuestion;
+import com.edulife.exams.exception.ExamAlreadyPassedException;
+import com.edulife.exams.exception.ExamCooldownException;
 import com.edulife.exams.repository.ExamAttemptRepository;
 import com.edulife.exams.repository.ExamChoiceRepository;
 import com.edulife.exams.repository.ExamQuestionRepository;
@@ -19,6 +21,8 @@ import com.edulife.security.FirebaseAuthentication;
 import com.edulife.users.entity.User;
 import com.edulife.users.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -106,6 +110,21 @@ public class ExamService {
         Exam exam = examRepository.findByCourseId(courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No exam found for this course"));
 
+        if (attemptRepository.existsByUserIdAndExamIdAndPassedTrue(user.getId(), exam.getId())) {
+            throw new ExamAlreadyPassedException();
+        }
+
+        long failedCount = attemptRepository.countByUserIdAndExamIdAndPassedFalse(user.getId(), exam.getId());
+        if (failedCount >= 2) {
+            ExamAttempt lastFailure = attemptRepository
+                    .findTopByUserIdAndExamIdAndPassedFalseOrderByTakenAtDesc(user.getId(), exam.getId())
+                    .orElseThrow();
+            Instant cooldownEndsAt = lastFailure.getTakenAt().plus(72, ChronoUnit.HOURS);
+            if (Instant.now().isBefore(cooldownEndsAt)) {
+                throw new ExamCooldownException(cooldownEndsAt);
+            }
+        }
+
         List<ExamQuestion> questions = questionRepository.findAllByExamIdOrderByOrderIndexAsc(exam.getId());
         Set<UUID> validQuestionIds = questions.stream().map(ExamQuestion::getId).collect(Collectors.toSet());
 
@@ -143,7 +162,14 @@ public class ExamService {
             certificateNumber = cert.certificateNumber();
         }
 
-        return new ExamResultDto(exam.getId(), score, exam.getPassScore(), passed, certificateNumber);
+        long totalFailed = attemptRepository.countByUserIdAndExamIdAndPassedFalse(user.getId(), exam.getId());
+        Instant cooldownEndsAt = null;
+        if (!passed && totalFailed >= 2) {
+            cooldownEndsAt = savedAttempt.getTakenAt().plus(72, ChronoUnit.HOURS);
+        }
+
+        return new ExamResultDto(exam.getId(), score, exam.getPassScore(), passed, certificateNumber,
+                (int) totalFailed, cooldownEndsAt);
     }
 
     private User resolveCurrentUser() {

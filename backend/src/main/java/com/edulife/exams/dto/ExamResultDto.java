@@ -1,5 +1,6 @@
 package com.edulife.exams.dto;
 
+import java.time.Instant;
 import java.util.UUID;
 
 public record ExamResultDto(
@@ -7,5 +8,7 @@ public record ExamResultDto(
         int score,
         int passScore,
         boolean passed,
-        String certificateNumber
+        String certificateNumber,
+        int attemptsUsed,
+        Instant cooldownEndsAt
 ) {}
