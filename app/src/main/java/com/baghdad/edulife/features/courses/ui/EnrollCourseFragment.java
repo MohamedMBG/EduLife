@@ -72,7 +72,6 @@ public class EnrollCourseFragment extends Fragment {
                 NavController nav = Navigation.findNavController(view);
                 NavOptions opts = new NavOptions.Builder()
                         .setLaunchSingleTop(true)
-                        .setRestoreState(true)
                         .setPopUpTo(R.id.homeFragment, false, true)
                         .build();
                 nav.navigate(R.id.coursesFragment, null, opts);

@@ -20,11 +20,18 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.NavBackStackEntry;
+import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
 import com.baghdad.edulife.R;
 import com.baghdad.edulife.features.courses.data.CourseRepository;
+import com.baghdad.edulife.features.courses.model.CourseDetail;
+import com.baghdad.edulife.features.courses.model.CourseDetailUiState;
+import com.baghdad.edulife.features.courses.model.CourseSection;
 import com.baghdad.edulife.features.courses.model.LessonDetail;
+import com.baghdad.edulife.features.courses.model.LessonSummary;
+import com.baghdad.edulife.features.courses.viewmodel.CourseDetailViewModel;
 import com.baghdad.edulife.features.courses.viewmodel.LessonPlayerViewModel;
 
 import java.net.URLEncoder;
@@ -98,12 +105,9 @@ public class LessonPlayerFragment extends Fragment {
         view.findViewById(R.id.playerPlayButton).setOnClickListener(v -> openInAppViewer());
 
         view.findViewById(R.id.lessonPrevButton).setOnClickListener(v ->
-                Toast.makeText(requireContext(),
-                        R.string.lesson_player_prev_unavailable, Toast.LENGTH_SHORT).show());
+                Navigation.findNavController(view).popBackStack());
 
-        view.findViewById(R.id.lessonNextButton).setOnClickListener(v ->
-                Toast.makeText(requireContext(),
-                        R.string.lesson_player_next_unavailable, Toast.LENGTH_SHORT).show());
+        setupNextLessonButton(view);
 
         markCompleteButton = view.findViewById(R.id.lessonMarkCompleteButton);
 
@@ -322,6 +326,78 @@ public class LessonPlayerFragment extends Fragment {
             viewerWebView = null;
         }
         super.onDestroyView();
+    }
+
+    private void setupNextLessonButton(View root) {
+        Button nextBtn = root.findViewById(R.id.lessonNextButton);
+        try {
+            NavController nav = Navigation.findNavController(root);
+            NavBackStackEntry courseEntry = nav.getBackStackEntry(R.id.courseDetailFragment);
+            CourseDetailViewModel courseVm =
+                    new ViewModelProvider(courseEntry).get(CourseDetailViewModel.class);
+            CourseDetailUiState state = courseVm.getUiState().getValue();
+            if (state == null || state.courseDetail == null) {
+                nextBtn.setAlpha(0.4f);
+                nextBtn.setEnabled(false);
+                return;
+            }
+            LessonInfo next = findNextLesson(state.courseDetail);
+            if (next == null) {
+                nextBtn.setAlpha(0.4f);
+                nextBtn.setEnabled(false);
+                return;
+            }
+            NavController finalNav = nav;
+            nextBtn.setOnClickListener(v -> {
+                Bundle nextArgs = new Bundle();
+                nextArgs.putString("courseId",       courseId);
+                nextArgs.putString("lessonId",       next.id);
+                nextArgs.putString("lessonTitle",    next.title);
+                nextArgs.putString("lessonSummary",  next.summary);
+                nextArgs.putString("lessonType",     next.lessonType);
+                nextArgs.putInt("durationMinutes",   next.durationMinutes);
+                nextArgs.putBoolean("isPreview",     next.preview);
+                nextArgs.putString("sectionTitle",   next.sectionTitle);
+                nextArgs.putInt("orderInSection",    next.displayOrder);
+                finalNav.navigate(R.id.lessonPlayerFragment, nextArgs);
+            });
+        } catch (IllegalArgumentException ignored) {
+            nextBtn.setAlpha(0.4f);
+            nextBtn.setEnabled(false);
+        }
+    }
+
+    @Nullable
+    private LessonInfo findNextLesson(CourseDetail courseDetail) {
+        if (courseDetail.sections == null || lessonId.isBlank()) return null;
+        boolean found = false;
+        for (CourseSection section : courseDetail.sections) {
+            if (section.lessons == null) continue;
+            for (LessonSummary lesson : section.lessons) {
+                if (found && (!isPreview || lesson.preview)) {
+                    return new LessonInfo(section.title != null ? section.title : "", lesson);
+                }
+                if (lessonId.equals(lesson.id)) found = true;
+            }
+        }
+        return null;
+    }
+
+    private static final class LessonInfo {
+        final String id, title, summary, lessonType, sectionTitle;
+        final int durationMinutes, displayOrder;
+        final boolean preview;
+
+        LessonInfo(String sectionTitle, LessonSummary lesson) {
+            this.id           = lesson.id != null ? lesson.id : "";
+            this.title        = lesson.title != null ? lesson.title : "";
+            this.summary      = lesson.summary != null ? lesson.summary : "";
+            this.lessonType   = lesson.lessonType != null ? lesson.lessonType : "";
+            this.sectionTitle = sectionTitle;
+            this.durationMinutes = lesson.estimatedDurationMinutes;
+            this.displayOrder    = lesson.displayOrder;
+            this.preview         = lesson.preview;
+        }
     }
 
     private String normalizeLabel(String raw) {

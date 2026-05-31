@@ -59,4 +59,8 @@ public class Enrollment {
     public void cancel() {
         this.status = EnrollmentStatus.CANCELLED;
     }
+
+    public void reactivate() {
+        this.status = EnrollmentStatus.ACTIVE;
+    }
 }
