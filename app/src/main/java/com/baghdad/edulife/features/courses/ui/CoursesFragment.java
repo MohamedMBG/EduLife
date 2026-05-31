@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -13,6 +14,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.baghdad.edulife.R;
@@ -57,7 +59,7 @@ public class CoursesFragment extends Fragment {
         emptyText = view.findViewById(R.id.coursesEmptyText);
         courseCountText = view.findViewById(R.id.courseCountText);
 
-        adapter = new EnrolledCourseAdapter(this::handleUnenroll);
+        adapter = new EnrolledCourseAdapter(this::handleOpenCourse, this::handleUnenroll);
         RecyclerView recycler = view.findViewById(R.id.coursesRecycler);
         recycler.setAdapter(adapter);
 
@@ -130,6 +132,15 @@ public class CoursesFragment extends Fragment {
         emptyText.setVisibility(View.VISIBLE);
     }
 
+    private void handleOpenCourse(EnrolledCourse course) {
+        if (course.courseId == null || course.courseId.isBlank()) return;
+        Bundle args = new Bundle();
+        args.putString("courseId", course.courseId);
+        args.putBoolean("isEnrolled", true);
+        Navigation.findNavController(requireView())
+                .navigate(R.id.action_coursesFragment_to_courseDetailFragment, args);
+    }
+
     private void handleUnenrollState(UnenrollUiState state) {
         if (state == null) return;
         if (state.errorMessage != null) {
@@ -180,6 +191,10 @@ public class CoursesFragment extends Fragment {
 
     // ── Enrolled Course Adapter ───────────────────────────────────────────────
 
+    interface OpenCourseAction {
+        void onOpen(EnrolledCourse course);
+    }
+
     interface UnenrollAction {
         void onUnenroll(EnrolledCourse course);
     }
@@ -187,10 +202,12 @@ public class CoursesFragment extends Fragment {
     static class EnrolledCourseAdapter extends RecyclerView.Adapter<EnrolledCourseAdapter.VH> {
 
         private List<EnrolledCourse> items = new ArrayList<>();
-        private final UnenrollAction action;
+        private final OpenCourseAction openAction;
+        private final UnenrollAction unenrollAction;
 
-        EnrolledCourseAdapter(UnenrollAction action) {
-            this.action = action;
+        EnrolledCourseAdapter(OpenCourseAction openAction, UnenrollAction unenrollAction) {
+            this.openAction = openAction;
+            this.unenrollAction = unenrollAction;
         }
 
         void setItems(List<EnrolledCourse> list) {
@@ -213,7 +230,8 @@ public class CoursesFragment extends Fragment {
             holder.desc.setText(course.shortDescription != null ? course.shortDescription : "");
             holder.language.setText(normalizeLabel(course.languageCode));
             holder.level.setText(course.level != null ? course.level : "");
-            holder.unenrollBtn.setOnClickListener(v -> action.onUnenroll(course));
+            holder.continueBtn.setOnClickListener(v -> openAction.onOpen(course));
+            holder.unenrollBtn.setOnClickListener(v -> unenrollAction.onUnenroll(course));
         }
 
         @Override
@@ -223,6 +241,7 @@ public class CoursesFragment extends Fragment {
 
         static class VH extends RecyclerView.ViewHolder {
             final TextView title, desc, language, level, unenrollBtn;
+            final Button continueBtn;
 
             VH(@NonNull View itemView) {
                 super(itemView);
@@ -230,6 +249,7 @@ public class CoursesFragment extends Fragment {
                 desc = itemView.findViewById(R.id.enrolledCourseDesc);
                 language = itemView.findViewById(R.id.enrolledCourseLanguage);
                 level = itemView.findViewById(R.id.enrolledLevelBadge);
+                continueBtn = itemView.findViewById(R.id.continueLearningButton);
                 unenrollBtn = itemView.findViewById(R.id.unenrollButton);
             }
         }

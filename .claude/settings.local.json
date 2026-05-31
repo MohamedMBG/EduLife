@@ -18,7 +18,13 @@
       "Bash(gh project *)",
       "Bash(gh label *)",
       "PowerShell(gh project *)",
-      "PowerShell(gh *)"
+      "PowerShell(gh *)",
+      "Bash(git stash *)",
+      "Bash(git commit *)",
+      "Bash(git restore *)",
+      "Bash(gh pr create --base main --head fix/android-avatar-upload --title 'fix\\(android\\): profile avatar upload — response model and drawables' --body ' *)",
+      "Bash(gh pr create --base main --head docs/project-foundation --title 'docs: CLAUDE.md operational guide, academic report, audit docs' --body ' *)",
+      "Bash(gh pr create --base main --head feat/web-backend-integration --title 'feat\\(web\\): full backend integration — API client, auth, new routes' --body ' *)"
     ]
   }
 }

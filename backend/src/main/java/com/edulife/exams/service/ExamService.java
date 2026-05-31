@@ -1,7 +1,7 @@
 package com.edulife.exams.service;
 
-import com.edulife.certificates.entity.Certificate;
-import com.edulife.certificates.repository.CertificateRepository;
+import com.edulife.certificates.dto.CertificateDetailDto;
+import com.edulife.certificates.service.CertificateService;
 import com.edulife.enrollments.model.EnrollmentStatus;
 import com.edulife.enrollments.repository.EnrollmentRepository;
 import com.edulife.exams.dto.ExamDto;
@@ -19,7 +19,6 @@ import com.edulife.security.FirebaseAuthentication;
 import com.edulife.users.entity.User;
 import com.edulife.users.repository.UserRepository;
 import jakarta.transaction.Transactional;
-import java.time.Year;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +38,7 @@ public class ExamService {
     private final ExamQuestionRepository questionRepository;
     private final ExamChoiceRepository choiceRepository;
     private final ExamAttemptRepository attemptRepository;
-    private final CertificateRepository certificateRepository;
+    private final CertificateService certificateService;
     private final EnrollmentRepository enrollmentRepository;
     private final UserRepository userRepository;
 
@@ -48,14 +47,14 @@ public class ExamService {
             ExamQuestionRepository questionRepository,
             ExamChoiceRepository choiceRepository,
             ExamAttemptRepository attemptRepository,
-            CertificateRepository certificateRepository,
+            CertificateService certificateService,
             EnrollmentRepository enrollmentRepository,
             UserRepository userRepository) {
         this.examRepository = examRepository;
         this.questionRepository = questionRepository;
         this.choiceRepository = choiceRepository;
         this.attemptRepository = attemptRepository;
-        this.certificateRepository = certificateRepository;
+        this.certificateService = certificateService;
         this.enrollmentRepository = enrollmentRepository;
         this.userRepository = userRepository;
     }
@@ -82,7 +81,6 @@ public class ExamService {
 
         List<ExamDto.QuestionDto> questionDtos = questions.stream().map(q -> {
             List<ExamChoice> choices = choicesByQuestion.getOrDefault(q.getId(), List.of());
-            // Shuffle choices so correct answer position varies between attempts
             List<ExamChoice> shuffled = new java.util.ArrayList<>(choices);
             Collections.shuffle(shuffled);
             List<ExamDto.ChoiceDto> choiceDtos = shuffled.stream()
@@ -111,7 +109,6 @@ public class ExamService {
         List<ExamQuestion> questions = questionRepository.findAllByExamIdOrderByOrderIndexAsc(exam.getId());
         Set<UUID> validQuestionIds = questions.stream().map(ExamQuestion::getId).collect(Collectors.toSet());
 
-        // Validate all submitted questionIds belong to this exam
         for (SubmitExamRequest.AnswerDto answer : request.answers()) {
             if (!validQuestionIds.contains(answer.questionId())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -119,7 +116,6 @@ public class ExamService {
             }
         }
 
-        // Bulk-load all choices for the exam questions
         List<UUID> questionIds = questions.stream().map(ExamQuestion::getId).toList();
         Map<UUID, ExamChoice> choiceById = choiceRepository
                 .findAllByQuestionIdIn(questionIds)
@@ -138,22 +134,16 @@ public class ExamService {
         int score = total == 0 ? 0 : (int) Math.round((correct * 100.0) / total);
         boolean passed = score >= exam.getPassScore();
 
-        attemptRepository.save(new ExamAttempt(user.getId(), exam.getId(), score, passed));
+        ExamAttempt savedAttempt = attemptRepository.save(new ExamAttempt(user.getId(), exam.getId(), score, passed));
 
-        // Issue certificate on first pass — idempotent
         String certificateNumber = null;
-        if (passed && !certificateRepository.existsByUserIdAndCourseId(user.getId(), courseId)) {
-            certificateNumber = generateCertificateNumber();
-            certificateRepository.save(new Certificate(user.getId(), courseId, certificateNumber));
+        if (passed) {
+            CertificateDetailDto cert = certificateService.generateCertificateAfterExamPass(
+                    user.getId(), courseId, savedAttempt.getId());
+            certificateNumber = cert.certificateNumber();
         }
 
         return new ExamResultDto(exam.getId(), score, exam.getPassScore(), passed, certificateNumber);
-    }
-
-    private String generateCertificateNumber() {
-        String year = String.valueOf(Year.now().getValue());
-        String unique = UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();
-        return "EL-" + year + "-" + unique;
     }
 
     private User resolveCurrentUser() {

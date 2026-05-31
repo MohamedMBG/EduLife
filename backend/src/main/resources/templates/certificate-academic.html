@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"/>
+<style>
+body {
+    font-family: Georgia, serif;
+    background: #fffff8;
+    color: #1a1a2e;
+    margin: 0;
+    padding: 0;
+}
+.page {
+    width: 793px;
+    padding: 40px;
+}
+.border-outer {
+    border: 3px solid #1a3a6b;
+    padding: 30px;
+}
+.border-inner {
+    border: 1px solid #c9a227;
+    padding: 30px;
+}
+.header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+.brand {
+    font-size: 13px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #1a3a6b;
+    margin-bottom: 8px;
+}
+.cert-title {
+    font-size: 28px;
+    font-weight: normal;
+    letter-spacing: 2px;
+    color: #1a3a6b;
+    margin-bottom: 4px;
+}
+.subtitle {
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #c9a227;
+}
+.divider {
+    width: 60px;
+    height: 2px;
+    background: #c9a227;
+    margin: 16px auto;
+}
+.presented {
+    font-size: 12px;
+    text-align: center;
+    color: #555;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.student-name {
+    font-size: 36px;
+    text-align: center;
+    color: #1a1a2e;
+    margin-bottom: 16px;
+    font-style: italic;
+}
+.body-text {
+    font-size: 13px;
+    text-align: center;
+    color: #333;
+    line-height: 1.8;
+    margin-bottom: 16px;
+}
+.course-title {
+    font-size: 20px;
+    text-align: center;
+    color: #1a3a6b;
+    font-weight: bold;
+    margin-bottom: 24px;
+}
+/* Table layout — flexbox not supported in OpenHTMLToPDF (CSS2.1 engine) */
+.footer-table {
+    width: 100%;
+    margin-top: 32px;
+    border-collapse: collapse;
+}
+.footer-table td {
+    vertical-align: bottom;
+    padding: 0;
+}
+.footer-left-cell {
+    font-size: 11px;
+    color: #555;
+    line-height: 1.8;
+    width: 40%;
+}
+.footer-center-cell {
+    text-align: center;
+    width: 30%;
+}
+.footer-right-cell {
+    text-align: right;
+    width: 30%;
+}
+.meta-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #999;
+}
+.meta-row {
+    margin-top: 12px;
+}
+.signature-block {
+    border-top: 1px solid #333;
+    padding-top: 6px;
+    font-size: 11px;
+    color: #333;
+}
+.sig-role {
+    font-size: 10px;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+}
+.qr-img {
+    width: 80px;
+    height: 80px;
+}
+.qr-label {
+    font-size: 9px;
+    color: #999;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="border-outer">
+    <div class="border-inner">
+
+      <div class="header">
+        <div class="brand">EduLife &#183; Educational Platform</div>
+        <div class="cert-title">Certificate of Completion</div>
+        <div class="subtitle">Academic Achievement</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="presented">This certifies that</div>
+
+      <div class="student-name" th:text="${studentName}">Student Name</div>
+
+      <div class="body-text">
+        has successfully completed all requirements and passed the final examination for the course
+      </div>
+
+      <div class="course-title" th:text="${courseTitle}">Course Title</div>
+
+      <div class="body-text">
+        achieving a passing score and demonstrating mastery of the subject matter.
+      </div>
+
+      <table class="footer-table">
+        <tr>
+          <td class="footer-left-cell">
+            <div>
+              <div class="meta-label">Instructor</div>
+              <div th:text="${issuerName}">Instructor Name</div>
+            </div>
+            <div class="meta-row">
+              <div class="meta-label">Issue Date</div>
+              <div th:text="${issuedAt}">January 1, 2026</div>
+            </div>
+            <div class="meta-row">
+              <div class="meta-label">Certificate ID</div>
+              <div th:text="${certificateNumber}">EL-2026-XXXXXX</div>
+            </div>
+            <div class="meta-row">
+              <div class="meta-label">Verification Code</div>
+              <div th:text="${verificationCode}">abc123...</div>
+            </div>
+          </td>
+          <td class="footer-center-cell">
+            <div class="signature-block" th:text="${issuerName}">Instructor Name</div>
+            <div class="sig-role">Authorized Signatory</div>
+          </td>
+          <td class="footer-right-cell">
+            <img class="qr-img" th:attr="src=${qrCodeDataUri}" alt="Verification QR Code"/>
+            <div class="qr-label">Scan to verify</div>
+          </td>
+        </tr>
+      </table>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

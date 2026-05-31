@@ -1,5 +1,9 @@
 package com.edulife.common.error;
 
+import com.edulife.certificates.exception.CertificateAccessDeniedException;
+import com.edulife.certificates.exception.CertificateAlreadyExistsException;
+import com.edulife.certificates.exception.CertificateGenerationException;
+import com.edulife.certificates.exception.CertificateNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -16,6 +20,27 @@ import org.springframework.web.server.ResponseStatusException;
 public class GlobalApiExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalApiExceptionHandler.class);
+
+    @ExceptionHandler(CertificateNotFoundException.class)
+    public ResponseEntity<ApiError> handleCertificateNotFound(CertificateNotFoundException ex) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(CertificateAccessDeniedException.class)
+    public ResponseEntity<ApiError> handleCertificateAccessDenied(CertificateAccessDeniedException ex) {
+        return build(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+
+    @ExceptionHandler(CertificateAlreadyExistsException.class)
+    public ResponseEntity<ApiError> handleCertificateAlreadyExists(CertificateAlreadyExistsException ex) {
+        return build(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(CertificateGenerationException.class)
+    public ResponseEntity<ApiError> handleCertificateGeneration(CertificateGenerationException ex) {
+        log.error("Certificate generation failed.", ex);
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Certificate generation failed");
+    }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiError> handleBadRequest(IllegalArgumentException exception) {

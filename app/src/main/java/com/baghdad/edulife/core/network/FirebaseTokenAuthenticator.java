@@ -3,6 +3,7 @@ package com.baghdad.edulife.core.network;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.baghdad.edulife.core.session.SessionEventBus;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -55,14 +56,14 @@ public class FirebaseTokenAuthenticator implements Authenticator {
                 Thread.currentThread().interrupt();
                 return null;
             } catch (Exception e) {
-                // Sign-out is a UI concern (it should also clear local SessionStorage and
-                // navigate to login); leaving it to AuthRepository keeps the network layer
-                // free of UI side effects and avoids logging the user out on transient
-                // network blips inside OkHttp.
+                SessionEventBus.postSessionExpired();
                 return null;
             }
 
             if (refreshedToken == null || refreshedToken.isBlank()) {
+                // Sign-out is a UI concern — post to the bus so the host activity drives
+                // teardown from the main thread instead of the OkHttp worker thread.
+                SessionEventBus.postSessionExpired();
                 return null;
             }
 

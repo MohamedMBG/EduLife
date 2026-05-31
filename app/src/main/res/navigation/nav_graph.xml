@@ -101,12 +101,19 @@
             android:name="courseDesc"
             app:argType="string"
             android:defaultValue="" />
+        <argument
+            android:name="isEnrolled"
+            app:argType="boolean"
+            android:defaultValue="false" />
         <action
             android:id="@+id/action_courseDetailFragment_to_enrollCourseFragment"
             app:destination="@id/enrollCourseFragment" />
         <action
             android:id="@+id/action_courseDetailFragment_to_lessonPlayerFragment"
             app:destination="@id/lessonPlayerFragment" />
+        <action
+            android:id="@+id/action_courseDetailFragment_to_examFragment"
+            app:destination="@id/examFragment" />
     </fragment>
 
     <fragment
@@ -141,6 +148,49 @@
             android:name="lessonCount"
             app:argType="integer"
             android:defaultValue="0" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/examFragment"
+        android:name="com.baghdad.edulife.features.courses.ui.ExamFragment"
+        android:label="Exam">
+        <argument
+            android:name="courseId"
+            app:argType="string"
+            android:defaultValue="" />
+        <action
+            android:id="@+id/action_examFragment_to_examResultFragment"
+            app:destination="@id/examResultFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/examResultFragment"
+        android:name="com.baghdad.edulife.features.courses.ui.ExamResultFragment"
+        android:label="Exam Result">
+        <argument
+            android:name="courseId"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="examId"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="score"
+            app:argType="integer"
+            android:defaultValue="0" />
+        <argument
+            android:name="passScore"
+            app:argType="integer"
+            android:defaultValue="80" />
+        <argument
+            android:name="passed"
+            app:argType="boolean"
+            android:defaultValue="false" />
+        <argument
+            android:name="certificateNumber"
+            app:argType="string"
+            android:defaultValue="" />
     </fragment>
 
     <fragment
