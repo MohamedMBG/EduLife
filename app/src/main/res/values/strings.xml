@@ -21,6 +21,27 @@
     <string name="onboarding_hero_description">Learner overlooking a mountain landscape</string>
     <string name="onboarding_focus_icon_description">Focus symbol</string>
     <string name="onboarding_terms_icon_description">Privacy and terms shield</string>
+    <!-- Auth (shared) -->
+    <string name="auth_google_unavailable">Google sign-in coming soon</string>
+    <string name="auth_forgot_password_unavailable">Password recovery coming soon</string>
+    <string name="auth_full_name_required">Full name is required</string>
+    <string name="auth_email_required">Email is required</string>
+    <string name="auth_password_required">Password is required</string>
+    <string name="auth_password_min_length">Password must be at least 6 characters</string>
+    <string name="auth_passwords_do_not_match">Passwords do not match</string>
+    <string name="auth_terms_required">Please accept the terms before continuing.</string>
+    <string name="auth_creating_account">Creating account…</string>
+    <string name="auth_register_verify_email">Account created. Please verify your email before logging in.</string>
+    <string name="auth_login_button_idle">Log in</string>
+    <string name="auth_login_button_loading">Signing in…</string>
+    <string name="auth_login_email_not_verified">Email not verified. Check your inbox and click the verification link, then try again.</string>
+    <string name="auth_error_server_unreachable">Cannot reach the server. Make sure your phone is on the right network and the backend is running.</string>
+    <string name="auth_error_server_timeout">The server did not answer in time. Check that the backend is running and reachable at the configured IP address.</string>
+    <string name="auth_error_server_rejected">Server rejected the request (%1$s). Contact support if this persists.</string>
+    <string name="auth_error_bad_credentials">Incorrect email or password. Please try again.</string>
+    <string name="auth_error_email_not_verified">Email not verified. Check your inbox and click the verification link.</string>
+    <string name="auth_error_network">Network error. Check your internet connection and try again.</string>
+
     <string name="catalog_title">Course Catalog</string>
     <string name="catalog_subtitle">Browse the live EduLife backend catalog and open a real course structure with sections and lesson previews.</string>
     <string name="catalog_signed_in_as">Signed in as %1$s</string>
@@ -63,6 +84,14 @@
     <string name="enroll_disclaimer">Free to enroll. Certificate requires passing the final exam.</string>
     <string name="enroll_cta">Enroll Now — It\'s Free</string>
     <string name="enrolling">Enrolling…</string>
+    <string name="enroll_success">You\'re enrolled.</string>
+    <string name="enroll_already_enrolled">You\'re already enrolled in this course.</string>
+
+    <!-- My Courses transient states -->
+    <string name="courses_loading">Loading your courses…</string>
+    <string name="courses_load_error">Couldn\'t refresh your courses. Check your connection.</string>
+    <string name="courses_unenroll_error">Couldn\'t unenroll. Try again.</string>
+    <string name="courses_unenroll_success">Unenrolled.</string>
 
     <!-- Lesson player -->
     <string name="lesson_player_tap_to_play">Tap to play</string>
@@ -74,6 +103,14 @@
     <string name="lesson_player_completed">✓ Completed</string>
     <string name="lesson_player_prev">← Previous</string>
     <string name="lesson_player_next">Next →</string>
+    <string name="lesson_player_order">Lesson %1$d</string>
+    <string name="lesson_player_duration_minutes">%1$d min</string>
+    <string name="lesson_player_section_from">From: %1$s</string>
+    <string name="lesson_player_prev_unavailable">Navigate to previous lesson — coming next sprint!</string>
+    <string name="lesson_player_next_unavailable">Navigate to next lesson — coming next sprint!</string>
+    <string name="lesson_player_complete_not_enrolled">You need to enroll in this course first.</string>
+    <string name="lesson_player_complete_network_error">Network error. Check your connection.</string>
+    <string name="lesson_player_complete_error">Could not save progress. Try again.</string>
     <string name="lesson_viewer_close">Close lesson viewer</string>
     <string name="lesson_viewer_no_content">This lesson has no playable content yet.</string>
     <string name="lesson_viewer_load_error">Could not load the lesson content. Check your connection.</string>

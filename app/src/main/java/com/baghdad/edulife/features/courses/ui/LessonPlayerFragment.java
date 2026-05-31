@@ -19,20 +19,17 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 
 import com.baghdad.edulife.R;
-import com.baghdad.edulife.core.network.ApiClient;
-import com.baghdad.edulife.core.network.ApiService;
+import com.baghdad.edulife.features.courses.data.CourseRepository;
 import com.baghdad.edulife.features.courses.model.LessonDetail;
+import com.baghdad.edulife.features.courses.viewmodel.LessonPlayerViewModel;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class LessonPlayerFragment extends Fragment {
 
@@ -46,9 +43,8 @@ public class LessonPlayerFragment extends Fragment {
     private String lessonId = "";
     private boolean isPreview;
     private boolean viewerOpened;
-    private boolean completionMarked;
-    private LessonDetail cachedDetail;
 
+    private LessonPlayerViewModel viewModel;
     private OnBackPressedCallback viewerBackCallback;
 
     public LessonPlayerFragment() {
@@ -58,6 +54,8 @@ public class LessonPlayerFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        viewModel = new ViewModelProvider(this).get(LessonPlayerViewModel.class);
 
         Bundle args           = getArguments();
         courseId              = args != null ? args.getString("courseId", "")       : "";
@@ -72,11 +70,13 @@ public class LessonPlayerFragment extends Fragment {
 
         ((TextView) view.findViewById(R.id.lessonTitle)).setText(lessonTitle);
         ((TextView) view.findViewById(R.id.lessonSectionContext))
-                .setText(sectionTitle.isBlank() ? "" : "From: " + sectionTitle);
+                .setText(sectionTitle.isBlank() ? "" : getString(R.string.lesson_player_section_from, sectionTitle));
         ((TextView) view.findViewById(R.id.lessonSummary)).setText(lessonSummary);
         ((TextView) view.findViewById(R.id.lessonTypeBadge)).setText(normalizeLabel(lessonType));
-        ((TextView) view.findViewById(R.id.lessonOrderText)).setText("Lesson " + orderInSection);
-        ((TextView) view.findViewById(R.id.lessonDurationText)).setText(durationMin + " min");
+        ((TextView) view.findViewById(R.id.lessonOrderText))
+                .setText(getString(R.string.lesson_player_order, orderInSection));
+        ((TextView) view.findViewById(R.id.lessonDurationText))
+                .setText(getString(R.string.lesson_player_duration_minutes, durationMin));
 
         view.findViewById(R.id.lessonPreviewBadge)
                 .setVisibility(isPreview ? View.VISIBLE : View.GONE);
@@ -98,25 +98,74 @@ public class LessonPlayerFragment extends Fragment {
         view.findViewById(R.id.playerPlayButton).setOnClickListener(v -> openInAppViewer());
 
         view.findViewById(R.id.lessonPrevButton).setOnClickListener(v ->
-                Toast.makeText(requireContext(), "Navigate to previous lesson — coming next sprint!", Toast.LENGTH_SHORT).show());
+                Toast.makeText(requireContext(),
+                        R.string.lesson_player_prev_unavailable, Toast.LENGTH_SHORT).show());
 
         view.findViewById(R.id.lessonNextButton).setOnClickListener(v ->
-                Toast.makeText(requireContext(), "Navigate to next lesson — coming next sprint!", Toast.LENGTH_SHORT).show());
+                Toast.makeText(requireContext(),
+                        R.string.lesson_player_next_unavailable, Toast.LENGTH_SHORT).show());
 
         markCompleteButton = view.findViewById(R.id.lessonMarkCompleteButton);
 
-        // Hide "Mark as Done" for preview lessons — no enrollment = no progress tracking
+        // Hide "Mark as Done" for preview lessons — no enrollment = no progress tracking.
         if (isPreview || courseId.isBlank() || lessonId.isBlank()) {
             markCompleteButton.setVisibility(View.GONE);
         } else {
             markCompleteButton.setOnClickListener(v -> {
                 markCompleteButton.setEnabled(false);
                 markCompleteButton.setText(R.string.lesson_player_completed);
-                markLessonCompleteIdempotent(false);
+                viewModel.markComplete(courseId, lessonId);
             });
         }
 
+        observeViewModel();
         installViewerBackHandler();
+    }
+
+    private void observeViewModel() {
+        viewModel.detail.observe(getViewLifecycleOwner(), detail -> {
+            if (detail == null) return;
+            if (viewerOpened) loadDetailInWebView(detail);
+        });
+
+        viewModel.detailLoading.observe(getViewLifecycleOwner(), loading -> {
+            if (viewerProgress == null) return;
+            viewerProgress.setVisibility(Boolean.TRUE.equals(loading) ? View.VISIBLE : View.GONE);
+        });
+
+        viewModel.detailError.observe(getViewLifecycleOwner(), msg -> {
+            if (msg == null || msg.isBlank()) return;
+            Toast.makeText(requireContext(),
+                    R.string.lesson_viewer_load_error, Toast.LENGTH_SHORT).show();
+        });
+
+        viewModel.completed.observe(getViewLifecycleOwner(), completed -> {
+            if (!Boolean.TRUE.equals(completed) || markCompleteButton == null) return;
+            markCompleteButton.setEnabled(false);
+            markCompleteButton.setText(R.string.lesson_player_completed);
+        });
+
+        viewModel.completionError.observe(getViewLifecycleOwner(), reason -> {
+            if (reason == null) return;
+            // Roll back the optimistic disabled / completed label so the learner can retry.
+            if (markCompleteButton != null) {
+                markCompleteButton.setEnabled(true);
+                markCompleteButton.setText(R.string.lesson_player_mark_complete);
+            }
+            int msg;
+            switch (reason) {
+                case NOT_ENROLLED:
+                    msg = R.string.lesson_player_complete_not_enrolled;
+                    break;
+                case NETWORK:
+                    msg = R.string.lesson_player_complete_network_error;
+                    break;
+                default:
+                    msg = R.string.lesson_player_complete_error;
+            }
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+            viewModel.clearCompletionError();
+        });
     }
 
     @SuppressWarnings("deprecation")
@@ -172,8 +221,10 @@ public class LessonPlayerFragment extends Fragment {
     }
 
     private void openInAppViewer() {
-        if (cachedDetail != null) {
-            loadDetailInWebView(cachedDetail);
+        LessonDetail cached = viewModel.detail.getValue();
+        if (cached != null) {
+            viewerOpened = true;
+            loadDetailInWebView(cached);
             return;
         }
         if (courseId.isBlank() || lessonId.isBlank()) {
@@ -181,34 +232,8 @@ public class LessonPlayerFragment extends Fragment {
                     R.string.lesson_viewer_no_content, Toast.LENGTH_SHORT).show();
             return;
         }
-
-        viewerProgress.setVisibility(View.VISIBLE);
-        ApiClient.getClient()
-                .create(ApiService.class)
-                .getLessonDetail(courseId, lessonId)
-                .enqueue(new Callback<LessonDetail>() {
-                    @Override
-                    public void onResponse(@NonNull Call<LessonDetail> call,
-                                           @NonNull Response<LessonDetail> response) {
-                        if (!isAdded()) return;
-                        viewerProgress.setVisibility(View.GONE);
-                        if (!response.isSuccessful() || response.body() == null) {
-                            Toast.makeText(requireContext(),
-                                    R.string.lesson_viewer_load_error, Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-                        cachedDetail = response.body();
-                        loadDetailInWebView(cachedDetail);
-                    }
-
-                    @Override
-                    public void onFailure(@NonNull Call<LessonDetail> call, @NonNull Throwable t) {
-                        if (!isAdded()) return;
-                        viewerProgress.setVisibility(View.GONE);
-                        Toast.makeText(requireContext(),
-                                R.string.lesson_viewer_load_error, Toast.LENGTH_SHORT).show();
-                    }
-                });
+        viewerOpened = true;
+        viewModel.loadLessonDetail(courseId, lessonId);
     }
 
     private void loadDetailInWebView(LessonDetail detail) {
@@ -217,11 +242,11 @@ public class LessonPlayerFragment extends Fragment {
         if (url.isEmpty() && body.isEmpty()) {
             Toast.makeText(requireContext(),
                     R.string.lesson_viewer_no_content, Toast.LENGTH_SHORT).show();
+            viewerOpened = false;
             return;
         }
 
         viewerContainer.setVisibility(View.VISIBLE);
-        viewerOpened = true;
         if (viewerBackCallback != null) {
             viewerBackCallback.setEnabled(true);
         }
@@ -258,71 +283,18 @@ public class LessonPlayerFragment extends Fragment {
 
         // Stop any background playback before hiding the viewer so audio cannot keep playing
         // while the learner is on the summary screen.
-        viewerWebView.loadUrl("about:blank");
+        if (viewerWebView != null) viewerWebView.loadUrl("about:blank");
         viewerContainer.setVisibility(View.GONE);
         if (viewerBackCallback != null) {
             viewerBackCallback.setEnabled(false);
         }
 
-        // Closing the viewer counts as engaging with the content for non-preview enrolled lessons,
-        // so progress is reported even when the learner forgets to tap "Mark as Done".
-        markLessonCompleteIdempotent(true);
-    }
-
-    private void markLessonCompleteIdempotent(boolean fromViewerClose) {
-        if (isPreview || courseId.isBlank() || lessonId.isBlank()) return;
-        if (completionMarked) return;
-        completionMarked = true;
-
-        ApiClient.getClient()
-                .create(ApiService.class)
-                .markLessonComplete(courseId, lessonId)
-                .enqueue(new Callback<Void>() {
-                    @Override
-                    public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
-                        if (!isAdded()) return;
-                        if (response.isSuccessful()) {
-                            if (markCompleteButton != null) {
-                                markCompleteButton.setEnabled(false);
-                                markCompleteButton.setText(R.string.lesson_player_completed);
-                            }
-                            return;
-                        }
-                        completionMarked = false;
-                        if (fromViewerClose) {
-                            // Silent failure when triggered by close so we don't surprise the
-                            // learner with a toast they didn't ask for.
-                            return;
-                        }
-                        if (markCompleteButton != null) {
-                            markCompleteButton.setEnabled(true);
-                            markCompleteButton.setText(R.string.lesson_player_mark_complete);
-                        }
-                        if (response.code() == 403) {
-                            Toast.makeText(requireContext(),
-                                    "You need to enroll in this course first.",
-                                    Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(requireContext(),
-                                    "Could not save progress. Try again.",
-                                    Toast.LENGTH_SHORT).show();
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
-                        if (!isAdded()) return;
-                        completionMarked = false;
-                        if (fromViewerClose) return;
-                        if (markCompleteButton != null) {
-                            markCompleteButton.setEnabled(true);
-                            markCompleteButton.setText(R.string.lesson_player_mark_complete);
-                        }
-                        Toast.makeText(requireContext(),
-                                "Network error. Check your connection.",
-                                Toast.LENGTH_SHORT).show();
-                    }
-                });
+        // Closing the viewer counts as engaging with the content for non-preview enrolled
+        // lessons. The ViewModel guards against double-marking via its own in-flight flag, so
+        // the manual "Mark as Done" button still works without a duplicate request.
+        if (!isPreview && !courseId.isBlank() && !lessonId.isBlank()) {
+            viewModel.markComplete(courseId, lessonId);
+        }
     }
 
     @Override
@@ -353,5 +325,4 @@ public class LessonPlayerFragment extends Fragment {
         String s = raw.replace('_', ' ').toLowerCase(Locale.ROOT);
         return s.substring(0, 1).toUpperCase(Locale.ROOT) + s.substring(1);
     }
-
 }

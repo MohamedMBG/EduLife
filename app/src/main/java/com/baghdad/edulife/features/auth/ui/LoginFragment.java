@@ -53,11 +53,13 @@ public class LoginFragment extends Fragment {
 
         view.findViewById(R.id.googleButton).setOnClickListener(v ->
                 // Google sign-in needs OAuth configuration, so this screen only exposes a visual placeholder.
-                Toast.makeText(requireContext(), "Google sign-in coming soon", Toast.LENGTH_SHORT).show());
+                Toast.makeText(requireContext(),
+                        R.string.auth_google_unavailable, Toast.LENGTH_SHORT).show());
 
         view.findViewById(R.id.forgotPasswordText).setOnClickListener(v ->
                 // Password recovery will be wired when the auth module receives reset endpoints.
-                Toast.makeText(requireContext(), "Password recovery coming soon", Toast.LENGTH_SHORT).show());
+                Toast.makeText(requireContext(),
+                        R.string.auth_forgot_password_unavailable, Toast.LENGTH_SHORT).show());
 
         view.findViewById(R.id.registerRow).setOnClickListener(v ->
                 // Navigate to the register screen so users who land on login can create an account.
@@ -72,12 +74,12 @@ public class LoginFragment extends Fragment {
         String password = passwordEditText.getText().toString();
 
         if (email.isEmpty()) {
-            emailEditText.setError("Email is required");
+            emailEditText.setError(getString(R.string.auth_email_required));
             return;
         }
 
         if (password.isEmpty()) {
-            passwordEditText.setError("Password is required");
+            passwordEditText.setError(getString(R.string.auth_password_required));
             return;
         }
 
@@ -93,7 +95,9 @@ public class LoginFragment extends Fragment {
         emailEditText.setEnabled(!state.loading);
         passwordEditText.setEnabled(!state.loading);
         // Mirror the backend-sync wait state in the button text so users know the request is still being processed.
-        loginButtonText.setText(state.loading ? "Signing in..." : "Log in");
+        loginButtonText.setText(getString(state.loading
+                ? R.string.auth_login_button_loading
+                : R.string.auth_login_button_idle));
 
         if (state.loading) {
             hideError();
@@ -107,7 +111,7 @@ public class LoginFragment extends Fragment {
         }
 
         if (state.emailVerificationRequired) {
-            showError("Email not verified. Check your inbox and click the verification link, then try again.");
+            showError(getString(R.string.auth_login_email_not_verified));
             return;
         }
 
@@ -127,22 +131,23 @@ public class LoginFragment extends Fragment {
 
     private String friendlyMessage(String raw) {
         if (raw.startsWith("Network error during sync:")) {
-            return "Cannot reach the server. Make sure your phone is on the right network and the backend is running.";
+            return getString(R.string.auth_error_server_unreachable);
         }
         if (raw.startsWith("Backend sync timed out.")) {
-            return "The server did not answer in time. Check that the backend is running and reachable at the configured IP address.";
+            return getString(R.string.auth_error_server_timeout);
         }
         if (raw.startsWith("Backend sync failed.")) {
-            return "Server rejected the request (" + raw.replace("Backend sync failed. Status: ", "HTTP ") + "). Contact support if this persists.";
+            return getString(R.string.auth_error_server_rejected,
+                    raw.replace("Backend sync failed. Status: ", "HTTP "));
         }
         if (raw.contains("password") || raw.contains("credential") || raw.contains("no user")) {
-            return "Incorrect email or password. Please try again.";
+            return getString(R.string.auth_error_bad_credentials);
         }
         if (raw.contains("verify")) {
-            return "Email not verified. Check your inbox and click the verification link.";
+            return getString(R.string.auth_error_email_not_verified);
         }
         if (raw.contains("network") || raw.contains("Unable to resolve") || raw.contains("timeout")) {
-            return "Network error. Check your internet connection and try again.";
+            return getString(R.string.auth_error_network);
         }
         return raw;
     }

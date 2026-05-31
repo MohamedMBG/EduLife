@@ -58,4 +58,16 @@ public class ProfileViewModel extends ViewModel {
             }
         });
     }
+
+    /**
+     * Consumed by the fragment after sign-out + nav so a stale "true" cannot re-fire the
+     * sign-out branch if the same VM instance is observed again later.
+     */
+    public void clearAccountDeleted() {
+        _accountDeleted.setValue(null);
+    }
+
+    public void clearDeleteError() {
+        _deleteError.setValue(null);
+    }
 }

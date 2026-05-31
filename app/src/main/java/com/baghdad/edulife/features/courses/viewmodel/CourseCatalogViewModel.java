@@ -29,13 +29,13 @@ public class CourseCatalogViewModel extends AndroidViewModel {
     }
 
     public void loadCourses(String category) {
-        // Show the seeded fallback catalog immediately so the home screen is never blank
-        // while OkHttp waits up to 35s for an unreachable backend.
-        uiState.setValue(CourseCatalogUiState.success(
-                CourseRepository.fallbackCourses(category), category));
+        // Emit a true loading state instead of optimistically swapping in the seeded fallback.
+        // The previous behaviour made the empty / loaded / errored states visually identical
+        // and hid real fetch failures behind a stale fallback list.
+        uiState.setValue(CourseCatalogUiState.loading(category));
 
-        // The first Android catalog slice intentionally keeps paging fixed to page 0 so
-        // the UI can prove the backend contract before adding infinite scroll complexity.
+        // The first Android catalog slice intentionally keeps paging fixed to page 0 so the UI
+        // can prove the backend contract before adding infinite scroll complexity.
         courseRepository.loadCourses(category, 0, new CourseRepository.CourseCatalogCallback() {
             @Override
             public void onSuccess(List<CourseSummary> courses) {
@@ -44,10 +44,11 @@ public class CourseCatalogViewModel extends AndroidViewModel {
 
             @Override
             public void onError(String message) {
-                // Repository already falls back internally, but keep the catalog populated
-                // in case a future error path bypasses that fallback.
-                uiState.postValue(CourseCatalogUiState.success(
-                        CourseRepository.fallbackCourses(category), category));
+                // Real errors now surface to the UI. HomeFragment renders the error message and
+                // the existing Retry button kicks off a re-fetch. The seeded fallback remains
+                // accessible via CourseRepository.fallbackCourses() for the explicit
+                // offline-dev path but is no longer auto-applied here.
+                uiState.postValue(CourseCatalogUiState.error(message, category));
             }
         });
     }

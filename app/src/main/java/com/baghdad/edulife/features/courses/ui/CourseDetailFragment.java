@@ -32,6 +32,12 @@ public class CourseDetailFragment extends Fragment {
     private TextView statusText;
     private ScrollView detailScrollView;
     private LinearLayout sectionContainer;
+    /**
+     * Captured once in onViewCreated so the bind-time and nav-time paths share a single source
+     * of truth. The previous code re-read getArguments() on every bind, which is safe today but
+     * fragile if the fragment is ever recreated with cleared args.
+     */
+    private String courseId = "";
 
     public CourseDetailFragment() {
         super(R.layout.fragment_course_detail);
@@ -50,11 +56,12 @@ public class CourseDetailFragment extends Fragment {
         view.findViewById(R.id.backButton).setOnClickListener(v ->
                 Navigation.findNavController(view).popBackStack());
 
-        String courseId = getArguments() != null ? getArguments().getString("courseId") : null;
-        if (courseId == null || courseId.isBlank()) {
+        String argId = getArguments() != null ? getArguments().getString("courseId") : null;
+        if (argId == null || argId.isBlank()) {
             renderError(getString(R.string.course_detail_missing_id));
             return;
         }
+        courseId = argId;
 
         courseDetailViewModel.getUiState().observe(getViewLifecycleOwner(), this::renderState);
 
@@ -116,7 +123,6 @@ public class CourseDetailFragment extends Fragment {
 
         sectionContainer.removeAllViews();
         int lessonCount = 0;
-        String courseId = getArguments() != null ? getArguments().getString("courseId", "") : "";
         if (courseDetail.sections != null) {
             for (CourseSection section : courseDetail.sections) {
                 sectionContainer.addView(createSectionView(courseId, section, isEnrolled));

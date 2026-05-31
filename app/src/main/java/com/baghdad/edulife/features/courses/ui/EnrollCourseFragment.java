@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -60,6 +61,14 @@ public class EnrollCourseFragment extends Fragment {
             applyState(view, enrollButton, state);
 
             if (state.enrolled) {
+                // Distinguish a fresh enrol from a 409 "already enrolled" so the learner is not
+                // told they just enrolled when they were already in the course.
+                Toast.makeText(requireContext(),
+                        state.alreadyEnrolled
+                                ? R.string.enroll_already_enrolled
+                                : R.string.enroll_success,
+                        Toast.LENGTH_SHORT).show();
+
                 NavController nav = Navigation.findNavController(view);
                 NavOptions opts = new NavOptions.Builder()
                         .setLaunchSingleTop(true)
@@ -67,6 +76,10 @@ public class EnrollCourseFragment extends Fragment {
                         .setPopUpTo(R.id.homeFragment, false, true)
                         .build();
                 nav.navigate(R.id.coursesFragment, null, opts);
+
+                // Reset so re-entering this fragment via back nav does not immediately re-fire
+                // the success branch and bounce the learner away again.
+                vm.clearEnrollState();
             }
         });
 
