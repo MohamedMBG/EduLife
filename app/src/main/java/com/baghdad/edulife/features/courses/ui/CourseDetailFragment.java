@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
 import com.baghdad.edulife.R;
@@ -47,7 +48,10 @@ public class CourseDetailFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        courseDetailViewModel = new ViewModelProvider(this).get(CourseDetailViewModel.class);
+        NavController navController = Navigation.findNavController(view);
+        courseDetailViewModel = new ViewModelProvider(
+                navController.getCurrentBackStackEntry()
+        ).get(CourseDetailViewModel.class);
         loadingIndicator = view.findViewById(R.id.detailLoadingIndicator);
         statusText = view.findViewById(R.id.detailStatusText);
         detailScrollView = view.findViewById(R.id.detailScrollView);

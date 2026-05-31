@@ -14,6 +14,7 @@ import com.edulife.users.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -46,11 +47,21 @@ public class EnrollmentService {
         courseRepository.findByIdAndStatus(courseId, CourseStatus.PUBLISHED)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
 
-        if (enrollmentRepository.existsByUserIdAndCourseId(user.getId(), courseId)) {
+        if (enrollmentRepository.existsByUserIdAndCourseIdAndStatus(user.getId(), courseId, EnrollmentStatus.ACTIVE)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Already enrolled in this course");
         }
 
-        Enrollment enrollment = enrollmentRepository.save(new Enrollment(user.getId(), courseId));
+        // Reactivate a previously cancelled enrollment rather than inserting a duplicate row —
+        // the table enforces UNIQUE (user_id, course_id).
+        Optional<Enrollment> existing = enrollmentRepository.findByUserIdAndCourseId(user.getId(), courseId);
+        Enrollment enrollment;
+        if (existing.isPresent()) {
+            enrollment = existing.get();
+            enrollment.reactivate();
+            enrollment = enrollmentRepository.save(enrollment);
+        } else {
+            enrollment = enrollmentRepository.save(new Enrollment(user.getId(), courseId));
+        }
 
         return new EnrollmentResponse(
                 enrollment.getId(),
