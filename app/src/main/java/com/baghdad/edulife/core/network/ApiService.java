@@ -1,18 +1,23 @@
 package com.baghdad.edulife.core.network;
 
+import com.baghdad.edulife.features.auth.model.AuthSyncRequest;
 import com.baghdad.edulife.features.auth.model.AuthSyncResponse;
 import com.baghdad.edulife.features.certificates.model.CertificateSummary;
 import com.baghdad.edulife.features.courses.model.CourseDetail;
 import com.baghdad.edulife.features.courses.model.CoursePageResponse;
+import com.baghdad.edulife.features.courses.model.CourseProgressSummary;
 import com.baghdad.edulife.features.courses.model.CourseSummary;
 import com.baghdad.edulife.features.courses.model.EnrolledCourse;
 import com.baghdad.edulife.features.courses.model.EnrollmentResponse;
 import com.baghdad.edulife.features.courses.model.EnrollRequest;
 import com.baghdad.edulife.features.courses.model.ExamResponse;
 import com.baghdad.edulife.features.courses.model.ExamResultResponse;
+import com.baghdad.edulife.features.courses.model.ExamStatusResponse;
 import com.baghdad.edulife.features.courses.model.LessonDetail;
 import com.baghdad.edulife.features.courses.model.SubmitExamRequest;
 import com.baghdad.edulife.features.profile.model.ProfileResponse;
+import com.baghdad.edulife.features.profile.model.SubmitTeacherRequestBody;
+import com.baghdad.edulife.features.profile.model.TeacherRequestResponse;
 
 import java.util.List;
 
@@ -41,6 +46,13 @@ public interface ApiService {
      */
     @POST("auth/sync")
     Call<AuthSyncResponse> syncUser();
+
+    /**
+     * Sends the chosen first-time role during the initial verified auth sync.
+     * The backend ignores this body for existing users and never allows ADMIN self-assignment.
+     */
+    @POST("auth/sync")
+    Call<AuthSyncResponse> syncUser(@Body AuthSyncRequest request);
 
     /**
      * Loads the published course catalog from the live backend.
@@ -102,8 +114,21 @@ public interface ApiService {
             @Path("lessonId") String lessonId
     );
 
+    /**
+     * Returns aggregate progress for one enrolled course so card summaries can show
+     * completed-vs-total lessons and completion percentage.
+     */
+    @GET("progress/courses/{courseId}")
+    Call<CourseProgressSummary> getCourseProgress(@Path("courseId") String courseId);
+
     @GET("profile")
     Call<ProfileResponse> getProfile();
+
+    @GET("teacher-requests/me")
+    Call<TeacherRequestResponse> getMyTeacherRequest();
+
+    @POST("teacher-requests")
+    Call<TeacherRequestResponse> submitTeacherRequest(@Body SubmitTeacherRequestBody request);
 
     /**
      * Self-service account deletion (Play Store mandate).
@@ -116,6 +141,13 @@ public interface ApiService {
 
     @GET("courses/{courseId}/exam")
     Call<ExamResponse> getExam(@Path("courseId") String courseId);
+
+    /**
+     * Checks whether the learner can start the exam before Android renders the full question UI.
+     * This prevents already-passed and cooldown users from reaching a dead-end submit error.
+     */
+    @GET("courses/{courseId}/exam/status")
+    Call<ExamStatusResponse> getExamStatus(@Path("courseId") String courseId);
 
     @POST("courses/{courseId}/exam/submit")
     Call<ExamResultResponse> submitExam(
