@@ -6,6 +6,9 @@ import androidx.lifecycle.ViewModel;
 
 import com.baghdad.edulife.features.profile.data.ProfileRepository;
 import com.baghdad.edulife.features.profile.model.ProfileResponse;
+import com.baghdad.edulife.features.profile.model.UpdateProfileRequest;
+
+import java.io.File;
 
 public class ProfileViewModel extends ViewModel {
 
@@ -27,6 +30,24 @@ public class ProfileViewModel extends ViewModel {
     // Separate error stream so delete failures stay distinct from profile-load failures.
     private final MutableLiveData<String> _deleteError = new MutableLiveData<>();
     public final LiveData<String> deleteError = _deleteError;
+
+    private final MutableLiveData<Boolean> _saving = new MutableLiveData<>(false);
+    public final LiveData<Boolean> saving = _saving;
+
+    private final MutableLiveData<Boolean> _saveSuccess = new MutableLiveData<>();
+    public final LiveData<Boolean> saveSuccess = _saveSuccess;
+
+    private final MutableLiveData<String> _saveError = new MutableLiveData<>();
+    public final LiveData<String> saveError = _saveError;
+
+    private final MutableLiveData<Boolean> _uploading = new MutableLiveData<>(false);
+    public final LiveData<Boolean> uploading = _uploading;
+
+    private final MutableLiveData<String> _uploadedAvatarUrl = new MutableLiveData<>();
+    public final LiveData<String> uploadedAvatarUrl = _uploadedAvatarUrl;
+
+    private final MutableLiveData<String> _uploadError = new MutableLiveData<>();
+    public final LiveData<String> uploadError = _uploadError;
 
     public void loadProfile() {
         repository.loadProfile(new ProfileRepository.ProfileCallback() {
@@ -69,5 +90,56 @@ public class ProfileViewModel extends ViewModel {
 
     public void clearDeleteError() {
         _deleteError.setValue(null);
+    }
+
+    public void updateProfile(String displayName, String bio) {
+        _saving.setValue(true);
+        _saveError.setValue(null);
+        repository.updateProfile(new UpdateProfileRequest(displayName, bio),
+                new ProfileRepository.UpdateProfileCallback() {
+                    @Override
+                    public void onSuccess(ProfileResponse updated) {
+                        _saving.postValue(false);
+                        _profile.postValue(updated);
+                        _saveSuccess.postValue(true);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        _saving.postValue(false);
+                        _saveError.postValue(message);
+                    }
+                });
+    }
+
+    public void clearSaveSuccess() {
+        _saveSuccess.setValue(null);
+    }
+
+    public void clearSaveError() {
+        _saveError.setValue(null);
+    }
+
+    public void uploadAvatar(File imageFile) {
+        _uploading.setValue(true);
+        _uploadError.setValue(null);
+        repository.uploadAvatar(imageFile, new ProfileRepository.UploadAvatarCallback() {
+            @Override
+            public void onSuccess(String avatarUrl) {
+                _uploading.postValue(false);
+                _uploadedAvatarUrl.postValue(avatarUrl);
+                loadProfile();
+            }
+
+            @Override
+            public void onError(String message) {
+                _uploading.postValue(false);
+                _uploadError.postValue(message);
+            }
+        });
+    }
+
+    public void clearUploadError() {
+        _uploadError.setValue(null);
     }
 }
