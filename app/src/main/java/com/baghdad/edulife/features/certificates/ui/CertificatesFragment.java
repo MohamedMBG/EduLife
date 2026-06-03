@@ -62,7 +62,7 @@ public class CertificatesFragment extends Fragment {
                 Navigation.findNavController(v).popBackStack());
 
         RecyclerView recycler = view.findViewById(R.id.certsRecycler);
-        adapter = new CertificateAdapter(this::downloadCertificate);
+        adapter = new CertificateAdapter(this::downloadCertificate, this::openCertDetail);
         recycler.setLayoutManager(new LinearLayoutManager(requireContext()));
         recycler.setAdapter(adapter);
 
@@ -93,6 +93,13 @@ public class CertificatesFragment extends Fragment {
         });
 
         viewModel.load();
+    }
+
+    private void openCertDetail(CertificateSummary cert) {
+        Bundle args = new Bundle();
+        args.putString("certId", cert.id != null ? cert.id : "");
+        Navigation.findNavController(requireView())
+                .navigate(R.id.action_certificatesFragment_to_certificateDetailFragment, args);
     }
 
     private void downloadCertificate(CertificateSummary cert) {
