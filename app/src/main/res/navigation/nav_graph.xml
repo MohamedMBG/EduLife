@@ -68,7 +68,7 @@
 
     <fragment
         android:id="@+id/profileFragment"
-        android:name="com.baghdad.edulife.features.courses.ui.ProfileFragment"
+        android:name="com.baghdad.edulife.features.profile.ui.ProfileFragment"
         android:label="Profile">
         <action
             android:id="@+id/action_profileFragment_to_loginFragment"
@@ -78,12 +78,42 @@
         <action
             android:id="@+id/action_profileFragment_to_certificatesFragment"
             app:destination="@id/certificatesFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_editProfileFragment"
+            app:destination="@id/editProfileFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_teacherRequestFragment"
+            app:destination="@id/teacherRequestFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/editProfileFragment"
+        android:name="com.baghdad.edulife.features.profile.ui.EditProfileFragment"
+        android:label="Edit Profile" />
+
+    <fragment
+        android:id="@+id/teacherRequestFragment"
+        android:name="com.baghdad.edulife.features.profile.ui.TeacherRequestFragment"
+        android:label="Become a Teacher" />
 
     <fragment
         android:id="@+id/certificatesFragment"
         android:name="com.baghdad.edulife.features.certificates.ui.CertificatesFragment"
-        android:label="Certificates" />
+        android:label="Certificates">
+        <action
+            android:id="@+id/action_certificatesFragment_to_certificateDetailFragment"
+            app:destination="@id/certificateDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/certificateDetailFragment"
+        android:name="com.baghdad.edulife.features.certificates.ui.CertificateDetailFragment"
+        android:label="Certificate">
+        <argument
+            android:name="certId"
+            app:argType="string"
+            android:defaultValue="" />
+    </fragment>
 
     <fragment
         android:id="@+id/courseDetailFragment"

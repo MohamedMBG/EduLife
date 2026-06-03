@@ -1,6 +1,7 @@
 package com.baghdad.edulife.core.network;
 
 import com.baghdad.edulife.features.auth.model.AuthSyncResponse;
+import com.baghdad.edulife.features.certificates.model.CertificateDetail;
 import com.baghdad.edulife.features.certificates.model.CertificateSummary;
 import com.baghdad.edulife.features.courses.model.CourseDetail;
 import com.baghdad.edulife.features.courses.model.CoursePageResponse;
@@ -8,20 +9,30 @@ import com.baghdad.edulife.features.courses.model.CourseSummary;
 import com.baghdad.edulife.features.courses.model.EnrolledCourse;
 import com.baghdad.edulife.features.courses.model.EnrollmentResponse;
 import com.baghdad.edulife.features.courses.model.EnrollRequest;
+import com.baghdad.edulife.features.courses.model.CourseProgressResponse;
 import com.baghdad.edulife.features.courses.model.ExamResponse;
 import com.baghdad.edulife.features.courses.model.ExamResultResponse;
+import com.baghdad.edulife.features.courses.model.ExamStatusResponse;
 import com.baghdad.edulife.features.courses.model.LessonDetail;
 import com.baghdad.edulife.features.courses.model.SubmitExamRequest;
+import com.baghdad.edulife.features.profile.model.AvatarUploadResponse;
 import com.baghdad.edulife.features.profile.model.ProfileResponse;
+import com.baghdad.edulife.features.profile.model.SubmitTeacherRequestBody;
+import com.baghdad.edulife.features.profile.model.TeacherRequestResponse;
+import com.baghdad.edulife.features.profile.model.UpdateProfileRequest;
 
 import java.util.List;
 
+import okhttp3.MultipartBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.Multipart;
+import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Query;
 
 /**
@@ -105,6 +116,13 @@ public interface ApiService {
     @GET("profile")
     Call<ProfileResponse> getProfile();
 
+    @PUT("profile")
+    Call<ProfileResponse> updateProfile(@Body UpdateProfileRequest request);
+
+    @Multipart
+    @POST("profile/avatar")
+    Call<AvatarUploadResponse> uploadAvatar(@Part MultipartBody.Part file);
+
     /**
      * Self-service account deletion (Play Store mandate).
      * Endpoint: DELETE /api/v1/account
@@ -117,6 +135,13 @@ public interface ApiService {
     @GET("courses/{courseId}/exam")
     Call<ExamResponse> getExam(@Path("courseId") String courseId);
 
+    /**
+     * Checks whether the learner can still open the exam before loading questions.
+     * The backend is the source of truth for pass lockouts and cooldown windows.
+     */
+    @GET("courses/{courseId}/exam/status")
+    Call<ExamStatusResponse> getExamStatus(@Path("courseId") String courseId);
+
     @POST("courses/{courseId}/exam/submit")
     Call<ExamResultResponse> submitExam(
             @Path("courseId") String courseId,
@@ -125,5 +150,17 @@ public interface ApiService {
 
     @GET("certificates/me")
     Call<List<CertificateSummary>> getMyCertificates();
+
+    @GET("certificates/{id}")
+    Call<CertificateDetail> getCertificateById(@Path("id") String id);
+
+    @GET("progress/courses/{courseId}")
+    Call<CourseProgressResponse> getCourseProgress(@Path("courseId") String courseId);
+
+    @POST("teacher-requests")
+    Call<TeacherRequestResponse> submitTeacherRequest(@Body SubmitTeacherRequestBody body);
+
+    @GET("teacher-requests/me")
+    Call<TeacherRequestResponse> getMyTeacherRequest();
 }
 
