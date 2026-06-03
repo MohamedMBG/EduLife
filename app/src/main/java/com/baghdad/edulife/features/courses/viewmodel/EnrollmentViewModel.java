@@ -8,13 +8,16 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.baghdad.edulife.features.courses.data.CourseRepository;
+import com.baghdad.edulife.features.courses.model.CourseProgressResponse;
 import com.baghdad.edulife.features.courses.model.EnrolledCourse;
 import com.baghdad.edulife.features.courses.model.EnrollmentResponse;
 import com.baghdad.edulife.features.courses.model.EnrollUiState;
 import com.baghdad.edulife.features.courses.model.UnenrollUiState;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class EnrollmentViewModel extends AndroidViewModel {
 
@@ -36,6 +39,8 @@ public class EnrollmentViewModel extends AndroidViewModel {
     private final MutableLiveData<String> myEnrollmentsError = new MutableLiveData<>();
 
     private final MutableLiveData<Boolean> myEnrollmentsLoading = new MutableLiveData<>(false);
+    private final MutableLiveData<Map<String, Integer>> progressMap =
+            new MutableLiveData<>(new HashMap<>());
 
     public EnrollmentViewModel(@NonNull Application application) {
         super(application);
@@ -60,6 +65,10 @@ public class EnrollmentViewModel extends AndroidViewModel {
 
     public LiveData<Boolean> getMyEnrollmentsLoading() {
         return myEnrollmentsLoading;
+    }
+
+    public LiveData<Map<String, Integer>> getProgressMap() {
+        return progressMap;
     }
 
     public void enroll(String courseId) {
@@ -114,6 +123,27 @@ public class EnrollmentViewModel extends AndroidViewModel {
         unenrollState.setValue(UnenrollUiState.idle());
     }
 
+    private void loadProgressForEnrollments(List<EnrolledCourse> courses) {
+        if (courses == null || courses.isEmpty()) return;
+        for (EnrolledCourse course : courses) {
+            if (course.courseId == null) continue;
+            courseRepository.getCourseProgress(course.courseId, new CourseRepository.CourseProgressCallback() {
+                @Override
+                public void onSuccess(CourseProgressResponse response) {
+                    Map<String, Integer> current = progressMap.getValue();
+                    Map<String, Integer> updated = current != null ? new HashMap<>(current) : new HashMap<>();
+                    updated.put(response.courseId, (int) Math.round(response.percentComplete));
+                    progressMap.postValue(updated);
+                }
+
+                @Override
+                public void onError(String message) {
+                    // Silent — progress bars are additive
+                }
+            });
+        }
+    }
+
     public void loadMyEnrollments() {
         myEnrollmentsLoading.postValue(true);
         // Clear any stale error before the new fetch so a transient failure does not linger
@@ -125,6 +155,7 @@ public class EnrollmentViewModel extends AndroidViewModel {
             public void onSuccess(List<EnrolledCourse> courses) {
                 myEnrollmentsLoading.postValue(false);
                 myEnrollments.postValue(courses);
+                loadProgressForEnrollments(courses);
             }
 
             @Override

@@ -6,6 +6,7 @@ import android.util.TypedValue;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -19,12 +20,16 @@ import androidx.navigation.Navigation;
 import com.baghdad.edulife.R;
 import com.baghdad.edulife.features.courses.model.CourseDetail;
 import com.baghdad.edulife.features.courses.model.CourseDetailUiState;
+import com.baghdad.edulife.features.courses.model.CourseProgressResponse;
 import com.baghdad.edulife.features.courses.model.CourseSection;
 import com.baghdad.edulife.features.courses.model.LessonSummary;
 import com.baghdad.edulife.features.courses.viewmodel.CourseDetailViewModel;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 public class CourseDetailFragment extends Fragment {
 
@@ -33,12 +38,13 @@ public class CourseDetailFragment extends Fragment {
     private TextView statusText;
     private ScrollView detailScrollView;
     private LinearLayout sectionContainer;
-    /**
-     * Captured once in onViewCreated so the bind-time and nav-time paths share a single source
-     * of truth. The previous code re-read getArguments() on every bind, which is safe today but
-     * fragile if the fragment is ever recreated with cleared args.
-     */
+    private LinearLayout progressSummaryLayout;
+    private TextView progressSummaryText;
+    private ProgressBar progressSummaryBar;
+
     private String courseId = "";
+    private CourseDetail currentCourseDetail = null;
+    private Set<String> completedLessonIds = Collections.emptySet();
 
     public CourseDetailFragment() {
         super(R.layout.fragment_course_detail);
@@ -52,10 +58,14 @@ public class CourseDetailFragment extends Fragment {
         courseDetailViewModel = new ViewModelProvider(
                 navController.getCurrentBackStackEntry()
         ).get(CourseDetailViewModel.class);
+
         loadingIndicator = view.findViewById(R.id.detailLoadingIndicator);
         statusText = view.findViewById(R.id.detailStatusText);
         detailScrollView = view.findViewById(R.id.detailScrollView);
         sectionContainer = view.findViewById(R.id.sectionContainer);
+        progressSummaryLayout = view.findViewById(R.id.progressSummaryLayout);
+        progressSummaryText = view.findViewById(R.id.progressSummaryText);
+        progressSummaryBar = view.findViewById(R.id.progressSummaryBar);
 
         view.findViewById(R.id.backButton).setOnClickListener(v ->
                 Navigation.findNavController(view).popBackStack());
@@ -68,6 +78,7 @@ public class CourseDetailFragment extends Fragment {
         courseId = argId;
 
         courseDetailViewModel.getUiState().observe(getViewLifecycleOwner(), this::renderState);
+        courseDetailViewModel.getProgress().observe(getViewLifecycleOwner(), this::applyProgress);
 
         CourseDetailUiState currentState = courseDetailViewModel.getUiState().getValue();
         if (currentState == null || currentState.courseDetail == null) {
@@ -76,9 +87,7 @@ public class CourseDetailFragment extends Fragment {
     }
 
     private void renderState(CourseDetailUiState state) {
-        if (state == null) {
-            return;
-        }
+        if (state == null) return;
 
         loadingIndicator.setVisibility(state.loading ? View.VISIBLE : View.GONE);
 
@@ -95,7 +104,34 @@ public class CourseDetailFragment extends Fragment {
         }
 
         if (state.courseDetail != null) {
+            currentCourseDetail = state.courseDetail;
             bindCourseDetail(state.courseDetail);
+        }
+    }
+
+    private void applyProgress(CourseProgressResponse progress) {
+        if (progress == null) return;
+
+        Set<String> ids = new HashSet<>();
+        if (progress.sections != null) {
+            for (CourseProgressResponse.SectionProgress section : progress.sections) {
+                if (section.lessons != null) {
+                    for (CourseProgressResponse.LessonProgress lesson : section.lessons) {
+                        if (lesson.completed) ids.add(lesson.lessonId);
+                    }
+                }
+            }
+        }
+        completedLessonIds = ids;
+
+        int percent = (int) Math.round(progress.percentComplete);
+        progressSummaryText.setText(getString(R.string.progress_lessons_summary,
+                progress.completedLessons, progress.totalLessons));
+        progressSummaryBar.setProgress(percent);
+        progressSummaryLayout.setVisibility(View.VISIBLE);
+
+        if (currentCourseDetail != null) {
+            rebuildSections(currentCourseDetail);
         }
     }
 
@@ -123,27 +159,31 @@ public class CourseDetailFragment extends Fragment {
         sectionCountText.setText(getString(R.string.course_detail_section_count, sectionCount));
         descriptionText.setText(courseDetail.description);
 
+        statusText.setVisibility(View.GONE);
+        detailScrollView.setVisibility(View.VISIBLE);
+
         boolean isEnrolled = getArguments() != null && getArguments().getBoolean("isEnrolled", false);
 
-        sectionContainer.removeAllViews();
+        if (isEnrolled) {
+            courseDetailViewModel.loadProgress(courseId);
+        }
+
+        rebuildSections(courseDetail);
+
         int lessonCount = 0;
         if (courseDetail.sections != null) {
             for (CourseSection section : courseDetail.sections) {
-                sectionContainer.addView(createSectionView(courseId, section, isEnrolled));
                 if (section.lessons != null) lessonCount += section.lessons.size();
             }
         }
         final int finalSectionCount = sectionCount;
         final int finalLessonCount = lessonCount;
 
-        statusText.setVisibility(View.GONE);
-        detailScrollView.setVisibility(View.VISIBLE);
-
-        View footer = requireView().findViewById(R.id.enrollCtaFooter);
+        View footer = view.findViewById(R.id.enrollCtaFooter);
         footer.setVisibility(View.VISIBLE);
 
-        Button enrollBtn = requireView().findViewById(R.id.enrollCtaButton);
-        Button takeExamBtn = requireView().findViewById(R.id.takeExamButton);
+        Button enrollBtn = view.findViewById(R.id.enrollCtaButton);
+        Button takeExamBtn = view.findViewById(R.id.takeExamButton);
 
         if (isEnrolled) {
             enrollBtn.setVisibility(View.GONE);
@@ -169,6 +209,16 @@ public class CourseDetailFragment extends Fragment {
                 Navigation.findNavController(requireView())
                         .navigate(R.id.action_courseDetailFragment_to_enrollCourseFragment, navArgs);
             });
+        }
+    }
+
+    private void rebuildSections(@NonNull CourseDetail courseDetail) {
+        boolean isEnrolled = getArguments() != null && getArguments().getBoolean("isEnrolled", false);
+        sectionContainer.removeAllViews();
+        if (courseDetail.sections != null) {
+            for (CourseSection section : courseDetail.sections) {
+                sectionContainer.addView(createSectionView(courseId, section, isEnrolled));
+            }
         }
     }
 
@@ -215,11 +265,31 @@ public class CourseDetailFragment extends Fragment {
         params.bottomMargin = dp(12);
         lessonLayout.setLayoutParams(params);
 
+        // Header row: title + completion badge
+        LinearLayout headerRow = new LinearLayout(requireContext());
+        headerRow.setOrientation(LinearLayout.HORIZONTAL);
+        headerRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
+
         TextView lessonTitle = new TextView(requireContext());
+        LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+        lessonTitle.setLayoutParams(titleParams);
         lessonTitle.setText(lesson.title);
         lessonTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
         lessonTitle.setTextColor(requireContext().getColor(R.color.catalog_text_primary));
         lessonTitle.setTypeface(lessonTitle.getTypeface(), Typeface.BOLD);
+
+        boolean completed = completedLessonIds.contains(lesson.id);
+        TextView completedBadge = new TextView(requireContext());
+        completedBadge.setText(R.string.progress_lesson_completed);
+        completedBadge.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
+        completedBadge.setTextColor(requireContext().getColor(R.color.catalog_primary));
+        completedBadge.setTypeface(completedBadge.getTypeface(), Typeface.BOLD);
+        completedBadge.setPadding(dp(8), 0, 0, 0);
+        completedBadge.setVisibility(completed ? View.VISIBLE : View.GONE);
+
+        headerRow.addView(lessonTitle);
+        headerRow.addView(completedBadge);
 
         TextView lessonSummaryView = new TextView(requireContext());
         lessonSummaryView.setText(lesson.summary);
@@ -252,7 +322,7 @@ public class CourseDetailFragment extends Fragment {
         accessText.setPadding(0, dp(8), 0, 0);
         accessText.setTypeface(accessText.getTypeface(), Typeface.BOLD);
 
-        lessonLayout.addView(lessonTitle);
+        lessonLayout.addView(headerRow);
         lessonLayout.addView(lessonSummaryView);
         lessonLayout.addView(lessonMeta);
         lessonLayout.addView(accessText);
@@ -291,7 +361,6 @@ public class CourseDetailFragment extends Fragment {
         if (rawValue == null || rawValue.isBlank()) {
             return "Unknown";
         }
-
         String normalized = rawValue.replace('_', ' ').toLowerCase(Locale.ROOT);
         return normalized.substring(0, 1).toUpperCase(Locale.ROOT) + normalized.substring(1);
     }
