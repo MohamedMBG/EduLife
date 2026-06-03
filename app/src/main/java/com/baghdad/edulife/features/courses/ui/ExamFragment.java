@@ -28,9 +28,13 @@ import com.baghdad.edulife.features.courses.model.ExamUiState;
 import com.baghdad.edulife.features.courses.model.SubmitExamRequest;
 import com.baghdad.edulife.features.courses.viewmodel.ExamViewModel;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class ExamFragment extends Fragment {
@@ -84,7 +88,13 @@ public class ExamFragment extends Fragment {
         });
 
         ExamUiState currentState = examViewModel.getExamState().getValue();
-        if (currentState == null || currentState.exam == null) {
+        boolean needsInitialLoad = currentState == null
+                || (!currentState.loading
+                && currentState.exam == null
+                && currentState.errorMessage == null
+                && !currentState.alreadyPassed
+                && currentState.cooldownEndsAt == null);
+        if (needsInitialLoad) {
             examViewModel.loadExam(courseId);
         }
     }
@@ -103,10 +113,18 @@ public class ExamFragment extends Fragment {
         }
 
         if (state.errorMessage != null && !state.errorMessage.isBlank()) {
-            scrollView.setVisibility(View.GONE);
-            submitFooter.setVisibility(View.GONE);
-            statusText.setVisibility(View.VISIBLE);
-            statusText.setText(state.errorMessage);
+            showBlockedState(state.errorMessage);
+            return;
+        }
+
+        if (state.alreadyPassed) {
+            // Passed learners must stay out of the question screen so certificate flow remains authoritative.
+            showBlockedState(getString(R.string.exam_already_passed));
+            return;
+        }
+
+        if (state.cooldownEndsAt != null) {
+            showBlockedState(buildCooldownMessage(state.cooldownEndsAt));
             return;
         }
 
@@ -135,10 +153,7 @@ public class ExamFragment extends Fragment {
 
         if (state.cooldownEndsAt != null) {
             submitButton.setEnabled(false);
-            scrollView.setVisibility(View.GONE);
-            submitFooter.setVisibility(View.GONE);
-            statusText.setVisibility(View.VISIBLE);
-            statusText.setText(getString(R.string.exam_cooldown_active, state.cooldownEndsAt));
+            showBlockedState(buildCooldownMessage(state.cooldownEndsAt));
             return;
         }
 
@@ -168,6 +183,7 @@ public class ExamFragment extends Fragment {
         TextView passScoreText = requireView().findViewById(R.id.examPassScoreText);
         TextView questionCountText = requireView().findViewById(R.id.examQuestionCountText);
 
+        selectedChoices.clear();
         titleText.setText(exam.title);
         passScoreText.setText(getString(R.string.exam_pass_score_label, exam.passScore));
         int count = exam.questions != null ? exam.questions.size() : 0;
@@ -259,6 +275,37 @@ public class ExamFragment extends Fragment {
         int answered = selectedChoices.size();
         progressText.setText(getString(R.string.exam_progress, answered, totalQuestions));
         submitButton.setEnabled(answered == totalQuestions && totalQuestions > 0);
+    }
+
+    private void showBlockedState(String message) {
+        scrollView.setVisibility(View.GONE);
+        submitFooter.setVisibility(View.GONE);
+        statusText.setVisibility(View.VISIBLE);
+        statusText.setText(message);
+    }
+
+    private String buildCooldownMessage(String cooldownEndsAt) {
+        String formattedDate = formatCooldownDate(cooldownEndsAt);
+        if (formattedDate == null) {
+            return getString(R.string.exam_result_cooldown_active);
+        }
+        return getString(R.string.exam_cooldown_active, formattedDate);
+    }
+
+    private String formatCooldownDate(String isoInstant) {
+        if (isoInstant == null || isoInstant.isBlank()) {
+            return null;
+        }
+        try {
+            Instant instant = Instant.parse(isoInstant);
+            DateTimeFormatter formatter = DateTimeFormatter
+                    .ofPattern("MMM d, yyyy 'at' h:mm a", Locale.getDefault())
+                    .withZone(ZoneId.systemDefault());
+            return formatter.format(instant);
+        } catch (Exception ignored) {
+            // Fallback keeps the guard readable even if the server timestamp format changes.
+            return isoInstant;
+        }
     }
 
     private int dp(int value) {
