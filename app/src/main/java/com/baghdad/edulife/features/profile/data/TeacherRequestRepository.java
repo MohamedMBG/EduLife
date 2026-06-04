@@ -13,13 +13,15 @@ import retrofit2.Response;
 
 public class TeacherRequestRepository {
 
-    public interface GetRequestCallback {
-        void onSuccess(TeacherRequestResponse request); // null = 204, no request exists
+    public interface LatestRequestCallback {
+        void onSuccess(TeacherRequestResponse request);
+        void onEmpty();
         void onError(String message);
     }
 
     public interface SubmitCallback {
         void onSuccess(TeacherRequestResponse request);
+        void onAlreadyPending();
         void onError(String message);
     }
 
@@ -29,51 +31,50 @@ public class TeacherRequestRepository {
         this.apiService = ApiClient.getClient().create(ApiService.class);
     }
 
-    public void getMyRequest(GetRequestCallback callback) {
+    public void getMyLatestRequest(LatestRequestCallback callback) {
         apiService.getMyTeacherRequest().enqueue(new Callback<TeacherRequestResponse>() {
             @Override
             public void onResponse(@NonNull Call<TeacherRequestResponse> call,
                                    @NonNull Response<TeacherRequestResponse> response) {
                 if (response.code() == 204) {
-                    callback.onSuccess(null);
+                    callback.onEmpty();
                     return;
                 }
-                if (!response.isSuccessful() || response.body() == null) {
-                    callback.onError("Request load failed. Status: " + response.code());
+                if (!response.isSuccessful()) {
+                    callback.onError("Teacher request load failed. Status: " + response.code());
                     return;
                 }
                 callback.onSuccess(response.body());
             }
 
             @Override
-            public void onFailure(@NonNull Call<TeacherRequestResponse> call,
-                                  @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<TeacherRequestResponse> call, @NonNull Throwable t) {
                 callback.onError(t.getMessage() != null ? t.getMessage() : "Network error");
             }
         });
     }
 
-    public void submitRequest(SubmitTeacherRequestBody body, SubmitCallback callback) {
-        apiService.submitTeacherRequest(body).enqueue(new Callback<TeacherRequestResponse>() {
-            @Override
-            public void onResponse(@NonNull Call<TeacherRequestResponse> call,
-                                   @NonNull Response<TeacherRequestResponse> response) {
-                if (response.code() == 409) {
-                    callback.onError("You already have a pending request.");
-                    return;
-                }
-                if (!response.isSuccessful() || response.body() == null) {
-                    callback.onError("Submission failed. Status: " + response.code());
-                    return;
-                }
-                callback.onSuccess(response.body());
-            }
+    public void submitTeacherRequest(String motivation, SubmitCallback callback) {
+        apiService.submitTeacherRequest(new SubmitTeacherRequestBody(motivation))
+                .enqueue(new Callback<TeacherRequestResponse>() {
+                    @Override
+                    public void onResponse(@NonNull Call<TeacherRequestResponse> call,
+                                           @NonNull Response<TeacherRequestResponse> response) {
+                        if (response.code() == 409) {
+                            callback.onAlreadyPending();
+                            return;
+                        }
+                        if (!response.isSuccessful() || response.body() == null) {
+                            callback.onError("Teacher request submission failed. Status: " + response.code());
+                            return;
+                        }
+                        callback.onSuccess(response.body());
+                    }
 
-            @Override
-            public void onFailure(@NonNull Call<TeacherRequestResponse> call,
-                                  @NonNull Throwable t) {
-                callback.onError(t.getMessage() != null ? t.getMessage() : "Network error");
-            }
-        });
+                    @Override
+                    public void onFailure(@NonNull Call<TeacherRequestResponse> call, @NonNull Throwable t) {
+                        callback.onError(t.getMessage() != null ? t.getMessage() : "Network error");
+                    }
+                });
     }
 }

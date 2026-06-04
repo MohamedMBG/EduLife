@@ -29,8 +29,10 @@ import com.baghdad.edulife.R;
 import com.baghdad.edulife.core.storage.SessionStorage;
 import com.baghdad.edulife.features.auth.viewmodel.AuthViewModel;
 import com.baghdad.edulife.features.profile.model.ProfileResponse;
+import com.baghdad.edulife.features.profile.model.TeacherRequestResponse;
 import com.baghdad.edulife.features.profile.viewmodel.ProfileViewModel;
 import com.bumptech.glide.Glide;
+import com.baghdad.edulife.features.profile.viewmodel.TeacherRequestViewModel;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -38,6 +40,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 public class ProfileFragment extends Fragment {
 
@@ -47,6 +53,8 @@ public class ProfileFragment extends Fragment {
     private AuthViewModel authViewModel;
     private ProfileViewModel profileViewModel;
     private ActivityResultLauncher<PickVisualMediaRequest> pickMediaLauncher;
+    private TeacherRequestViewModel teacherRequestViewModel;
+    private String currentRoleCode = "LEARNER";
 
     public ProfileFragment() {
         super(R.layout.fragment_profile);
@@ -69,7 +77,11 @@ public class ProfileFragment extends Fragment {
 
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
         profileViewModel = new ViewModelProvider(this).get(ProfileViewModel.class);
+        teacherRequestViewModel = new ViewModelProvider(this).get(TeacherRequestViewModel.class);
         SessionStorage sessionStorage = new SessionStorage(requireContext());
+        currentRoleCode = sessionStorage.getRole() != null
+                ? sessionStorage.getRole().toUpperCase(Locale.ROOT)
+                : "LEARNER";
 
         View profileHeader = view.findViewById(R.id.profileHeaderLayout);
         final int origProfileHeaderTop = profileHeader.getPaddingTop();
@@ -84,6 +96,11 @@ public class ProfileFragment extends Fragment {
         observeProfile(view);
         observeAvatarUpload(view);
         profileViewModel.loadProfile();
+        bindTeacherRequestRow(view);
+        observeTeacherRequests(view);
+        if (isTeacherRequestEligible(currentRoleCode)) {
+            teacherRequestViewModel.loadLatestRequest();
+        }
 
         view.findViewById(R.id.avatarContainer).setOnClickListener(v ->
                 pickMediaLauncher.launch(
@@ -196,6 +213,70 @@ public class ProfileFragment extends Fragment {
                 .into(imageView);
         imageView.setVisibility(View.VISIBLE);
         initials.setVisibility(View.GONE);
+    }
+
+    private void bindTeacherRequestRow(View view) {
+        View requestRow = view.findViewById(R.id.profileTeacherRequestRow);
+        if (!isTeacherRequestEligible(currentRoleCode)) {
+            requestRow.setVisibility(View.GONE);
+            return;
+        }
+
+        requestRow.setOnClickListener(v -> {
+            TeacherRequestResponse request = teacherRequestViewModel.getLatestRequest().getValue();
+            if (request != null && "PENDING".equalsIgnoreCase(request.status)) {
+                Toast.makeText(requireContext(),
+                        getString(R.string.profile_teacher_request_status_pending),
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (request != null && "APPROVED".equalsIgnoreCase(request.status)) {
+                Toast.makeText(requireContext(),
+                        getString(R.string.profile_teacher_request_status_approved),
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
+            showTeacherRequestDialog();
+        });
+    }
+
+    private void showTeacherRequestDialog() {
+        EditText motivationInput = new EditText(requireContext());
+        motivationInput.setHint(R.string.profile_teacher_request_dialog_hint);
+        motivationInput.setMinLines(4);
+        motivationInput.setMaxLines(6);
+        motivationInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+                | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        motivationInput.setFilters(new android.text.InputFilter[] {
+                new android.text.InputFilter.LengthFilter(1000)
+        });
+        int padPx = (int) (requireContext().getResources().getDisplayMetrics().density * 24);
+        motivationInput.setPadding(padPx, padPx / 2, padPx, padPx / 2);
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.profile_teacher_request_dialog_title)
+                .setMessage(R.string.profile_teacher_request_dialog_body)
+                .setView(motivationInput)
+                .setNegativeButton(R.string.profile_delete_account_dialog_cancel, null)
+                .setPositiveButton(R.string.profile_teacher_request_dialog_submit, null)
+                .create();
+
+        dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                .setOnClickListener(btn -> {
+                    String motivation = motivationInput.getText() == null
+                            ? ""
+                            : motivationInput.getText().toString().trim();
+                    if (motivation.isBlank()) {
+                        Toast.makeText(requireContext(),
+                                R.string.profile_teacher_request_motivation_required,
+                                Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    dialog.dismiss();
+                    teacherRequestViewModel.submitTeacherRequest(motivation);
+                }));
+
+        dialog.show();
     }
 
     private void showDeleteAccountDialog(View view) {
@@ -325,6 +406,71 @@ public class ProfileFragment extends Fragment {
         });
     }
 
+    private void observeTeacherRequests(View view) {
+        TextView statusView = view.findViewById(R.id.profileTeacherRequestStatus);
+        TextView metaView = view.findViewById(R.id.profileTeacherRequestMeta);
+        View row = view.findViewById(R.id.profileTeacherRequestRow);
+
+        if (!isTeacherRequestEligible(currentRoleCode)) {
+            row.setVisibility(View.GONE);
+            return;
+        }
+
+        teacherRequestViewModel.getLoading().observe(getViewLifecycleOwner(), loading -> {
+            if (Boolean.TRUE.equals(loading)) {
+                statusView.setText(R.string.profile_teacher_request_status_idle);
+                metaView.setText(R.string.profile_teacher_request_meta_loading);
+            }
+        });
+
+        teacherRequestViewModel.getLatestRequest().observe(getViewLifecycleOwner(), request ->
+                bindTeacherRequestState(statusView, metaView, request));
+
+        teacherRequestViewModel.getSubmitMessage().observe(getViewLifecycleOwner(), message -> {
+            if (message == null || message.isBlank()) return;
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+            teacherRequestViewModel.clearSubmitMessage();
+        });
+
+        teacherRequestViewModel.getError().observe(getViewLifecycleOwner(), message -> {
+            if (message == null || message.isBlank()) return;
+            Toast.makeText(requireContext(),
+                    R.string.profile_teacher_request_error, Toast.LENGTH_SHORT).show();
+            teacherRequestViewModel.clearError();
+        });
+    }
+
+    private void bindTeacherRequestState(TextView statusView, TextView metaView, TeacherRequestResponse request) {
+        if (request == null) {
+            statusView.setText(R.string.profile_teacher_request_status_idle);
+            metaView.setText(R.string.profile_teacher_request_meta_idle);
+            return;
+        }
+
+        String status = request.status != null ? request.status.toUpperCase(Locale.ROOT) : "";
+        switch (status) {
+            case "PENDING":
+                statusView.setText(R.string.profile_teacher_request_status_pending);
+                metaView.setText(getString(R.string.profile_teacher_request_meta_pending,
+                        formatTeacherRequestDate(request.requestedAt)));
+                break;
+            case "APPROVED":
+                statusView.setText(R.string.profile_teacher_request_status_approved);
+                metaView.setText(getString(R.string.profile_teacher_request_meta_approved,
+                        formatTeacherRequestDate(request.reviewedAt)));
+                break;
+            case "REJECTED":
+                statusView.setText(R.string.profile_teacher_request_status_rejected);
+                metaView.setText(getString(R.string.profile_teacher_request_meta_rejected,
+                        formatTeacherRequestDate(request.reviewedAt)));
+                break;
+            default:
+                statusView.setText(R.string.profile_teacher_request_status_idle);
+                metaView.setText(R.string.profile_teacher_request_meta_idle);
+                break;
+        }
+    }
+
     private String buildMetaStatus(boolean emailVerified, boolean syncReady) {
         String verification = getString(emailVerified
                 ? R.string.profile_meta_verified
@@ -371,5 +517,23 @@ public class ProfileFragment extends Fragment {
             if (out.length() == 2) break;
         }
         return out.length() == 0 ? "?" : out.toString();
+    }
+
+    private boolean isTeacherRequestEligible(String roleCode) {
+        return "LEARNER".equalsIgnoreCase(roleCode) || "STUDENT".equalsIgnoreCase(roleCode);
+    }
+
+    private String formatTeacherRequestDate(String isoInstant) {
+        if (isoInstant == null || isoInstant.isBlank()) {
+            return "recently";
+        }
+        try {
+            Instant instant = Instant.parse(isoInstant);
+            return DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.getDefault())
+                    .withZone(ZoneId.systemDefault())
+                    .format(instant);
+        } catch (Exception e) {
+            return isoInstant;
+        }
     }
 }

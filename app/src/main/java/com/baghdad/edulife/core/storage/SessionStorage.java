@@ -8,7 +8,8 @@ import android.content.SharedPreferences;
  *
  * It stores only:
  *   - userId  : the internal UUID returned by /api/v1/auth/sync
- *   - role    : the user's role (e.g. STUDENT, TEACHER, ADMIN)
+ *   - role    : the user's role (e.g. LEARNER, TEACHER, GROUP_ADMIN)
+ *   - pending_registration_role : the selected role waiting for the first verified /auth/sync
  *
  * SECURITY: This class intentionally never stores Firebase ID tokens, refresh tokens, or passwords.
  * Tokens are always fetched fresh from Firebase at request time via FirebaseAuthInterceptor.
@@ -23,6 +24,7 @@ public class SessionStorage {
     private static final String PREFS_NAME = "edulife_session";
     private static final String KEY_USER_ID = "user_id";
     private static final String KEY_ROLE    = "role";
+    private static final String KEY_PENDING_REGISTRATION_ROLE = "pending_registration_role";
 
     private final SharedPreferences prefs;
 
@@ -37,7 +39,7 @@ public class SessionStorage {
      * Must only be called after a successful sync response.
      *
      * @param userId internal UUID assigned by the backend
-     * @param role   user role string (e.g. "STUDENT")
+     * @param role   user role string (e.g. "LEARNER")
      */
     public void saveSession(String userId, String role) {
         prefs.edit()
@@ -60,6 +62,22 @@ public class SessionStorage {
      */
     public String getRole() {
         return prefs.getString(KEY_ROLE, null);
+    }
+
+    /**
+     * Persists the selected registration role until the first verified backend sync consumes it.
+     * This survives app restarts so email verification can happen outside the app without losing intent.
+     */
+    public void savePendingRegistrationRole(String role) {
+        prefs.edit().putString(KEY_PENDING_REGISTRATION_ROLE, role).apply();
+    }
+
+    public String getPendingRegistrationRole() {
+        return prefs.getString(KEY_PENDING_REGISTRATION_ROLE, null);
+    }
+
+    public void clearPendingRegistrationRole() {
+        prefs.edit().remove(KEY_PENDING_REGISTRATION_ROLE).apply();
     }
 
     /**

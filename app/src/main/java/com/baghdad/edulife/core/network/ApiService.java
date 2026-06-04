@@ -1,10 +1,12 @@
 package com.baghdad.edulife.core.network;
 
+import com.baghdad.edulife.features.auth.model.AuthSyncRequest;
 import com.baghdad.edulife.features.auth.model.AuthSyncResponse;
 import com.baghdad.edulife.features.certificates.model.CertificateDetail;
 import com.baghdad.edulife.features.certificates.model.CertificateSummary;
 import com.baghdad.edulife.features.courses.model.CourseDetail;
 import com.baghdad.edulife.features.courses.model.CoursePageResponse;
+import com.baghdad.edulife.features.courses.model.CourseProgressSummary;
 import com.baghdad.edulife.features.courses.model.CourseSummary;
 import com.baghdad.edulife.features.courses.model.EnrolledCourse;
 import com.baghdad.edulife.features.courses.model.EnrollmentResponse;
@@ -52,6 +54,13 @@ public interface ApiService {
      */
     @POST("auth/sync")
     Call<AuthSyncResponse> syncUser();
+
+    /**
+     * Sends the chosen first-time role during the initial verified auth sync.
+     * The backend ignores this body for existing users and never allows ADMIN self-assignment.
+     */
+    @POST("auth/sync")
+    Call<AuthSyncResponse> syncUser(@Body AuthSyncRequest request);
 
     /**
      * Loads the published course catalog from the live backend.
@@ -113,6 +122,13 @@ public interface ApiService {
             @Path("lessonId") String lessonId
     );
 
+    /**
+     * Returns aggregate progress for one enrolled course so card summaries can show
+     * completed-vs-total lessons and completion percentage.
+     */
+    @GET("progress/courses/{courseId}")
+    Call<CourseProgressSummary> getCourseProgress(@Path("courseId") String courseId);
+
     @GET("profile")
     Call<ProfileResponse> getProfile();
 
@@ -136,8 +152,8 @@ public interface ApiService {
     Call<ExamResponse> getExam(@Path("courseId") String courseId);
 
     /**
-     * Checks whether the learner can still open the exam before loading questions.
-     * The backend is the source of truth for pass lockouts and cooldown windows.
+     * Checks whether the learner can start the exam before Android renders the full question UI.
+     * This prevents already-passed and cooldown users from reaching a dead-end submit error.
      */
     @GET("courses/{courseId}/exam/status")
     Call<ExamStatusResponse> getExamStatus(@Path("courseId") String courseId);
@@ -153,9 +169,6 @@ public interface ApiService {
 
     @GET("certificates/{id}")
     Call<CertificateDetail> getCertificateById(@Path("id") String id);
-
-    @GET("progress/courses/{courseId}")
-    Call<CourseProgressResponse> getCourseProgress(@Path("courseId") String courseId);
 
     @POST("teacher-requests")
     Call<TeacherRequestResponse> submitTeacherRequest(@Body SubmitTeacherRequestBody body);

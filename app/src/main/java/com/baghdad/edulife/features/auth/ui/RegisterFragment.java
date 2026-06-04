@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -17,18 +18,34 @@ import androidx.navigation.Navigation;
 
 import com.baghdad.edulife.R;
 import com.baghdad.edulife.features.auth.model.AuthUiState;
+import com.baghdad.edulife.features.auth.model.RegisterRequest;
 import com.baghdad.edulife.features.auth.viewmodel.AuthViewModel;
 
 public class RegisterFragment extends Fragment {
+    private static final String STATE_SELECTED_ROLE = "selectedRole";
+    private static final String STATE_ROLE_STEP_ACTIVE = "roleStepActive";
 
     private AuthViewModel authViewModel;
 
+    private TextView eyebrowText;
+    private TextView titleText;
+    private TextView infoMessageText;
+    private TextView stepIndicatorText;
+    private View roleStepContainer;
+    private View credentialsStepContainer;
+    private View continueRoleButton;
+    private View backToRoleButton;
+    private View learnerRoleCard;
+    private View teacherRoleCard;
+    private View groupAdminRoleCard;
     private EditText fullNameInput;
     private EditText emailInput;
     private EditText passwordInput;
     private EditText confirmPasswordInput;
     private CheckBox termsCheckbox;
     private View createAccountButton;
+    private String selectedRole;
+    private boolean roleStepActive = true;
 
     public RegisterFragment() {
         super(R.layout.fragment_register);
@@ -40,6 +57,17 @@ public class RegisterFragment extends Fragment {
 
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
 
+        eyebrowText = view.findViewById(R.id.eyebrowText);
+        titleText = view.findViewById(R.id.titleText);
+        infoMessageText = view.findViewById(R.id.infoMessageText);
+        stepIndicatorText = view.findViewById(R.id.stepIndicatorText);
+        roleStepContainer = view.findViewById(R.id.roleStepContainer);
+        credentialsStepContainer = view.findViewById(R.id.credentialsStepContainer);
+        continueRoleButton = view.findViewById(R.id.continueRoleButton);
+        backToRoleButton = view.findViewById(R.id.backToRoleButton);
+        learnerRoleCard = view.findViewById(R.id.learnerRoleCard);
+        teacherRoleCard = view.findViewById(R.id.teacherRoleCard);
+        groupAdminRoleCard = view.findViewById(R.id.groupAdminRoleCard);
         fullNameInput = view.findViewById(R.id.fullNameInput);
         emailInput = view.findViewById(R.id.emailInput);
         passwordInput = view.findViewById(R.id.passwordInput);
@@ -58,6 +86,11 @@ public class RegisterFragment extends Fragment {
         confirmPasswordVisibilityToggle.setOnClickListener(
                 v -> togglePasswordVisibility(confirmPasswordInput));
 
+        learnerRoleCard.setOnClickListener(v -> selectRole(RegisterRequest.ROLE_LEARNER));
+        teacherRoleCard.setOnClickListener(v -> selectRole(RegisterRequest.ROLE_TEACHER));
+        groupAdminRoleCard.setOnClickListener(v -> selectRole(RegisterRequest.ROLE_GROUP_ADMIN));
+        continueRoleButton.setOnClickListener(v -> openCredentialsStep());
+        backToRoleButton.setOnClickListener(v -> showRoleStep());
         createAccountButton.setOnClickListener(v -> handleRegister());
 
         googleRegisterButton.setOnClickListener(v ->
@@ -71,11 +104,33 @@ public class RegisterFragment extends Fragment {
 
         authViewModel.getAuthState().observe(getViewLifecycleOwner(), this::renderAuthState);
 
+        if (savedInstanceState != null) {
+            selectedRole = savedInstanceState.getString(STATE_SELECTED_ROLE);
+            roleStepActive = savedInstanceState.getBoolean(STATE_ROLE_STEP_ACTIVE, true);
+        }
+
+        updateRoleSelectionUi();
+        updateStepUi();
+
         fullNameInput.clearFocus();
         emailInput.clearFocus();
     }
 
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(STATE_SELECTED_ROLE, selectedRole);
+        outState.putBoolean(STATE_ROLE_STEP_ACTIVE, roleStepActive);
+    }
+
     private void handleRegister() {
+        if (selectedRole == null || selectedRole.isBlank()) {
+            Toast.makeText(requireContext(),
+                    R.string.register_role_required, Toast.LENGTH_SHORT).show();
+            showRoleStep();
+            return;
+        }
+
         String fullName = fullNameInput.getText().toString().trim();
         String email = emailInput.getText().toString().trim();
         String password = passwordInput.getText().toString();
@@ -112,14 +167,16 @@ public class RegisterFragment extends Fragment {
             return;
         }
 
-        // fullName is forwarded so the backend / Firebase profile carries the learner's typed
-        // name instead of falling back to the email local-part.
-        authViewModel.register(fullName, email, password);
+        // "Student" in the UI maps to the backend LEARNER role so Android stays aligned with the
+        // locked enum used by /api/v1/auth/sync.
+        authViewModel.register(new RegisterRequest(fullName, email, password, selectedRole));
     }
 
     private void renderAuthState(AuthUiState state) {
         if (state == null) return;
 
+        continueRoleButton.setEnabled(!state.loading);
+        backToRoleButton.setEnabled(!state.loading);
         createAccountButton.setEnabled(!state.loading);
 
         if (state.loading) {
@@ -146,5 +203,69 @@ public class RegisterFragment extends Fragment {
                 ? HideReturnsTransformationMethod.getInstance()
                 : PasswordTransformationMethod.getInstance());
         passwordInput.setSelection(passwordInput.length());
+    }
+
+    private void selectRole(String role) {
+        selectedRole = role;
+        updateRoleSelectionUi();
+    }
+
+    private void openCredentialsStep() {
+        if (selectedRole == null || selectedRole.isBlank()) {
+            Toast.makeText(requireContext(),
+                    R.string.register_role_required, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        roleStepActive = false;
+        updateStepUi();
+    }
+
+    private void showRoleStep() {
+        roleStepActive = true;
+        updateStepUi();
+    }
+
+    private void updateStepUi() {
+        roleStepContainer.setVisibility(roleStepActive ? View.VISIBLE : View.GONE);
+        credentialsStepContainer.setVisibility(roleStepActive ? View.GONE : View.VISIBLE);
+
+        if (roleStepActive) {
+            stepIndicatorText.setText(R.string.register_role_step_indicator);
+            eyebrowText.setText(R.string.register_role_eyebrow);
+            titleText.setText(R.string.register_role_title);
+            infoMessageText.setText(R.string.register_role_info);
+        } else {
+            stepIndicatorText.setText(R.string.register_credentials_step_indicator);
+            eyebrowText.setText(getString(R.string.register_role_profile_eyebrow, getRoleLabel(selectedRole)));
+            titleText.setText(R.string.register_create_title);
+            // Show the selected role here because the backend only honors it on first sync and
+            // users need a clear confirmation before they submit credentials.
+            infoMessageText.setText(getString(
+                    R.string.register_role_selected_info,
+                    getRoleLabel(selectedRole)
+            ));
+        }
+    }
+
+    private void updateRoleSelectionUi() {
+        updateRoleCardSelection(learnerRoleCard, RegisterRequest.ROLE_LEARNER.equals(selectedRole));
+        updateRoleCardSelection(teacherRoleCard, RegisterRequest.ROLE_TEACHER.equals(selectedRole));
+        updateRoleCardSelection(groupAdminRoleCard, RegisterRequest.ROLE_GROUP_ADMIN.equals(selectedRole));
+        continueRoleButton.setEnabled(selectedRole != null && !selectedRole.isBlank());
+    }
+
+    private void updateRoleCardSelection(View roleCard, boolean selected) {
+        roleCard.setSelected(selected);
+        roleCard.setBackgroundResource(R.drawable.bg_auth_role_option);
+    }
+
+    private String getRoleLabel(String role) {
+        if (RegisterRequest.ROLE_TEACHER.equals(role)) {
+            return getString(R.string.register_role_teacher_title);
+        }
+        if (RegisterRequest.ROLE_GROUP_ADMIN.equals(role)) {
+            return getString(R.string.register_role_group_admin_title);
+        }
+        return getString(R.string.register_role_student_title);
     }
 }

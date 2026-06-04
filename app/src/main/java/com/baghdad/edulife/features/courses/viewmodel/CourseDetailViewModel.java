@@ -10,14 +10,19 @@ import androidx.lifecycle.MutableLiveData;
 import com.baghdad.edulife.features.courses.data.CourseRepository;
 import com.baghdad.edulife.features.courses.model.CourseDetail;
 import com.baghdad.edulife.features.courses.model.CourseDetailUiState;
-import com.baghdad.edulife.features.courses.model.CourseProgressResponse;
+import com.baghdad.edulife.features.courses.model.CourseProgressSummary;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 public class CourseDetailViewModel extends AndroidViewModel {
 
     private final CourseRepository courseRepository;
     private final MutableLiveData<CourseDetailUiState> uiState =
             new MutableLiveData<>(CourseDetailUiState.idle());
-    private final MutableLiveData<CourseProgressResponse> progressLiveData = new MutableLiveData<>();
+    private final MutableLiveData<Map<String, Boolean>> lessonCompletionState =
+            new MutableLiveData<>(new LinkedHashMap<>());
 
     public CourseDetailViewModel(@NonNull Application application) {
         super(application);
@@ -28,23 +33,8 @@ public class CourseDetailViewModel extends AndroidViewModel {
         return uiState;
     }
 
-    public LiveData<CourseProgressResponse> getProgress() {
-        return progressLiveData;
-    }
-
-    public void loadProgress(String courseId) {
-        if (progressLiveData.getValue() != null) return;
-        courseRepository.getCourseProgress(courseId, new CourseRepository.CourseProgressCallback() {
-            @Override
-            public void onSuccess(CourseProgressResponse response) {
-                progressLiveData.postValue(response);
-            }
-
-            @Override
-            public void onError(String message) {
-                // Silent — progress is additive, not blocking
-            }
-        });
+    public LiveData<Map<String, Boolean>> getLessonCompletionState() {
+        return lessonCompletionState;
     }
 
     public void loadCourseDetail(String courseId) {
@@ -61,5 +51,44 @@ public class CourseDetailViewModel extends AndroidViewModel {
                 uiState.postValue(CourseDetailUiState.error(message));
             }
         });
+    }
+
+    public void loadLessonCompletion(String courseId) {
+        courseRepository.getCourseProgress(courseId, new CourseRepository.CourseProgressCallback() {
+            @Override
+            public void onSuccess(CourseProgressSummary progress) {
+                // Course detail needs only the per-lesson completed flag, so the fragment receives
+                // a normalized lessonId -> completed map instead of parsing nested section DTOs.
+                lessonCompletionState.postValue(flattenCompletionMap(progress));
+            }
+
+            @Override
+            public void onError(String message) {
+                // Completion indicators are additive UX. A failure here must not block the
+                // underlying course detail screen or hide otherwise accessible lessons.
+                lessonCompletionState.postValue(new LinkedHashMap<>());
+            }
+        });
+    }
+
+    private Map<String, Boolean> flattenCompletionMap(CourseProgressSummary progress) {
+        Map<String, Boolean> completionMap = new LinkedHashMap<>();
+        if (progress == null || progress.sections == null) {
+            return completionMap;
+        }
+
+        for (CourseProgressSummary.SectionProgressSummary section : progress.sections) {
+            List<CourseProgressSummary.LessonProgressSummary> lessons =
+                    section != null ? section.lessons : null;
+            if (lessons == null) {
+                continue;
+            }
+            for (CourseProgressSummary.LessonProgressSummary lesson : lessons) {
+                if (lesson != null && lesson.lessonId != null && !lesson.lessonId.isBlank()) {
+                    completionMap.put(lesson.lessonId, lesson.completed);
+                }
+            }
+        }
+        return completionMap;
     }
 }

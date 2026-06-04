@@ -5,89 +5,91 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.baghdad.edulife.features.profile.data.TeacherRequestRepository;
-import com.baghdad.edulife.features.profile.model.SubmitTeacherRequestBody;
 import com.baghdad.edulife.features.profile.model.TeacherRequestResponse;
 
 public class TeacherRequestViewModel extends ViewModel {
 
     private final TeacherRequestRepository repository = new TeacherRequestRepository();
 
-    private final MutableLiveData<Boolean> _loading = new MutableLiveData<>(false);
-    public final LiveData<Boolean> loading = _loading;
+    private final MutableLiveData<TeacherRequestResponse> latestRequest = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> loading = new MutableLiveData<>(false);
+    private final MutableLiveData<Boolean> submitting = new MutableLiveData<>(false);
+    private final MutableLiveData<String> error = new MutableLiveData<>();
+    private final MutableLiveData<String> submitMessage = new MutableLiveData<>();
 
-    private final MutableLiveData<TeacherRequestResponse> _request = new MutableLiveData<>();
-    public final LiveData<TeacherRequestResponse> request = _request;
+    public LiveData<TeacherRequestResponse> getLatestRequest() {
+        return latestRequest;
+    }
 
-    // True when the backend confirmed no request exists (204 response).
-    private final MutableLiveData<Boolean> _noRequest = new MutableLiveData<>(false);
-    public final LiveData<Boolean> noRequest = _noRequest;
+    public LiveData<Boolean> getLoading() {
+        return loading;
+    }
 
-    private final MutableLiveData<String> _error = new MutableLiveData<>();
-    public final LiveData<String> error = _error;
+    public LiveData<Boolean> getSubmitting() {
+        return submitting;
+    }
 
-    private final MutableLiveData<Boolean> _submitting = new MutableLiveData<>(false);
-    public final LiveData<Boolean> submitting = _submitting;
+    public LiveData<String> getError() {
+        return error;
+    }
 
-    private final MutableLiveData<String> _submitError = new MutableLiveData<>();
-    public final LiveData<String> submitError = _submitError;
+    public LiveData<String> getSubmitMessage() {
+        return submitMessage;
+    }
 
-    private boolean loaded = false;
-
-    public void load() {
-        if (loaded) return;
-        loaded = true;
-        _loading.setValue(true);
-        repository.getMyRequest(new TeacherRequestRepository.GetRequestCallback() {
+    public void loadLatestRequest() {
+        loading.setValue(true);
+        repository.getMyLatestRequest(new TeacherRequestRepository.LatestRequestCallback() {
             @Override
-            public void onSuccess(TeacherRequestResponse req) {
-                _loading.postValue(false);
-                if (req == null) {
-                    _noRequest.postValue(true);
-                } else {
-                    _noRequest.postValue(false);
-                    _request.postValue(req);
-                }
+            public void onSuccess(TeacherRequestResponse request) {
+                loading.postValue(false);
+                latestRequest.postValue(request);
+            }
+
+            @Override
+            public void onEmpty() {
+                loading.postValue(false);
+                latestRequest.postValue(null);
             }
 
             @Override
             public void onError(String message) {
-                _loading.postValue(false);
-                _error.postValue(message);
+                loading.postValue(false);
+                error.postValue(message);
             }
         });
     }
 
-    public void submit(String motivation) {
-        _submitting.setValue(true);
-        _submitError.setValue(null);
-        String trimmed = motivation != null ? motivation.trim() : null;
-        SubmitTeacherRequestBody body = new SubmitTeacherRequestBody(
-                trimmed != null && !trimmed.isEmpty() ? trimmed : null);
-        repository.submitRequest(body, new TeacherRequestRepository.SubmitCallback() {
+    public void submitTeacherRequest(String motivation) {
+        submitting.setValue(true);
+        repository.submitTeacherRequest(motivation, new TeacherRequestRepository.SubmitCallback() {
             @Override
-            public void onSuccess(TeacherRequestResponse req) {
-                _submitting.postValue(false);
-                _noRequest.postValue(false);
-                _request.postValue(req);
+            public void onSuccess(TeacherRequestResponse request) {
+                submitting.postValue(false);
+                latestRequest.postValue(request);
+                submitMessage.postValue("Teacher request submitted.");
+            }
+
+            @Override
+            public void onAlreadyPending() {
+                submitting.postValue(false);
+                submitMessage.postValue("A pending teacher request already exists.");
+                loadLatestRequest();
             }
 
             @Override
             public void onError(String message) {
-                _submitting.postValue(false);
-                _submitError.postValue(message);
+                submitting.postValue(false);
+                error.postValue(message);
             }
         });
     }
 
-    public void clearSubmitError() {
-        _submitError.setValue(null);
+    public void clearError() {
+        error.setValue(null);
     }
 
-    public void reload() {
-        loaded = false;
-        _noRequest.setValue(false);
-        _request.setValue(null);
-        _error.setValue(null);
-        load();
+    public void clearSubmitMessage() {
+        submitMessage.setValue(null);
     }
 }

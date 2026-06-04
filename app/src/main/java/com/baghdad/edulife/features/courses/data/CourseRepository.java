@@ -6,7 +6,7 @@ import com.baghdad.edulife.core.network.ApiClient;
 import com.baghdad.edulife.core.network.ApiService;
 import com.baghdad.edulife.features.courses.model.CourseDetail;
 import com.baghdad.edulife.features.courses.model.CoursePageResponse;
-import com.baghdad.edulife.features.courses.model.CourseProgressResponse;
+import com.baghdad.edulife.features.courses.model.CourseProgressSummary;
 import com.baghdad.edulife.features.courses.model.CourseSummary;
 import com.baghdad.edulife.features.courses.model.EnrolledCourse;
 import com.baghdad.edulife.features.courses.model.EnrollmentResponse;
@@ -215,6 +215,11 @@ public class CourseRepository {
         void onError(String message);
     }
 
+    public interface CourseProgressCallback {
+        void onSuccess(CourseProgressSummary progress);
+        void onError(String message);
+    }
+
     /**
      * Reason for a mark-complete failure so the UI can pick a specific message instead of
      * stringly-typing HTTP status codes inside the fragment.
@@ -264,6 +269,32 @@ public class CourseRepository {
         });
     }
 
+    public void getCourseProgress(String courseId, CourseProgressCallback callback) {
+        apiService.getCourseProgress(courseId).enqueue(new Callback<CourseProgressSummary>() {
+            @Override
+            public void onResponse(@NonNull Call<CourseProgressSummary> call, @NonNull Response<CourseProgressSummary> response) {
+                if (response.code() == 403) {
+                    callback.onError("You must be enrolled to view progress for this course.");
+                    return;
+                }
+                if (response.code() == 404) {
+                    callback.onError("Course progress not found.");
+                    return;
+                }
+                if (!response.isSuccessful() || response.body() == null) {
+                    callback.onError("Course progress failed to load. Status: " + response.code());
+                    return;
+                }
+                callback.onSuccess(response.body());
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<CourseProgressSummary> call, @NonNull Throwable t) {
+                callback.onError("Network error: " + safeMessage(t));
+            }
+        });
+    }
+
     public void getMyEnrollments(MyEnrollmentsCallback callback) {
         apiService.getMyEnrollments().enqueue(new Callback<List<EnrolledCourse>>() {
             @Override
@@ -278,29 +309,6 @@ public class CourseRepository {
             @Override
             public void onFailure(@NonNull Call<List<EnrolledCourse>> call, @NonNull Throwable t) {
                 callback.onError("Network error: " + safeMessage(t));
-            }
-        });
-    }
-
-    public interface CourseProgressCallback {
-        void onSuccess(CourseProgressResponse response);
-        void onError(String message);
-    }
-
-    public void getCourseProgress(String courseId, CourseProgressCallback callback) {
-        apiService.getCourseProgress(courseId).enqueue(new Callback<CourseProgressResponse>() {
-            @Override
-            public void onResponse(@NonNull Call<CourseProgressResponse> call, @NonNull Response<CourseProgressResponse> response) {
-                if (!response.isSuccessful() || response.body() == null) {
-                    callback.onError("Progress failed. Status: " + response.code());
-                    return;
-                }
-                callback.onSuccess(response.body());
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<CourseProgressResponse> call, @NonNull Throwable t) {
-                callback.onError("Progress network error: " + safeMessage(t));
             }
         });
     }

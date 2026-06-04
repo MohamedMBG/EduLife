@@ -10,6 +10,7 @@ import androidx.lifecycle.MutableLiveData;
 import com.baghdad.edulife.features.auth.data.AuthRepository;
 import com.baghdad.edulife.features.auth.model.AuthResult;
 import com.baghdad.edulife.features.auth.model.AuthUiState;
+import com.baghdad.edulife.features.auth.model.RegisterRequest;
 
 /**
  * AuthViewModel manages the authentication UI state for login and registration flows.
@@ -34,10 +35,10 @@ public class AuthViewModel extends AndroidViewModel {
         return authState;
     }
 
-    public void register(String fullName, String email, String password) {
+    public void register(RegisterRequest request) {
         authState.setValue(AuthUiState.loading());
 
-        authRepository.register(fullName, email, password, result -> {
+        authRepository.register(request, result -> {
             if (result.success) {
                 authState.postValue(AuthUiState.verificationRequired(result.message));
             } else {
@@ -52,7 +53,8 @@ public class AuthViewModel extends AndroidViewModel {
         authRepository.login(email, password, result -> {
             if (result.success) {
                 authState.postValue(AuthUiState.success("Login successful."));
-                // Backend sync is best-effort: it persists userId/role when reachable
+                // Backend sync is best-effort: it persists userId/role when reachable and
+                // consumes any pending intendedRole chosen during registration.
                 // but never blocks or fails the login UI.
                 authRepository.syncWithBackend(syncResult -> { /* no-op */ });
             } else if (result.emailVerificationRequired) {
