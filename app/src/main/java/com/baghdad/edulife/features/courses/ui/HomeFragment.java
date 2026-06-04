@@ -100,6 +100,13 @@ public class HomeFragment extends Fragment {
                 }
             }
         });
+
+        enrollmentViewModel.getProgressMap().observe(getViewLifecycleOwner(), map -> {
+            if (courseCatalogAdapter != null) {
+                courseCatalogAdapter.updateProgressMap(map);
+            }
+        });
+
         enrollmentViewModel.loadMyEnrollments();
 
         courseCatalogViewModel.getUiState().observe(getViewLifecycleOwner(), this::renderCatalogState);

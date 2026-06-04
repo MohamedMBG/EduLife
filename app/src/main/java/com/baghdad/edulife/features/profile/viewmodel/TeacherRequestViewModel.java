@@ -74,7 +74,6 @@ public class TeacherRequestViewModel extends ViewModel {
             public void onAlreadyPending() {
                 submitting.postValue(false);
                 submitMessage.postValue("A pending teacher request already exists.");
-                // Refresh latest request so the profile reflects the canonical backend state.
                 loadLatestRequest();
             }
 

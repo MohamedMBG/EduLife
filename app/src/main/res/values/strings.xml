@@ -253,6 +253,53 @@
     <string name="exam_result_cooldown_active">Cooldown active. You cannot retake this exam yet.</string>
     <string name="exam_already_passed">You have already passed this exam.</string>
     <string name="exam_cooldown_active">Cooldown active. You can retake this exam after %1$s.</string>
+
+    <!-- Progress -->
+    <string name="progress_lessons_summary">%1$d of %2$d lessons completed</string>
+    <string name="progress_percent">%1$d%% complete</string>
+    <string name="progress_lesson_completed">&#10003; Completed</string>
+
+    <!-- Edit Profile -->
+    <string name="edit_profile_title">Edit Profile</string>
+    <string name="edit_profile_display_name_label">Display Name</string>
+    <string name="edit_profile_bio_label">Bio (optional)</string>
+    <string name="edit_profile_save">Save</string>
+    <string name="edit_profile_success">Profile updated</string>
+    <string name="edit_profile_error">Failed to save. Try again.</string>
+    <string name="edit_profile_name_required">Display name is required</string>
+    <string name="edit_profile_name_too_long">Max 100 characters</string>
+
+    <!-- Avatar -->
+    <string name="avatar_change_hint">Change avatar</string>
+    <string name="avatar_uploading">Uploading avatar…</string>
+    <string name="avatar_upload_success">Avatar updated</string>
+    <string name="avatar_upload_error">Avatar upload failed. Try again.</string>
+
+    <!-- Certificate Detail -->
+    <string name="cert_detail_title">Certificate</string>
+    <string name="cert_detail_student_label">Awarded to</string>
+    <string name="cert_detail_issuer_label">Issued by</string>
+    <string name="cert_detail_hash_label">Verification</string>
+    <string name="cert_detail_share">Share Certificate</string>
+    <string name="cert_share_text">I completed %1$s!\n\nCertificate: %2$s\nIssued: %3$s\nVerification: %4$s\n\nVerified by EduLife</string>
+    <!-- Teacher Request -->
+    <string name="profile_become_teacher">Become a Teacher</string>
+    <string name="teacher_request_eyebrow">Career</string>
+    <string name="teacher_request_title">Become a Teacher</string>
+    <string name="teacher_request_section_title">Apply to teach</string>
+    <string name="teacher_request_description">Share your expertise with learners on EduLife. Tell us about your background and why you\'d like to create courses. Our team reviews every application carefully.</string>
+    <string name="teacher_request_motivation_hint">Your motivation (optional)</string>
+    <string name="teacher_request_submit">Submit Request</string>
+    <string name="teacher_request_submitting">Submitting…</string>
+    <string name="teacher_request_rejected_label">Previous request declined</string>
+    <string name="teacher_request_rejected_body">Your previous request was not approved. You\'re welcome to submit a new application below.</string>
+    <string name="teacher_request_status_pending">Pending Review</string>
+    <string name="teacher_request_pending_title">Request received</string>
+    <string name="teacher_request_pending_body">Your application is under review. We\'ll update your account once a decision is made. This typically takes a few business days.</string>
+    <string name="teacher_request_submitted_label">Submitted on</string>
+    <string name="teacher_request_approved_title">Application approved</string>
+    <string name="teacher_request_approved_body">Your teacher role will be active the next time you log in.</string>
+
     <string name="exam_result_done">Back to Course</string>
     <string name="exam_take_cta">Take Final Exam</string>
     <string name="exam_question_label">Question %1$d</string>

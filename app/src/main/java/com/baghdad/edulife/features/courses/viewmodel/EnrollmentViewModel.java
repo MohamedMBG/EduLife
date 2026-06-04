@@ -17,6 +17,7 @@ import com.baghdad.edulife.features.courses.model.UnenrollUiState;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,6 +42,8 @@ public class EnrollmentViewModel extends AndroidViewModel {
     private final MutableLiveData<String> myEnrollmentsError = new MutableLiveData<>();
 
     private final MutableLiveData<Boolean> myEnrollmentsLoading = new MutableLiveData<>(false);
+    private final MutableLiveData<Map<String, Integer>> progressMap =
+            new MutableLiveData<>(new HashMap<>());
 
     private final MutableLiveData<Map<String, CourseProgressSummary>> myCourseProgress =
             new MutableLiveData<>(new LinkedHashMap<>());
@@ -71,6 +74,10 @@ public class EnrollmentViewModel extends AndroidViewModel {
 
     public LiveData<Boolean> getMyEnrollmentsLoading() {
         return myEnrollmentsLoading;
+    }
+
+    public LiveData<Map<String, Integer>> getProgressMap() {
+        return progressMap;
     }
 
     public LiveData<Map<String, CourseProgressSummary>> getMyCourseProgress() {
@@ -133,6 +140,27 @@ public class EnrollmentViewModel extends AndroidViewModel {
         unenrollState.setValue(UnenrollUiState.idle());
     }
 
+    private void loadProgressForEnrollments(List<EnrolledCourse> courses) {
+        if (courses == null || courses.isEmpty()) return;
+        for (EnrolledCourse course : courses) {
+            if (course.courseId == null) continue;
+            courseRepository.getCourseProgress(course.courseId, new CourseRepository.CourseProgressCallback() {
+                @Override
+                public void onSuccess(CourseProgressSummary progress) {
+                    Map<String, Integer> current = progressMap.getValue();
+                    Map<String, Integer> updated = current != null ? new HashMap<>(current) : new HashMap<>();
+                    updated.put(progress.courseId, (int) Math.round(progress.percentComplete));
+                    progressMap.postValue(updated);
+                }
+
+                @Override
+                public void onError(String message) {
+                    // Silent — progress bars are additive
+                }
+            });
+        }
+    }
+
     public void loadMyEnrollments() {
         myEnrollmentsLoading.postValue(true);
         // Clear any stale error before the new fetch so a transient failure does not linger
@@ -144,7 +172,7 @@ public class EnrollmentViewModel extends AndroidViewModel {
             public void onSuccess(List<EnrolledCourse> courses) {
                 myEnrollmentsLoading.postValue(false);
                 myEnrollments.postValue(courses);
-                loadCourseProgressFor(courses);
+                loadProgressForEnrollments(courses);
             }
 
             @Override

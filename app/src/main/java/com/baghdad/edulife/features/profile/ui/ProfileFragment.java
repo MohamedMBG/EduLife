@@ -1,12 +1,20 @@
-package com.baghdad.edulife.features.courses.ui;
+package com.baghdad.edulife.features.profile.ui;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.PickVisualMediaRequest;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -23,10 +31,15 @@ import com.baghdad.edulife.features.auth.viewmodel.AuthViewModel;
 import com.baghdad.edulife.features.profile.model.ProfileResponse;
 import com.baghdad.edulife.features.profile.model.TeacherRequestResponse;
 import com.baghdad.edulife.features.profile.viewmodel.ProfileViewModel;
+import com.bumptech.glide.Glide;
 import com.baghdad.edulife.features.profile.viewmodel.TeacherRequestViewModel;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -34,13 +47,28 @@ import java.util.Locale;
 
 public class ProfileFragment extends Fragment {
 
+    private static final int AVATAR_MAX_PX = 1024;
+    private static final int AVATAR_JPEG_QUALITY = 88;
+
     private AuthViewModel authViewModel;
     private ProfileViewModel profileViewModel;
+    private ActivityResultLauncher<PickVisualMediaRequest> pickMediaLauncher;
     private TeacherRequestViewModel teacherRequestViewModel;
     private String currentRoleCode = "LEARNER";
 
     public ProfileFragment() {
         super(R.layout.fragment_profile);
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        pickMediaLauncher = registerForActivityResult(
+                new ActivityResultContracts.PickVisualMedia(),
+                uri -> {
+                    if (uri != null) handleAvatarSelected(uri);
+                }
+        );
     }
 
     @Override
@@ -66,6 +94,7 @@ public class ProfileFragment extends Fragment {
 
         bindStaticUserInfo(view, sessionStorage);
         observeProfile(view);
+        observeAvatarUpload(view);
         profileViewModel.loadProfile();
         bindTeacherRequestRow(view);
         observeTeacherRequests(view);
@@ -73,9 +102,29 @@ public class ProfileFragment extends Fragment {
             teacherRequestViewModel.loadLatestRequest();
         }
 
+        view.findViewById(R.id.avatarContainer).setOnClickListener(v ->
+                pickMediaLauncher.launch(
+                        new PickVisualMediaRequest.Builder()
+                                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                                .build()
+                ));
+
+        view.findViewById(R.id.settingsEditProfile).setOnClickListener(v ->
+                Navigation.findNavController(view)
+                        .navigate(R.id.action_profileFragment_to_editProfileFragment));
+
         view.findViewById(R.id.profileCertificatesRow).setOnClickListener(v ->
                 Navigation.findNavController(v)
                         .navigate(R.id.action_profileFragment_to_certificatesFragment));
+
+        String role = sessionStorage.getRole();
+        View becomeTeacherRow = view.findViewById(R.id.profileBecomeTeacherRow);
+        if ("LEARNER".equalsIgnoreCase(role)) {
+            becomeTeacherRow.setVisibility(View.VISIBLE);
+            becomeTeacherRow.setOnClickListener(v ->
+                    Navigation.findNavController(v)
+                            .navigate(R.id.action_profileFragment_to_teacherRequestFragment));
+        }
 
         view.findViewById(R.id.logoutButton).setOnClickListener(v -> {
             authViewModel.signOut();
@@ -90,6 +139,80 @@ public class ProfileFragment extends Fragment {
                 .setOnClickListener(v -> showDeleteAccountDialog(view));
 
         observeAccountDeletion(view);
+    }
+
+    private void handleAvatarSelected(Uri uri) {
+        File compressed = compressImage(requireContext(), uri);
+        if (compressed == null) {
+            Toast.makeText(requireContext(), R.string.avatar_upload_error, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        profileViewModel.uploadAvatar(compressed);
+    }
+
+    @Nullable
+    private File compressImage(Context context, Uri uri) {
+        try (InputStream inputStream = context.getContentResolver().openInputStream(uri)) {
+            if (inputStream == null) return null;
+
+            Bitmap original = BitmapFactory.decodeStream(inputStream);
+            if (original == null) return null;
+
+            Bitmap scaled = scaleBitmap(original, AVATAR_MAX_PX);
+
+            File outFile = File.createTempFile("avatar_", ".jpg", context.getCacheDir());
+            try (FileOutputStream out = new FileOutputStream(outFile)) {
+                scaled.compress(Bitmap.CompressFormat.JPEG, AVATAR_JPEG_QUALITY, out);
+            }
+
+            if (!scaled.equals(original)) scaled.recycle();
+            original.recycle();
+
+            return outFile;
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    private Bitmap scaleBitmap(Bitmap src, int maxPx) {
+        int w = src.getWidth();
+        int h = src.getHeight();
+        if (w <= maxPx && h <= maxPx) return src;
+
+        float ratio = w > h ? (float) maxPx / w : (float) maxPx / h;
+        return Bitmap.createScaledBitmap(src, Math.round(w * ratio), Math.round(h * ratio), true);
+    }
+
+    private void observeAvatarUpload(View view) {
+        ImageView avatarImage = view.findViewById(R.id.avatarImage);
+        TextView avatarInitials = view.findViewById(R.id.avatarInitials);
+
+        profileViewModel.uploading.observe(getViewLifecycleOwner(), uploading -> {
+            if (Boolean.TRUE.equals(uploading)) {
+                Toast.makeText(requireContext(), R.string.avatar_uploading, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        profileViewModel.uploadedAvatarUrl.observe(getViewLifecycleOwner(), url -> {
+            if (url == null || url.isBlank()) return;
+            Toast.makeText(requireContext(), R.string.avatar_upload_success, Toast.LENGTH_SHORT).show();
+            loadAvatarImage(avatarImage, avatarInitials, url);
+        });
+
+        profileViewModel.uploadError.observe(getViewLifecycleOwner(), msg -> {
+            if (msg == null || msg.isBlank()) return;
+            profileViewModel.clearUploadError();
+            Toast.makeText(requireContext(), R.string.avatar_upload_error, Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void loadAvatarImage(ImageView imageView, TextView initials, String url) {
+        Glide.with(this)
+                .load(url)
+                .circleCrop()
+                .into(imageView);
+        imageView.setVisibility(View.VISIBLE);
+        initials.setVisibility(View.GONE);
     }
 
     private void bindTeacherRequestRow(View view) {
@@ -159,14 +282,9 @@ public class ProfileFragment extends Fragment {
     private void showDeleteAccountDialog(View view) {
         EditText confirmInput = new EditText(requireContext());
         confirmInput.setHint(R.string.profile_delete_account_dialog_hint);
-        // The confirmation only ever compares against the literal "DELETE", so capping the
-        // input prevents a paste-bomb from reaching the network layer and short-circuits any
-        // accidental over-length input before the equality check.
         confirmInput.setFilters(new android.text.InputFilter[] {
                 new android.text.InputFilter.LengthFilter(16)
         });
-        // Single-line + no suggestions so the typed string is not silently mangled into
-        // "Delete" or autocompleted before the equality check.
         confirmInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         confirmInput.setSingleLine(true);
         int padPx = (int) (requireContext().getResources().getDisplayMetrics().density * 24);
@@ -184,8 +302,6 @@ public class ProfileFragment extends Fragment {
                 .setOnClickListener(btn -> {
                     String typed = confirmInput.getText() == null ? "" : confirmInput.getText().toString();
                     if (!"DELETE".equals(typed)) {
-                        // Stay on the dialog so the learner can correct; toast carries the exact
-                        // requirement so we don't depend on the label alone.
                         Toast.makeText(requireContext(),
                                 R.string.profile_delete_account_confirm_required,
                                 Toast.LENGTH_SHORT).show();
@@ -201,8 +317,6 @@ public class ProfileFragment extends Fragment {
     private void observeAccountDeletion(View view) {
         profileViewModel.accountDeleted.observe(getViewLifecycleOwner(), deleted -> {
             if (!Boolean.TRUE.equals(deleted)) return;
-            // Local sign-out clears Firebase + SessionStorage so the orphaned Bearer token
-            // cannot be replayed even if it is still cached locally.
             authViewModel.signOut();
             Toast.makeText(requireContext(),
                     R.string.profile_delete_account_success, Toast.LENGTH_SHORT).show();
@@ -211,7 +325,6 @@ public class ProfileFragment extends Fragment {
                     .build();
             Navigation.findNavController(view)
                     .navigate(R.id.action_profileFragment_to_loginFragment, null, options);
-            // Consume the signal so a re-attached observer cannot re-fire sign-out + nav.
             profileViewModel.clearAccountDeleted();
         });
 
@@ -227,6 +340,7 @@ public class ProfileFragment extends Fragment {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
         TextView avatarInitials = view.findViewById(R.id.avatarInitials);
+        ImageView avatarImage = view.findViewById(R.id.avatarImage);
         TextView nameView = view.findViewById(R.id.profileName);
         TextView emailView = view.findViewById(R.id.profileEmail);
         TextView roleView = view.findViewById(R.id.profileRole);
@@ -255,15 +369,21 @@ public class ProfileFragment extends Fragment {
                 ? R.string.profile_access_verified
                 : R.string.profile_access_pending));
 
-        // Show placeholder zeros until API responds
         view.<TextView>findViewById(R.id.profileStatPrimaryValue).setText("—");
         view.<TextView>findViewById(R.id.profileStatSecondaryValue).setText("—");
         view.<TextView>findViewById(R.id.profileStatTertiaryValue).setText("—");
+
+        // Load existing avatar if available from a previous session's cached profile
+        ProfileResponse cached = profileViewModel.profile.getValue();
+        if (cached != null && cached.avatarUrl != null && !cached.avatarUrl.isBlank()) {
+            loadAvatarImage(avatarImage, avatarInitials, cached.avatarUrl);
+        }
     }
 
     private void observeProfile(View view) {
         TextView nameView = view.findViewById(R.id.profileName);
         TextView avatarInitials = view.findViewById(R.id.avatarInitials);
+        ImageView avatarImage = view.findViewById(R.id.avatarImage);
         TextView enrolledView = view.findViewById(R.id.profileStatPrimaryValue);
         TextView lessonsView = view.findViewById(R.id.profileStatSecondaryValue);
         TextView certView = view.findViewById(R.id.profileStatTertiaryValue);
@@ -271,7 +391,6 @@ public class ProfileFragment extends Fragment {
         profileViewModel.profile.observe(getViewLifecycleOwner(), (ProfileResponse profile) -> {
             if (profile == null) return;
 
-            // Prefer server-side displayName over Firebase fallback
             if (profile.displayName != null && !profile.displayName.isBlank()) {
                 nameView.setText(profile.displayName);
                 avatarInitials.setText(getInitials(profile.displayName));
@@ -280,6 +399,10 @@ public class ProfileFragment extends Fragment {
             enrolledView.setText(String.valueOf(profile.enrolledCourses));
             lessonsView.setText(String.valueOf(profile.completedLessons));
             certView.setText(String.valueOf(profile.certificates));
+
+            if (profile.avatarUrl != null && !profile.avatarUrl.isBlank()) {
+                loadAvatarImage(avatarImage, avatarInitials, profile.avatarUrl);
+            }
         });
     }
 
@@ -376,8 +499,6 @@ public class ProfileFragment extends Fragment {
         String email = user.getEmail();
         int atIdx = email.indexOf('@');
         if (atIdx <= 0) return "Learner";
-        // Defensive: a malformed Firebase email could leave local empty after the substring,
-        // so guard substring(1) which would otherwise crash on a single-char local part.
         String local = email.substring(0, atIdx);
         if (local.isEmpty()) return "Learner";
         if (local.length() == 1) return local.toUpperCase();
@@ -389,8 +510,6 @@ public class ProfileFragment extends Fragment {
         String trimmed = name.trim();
         if (trimmed.isEmpty()) return "?";
         String[] parts = trimmed.split("\\s+");
-        // Use the first two non-blank parts (split on a leading space can leave an empty
-        // string in parts[0] on certain inputs, so guard before charAt).
         StringBuilder out = new StringBuilder(2);
         for (String part : parts) {
             if (part.isEmpty()) continue;

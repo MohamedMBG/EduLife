@@ -107,7 +107,6 @@ public class ExamFragment extends Fragment {
 
         ExamStatusUiState currentStatusState = examViewModel.getExamStatusState().getValue();
         if (currentStatusState == null || currentStatusState.status == null) {
-            // Access is checked first so users in cooldown never see answer inputs they cannot submit.
             examViewModel.loadExamStatus(courseId);
         }
     }
@@ -129,8 +128,6 @@ public class ExamFragment extends Fragment {
 
         ExamStatusResponse status = state.status;
         if (status.passed) {
-            // The learner loop awards a certificate after passing, so the exam should lock here
-            // instead of letting the user re-enter the question flow.
             showGateState(
                     getString(R.string.exam_gate_passed_eyebrow),
                     getString(R.string.exam_gate_passed_title),
@@ -237,6 +234,7 @@ public class ExamFragment extends Fragment {
         TextView passScoreText = requireView().findViewById(R.id.examPassScoreText);
         TextView questionCountText = requireView().findViewById(R.id.examQuestionCountText);
 
+        selectedChoices.clear();
         titleText.setText(exam.title);
         passScoreText.setText(getString(R.string.exam_pass_score_label, exam.passScore));
         int count = exam.questions != null ? exam.questions.size() : 0;

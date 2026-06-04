@@ -25,16 +25,22 @@ public class CertificateAdapter extends RecyclerView.Adapter<CertificateAdapter.
         void onDownload(CertificateSummary cert);
     }
 
+    public interface OnItemClick {
+        void onOpen(CertificateSummary cert);
+    }
+
     private final List<CertificateSummary> items = new ArrayList<>();
     private final OnDownloadClick downloadListener;
+    private final OnItemClick itemListener;
 
     private static final SimpleDateFormat ISO_PARSE =
             new SimpleDateFormat("yyyy-MM-dd", Locale.US);
     private static final SimpleDateFormat DATE_FMT =
             new SimpleDateFormat("MMM d, yyyy", Locale.ENGLISH);
 
-    public CertificateAdapter(OnDownloadClick downloadListener) {
+    public CertificateAdapter(OnDownloadClick downloadListener, OnItemClick itemListener) {
         this.downloadListener = downloadListener;
+        this.itemListener = itemListener;
     }
 
     public void setItems(List<CertificateSummary> newItems) {
@@ -71,6 +77,7 @@ public class CertificateAdapter extends RecyclerView.Adapter<CertificateAdapter.
         }
 
         holder.downloadButton.setOnClickListener(v -> downloadListener.onDownload(cert));
+        holder.itemView.setOnClickListener(v -> itemListener.onOpen(cert));
     }
 
     @Override

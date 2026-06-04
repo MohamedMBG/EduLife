@@ -4,6 +4,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -15,8 +16,11 @@ import com.baghdad.edulife.R;
 import com.baghdad.edulife.features.courses.model.CourseSummary;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class CourseCatalogAdapter extends RecyclerView.Adapter<CourseCatalogAdapter.CourseViewHolder> {
 
@@ -26,6 +30,7 @@ public class CourseCatalogAdapter extends RecyclerView.Adapter<CourseCatalogAdap
 
     private final List<CourseSummary> courses = new ArrayList<>();
     private final OnCourseClickListener onCourseClickListener;
+    private Map<String, Integer> progressMap = Collections.emptyMap();
 
     public CourseCatalogAdapter(OnCourseClickListener onCourseClickListener) {
         this.onCourseClickListener = onCourseClickListener;
@@ -39,6 +44,11 @@ public class CourseCatalogAdapter extends RecyclerView.Adapter<CourseCatalogAdap
         notifyDataSetChanged();
     }
 
+    public void updateProgressMap(Map<String, Integer> map) {
+        progressMap = map != null ? new HashMap<>(map) : Collections.emptyMap();
+        notifyDataSetChanged();
+    }
+
     @NonNull
     @Override
     public CourseViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -49,7 +59,9 @@ public class CourseCatalogAdapter extends RecyclerView.Adapter<CourseCatalogAdap
 
     @Override
     public void onBindViewHolder(@NonNull CourseViewHolder holder, int position) {
-        holder.bind(courses.get(position), onCourseClickListener);
+        CourseSummary course = courses.get(position);
+        Integer percent = progressMap.get(course.id);
+        holder.bind(course, onCourseClickListener, percent);
     }
 
     @Override
@@ -67,6 +79,9 @@ public class CourseCatalogAdapter extends RecyclerView.Adapter<CourseCatalogAdap
         private final TextView ratingText;
         private final TextView reviewCountText;
         private final TextView openCourseButton;
+        private final View progressLayout;
+        private final ProgressBar progressBar;
+        private final TextView progressText;
 
         CourseViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -78,9 +93,12 @@ public class CourseCatalogAdapter extends RecyclerView.Adapter<CourseCatalogAdap
             ratingText = itemView.findViewById(R.id.courseRatingText);
             reviewCountText = itemView.findViewById(R.id.courseReviewCountText);
             openCourseButton = itemView.findViewById(R.id.openCourseButton);
+            progressLayout = itemView.findViewById(R.id.courseProgressLayout);
+            progressBar = itemView.findViewById(R.id.courseProgressBar);
+            progressText = itemView.findViewById(R.id.courseProgressText);
         }
 
-        void bind(CourseSummary course, OnCourseClickListener clickListener) {
+        void bind(CourseSummary course, OnCourseClickListener clickListener, @androidx.annotation.Nullable Integer progressPercent) {
             titleText.setText(course.title);
             descriptionText.setText(course.shortDescription);
             levelText.setText(normalizeLabel(course.level));
@@ -106,6 +124,14 @@ public class CourseCatalogAdapter extends RecyclerView.Adapter<CourseCatalogAdap
             int reviewCount = stableReviewCount(course.id);
             ratingText.setText(String.format(Locale.US, "%.1f", rating));
             reviewCountText.setText(String.format(Locale.US, "(%d)", reviewCount));
+
+            if (progressPercent != null) {
+                progressBar.setProgress(progressPercent);
+                progressText.setText(String.format(Locale.US, "%d%%", progressPercent));
+                progressLayout.setVisibility(View.VISIBLE);
+            } else {
+                progressLayout.setVisibility(View.GONE);
+            }
 
             View.OnClickListener openListener = v -> clickListener.onCourseClick(course);
             itemView.setOnClickListener(openListener);

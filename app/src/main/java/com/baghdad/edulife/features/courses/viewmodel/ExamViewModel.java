@@ -60,10 +60,31 @@ public class ExamViewModel extends AndroidViewModel {
 
     public void loadExam(String courseId) {
         examState.setValue(ExamUiState.loading());
-        examRepository.getExam(courseId, new ExamRepository.ExamCallback() {
+        // The status preflight keeps the learner flow aligned with backend attempt rules
+        // before the client renders any questions that should already be locked.
+        examRepository.getExamStatus(courseId, new ExamRepository.ExamStatusCallback() {
             @Override
-            public void onSuccess(com.baghdad.edulife.features.courses.model.ExamResponse exam) {
-                examState.postValue(ExamUiState.success(exam));
+            public void onSuccess(com.baghdad.edulife.features.courses.model.ExamStatusResponse status) {
+                if (status.passed) {
+                    examState.postValue(ExamUiState.alreadyPassed());
+                    return;
+                }
+                if (status.inCooldown) {
+                    examState.postValue(ExamUiState.cooldown(status.cooldownEndsAt));
+                    return;
+                }
+
+                examRepository.getExam(courseId, new ExamRepository.ExamCallback() {
+                    @Override
+                    public void onSuccess(com.baghdad.edulife.features.courses.model.ExamResponse exam) {
+                        examState.postValue(ExamUiState.success(exam));
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        examState.postValue(ExamUiState.error(message));
+                    }
+                });
             }
 
             @Override
