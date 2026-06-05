@@ -3,6 +3,12 @@ package com.baghdad.edulife.core.storage;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import androidx.security.crypto.EncryptedSharedPreferences;
+import androidx.security.crypto.MasterKey;
+
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+
 /**
  * SessionStorage is the single source of truth for the locally persisted EduLife session identity.
  *
@@ -14,6 +20,9 @@ import android.content.SharedPreferences;
  * SECURITY: This class intentionally never stores Firebase ID tokens, refresh tokens, or passwords.
  * Tokens are always fetched fresh from Firebase at request time via FirebaseAuthInterceptor.
  *
+ * All values are persisted via androidx.security EncryptedSharedPreferences so the on-disk file
+ * is encrypted at rest with a key bound to the Android Keystore (AES256-GCM master key).
+ *
  * Usage pattern:
  *   - Write: after /api/v1/auth/sync succeeds
  *   - Clear: on logout or sync failure
@@ -21,7 +30,12 @@ import android.content.SharedPreferences;
  */
 public class SessionStorage {
 
-    private static final String PREFS_NAME = "edulife_session";
+    // New filename so the migration from the legacy plain-text "edulife_session" file does not
+    // clash with EncryptedSharedPreferences, which expects an encrypted payload format.
+    // Existing users transparently re-run /auth/sync on next launch; Firebase auth state survives.
+    private static final String PREFS_NAME = "edulife_session_secure";
+    private static final String LEGACY_PREFS_NAME = "edulife_session";
+
     private static final String KEY_USER_ID = "user_id";
     private static final String KEY_ROLE    = "role";
     private static final String KEY_PENDING_REGISTRATION_ROLE = "pending_registration_role";
@@ -29,9 +43,48 @@ public class SessionStorage {
     private final SharedPreferences prefs;
 
     public SessionStorage(Context context) {
-        // Use application context to avoid Activity memory leaks
-        this.prefs = context.getApplicationContext()
-                .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        // Use application context to avoid Activity memory leaks across the prefs lifetime.
+        Context appContext = context.getApplicationContext();
+        this.prefs = openEncryptedPrefs(appContext);
+
+        // Delete the legacy unencrypted prefs file if it survived the upgrade. Its values
+        // are not migrated: re-running /auth/sync is cheaper than maintaining a plaintext shim.
+        appContext.deleteSharedPreferences(LEGACY_PREFS_NAME);
+    }
+
+    private static SharedPreferences openEncryptedPrefs(Context appContext) {
+        try {
+            MasterKey masterKey = new MasterKey.Builder(appContext)
+                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                    .build();
+
+            return EncryptedSharedPreferences.create(
+                    appContext,
+                    PREFS_NAME,
+                    masterKey,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            );
+        } catch (GeneralSecurityException | IOException e) {
+            // Keystore can become corrupt after a device-level event (factory reset of credentials,
+            // strongbox failure). Drop the encrypted file and recreate so the app does not crash on
+            // launch; user simply re-syncs.
+            appContext.deleteSharedPreferences(PREFS_NAME);
+            try {
+                MasterKey masterKey = new MasterKey.Builder(appContext)
+                        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                        .build();
+                return EncryptedSharedPreferences.create(
+                        appContext,
+                        PREFS_NAME,
+                        masterKey,
+                        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+                );
+            } catch (GeneralSecurityException | IOException retryFailure) {
+                throw new IllegalStateException("Unable to initialise encrypted session storage", retryFailure);
+            }
+        }
     }
 
     /**

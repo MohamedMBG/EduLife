@@ -116,4 +116,9 @@ dependencies {
 
     // Glide for loading remote course thumbnail images
     implementation("com.github.bumptech.glide:glide:4.16.0")
+
+    // EncryptedSharedPreferences for at-rest encryption of the persisted EduLife session.
+    // Pinned to 1.1.0-alpha06 because the stable 1.0.0 line drags in the deprecated
+    // androidx.security.crypto.MasterKeys helper and lacks the newer MasterKey.Builder API.
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 }
