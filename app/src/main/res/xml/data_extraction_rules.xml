@@ -1,19 +1,18 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Data extraction rules for API 31+ Auto Backup and Device-to-Device transfer.
+
+  Cloud backup and device transfer both exclude the encrypted session prefs and
+  the legacy plaintext file so the EduLife identity is never restored onto a
+  device the original learner does not control.
 -->
 <data-extraction-rules>
     <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
+        <exclude domain="sharedpref" path="edulife_session_secure.xml"/>
+        <exclude domain="sharedpref" path="edulife_session.xml"/>
     </cloud-backup>
-    <!--
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <exclude domain="sharedpref" path="edulife_session_secure.xml"/>
+        <exclude domain="sharedpref" path="edulife_session.xml"/>
     </device-transfer>
-    -->
 </data-extraction-rules>
