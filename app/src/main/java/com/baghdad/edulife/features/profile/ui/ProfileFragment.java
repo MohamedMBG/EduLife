@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -37,6 +38,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,6 +49,7 @@ import java.util.Locale;
 
 public class ProfileFragment extends Fragment {
 
+    private static final String TAG = "ProfileFragment";
     private static final int AVATAR_MAX_PX = 1024;
     private static final int AVATAR_JPEG_QUALITY = 88;
 
@@ -153,10 +156,17 @@ public class ProfileFragment extends Fragment {
     @Nullable
     private File compressImage(Context context, Uri uri) {
         try (InputStream inputStream = context.getContentResolver().openInputStream(uri)) {
-            if (inputStream == null) return null;
+            if (inputStream == null) {
+                Log.w(TAG, "Avatar source stream was null for uri=" + uri);
+                return null;
+            }
 
             Bitmap original = BitmapFactory.decodeStream(inputStream);
-            if (original == null) return null;
+            if (original == null) {
+                Log.w(TAG, "BitmapFactory.decodeStream returned null for uri=" + uri
+                        + " — likely unsupported format or corrupt source");
+                return null;
+            }
 
             Bitmap scaled = scaleBitmap(original, AVATAR_MAX_PX);
 
@@ -169,7 +179,15 @@ public class ProfileFragment extends Fragment {
             original.recycle();
 
             return outFile;
+        } catch (FileNotFoundException e) {
+            // Provider revoked the URI between the picker callback and the read attempt, or
+            // the source content was deleted from underneath us. Treat as recoverable.
+            Log.w(TAG, "Avatar source not found for uri=" + uri, e);
+            return null;
         } catch (IOException e) {
+            // Disk full, cache dir not writable, or the decoded bitmap failed to flush.
+            // These are operational failures the user can retry after freeing space.
+            Log.e(TAG, "Avatar compression IO failure for uri=" + uri, e);
             return null;
         }
     }

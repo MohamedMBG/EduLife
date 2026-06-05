@@ -64,16 +64,18 @@ public class LessonPlayerFragment extends Fragment {
 
         viewModel = new ViewModelProvider(this).get(LessonPlayerViewModel.class);
 
-        Bundle args           = getArguments();
-        courseId              = args != null ? args.getString("courseId", "")       : "";
-        lessonId              = args != null ? args.getString("lessonId", "")       : "";
-        String lessonTitle    = args != null ? args.getString("lessonTitle", "")    : "";
-        String lessonSummary  = args != null ? args.getString("lessonSummary", "")  : "";
-        String lessonType     = args != null ? args.getString("lessonType", "")     : "";
-        int    durationMin    = args != null ? args.getInt("durationMinutes", 0)    : 0;
-        isPreview             = args != null && args.getBoolean("isPreview", false);
-        String sectionTitle   = args != null ? args.getString("sectionTitle", "")   : "";
-        int    orderInSection = args != null ? args.getInt("orderInSection", 1)     : 1;
+        // Nav graph always supplies the lesson bundle; requireArguments turns a wiring bug into
+        // an ISE rather than the ten silent blank-fallback paths below.
+        Bundle args           = requireArguments();
+        courseId              = args.getString("courseId", "");
+        lessonId              = args.getString("lessonId", "");
+        String lessonTitle    = args.getString("lessonTitle", "");
+        String lessonSummary  = args.getString("lessonSummary", "");
+        String lessonType     = args.getString("lessonType", "");
+        int    durationMin    = args.getInt("durationMinutes", 0);
+        isPreview             = args.getBoolean("isPreview", false);
+        String sectionTitle   = args.getString("sectionTitle", "");
+        int    orderInSection = args.getInt("orderInSection", 1);
 
         ((TextView) view.findViewById(R.id.lessonTitle)).setText(lessonTitle);
         ((TextView) view.findViewById(R.id.lessonSectionContext))

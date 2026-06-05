@@ -90,7 +90,9 @@ public class ExamFragment extends Fragment {
         examGateButton.setOnClickListener(v ->
                 Navigation.findNavController(view).popBackStack());
 
-        courseId = getArguments() != null ? getArguments().getString("courseId", "") : "";
+        // Navigation graph is the only entry point and always passes courseId. requireArguments
+        // surfaces a missing-bundle programming error as ISE instead of silently submitting "".
+        courseId = requireArguments().getString("courseId", "");
 
         examViewModel.getExamStatusState().observe(getViewLifecycleOwner(), this::renderExamStatusState);
         examViewModel.getExamState().observe(getViewLifecycleOwner(), this::renderExamState);
