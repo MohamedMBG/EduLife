@@ -18,10 +18,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * Token-bucket rate limiting for the three endpoints most vulnerable to abuse:
- *  - POST /api/v1/auth/sync        30 calls / minute  per principal
- *  - POST /api/v1/enrollments      20 calls / hour    per principal
- *  - POST /api/v1/courses/{courseId}/exam/submit  5 calls / hour per principal
+ * Token-bucket rate limiting for the endpoints most vulnerable to abuse:
+ *  - POST /api/v1/auth/sync                              30 calls / minute  per principal
+ *  - POST /api/v1/enrollments                            20 calls / hour    per principal
+ *  - POST /api/v1/courses/{courseId}/exam/submit          5 calls / hour    per principal
+ *  - GET  /api/v1/certificates/verify/{hash}             30 calls / minute  per client IP
+ *
+ * The certificate verify endpoint is public (no Firebase auth), so a per-IP bucket prevents
+ * brute-force enumeration of verification hashes by unauthenticated clients.
  *
  * Buckets are held in a ConcurrentHashMap (in-memory, single-instance only).
  * If horizontal scaling is added, swap the backing store to bucket4j-redis.
@@ -35,6 +39,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
     // Patterns are compiled once at startup rather than per-request to avoid regex overhead.
     private static final Pattern EXAM_SUBMIT_PATTERN =
             Pattern.compile("^/api/v1/courses/[^/]+/exam/submit$");
+    private static final Pattern CERT_VERIFY_PATTERN =
+            Pattern.compile("^/api/v1/certificates/verify/[^/]+$");
 
     // Bandwidth limits define the token-bucket capacity and refill rate.
     // Using Bandwidth.classic with Refill.intervally: the full capacity is restored as a
@@ -46,6 +52,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
             Bandwidth.classic(20, Refill.intervally(20, Duration.ofHours(1)));
     private static final Bandwidth EXAM_LIMIT =
             Bandwidth.classic(5, Refill.intervally(5, Duration.ofHours(1)));
+    // Cert verify is the only public endpoint behind this filter; per-IP cap defends against
+    // hash enumeration without blocking legitimate employer/institution checks.
+    private static final Bandwidth CERT_VERIFY_LIMIT =
+            Bandwidth.classic(30, Refill.intervally(30, Duration.ofMinutes(1)));
 
     // Buckets are keyed by "prefix:principal" so each user has independent limits per endpoint.
     private final ConcurrentHashMap<String, Bucket> buckets = new ConcurrentHashMap<>();
@@ -73,9 +83,19 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private Bucket resolveBucket(HttpServletRequest request) {
-        if (!"POST".equalsIgnoreCase(request.getMethod())) return null;
-
+        String method = request.getMethod();
         String path = request.getRequestURI();
+
+        // GET /certificates/verify is public, so the bucket key must be the client IP
+        // rather than an authenticated principal that will never be populated here.
+        if ("GET".equalsIgnoreCase(method) && CERT_VERIFY_PATTERN.matcher(path).matches()) {
+            String ip = resolveClientIp(request);
+            return buckets.computeIfAbsent("certverify:" + ip,
+                    k -> Bucket.builder().addLimit(CERT_VERIFY_LIMIT).build());
+        }
+
+        if (!"POST".equalsIgnoreCase(method)) return null;
+
         String principal = resolvePrincipal(request);
 
         if ("/api/v1/auth/sync".equals(path)) {
@@ -94,6 +114,20 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
 
         return null;
+    }
+
+    /**
+     * Resolves the client IP from X-Forwarded-For (set by the platform proxy) and falls back
+     * to the raw remote address for direct connections. Only the first forwarded hop is used
+     * since intermediate proxies can append untrusted values to the chain.
+     */
+    private static String resolveClientIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            int comma = forwarded.indexOf(',');
+            return (comma > 0 ? forwarded.substring(0, comma) : forwarded).trim();
+        }
+        return request.getRemoteAddr();
     }
 
     /**
