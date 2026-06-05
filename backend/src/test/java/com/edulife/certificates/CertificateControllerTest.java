@@ -10,6 +10,7 @@ import com.edulife.common.error.ApiErrorWriter;
 import com.edulife.common.error.GlobalApiExceptionHandler;
 import com.edulife.security.SecurityConfig;
 import com.edulife.users.entity.User;
+import com.edulife.users.model.UserRole;
 import com.edulife.users.repository.UserRepository;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
@@ -148,6 +149,32 @@ class CertificateControllerTest {
     }
 
     @Test
+    void verifyCertificateRateLimitedAfterBudgetExhausted() throws Exception {
+        // Unique forwarded IP isolates this test's bucket from sibling tests in the shared context.
+        String testIp = "203.0.113.42";
+        String hash = "ratelimit-hash";
+        CertificateVerificationDto dto = new CertificateVerificationDto(
+                "Jane Doe", "Algebra Foundations", "Prof. Smith",
+                Instant.parse("2026-05-01T10:00:00Z"), "EL-2026-ABC123DEF456", true);
+
+        given(certificateService.verifyCertificate(hash)).willReturn(dto);
+
+        // CERT_VERIFY_LIMIT = 30 calls / minute / IP. First 30 must succeed.
+        for (int i = 0; i < 30; i++) {
+            mockMvc.perform(get("/api/v1/certificates/verify/{hash}", hash)
+                            .header("X-Forwarded-For", testIp))
+                    .andExpect(status().isOk());
+        }
+
+        // 31st request must be rejected by the shared API error contract.
+        mockMvc.perform(get("/api/v1/certificates/verify/{hash}", hash)
+                        .header("X-Forwarded-For", testIp))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.status").value(429))
+                .andExpect(jsonPath("$.message").value("Rate limit exceeded"));
+    }
+
+    @Test
     void downloadCertificateWithValidTokenReturns200PdfContentType() throws Exception {
         mockValidFirebaseToken();
         mockUserResolution();
@@ -174,6 +201,9 @@ class CertificateControllerTest {
     private void mockUserResolution() {
         User user = mock(User.class);
         given(user.getId()).willReturn(USER_ID);
+        // FirebaseTokenFilter.authoritiesFor() reads the role to build a granted authority,
+        // so a null role here surfaces as an NPE inside the security filter chain.
+        given(user.getRole()).willReturn(UserRole.LEARNER);
         given(userRepository.findByFirebaseUid("test-uid")).willReturn(Optional.of(user));
     }
 }
