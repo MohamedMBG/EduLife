@@ -26,6 +26,7 @@
     <string name="auth_forgot_password_unavailable">Password recovery coming soon</string>
     <string name="auth_full_name_required">Full name is required</string>
     <string name="auth_email_required">Email is required</string>
+    <string name="auth_email_invalid">Enter a valid email address</string>
     <string name="auth_password_required">Password is required</string>
     <string name="auth_password_min_length">Password must be at least 6 characters</string>
     <string name="auth_passwords_do_not_match">Passwords do not match</string>
@@ -124,6 +125,8 @@
     <!-- My Courses transient states -->
     <string name="courses_loading">Loading your courses…</string>
     <string name="courses_load_error">Couldn\'t refresh your courses. Check your connection.</string>
+    <string name="courses_retry">Retry</string>
+    <string name="courses_browse_cta">Browse courses</string>
     <string name="courses_unenroll_error">Couldn\'t unenroll. Try again.</string>
     <string name="courses_unenroll_success">Unenrolled.</string>
     <string name="courses_progress_loading">Loading progress…</string>
