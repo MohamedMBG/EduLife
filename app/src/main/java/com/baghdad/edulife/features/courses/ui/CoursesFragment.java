@@ -43,9 +43,13 @@ public class CoursesFragment extends Fragment {
     private TextView courseCountText;
     private TextView emptyText;
     private Button browseButton;
+    private RecyclerView recycler;
     private List<EnrolledCourse> allEnrolled = new ArrayList<>();
     private Map<String, CourseProgressSummary> courseProgressMap = new HashMap<>();
     private Set<String> courseProgressFailedIds = new HashSet<>();
+    // When the last fetch failed, the empty-state text + browse button are repurposed as the
+    // retry surface. applyFilter() must skip its normal rendering so the error UI stays put.
+    private boolean inErrorState;
 
     public CoursesFragment() {
         super(R.layout.fragment_courses);
@@ -72,7 +76,7 @@ public class CoursesFragment extends Fragment {
         browseButton.setOnClickListener(v -> navigateToHome());
 
         adapter = new EnrolledCourseAdapter(this::handleOpenCourse, this::handleUnenroll);
-        RecyclerView recycler = view.findViewById(R.id.coursesRecycler);
+        recycler = view.findViewById(R.id.coursesRecycler);
         recycler.setAdapter(adapter);
 
         filterAll = view.findViewById(R.id.filterAll);
@@ -87,6 +91,11 @@ public class CoursesFragment extends Fragment {
 
         enrollmentViewModel.getMyEnrollments().observe(getViewLifecycleOwner(), courses -> {
             allEnrolled = courses != null ? courses : new ArrayList<>();
+            // A fresh enrollment list always supersedes any prior error UI even when the list
+            // happens to be empty, so the user can see "no courses" instead of stale "retry".
+            if (inErrorState && courses != null) {
+                inErrorState = false;
+            }
             applyFilter(activeFilter);
         });
 
@@ -101,11 +110,18 @@ public class CoursesFragment extends Fragment {
         });
 
         enrollmentViewModel.getMyEnrollmentsError().observe(getViewLifecycleOwner(), error -> {
-            if (error == null || error.isBlank()) return;
-            // The fetch error is transient; surface it via Toast so the empty state below the
-            // list stays meaningful instead of being overwritten with the network error string.
-            Toast.makeText(requireContext(),
-                    getString(R.string.courses_load_error), Toast.LENGTH_SHORT).show();
+            if (error == null || error.isBlank()) {
+                // ViewModel posts null at the start of every fetch; treat as "no error visible".
+                if (inErrorState) {
+                    inErrorState = false;
+                    applyFilter(activeFilter);
+                }
+                return;
+            }
+            // Distinct error state — repurposes the empty TextView + browse button as the retry
+            // surface so a failed fetch is never indistinguishable from "you have no courses".
+            inErrorState = true;
+            showError(getString(R.string.courses_load_error));
         });
 
         enrollmentViewModel.getMyEnrollmentsLoading().observe(getViewLifecycleOwner(), loading -> {
@@ -129,6 +145,10 @@ public class CoursesFragment extends Fragment {
         activeFilter = level;
         updateFilterChipStyles();
 
+        // Error UI owns the empty-state real estate; let the dedicated error renderer manage
+        // it so a filter tap during an error does not overwrite "Retry" with "Browse courses".
+        if (inErrorState) return;
+
         List<EnrolledCourse> filtered = new ArrayList<>();
         for (EnrolledCourse c : allEnrolled) {
             if (level.equals("ALL") || level.equalsIgnoreCase(c.level)) {
@@ -137,6 +157,7 @@ public class CoursesFragment extends Fragment {
         }
 
         adapter.setItems(filtered);
+        if (recycler != null) recycler.setVisibility(View.VISIBLE);
 
         if (filtered.isEmpty()) {
             if (allEnrolled.isEmpty()) {
@@ -157,6 +178,19 @@ public class CoursesFragment extends Fragment {
         emptyText.setText(message);
         emptyText.setVisibility(View.VISIBLE);
         browseButton.setVisibility(showBrowseButton ? View.VISIBLE : View.GONE);
+        // Restore the normal "Browse" semantics in case the button is being recycled from a
+        // prior error-state retry binding.
+        browseButton.setText(R.string.courses_browse_cta);
+        browseButton.setOnClickListener(v -> navigateToHome());
+    }
+
+    private void showError(String message) {
+        if (recycler != null) recycler.setVisibility(View.GONE);
+        emptyText.setText(message);
+        emptyText.setVisibility(View.VISIBLE);
+        browseButton.setText(R.string.courses_retry);
+        browseButton.setVisibility(View.VISIBLE);
+        browseButton.setOnClickListener(v -> enrollmentViewModel.loadMyEnrollments());
     }
 
     private void handleOpenCourse(EnrolledCourse course) {

@@ -3,6 +3,7 @@ package com.baghdad.edulife.features.auth.ui;
 import android.os.Bundle;
 import android.text.method.HideReturnsTransformationMethod;
 import android.text.method.PasswordTransformationMethod;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -75,6 +76,13 @@ public class LoginFragment extends Fragment {
 
         if (email.isEmpty()) {
             emailEditText.setError(getString(R.string.auth_email_required));
+            return;
+        }
+
+        // Catch malformed addresses before the backend round-trip so users get a field-level
+        // hint instead of a generic "Backend sync failed. Status: 400" message.
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            emailEditText.setError(getString(R.string.auth_email_invalid));
             return;
         }
 

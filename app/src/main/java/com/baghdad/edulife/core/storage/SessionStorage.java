@@ -91,6 +91,10 @@ public class SessionStorage {
      * Persists the internal EduLife identity returned by /api/v1/auth/sync.
      * Must only be called after a successful sync response.
      *
+     * Uses commit() instead of apply() so a crash between sync success and the next process
+     * launch cannot resurrect a half-written session. Sync callers already run on a background
+     * thread so blocking on the encrypted disk write is acceptable here.
+     *
      * @param userId internal UUID assigned by the backend
      * @param role   user role string (e.g. "LEARNER")
      */
@@ -98,7 +102,7 @@ public class SessionStorage {
         prefs.edit()
                 .putString(KEY_USER_ID, userId)
                 .putString(KEY_ROLE, role)
-                .apply();
+                .commit();
     }
 
     /**
@@ -145,8 +149,12 @@ public class SessionStorage {
      * Clears all stored session data.
      * Must be called on logout and on /api/v1/auth/sync failure
      * to prevent stale identity from leaking into future sessions.
+     *
+     * Uses commit() so a crash immediately after sign-out cannot leave a stale userId/role on
+     * disk and let a different user inherit it on the next launch. Logout flows already block
+     * the user behind a progress indicator, so blocking on disk is the right trade-off.
      */
     public void clearSession() {
-        prefs.edit().clear().apply();
+        prefs.edit().clear().commit();
     }
 }
