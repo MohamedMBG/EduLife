@@ -69,13 +69,17 @@ public class CourseDetailFragment extends Fragment {
         view.findViewById(R.id.backButton).setOnClickListener(v ->
                 Navigation.findNavController(view).popBackStack());
 
-        String argId = getArguments() != null ? getArguments().getString("courseId") : null;
+        // Nav graph is the only entry; requireArguments turns a missing-bundle wiring bug into
+        // an ISE rather than the silent "missing id" UI path below. The id-present branch still
+        // renders an error state because a blank value can leak through programmatic navigation.
+        Bundle args = requireArguments();
+        String argId = args.getString("courseId");
         if (argId == null || argId.isBlank()) {
             renderError(getString(R.string.course_detail_missing_id));
             return;
         }
         courseId = argId;
-        isEnrolled = getArguments() != null && getArguments().getBoolean("isEnrolled", false);
+        isEnrolled = args.getBoolean("isEnrolled", false);
 
         courseDetailViewModel.getUiState().observe(getViewLifecycleOwner(), this::renderState);
         courseDetailViewModel.getLessonCompletionState().observe(getViewLifecycleOwner(), completionMap -> {

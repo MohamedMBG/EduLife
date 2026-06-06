@@ -128,7 +128,9 @@ public class CertificatesFragment extends Fragment {
                     .getSystemService(Context.DOWNLOAD_SERVICE);
             pendingDownloadId = dm.enqueue(request);
 
-            registerDownloadReceiver(dm);
+            // Register only if the Fragment is currently started; otherwise onStart will
+            // pick this up when the user returns. Avoids leaking the receiver while paused.
+            ensureReceiverRegistered();
 
             Toast.makeText(requireContext(),
                     R.string.cert_download_started, Toast.LENGTH_SHORT).show();
@@ -138,15 +140,27 @@ public class CertificatesFragment extends Fragment {
         );
     }
 
-    private void registerDownloadReceiver(DownloadManager dm) {
-        if (downloadReceiver != null) {
-            requireContext().unregisterReceiver(downloadReceiver);
-        }
+    /**
+     * Registers the download-complete receiver if the Fragment is started and a download
+     * is actually pending. Safe to call multiple times — second call is a no-op.
+     *
+     * The receiver is rebuilt rather than reused because it captures the DownloadManager
+     * instance; that capture must come from the current resumed context.
+     */
+    private void ensureReceiverRegistered() {
+        if (downloadReceiver != null) return;
+        if (pendingDownloadId == -1L) return;
+        if (!isAdded()) return;
+
+        DownloadManager dm = (DownloadManager) requireContext()
+                .getSystemService(Context.DOWNLOAD_SERVICE);
+
         downloadReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
                 if (id != pendingDownloadId) return;
+                pendingDownloadId = -1L;
                 Uri uri = dm.getUriForDownloadedFile(id);
                 if (uri == null) return;
                 Intent open = new Intent(Intent.ACTION_VIEW);
@@ -166,8 +180,18 @@ public class CertificatesFragment extends Fragment {
     }
 
     @Override
-    public void onDestroyView() {
-        super.onDestroyView();
+    public void onStart() {
+        super.onStart();
+        // Re-register if a download was already enqueued before the Fragment was stopped so
+        // the auto-open intent still fires once the user returns to the screen.
+        ensureReceiverRegistered();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        // Unregister whenever the view is not visible. DownloadManager's own system notification
+        // continues to surface completion to the user while the receiver is detached.
         if (downloadReceiver != null) {
             requireContext().unregisterReceiver(downloadReceiver);
             downloadReceiver = null;

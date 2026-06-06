@@ -108,7 +108,10 @@ public class CourseCatalogAdapter extends RecyclerView.Adapter<CourseCatalogAdap
             ));
 
             if (course.imageUrl != null && !course.imageUrl.isBlank()) {
-                Glide.with(itemView.getContext())
+                // Glide.with(View) resolves the host Fragment/Activity lifecycle so requests
+                // are cancelled when the host is destroyed. Glide.with(Context) would bind to
+                // the application lifecycle and keep references alive past Fragment death.
+                Glide.with(itemView)
                         .load(course.imageUrl)
                         .placeholder(heroForLevel(course.level))
                         .error(heroForLevel(course.level))
