@@ -1,6 +1,29 @@
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { Award, BookOpen, Compass, GraduationCap, Home, LogOut, Menu, Shield, X } from "lucide-react";
+import { Award, BookOpen, Compass, GraduationCap, Home, LogOut, Menu, Moon, Shield, Sun, X } from "lucide-react";
+
+const DARK_KEY = "edulife-dark";
+
+function useDarkMode() {
+  const [dark, setDark] = useState(false);
+
+  useEffect(() => {
+    setDark(document.documentElement.classList.contains("dark"));
+  }, []);
+
+  function toggle() {
+    const next = !dark;
+    document.documentElement.classList.toggle("dark", next);
+    try {
+      localStorage.setItem(DARK_KEY, String(next));
+    } catch {
+      // storage unavailable — silent
+    }
+    setDark(next);
+  }
+
+  return { dark, toggle };
+}
 
 interface ShellUser {
   displayName: string;
@@ -34,6 +57,7 @@ const navItems = [
 
 export function AppShell({ active, user, onLogout, header, children }: AppShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { dark, toggle: toggleDark } = useDarkMode();
 
   const userInitials = getInitials(user.displayName || user.email || "EL");
 
@@ -143,6 +167,14 @@ export function AppShell({ active, user, onLogout, header, children }: AppShellP
               <Menu className="h-5 w-5" />
             </button>
             <div className="min-w-0 flex-1">{header}</div>
+            <button
+              type="button"
+              onClick={toggleDark}
+              className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
           </div>
         </header>
 
