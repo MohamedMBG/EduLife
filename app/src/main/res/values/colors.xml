@@ -123,4 +123,15 @@
     <color name="admin_accent">#3D5AF1</color>
     <color name="admin_accent_surface">#EEF0FD</color>
     <color name="admin_accent_dark">#2A3EC0</color>
+
+    <!-- ══ TEACHER CMS ════════════════════════════════════════════════ -->
+    <color name="teacher_background">@color/brand_background</color>
+    <color name="teacher_surface">@color/brand_surface</color>
+    <color name="teacher_text_primary">@color/brand_text_primary</color>
+    <color name="teacher_text_secondary">@color/brand_text_secondary</color>
+    <color name="teacher_accent">@color/brand_primary</color>
+    <color name="teacher_border">@color/brand_border</color>
+    <color name="teacher_status_draft_text">#B87000</color>
+    <color name="teacher_status_published_text">@color/brand_primary</color>
+    <color name="teacher_status_archived_text">#888888</color>
 </resources>

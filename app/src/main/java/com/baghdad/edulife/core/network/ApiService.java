@@ -4,6 +4,12 @@ import com.baghdad.edulife.features.admin.model.AdminPageResponse;
 import com.baghdad.edulife.features.admin.model.AdminRejectRequest;
 import com.baghdad.edulife.features.admin.model.AdminStats;
 import com.baghdad.edulife.features.admin.model.AdminTeacherRequest;
+import com.baghdad.edulife.features.teacher.model.CmsCourse;
+import com.baghdad.edulife.features.teacher.model.CmsLesson;
+import com.baghdad.edulife.features.teacher.model.CmsSection;
+import com.baghdad.edulife.features.teacher.model.CreateCourseRequest;
+import com.baghdad.edulife.features.teacher.model.CreateLessonRequest;
+import com.baghdad.edulife.features.teacher.model.CreateSectionRequest;
 import com.baghdad.edulife.features.auth.model.AuthSyncRequest;
 import com.baghdad.edulife.features.auth.model.AuthSyncResponse;
 import com.baghdad.edulife.features.certificates.model.CertificateDetail;
@@ -200,5 +206,31 @@ public interface ApiService {
             @Path("id") String id,
             @Body AdminRejectRequest body
     );
+
+    // ── CMS endpoints — TEACHER role required (token enforced by FirebaseAuthInterceptor + backend RBAC) ─
+
+    @GET("cms/courses")
+    Call<List<CmsCourse>> getCmsCourses();
+
+    @POST("cms/courses")
+    Call<CmsCourse> createCmsCourse(@Body CreateCourseRequest request);
+
+    @PUT("cms/courses/{id}")
+    Call<CmsCourse> updateCmsCourse(@Path("id") String id, @Body CreateCourseRequest request);
+
+    @GET("cms/courses/{courseId}/sections")
+    Call<List<CmsSection>> getCmsSections(@Path("courseId") String courseId);
+
+    @POST("cms/courses/{courseId}/sections")
+    Call<CmsSection> createCmsSection(@Path("courseId") String courseId, @Body CreateSectionRequest request);
+
+    @DELETE("cms/courses/{courseId}/sections/{sectionId}")
+    Call<Void> deleteCmsSection(@Path("courseId") String courseId, @Path("sectionId") String sectionId);
+
+    @POST("cms/sections/{sectionId}/lessons")
+    Call<CmsLesson> createCmsLesson(@Path("sectionId") String sectionId, @Body CreateLessonRequest request);
+
+    @DELETE("cms/sections/{sectionId}/lessons/{lessonId}")
+    Call<Void> deleteCmsLesson(@Path("sectionId") String sectionId, @Path("lessonId") String lessonId);
 }
 

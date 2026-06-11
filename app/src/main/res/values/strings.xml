@@ -355,4 +355,25 @@
     <string name="admin_reject_note_hint_label">Leave an optional note explaining the decision (visible to the admin log only).</string>
     <string name="admin_reject_note_hint">Admin note (optional, max 500 chars)</string>
     <string name="admin_note_label">ADMIN NOTE</string>
+
+    <!-- ── Teacher CMS ── -->
+    <string name="teacher_dashboard_title">My Courses</string>
+    <string name="teacher_dashboard_subtitle">Teacher Dashboard</string>
+    <string name="teacher_no_courses_title">No courses yet</string>
+    <string name="teacher_no_courses_body">Tap + to create your first course.</string>
+    <string name="teacher_create_course_title">Create Course</string>
+    <string name="teacher_course_title_hint">Course title</string>
+    <string name="teacher_course_desc_hint">Short description</string>
+    <string name="teacher_course_lang_hint">Language code (e.g. en, fr)</string>
+    <string name="teacher_create_button">Create</string>
+    <string name="teacher_cancel_button">Cancel</string>
+    <string name="teacher_status_draft">DRAFT</string>
+    <string name="teacher_status_published">PUBLISHED</string>
+    <string name="teacher_status_archived">ARCHIVED</string>
+    <string name="teacher_sections_title">Sections</string>
+    <string name="teacher_add_section">Add Section</string>
+    <string name="teacher_section_title_hint">Section title</string>
+    <string name="teacher_back_cd">Back</string>
+    <string name="teacher_loading">Loading…</string>
+    <string name="teacher_retry">Retry</string>
 </resources>

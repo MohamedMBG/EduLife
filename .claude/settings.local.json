@@ -61,7 +61,11 @@
       "Bash(./gradlew :app:compileDebugJavaWithJavac :app:processDebugResources --rerun-tasks --console=plain)",
       "Bash(./mvnw test *)",
       "Bash(./gradlew assembleDebug --no-daemon -q)",
-      "Bash(bun run *)"
+      "Bash(bun run *)",
+      "Bash(xargs grep -l \"admin\")",
+      "Bash(xargs grep -l \"admin@\")",
+      "Bash(xargs grep -l \"admin\\\\|ADMIN\")",
+      "Bash(xargs grep -l \"syncAuth\\\\|auth/sync\")"
     ]
   }
 }
