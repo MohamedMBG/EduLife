@@ -72,8 +72,7 @@ class CertificateControllerTest {
 
         CertificateSummaryDto summary = new CertificateSummaryDto(
                 CERT_ID, COURSE_ID, "EL-2026-ABC123DEF456",
-                "Algebra Foundations", Instant.parse("2026-05-01T10:00:00Z"),
-                "abc123hashvalue");
+                "Algebra Foundations", Instant.parse("2026-05-01T10:00:00Z"));
 
         given(certificateService.getMyCertificates(USER_ID)).willReturn(List.of(summary));
 

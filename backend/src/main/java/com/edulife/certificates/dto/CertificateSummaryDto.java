@@ -8,6 +8,5 @@ public record CertificateSummaryDto(
         UUID courseId,
         String certificateNumber,
         String courseTitle,
-        Instant issuedAt,
-        String verificationHash
+        Instant issuedAt
 ) {}

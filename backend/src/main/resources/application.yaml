@@ -40,6 +40,6 @@ edulife:
 
 app:
   cors:
-    # Comma-separated list of explicit origins. Empty in non-prod = CORS closed and any
-    # cross-origin preflight is rejected; production must inject the real Android / web origins.
-    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:}
+    # Comma-separated list of explicit origins. Local web origins are allowed by default so
+    # browser auth sync works in development; production should inject the deployed website URL.
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173}

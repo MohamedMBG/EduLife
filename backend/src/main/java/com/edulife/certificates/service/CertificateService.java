@@ -158,7 +158,14 @@ public class CertificateService {
         }
 
         try {
-            return Files.readAllBytes(Path.of(pdfUrl));
+            Path storageRoot = Path.of(storageProperties.getStorageDir()).toAbsolutePath().normalize();
+            Path target = Path.of(pdfUrl).toAbsolutePath().normalize();
+            if (!target.startsWith(storageRoot)) {
+                throw new CertificateNotFoundException("PDF not available for this certificate");
+            }
+            return Files.readAllBytes(target);
+        } catch (CertificateNotFoundException e) {
+            throw e;
         } catch (Exception e) {
             throw new CertificateGenerationException("Could not read certificate PDF from storage", e);
         }
@@ -220,8 +227,7 @@ public class CertificateService {
                 cert.getCourseId(),
                 cert.getCertificateNumber(),
                 cert.getCourseTitle(),
-                cert.getIssuedAt(),
-                cert.getVerificationHash()
+                cert.getIssuedAt()
         );
     }
 
