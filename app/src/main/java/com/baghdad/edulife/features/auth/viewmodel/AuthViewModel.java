@@ -52,11 +52,10 @@ public class AuthViewModel extends AndroidViewModel {
 
         authRepository.login(email, password, result -> {
             if (result.success) {
-                authState.postValue(AuthUiState.success("Login successful."));
-                // Backend sync is best-effort: it persists userId/role when reachable and
-                // consumes any pending intendedRole chosen during registration.
-                // but never blocks or fails the login UI.
-                authRepository.syncWithBackend(syncResult -> { /* no-op */ });
+                // Sync before posting success so SessionStorage has the role written
+                // by the time LoginFragment reads it for navigation.
+                authRepository.syncWithBackend(syncResult ->
+                        authState.postValue(AuthUiState.success("Login successful.")));
             } else if (result.emailVerificationRequired) {
                 authState.postValue(AuthUiState.verificationRequired(result.message));
             } else {
