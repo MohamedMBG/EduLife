@@ -1,5 +1,6 @@
 package com.baghdad.edulife.features.courses.ui;
 
+import android.content.res.ColorStateList;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.TypedValue;
@@ -30,6 +31,7 @@ import com.baghdad.edulife.features.courses.model.ExamSubmitUiState;
 import com.baghdad.edulife.features.courses.model.ExamUiState;
 import com.baghdad.edulife.features.courses.model.SubmitExamRequest;
 import com.baghdad.edulife.features.courses.viewmodel.ExamViewModel;
+import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -56,6 +58,8 @@ public class ExamFragment extends Fragment {
     private LinearLayout submitFooter;
     private TextView progressText;
     private Button submitButton;
+    private LinearProgressIndicator progressBar;
+    private TextView topProgressPill;
 
     private final Map<String, String> selectedChoices = new HashMap<>();
     private ExamResponse currentExam;
@@ -84,6 +88,8 @@ public class ExamFragment extends Fragment {
         submitFooter = view.findViewById(R.id.examSubmitFooter);
         progressText = view.findViewById(R.id.examProgressText);
         submitButton = view.findViewById(R.id.examSubmitButton);
+        progressBar = view.findViewById(R.id.examProgressBar);
+        topProgressPill = view.findViewById(R.id.examTopProgressPill);
 
         view.findViewById(R.id.examBackButton).setOnClickListener(v ->
                 Navigation.findNavController(view).popBackStack());
@@ -263,37 +269,42 @@ public class ExamFragment extends Fragment {
     private View createQuestionView(int number, ExamQuestion question, int totalQuestions) {
         LinearLayout card = new LinearLayout(requireContext());
         card.setOrientation(LinearLayout.VERTICAL);
-        card.setBackgroundColor(requireContext().getColor(R.color.brand_surface));
-        card.setPadding(dp(16), dp(16), dp(16), dp(16));
+        card.setBackgroundResource(R.drawable.bg_catalog_card);
+        card.setPadding(dp(20), dp(20), dp(20), dp(20));
 
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
-        params.bottomMargin = dp(12);
+        params.bottomMargin = dp(14);
         card.setLayoutParams(params);
 
         TextView questionNumber = new TextView(requireContext());
-        questionNumber.setText(getString(R.string.exam_question_label, number));
-        questionNumber.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        questionNumber.setTextColor(requireContext().getColor(R.color.brand_text_secondary));
+        questionNumber.setText(getString(R.string.exam_question_of, number, totalQuestions)
+                .toUpperCase(Locale.getDefault()));
+        questionNumber.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
+        questionNumber.setTypeface(questionNumber.getTypeface(), Typeface.BOLD);
+        questionNumber.setLetterSpacing(0.08f);
+        questionNumber.setTextColor(requireContext().getColor(R.color.brand_primary));
+        questionNumber.setBackgroundResource(R.drawable.bg_auth_eyebrow);
         LinearLayout.LayoutParams numParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
-        numParams.bottomMargin = dp(6);
+        numParams.bottomMargin = dp(12);
         questionNumber.setLayoutParams(numParams);
 
         TextView questionText = new TextView(requireContext());
         questionText.setText(question.questionText);
         questionText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
         questionText.setTypeface(questionText.getTypeface(), Typeface.BOLD);
+        questionText.setLineSpacing(dp(2), 1f);
         questionText.setTextColor(requireContext().getColor(R.color.brand_text_primary));
         LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
-        textParams.bottomMargin = dp(12);
+        textParams.bottomMargin = dp(14);
         questionText.setLayoutParams(textParams);
 
         RadioGroup radioGroup = new RadioGroup(requireContext());
@@ -305,8 +316,17 @@ public class ExamFragment extends Fragment {
                 rb.setText(choice.choiceText);
                 rb.setTag(choice.choiceId);
                 rb.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
-                rb.setPadding(dp(4), dp(8), dp(4), dp(8));
+                rb.setPadding(dp(12), dp(14), dp(14), dp(14));
                 rb.setTextColor(requireContext().getColor(R.color.brand_text_primary));
+                rb.setBackgroundResource(R.drawable.bg_exam_choice);
+                rb.setButtonTintList(ColorStateList.valueOf(
+                        requireContext().getColor(R.color.brand_primary)));
+                RadioGroup.LayoutParams rbParams = new RadioGroup.LayoutParams(
+                        RadioGroup.LayoutParams.MATCH_PARENT,
+                        RadioGroup.LayoutParams.WRAP_CONTENT
+                );
+                rbParams.topMargin = dp(8);
+                rb.setLayoutParams(rbParams);
                 radioGroup.addView(rb);
             }
         }
@@ -328,6 +348,10 @@ public class ExamFragment extends Fragment {
     private void updateProgress(int totalQuestions) {
         int answered = selectedChoices.size();
         progressText.setText(getString(R.string.exam_progress, answered, totalQuestions));
+        progressBar.setMax(Math.max(totalQuestions, 1));
+        progressBar.setProgressCompat(answered, true);
+        topProgressPill.setVisibility(View.VISIBLE);
+        topProgressPill.setText(getString(R.string.exam_progress_pill, answered, totalQuestions));
         submitButton.setEnabled(answered == totalQuestions && totalQuestions > 0);
     }
 
@@ -336,6 +360,7 @@ public class ExamFragment extends Fragment {
         examGateContainer.setVisibility(View.GONE);
         scrollView.setVisibility(View.GONE);
         submitFooter.setVisibility(View.GONE);
+        topProgressPill.setVisibility(View.GONE);
         statusText.setVisibility(View.VISIBLE);
         statusText.setText(message);
     }
@@ -345,6 +370,7 @@ public class ExamFragment extends Fragment {
         statusText.setVisibility(View.GONE);
         scrollView.setVisibility(View.GONE);
         submitFooter.setVisibility(View.GONE);
+        topProgressPill.setVisibility(View.GONE);
         examGateContainer.setVisibility(View.VISIBLE);
 
         examGateEyebrow.setText(eyebrow);

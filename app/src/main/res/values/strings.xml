@@ -312,4 +312,47 @@
     <string name="exam_result_done">Back to Course</string>
     <string name="exam_take_cta">Take Final Exam</string>
     <string name="exam_question_label">Question %1$d</string>
+    <string name="exam_question_of">Question %1$d of %2$d</string>
+    <string name="exam_progress_pill">%1$d/%2$d</string>
+    <string name="exam_header_eyebrow">Final exam</string>
+    <string name="exam_back_cd">Back</string>
+    <string name="edit_profile_section_eyebrow">Your identity</string>
+    <string name="edit_profile_section_title">Personal information</string>
+    <string name="edit_profile_section_subtitle">This is how your name appears on courses and certificates.</string>
+
+    <!-- ── Admin ── -->
+    <string name="admin_eyebrow">Platform admin</string>
+    <string name="admin_dashboard_title">Admin Dashboard</string>
+    <string name="admin_dashboard_subtitle">Platform overview — all data from the live backend.</string>
+    <string name="admin_logout">Sign out</string>
+    <string name="admin_loading">Loading platform stats…</string>
+    <string name="admin_retry">Retry</string>
+    <string name="admin_section_overview">OVERVIEW</string>
+    <string name="admin_section_actions">MANAGEMENT</string>
+    <string name="admin_stat_learners_label">Learners</string>
+    <string name="admin_stat_teachers_label">Teachers</string>
+    <string name="admin_stat_courses_label">Published courses</string>
+    <string name="admin_stat_pending_label">Pending requests</string>
+    <string name="admin_stat_certificates_label">Certificates issued</string>
+    <string name="admin_stat_enrollments_label">Active enrollments</string>
+    <string name="admin_action_teacher_requests_title">Teacher Applications</string>
+    <string name="admin_action_teacher_requests_subtitle">Review and approve pending requests.</string>
+    <string name="admin_action_users_title">Manage Users</string>
+    <string name="admin_action_users_subtitle">Browse and change user roles.</string>
+    <string name="admin_users_coming_soon">User management coming soon.</string>
+    <string name="admin_teacher_requests_title">Teacher Applications</string>
+    <string name="admin_teacher_requests_subtitle">Approve or reject applicants.</string>
+    <string name="admin_back_cd">Back</string>
+    <string name="admin_filter_pending">Pending</string>
+    <string name="admin_filter_approved">Approved</string>
+    <string name="admin_filter_rejected">Rejected</string>
+    <string name="admin_requests_empty">No requests in this category.</string>
+    <string name="admin_approve">Approve</string>
+    <string name="admin_reject">Reject</string>
+    <string name="admin_approve_confirm_title">Approve teacher request?</string>
+    <string name="admin_approve_confirm_message">The user will be promoted to Teacher role immediately.</string>
+    <string name="admin_reject_confirm_title">Reject teacher request?</string>
+    <string name="admin_reject_note_hint_label">Leave an optional note explaining the decision (visible to the admin log only).</string>
+    <string name="admin_reject_note_hint">Admin note (optional, max 500 chars)</string>
+    <string name="admin_note_label">ADMIN NOTE</string>
 </resources>

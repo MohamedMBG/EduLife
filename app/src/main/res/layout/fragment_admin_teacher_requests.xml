@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/admin_background"
+    android:orientation="vertical">
+
+    <!-- Top bar -->
+    <LinearLayout
+        android:id="@+id/teacherRequestsTopBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/admin_header_bg"
+        android:orientation="horizontal"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp"
+        android:gravity="center_vertical">
+
+        <ImageButton
+            android:id="@+id/teacherRequestsBackButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="14dp"
+            android:background="@drawable/bg_icon_back"
+            android:contentDescription="@string/admin_back_cd"
+            android:src="@drawable/ic_back"
+            app:tint="@color/admin_text_primary" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/admin_teacher_requests_title"
+                android:textColor="@color/admin_text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/admin_teacher_requests_subtitle"
+                android:textColor="@color/admin_text_secondary"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Filter tabs -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/admin_header_bg"
+        android:orientation="horizontal"
+        android:paddingHorizontal="24dp"
+        android:paddingBottom="16dp">
+
+        <TextView
+            android:id="@+id/filterPending"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_catalog_filter_button_active"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="7dp"
+            android:text="@string/admin_filter_pending"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/filterApproved"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_catalog_filter_button"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="7dp"
+            android:text="@string/admin_filter_approved"
+            android:textColor="@color/brand_primary"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/filterRejected"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_catalog_filter_button"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="7dp"
+            android:text="@string/admin_filter_rejected"
+            android:textColor="@color/brand_primary"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <!-- State card (loading / error / empty) -->
+    <LinearLayout
+        android:id="@+id/teacherRequestsStateCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="24dp"
+        android:background="@drawable/bg_catalog_card"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp"
+        android:paddingVertical="36dp"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/teacherRequestsLoadingIndicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:indicatorColor="@color/admin_accent"
+            app:trackColor="@color/admin_border"
+            android:indeterminate="true"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <TextView
+            android:id="@+id/teacherRequestsStateText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            android:textColor="@color/admin_text_secondary"
+            android:textSize="14sp"
+            tools:text="Loading requests…" />
+
+        <TextView
+            android:id="@+id/teacherRequestsRetryButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_admin_logout_button"
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="9dp"
+            android:text="@string/admin_retry"
+            android:textColor="@color/admin_accent"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- Toast-style action feedback -->
+    <TextView
+        android:id="@+id/teacherRequestsActionMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_admin_action_card"
+        android:paddingHorizontal="18dp"
+        android:paddingVertical="12dp"
+        android:textColor="@color/admin_text_primary"
+        android:textSize="13sp"
+        android:visibility="gone"
+        tools:text="Request approved — user promoted to Teacher."
+        tools:visibility="visible" />
+
+    <!-- List -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/teacherRequestsRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="24dp"
+        android:clipToPadding="false"
+        android:visibility="gone"
+        tools:visibility="visible"
+        tools:listitem="@layout/item_teacher_request" />
+
+</LinearLayout>

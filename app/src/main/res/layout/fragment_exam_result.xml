@@ -1,79 +1,118 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/brand_background">
+    android:background="@color/brand_background"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp"
+        android:paddingStart="28dp"
+        android:paddingTop="48dp"
+        android:paddingEnd="28dp"
+        android:paddingBottom="32dp"
         android:gravity="center_horizontal">
 
-        <!-- Score circle (large number) -->
-        <TextView
-            android:id="@+id/examResultScoreCircle"
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:gravity="center"
-            android:textSize="36sp"
-            android:textStyle="bold"
-            android:textColor="@color/white"
-            android:background="@drawable/bg_score_circle"
-            android:layout_marginBottom="24dp" />
+        <!-- Score hero: circle inside decorative ring -->
+        <FrameLayout
+            android:layout_width="156dp"
+            android:layout_height="156dp">
+
+            <View
+                android:layout_width="156dp"
+                android:layout_height="156dp"
+                android:background="@drawable/bg_score_ring" />
+
+            <TextView
+                android:id="@+id/examResultScoreCircle"
+                android:layout_width="124dp"
+                android:layout_height="124dp"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:textSize="34sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:background="@drawable/bg_score_circle" />
+        </FrameLayout>
 
         <!-- Pass / Fail label -->
         <TextView
             android:id="@+id/examResultStatusLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginTop="26dp"
+            android:textSize="26sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/examResultPassScoreLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:textSize="14sp"
-            android:textColor="@color/brand_text_secondary"
-            android:layout_marginBottom="24dp" />
+            android:textColor="@color/brand_text_secondary" />
 
         <!-- Certificate card (visible only on pass) -->
         <LinearLayout
             android:id="@+id/examResultCertCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
             android:orientation="vertical"
-            android:background="@color/brand_surface"
-            android:padding="20dp"
-            android:layout_marginBottom="24dp"
+            android:gravity="center_horizontal"
+            android:background="@drawable/bg_exam_cert_card"
+            android:padding="26dp"
             android:visibility="gone">
 
+            <FrameLayout
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_exam_gold_icon">
+
+                <ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_workspace_premium"
+                    app:tint="@color/cert_gold" />
+            </FrameLayout>
+
             <TextView
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
                 android:text="@string/exam_result_cert_label"
-                android:textSize="16sp"
+                android:textSize="17sp"
                 android:textStyle="bold"
-                android:textColor="@color/brand_primary"
-                android:layout_marginBottom="8dp" />
+                android:textColor="@color/cert_ink" />
 
             <TextView
                 android:id="@+id/examResultCertNumber"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="14sp"
-                android:textColor="@color/brand_text_secondary" />
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_cert_number_pill"
+                android:paddingStart="14dp"
+                android:paddingTop="7dp"
+                android:paddingEnd="14dp"
+                android:paddingBottom="7dp"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="@color/cert_ink" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:lineSpacingExtra="2dp"
                 android:text="@string/exam_result_cert_hint"
                 android:textSize="13sp"
-                android:textColor="@color/brand_text_secondary"
-                android:layout_marginTop="8dp" />
+                android:textColor="@color/cert_ink_muted" />
         </LinearLayout>
 
         <!-- Retry message (visible only on fail) -->
@@ -81,19 +120,31 @@
             android:id="@+id/examResultRetryMessage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:background="@drawable/bg_login_error_card"
+            android:padding="18dp"
             android:textSize="14sp"
-            android:textColor="@color/brand_text_secondary"
+            android:lineSpacingExtra="3dp"
+            android:textColor="@color/brand_text_body"
             android:gravity="center"
-            android:layout_marginBottom="24dp"
             android:visibility="gone" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:minHeight="32dp" />
 
         <!-- Done button -->
         <Button
             android:id="@+id/examResultDoneButton"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="52dp"
             android:text="@string/exam_result_done"
+            android:textAllCaps="false"
+            android:textSize="15sp"
+            android:textStyle="bold"
             android:textColor="@color/white"
-            android:backgroundTint="@color/brand_primary" />
+            android:background="@drawable/bg_enroll_cta_button" />
     </LinearLayout>
 </ScrollView>
