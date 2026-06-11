@@ -94,6 +94,31 @@ export interface Profile {
   certificates: number;
 }
 
+export interface AdminMetrics {
+  totalLearners: number;
+  totalTeachers: number;
+  totalGroupAdmins: number;
+  totalCoursesDraft: number;
+  totalCoursesPublished: number;
+  totalCoursesArchived: number;
+  totalEnrollmentsActive: number;
+  totalCertificates: number;
+  pendingTeacherRequests: number;
+}
+
+export type TeacherRequestStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+export interface TeacherRequestSummary {
+  id: string;
+  userId: string;
+  userEmail: string;
+  status: TeacherRequestStatus;
+  motivation: string | null;
+  adminNote: string | null;
+  requestedAt: string;
+  reviewedAt: string | null;
+}
+
 export interface CourseProgressSection {
   sectionId: string;
   title: string;

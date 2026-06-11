@@ -178,10 +178,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     const storedRole = readStoredIntendedRole();
-    const sync = await syncAuth(
-      async (forceRefresh) => firebaseUser.getIdToken(forceRefresh),
-      storedRole,
-    );
+    let sync: Awaited<ReturnType<typeof syncAuth>>;
+    try {
+      sync = await syncAuth(
+        async (forceRefresh) => firebaseUser.getIdToken(forceRefresh),
+        storedRole,
+      );
+    } catch (syncError) {
+      syncedUidRef.current = null;
+      commitAnonymous(getReadableAuthError(syncError));
+      return;
+    }
     // Clear after first use — subsequent syncs must not re-apply the registration intent.
     localStorage.removeItem(INTENDED_ROLE_KEY);
 
@@ -443,6 +450,35 @@ export function RequireAuth({ children }: { children: ReactNode }) {
         </div>
       </div>
     );
+  }
+
+  return <>{children}</>;
+}
+
+export function RequireAdmin({ children }: { children: ReactNode }) {
+  const auth = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (auth.status === "anonymous" && auth.configured) {
+      navigate({ to: "/login" });
+    } else if (auth.status === "authenticated" && auth.session?.role !== "ADMIN") {
+      navigate({ to: "/dashboard" });
+    }
+  }, [auth.configured, auth.session?.role, auth.status, navigate]);
+
+  if (auth.status === "loading") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="rounded-3xl border border-border bg-surface-elevated px-6 py-5 text-center shadow-elevated">
+          <p className="text-sm font-medium text-foreground">Loading admin session…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (auth.status !== "authenticated" || auth.session?.role !== "ADMIN") {
+    return null;
   }
 
   return <>{children}</>;

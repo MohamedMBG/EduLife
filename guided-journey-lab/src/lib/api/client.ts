@@ -1,5 +1,6 @@
 import { appEnv, getEnvConfigurationError } from "../env";
 import type {
+  AdminMetrics,
   ApiErrorPayload,
   AuthSyncResponse,
   AvatarUploadResponse,
@@ -19,6 +20,8 @@ import type {
   LessonDetail,
   PageResponse,
   Profile,
+  TeacherRequestSummary,
+  TeacherRequestStatus,
   UpdateProfileRequest,
 } from "./types";
 import {
@@ -94,6 +97,8 @@ async function parseError(response: Response) {
   );
 }
 
+const REQUEST_TIMEOUT_MS = 15_000;
+
 async function makeRequest<T>(path: string, options: RequestOptions = {}) {
   const headers = new Headers(options.headers);
   let token = options.getAccessToken ? await options.getAccessToken(false) : null;
@@ -112,11 +117,30 @@ async function makeRequest<T>(path: string, options: RequestOptions = {}) {
       body = JSON.stringify(body);
     }
 
-    return fetch(buildUrl(path, options.query), {
-      method: options.method ?? "GET",
-      headers: requestHeaders,
-      body,
-    });
+    let response: Response;
+    try {
+      response = await fetch(buildUrl(path, options.query), {
+        method: options.method ?? "GET",
+        headers: requestHeaders,
+        body,
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "TimeoutError") {
+        throw new ApiClientError(
+          503,
+          "The server is taking too long to respond. Please try again in a moment.",
+        );
+      }
+      if (e instanceof TypeError) {
+        throw new ApiClientError(
+          503,
+          "Cannot reach the server. Check your connection and try again.",
+        );
+      }
+      throw e;
+    }
+    return response;
   }
 
   let response = await executeRequest(token);
@@ -160,6 +184,24 @@ export function getProfile(getAccessToken: NonNullable<RequestOptions["getAccess
   }
 
   return makeRequest<Profile>("api/v1/profile", { getAccessToken });
+}
+
+export function getAdminMetrics(getAccessToken: NonNullable<RequestOptions["getAccessToken"]>) {
+  if (appEnv.demoMode) {
+    return Promise.resolve<AdminMetrics>({
+      totalLearners: 0,
+      totalTeachers: 0,
+      totalGroupAdmins: 0,
+      totalCoursesDraft: 0,
+      totalCoursesPublished: 0,
+      totalCoursesArchived: 0,
+      totalEnrollmentsActive: 0,
+      totalCertificates: 0,
+    });
+  }
+
+  // This endpoint is intentionally admin-only; callers should gate it by the synced backend role.
+  return makeRequest<AdminMetrics>("api/v1/admin/metrics", { getAccessToken });
 }
 
 export function updateProfile(
@@ -301,9 +343,7 @@ export function markLessonComplete(
   });
 }
 
-export function listMyCertificates(
-  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
-) {
+export function listMyCertificates(getAccessToken: NonNullable<RequestOptions["getAccessToken"]>) {
   if (appEnv.demoMode) {
     return demoListMyCertificates();
   }
@@ -412,4 +452,52 @@ export function verifyCertificate(hash: string) {
   return makeRequest<CertificateVerification>(
     `api/v1/certificates/verify/${encodeURIComponent(hash)}`,
   );
+}
+
+// ── Admin endpoints (ADMIN role only) ────────────────────────────────────────
+
+export function listAdminTeacherRequests(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  status: TeacherRequestStatus = "PENDING",
+  page = 0,
+  size = 50,
+) {
+  if (appEnv.demoMode) {
+    throw new ApiClientError(501, "Admin endpoints not available in demo mode.");
+  }
+
+  return makeRequest<PageResponse<TeacherRequestSummary>>("api/v1/admin/teacher-requests", {
+    getAccessToken,
+    query: { status, page, size },
+  });
+}
+
+export function approveTeacherRequest(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  requestId: string,
+) {
+  if (appEnv.demoMode) {
+    throw new ApiClientError(501, "Admin endpoints not available in demo mode.");
+  }
+
+  return makeRequest<TeacherRequestSummary>(`api/v1/admin/teacher-requests/${requestId}/approve`, {
+    method: "PUT",
+    getAccessToken,
+  });
+}
+
+export function rejectTeacherRequest(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  requestId: string,
+  adminNote?: string,
+) {
+  if (appEnv.demoMode) {
+    throw new ApiClientError(501, "Admin endpoints not available in demo mode.");
+  }
+
+  return makeRequest<TeacherRequestSummary>(`api/v1/admin/teacher-requests/${requestId}/reject`, {
+    method: "PUT",
+    body: adminNote ? { adminNote } : {},
+    getAccessToken,
+  });
 }
