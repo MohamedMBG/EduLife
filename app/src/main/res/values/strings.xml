@@ -134,7 +134,6 @@
     <string name="courses_progress_format">%1$d / %2$d lessons · %3$d%%</string>
     <string name="courses_empty_unenrolled">You have no active enrollments yet.\nBrowse courses on the Home tab.</string>
     <string name="courses_empty_filtered">No %1$s courses in your enrollments.</string>
-    <string name="courses_browse_cta">Browse Courses</string>
 
     <!-- Lesson player -->
     <string name="lesson_player_tap_to_play">Tap to play</string>
@@ -285,6 +284,13 @@
     <string name="cert_detail_hash_label">Verification</string>
     <string name="cert_detail_share">Share Certificate</string>
     <string name="cert_share_text">I completed %1$s!\n\nCertificate: %2$s\nIssued: %3$s\nVerification: %4$s\n\nVerified by EduLife</string>
+    <string name="cert_detail_eyebrow">Certificate of Completion</string>
+    <string name="cert_detail_award_clause">This certificate is proudly presented to</string>
+    <string name="cert_detail_for_completing">for successfully completing the course</string>
+    <string name="cert_detail_signature_label">Authorized signature</string>
+    <string name="cert_detail_date_label">Date of issue</string>
+    <string name="cert_seal_description">Official seal</string>
+    <string name="cert_ornament_description">Decorative ornament</string>
     <!-- Teacher Request -->
     <string name="profile_become_teacher">Become a Teacher</string>
     <string name="teacher_request_eyebrow">Career</string>

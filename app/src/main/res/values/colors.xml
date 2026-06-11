@@ -101,4 +101,13 @@
     <!-- ══ EXAM ═══════════════════════════════════════════════════════ -->
     <color name="exam_pass_green">@color/brand_primary</color>
     <color name="exam_fail_red">@color/brand_error</color>
+
+    <!-- ══ CERTIFICATE (decorated) ════════════════════════════════════ -->
+    <color name="cert_paper">#FBF7EE</color>
+    <color name="cert_paper_alt">#F4ECDB</color>
+    <color name="cert_gold">#B8893A</color>
+    <color name="cert_gold_soft">#D9B873</color>
+    <color name="cert_gold_pale">#F2E3C0</color>
+    <color name="cert_ink">#1A2018</color>
+    <color name="cert_ink_muted">#5A5446</color>
 </resources>

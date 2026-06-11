@@ -49,13 +49,13 @@ public class TeacherRequestFragment extends Fragment {
             TextInputEditText motivInput = view.findViewById(R.id.teacherMotivationInput);
             String motivation = motivInput.getText() != null
                     ? motivInput.getText().toString() : "";
-            viewModel.submit(motivation);
+            viewModel.submitTeacherRequest(motivation);
         });
 
-        view.findViewById(R.id.teacherRetryButton).setOnClickListener(v -> viewModel.reload());
+        view.findViewById(R.id.teacherRetryButton).setOnClickListener(v -> viewModel.loadLatestRequest());
 
         observeState(view);
-        viewModel.load();
+        viewModel.loadLatestRequest();
     }
 
     private void observeState(View view) {
@@ -71,11 +71,11 @@ public class TeacherRequestFragment extends Fragment {
         View submitButton = view.findViewById(R.id.teacherSubmitButton);
         TextView submitLabel = view.findViewById(R.id.teacherSubmitLabel);
 
-        viewModel.loading.observe(getViewLifecycleOwner(), isLoading -> {
+        viewModel.getLoading().observe(getViewLifecycleOwner(), isLoading -> {
             loading.setVisibility(Boolean.TRUE.equals(isLoading) ? View.VISIBLE : View.GONE);
         });
 
-        viewModel.error.observe(getViewLifecycleOwner(), err -> {
+        viewModel.getError().observe(getViewLifecycleOwner(), err -> {
             if (err != null && !err.isBlank()) {
                 errorView.setVisibility(View.VISIBLE);
                 errorText.setText(err);
@@ -87,18 +87,15 @@ public class TeacherRequestFragment extends Fragment {
             }
         });
 
-        viewModel.noRequest.observe(getViewLifecycleOwner(), isNone -> {
-            if (!Boolean.TRUE.equals(isNone)) return;
+        viewModel.getLatestRequest().observe(getViewLifecycleOwner(), req -> {
             errorView.setVisibility(View.GONE);
-            pendingCard.setVisibility(View.GONE);
-            approvedCard.setVisibility(View.GONE);
-            rejectionCard.setVisibility(View.GONE);
-            formView.setVisibility(View.VISIBLE);
-        });
-
-        viewModel.request.observe(getViewLifecycleOwner(), req -> {
-            if (req == null) return;
-            errorView.setVisibility(View.GONE);
+            if (req == null) {
+                pendingCard.setVisibility(View.GONE);
+                approvedCard.setVisibility(View.GONE);
+                rejectionCard.setVisibility(View.GONE);
+                formView.setVisibility(View.VISIBLE);
+                return;
+            }
             switch (req.status) {
                 case "PENDING":
                     showPendingState(formView, pendingCard, approvedCard, requestedAtView, req);
@@ -115,7 +112,7 @@ public class TeacherRequestFragment extends Fragment {
             }
         });
 
-        viewModel.submitting.observe(getViewLifecycleOwner(), isSubmitting -> {
+        viewModel.getSubmitting().observe(getViewLifecycleOwner(), isSubmitting -> {
             boolean active = Boolean.TRUE.equals(isSubmitting);
             submitButton.setEnabled(!active);
             submitLabel.setText(active
@@ -123,10 +120,10 @@ public class TeacherRequestFragment extends Fragment {
                     : getString(R.string.teacher_request_submit));
         });
 
-        viewModel.submitError.observe(getViewLifecycleOwner(), err -> {
-            if (err == null || err.isBlank()) return;
-            viewModel.clearSubmitError();
-            Toast.makeText(requireContext(), err, Toast.LENGTH_LONG).show();
+        viewModel.getSubmitMessage().observe(getViewLifecycleOwner(), msg -> {
+            if (msg == null || msg.isBlank()) return;
+            viewModel.clearSubmitMessage();
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show();
         });
     }
 
