@@ -116,9 +116,14 @@ public class LoginFragment extends Fragment {
         if (state.success) {
             SessionStorage session = new SessionStorage(requireContext());
             String role = session.getRole();
-            int action = "ADMIN".equals(role)
-                    ? R.id.action_loginFragment_to_adminDashboardFragment
-                    : R.id.action_loginFragment_to_homeFragment;
+            int action;
+            if ("ADMIN".equals(role)) {
+                action = R.id.action_loginFragment_to_adminDashboardFragment;
+            } else if ("TEACHER".equals(role)) {
+                action = R.id.action_loginFragment_to_teacherDashboardFragment;
+            } else {
+                action = R.id.action_loginFragment_to_homeFragment;
+            }
             Navigation.findNavController(requireView()).navigate(action);
             authViewModel.resetState();
             return;

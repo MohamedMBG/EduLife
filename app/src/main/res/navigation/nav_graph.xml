@@ -31,6 +31,11 @@
             app:popUpTo="@id/nav_graph"
             app:popUpToInclusive="true" />
         <action
+            android:id="@+id/action_loginFragment_to_teacherDashboardFragment"
+            app:destination="@id/teacherDashboardFragment"
+            app:popUpTo="@id/nav_graph"
+            app:popUpToInclusive="true" />
+        <action
             android:id="@+id/action_loginFragment_to_registerFragment"
             app:destination="@id/registerFragment" />
     </fragment>
@@ -264,6 +269,36 @@
         android:id="@+id/teacherRequestsFragment"
         android:name="com.baghdad.edulife.features.admin.ui.TeacherRequestsFragment"
         android:label="Teacher Requests" />
+
+    <!-- ── Teacher CMS area ────────────────────────────────────────── -->
+
+    <fragment
+        android:id="@+id/teacherDashboardFragment"
+        android:name="com.baghdad.edulife.features.teacher.ui.TeacherDashboardFragment"
+        android:label="My Courses">
+        <action
+            android:id="@+id/action_teacherDashboardFragment_to_loginFragment"
+            app:destination="@id/loginFragment"
+            app:popUpTo="@id/nav_graph"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_teacherDashboardFragment_to_cmsCourseDetailFragment"
+            app:destination="@id/cmsCourseDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/cmsCourseDetailFragment"
+        android:name="com.baghdad.edulife.features.teacher.ui.CmsCourseDetailFragment"
+        android:label="Course Detail">
+        <argument
+            android:name="courseId"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="courseTitle"
+            app:argType="string"
+            android:defaultValue="" />
+    </fragment>
 
     <fragment
         android:id="@+id/lessonPlayerFragment"
