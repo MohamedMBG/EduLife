@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    android:background="@drawable/bg_catalog_card"
+    android:orientation="vertical"
+    android:paddingHorizontal="20dp"
+    android:paddingVertical="18dp">
+
+    <!-- Status pill + date row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/requestStatusPill"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_admin_badge"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="3dp"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            tools:text="PENDING"
+            tools:textColor="@color/admin_accent" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/requestDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/admin_text_muted"
+            android:textSize="11sp"
+            tools:text="2026-06-01" />
+    </LinearLayout>
+
+    <!-- Email -->
+    <TextView
+        android:id="@+id/requestEmail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:textColor="@color/admin_text_primary"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        tools:text="jane.doe@example.com" />
+
+    <!-- Motivation -->
+    <TextView
+        android:id="@+id/requestMotivation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="@color/admin_text_secondary"
+        android:textSize="13sp"
+        android:maxLines="3"
+        android:ellipsize="end"
+        tools:text="I have 5 years of experience in mobile development and want to share my knowledge with learners." />
+
+    <!-- Action buttons (only for PENDING) -->
+    <LinearLayout
+        android:id="@+id/requestActionRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            android:id="@+id/requestApproveButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_admin_approve_button"
+            android:gravity="center"
+            android:paddingVertical="10dp"
+            android:text="@string/admin_approve"
+            android:textColor="@color/white"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/requestRejectButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_admin_logout_button"
+            android:gravity="center"
+            android:paddingVertical="10dp"
+            android:text="@string/admin_reject"
+            android:textColor="@color/brand_error"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Admin note (for reviewed requests) -->
+    <LinearLayout
+        android:id="@+id/requestAdminNoteRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_login_error_card"
+        android:orientation="vertical"
+        android:paddingHorizontal="14dp"
+        android:paddingVertical="10dp"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/admin_note_label"
+            android:textColor="@color/brand_error"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/requestAdminNote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="@color/admin_text_secondary"
+            android:textSize="13sp"
+            tools:text="Does not meet minimum requirements." />
+    </LinearLayout>
+
+</LinearLayout>

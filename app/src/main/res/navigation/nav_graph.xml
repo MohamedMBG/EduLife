@@ -26,6 +26,11 @@
             app:popUpTo="@id/nav_graph"
             app:popUpToInclusive="true" />
         <action
+            android:id="@+id/action_loginFragment_to_adminDashboardFragment"
+            app:destination="@id/adminDashboardFragment"
+            app:popUpTo="@id/nav_graph"
+            app:popUpToInclusive="true" />
+        <action
             android:id="@+id/action_loginFragment_to_registerFragment"
             app:destination="@id/registerFragment" />
     </fragment>
@@ -238,6 +243,27 @@
             app:argType="string"
             android:defaultValue="" />
     </fragment>
+
+    <!-- ── Admin area ────────────────────────────────────────────────── -->
+
+    <fragment
+        android:id="@+id/adminDashboardFragment"
+        android:name="com.baghdad.edulife.features.admin.ui.AdminDashboardFragment"
+        android:label="Admin Dashboard">
+        <action
+            android:id="@+id/action_adminDashboardFragment_to_loginFragment"
+            app:destination="@id/loginFragment"
+            app:popUpTo="@id/nav_graph"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_adminDashboardFragment_to_teacherRequestsFragment"
+            app:destination="@id/teacherRequestsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/teacherRequestsFragment"
+        android:name="com.baghdad.edulife.features.admin.ui.TeacherRequestsFragment"
+        android:label="Teacher Requests" />
 
     <fragment
         android:id="@+id/lessonPlayerFragment"

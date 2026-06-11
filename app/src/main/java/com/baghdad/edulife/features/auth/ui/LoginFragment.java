@@ -17,6 +17,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 
 import com.baghdad.edulife.R;
+import com.baghdad.edulife.core.storage.SessionStorage;
 import com.baghdad.edulife.features.auth.model.AuthUiState;
 import com.baghdad.edulife.features.auth.viewmodel.AuthViewModel;
 
@@ -113,7 +114,12 @@ public class LoginFragment extends Fragment {
         }
 
         if (state.success) {
-            Navigation.findNavController(requireView()).navigate(R.id.action_loginFragment_to_homeFragment);
+            SessionStorage session = new SessionStorage(requireContext());
+            String role = session.getRole();
+            int action = "ADMIN".equals(role)
+                    ? R.id.action_loginFragment_to_adminDashboardFragment
+                    : R.id.action_loginFragment_to_homeFragment;
+            Navigation.findNavController(requireView()).navigate(action);
             authViewModel.resetState();
             return;
         }

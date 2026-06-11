@@ -59,6 +59,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="12dp"
+        android:indeterminateTint="@color/brand_primary"
         android:visibility="gone" />
 
     <androidx.core.widget.NestedScrollView
@@ -76,14 +77,51 @@
             android:paddingTop="32dp"
             android:paddingEnd="24dp">
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/displayNameLayout"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_auth_eyebrow"
+                android:letterSpacing="0.08"
+                android:text="@string/edit_profile_section_eyebrow"
+                android:textAllCaps="true"
+                android:textColor="@color/brand_primary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="@string/edit_profile_section_title"
+                android:textColor="@color/brand_text_primary"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:lineSpacingExtra="2dp"
+                android:text="@string/edit_profile_section_subtitle"
+                android:textColor="@color/brand_text_secondary"
+                android:textSize="14sp" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/displayNameLayout"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="28dp"
                 android:hint="@string/edit_profile_display_name_label"
+                app:boxBackgroundColor="@color/brand_surface"
+                app:boxCornerRadiusBottomEnd="14dp"
+                app:boxCornerRadiusBottomStart="14dp"
+                app:boxCornerRadiusTopEnd="14dp"
+                app:boxCornerRadiusTopStart="14dp"
+                app:boxStrokeColor="@color/brand_primary"
                 app:counterEnabled="true"
-                app:counterMaxLength="100">
+                app:counterMaxLength="100"
+                app:hintTextColor="@color/brand_primary">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/displayNameInput"
@@ -91,18 +129,26 @@
                     android:layout_height="wrap_content"
                     android:inputType="textPersonName|textCapWords"
                     android:maxLength="100"
-                    android:singleLine="true" />
+                    android:singleLine="true"
+                    android:textColor="@color/brand_text_primary" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/bioLayout"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 android:hint="@string/edit_profile_bio_label"
+                app:boxBackgroundColor="@color/brand_surface"
+                app:boxCornerRadiusBottomEnd="14dp"
+                app:boxCornerRadiusBottomStart="14dp"
+                app:boxCornerRadiusTopEnd="14dp"
+                app:boxCornerRadiusTopStart="14dp"
+                app:boxStrokeColor="@color/brand_primary"
                 app:counterEnabled="true"
-                app:counterMaxLength="500">
+                app:counterMaxLength="500"
+                app:hintTextColor="@color/brand_primary">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/bioInput"
@@ -113,7 +159,8 @@
                     android:lines="4"
                     android:maxLength="500"
                     android:maxLines="8"
-                    android:minLines="4" />
+                    android:minLines="4"
+                    android:textColor="@color/brand_text_primary" />
             </com.google.android.material.textfield.TextInputLayout>
 
         </LinearLayout>

@@ -1,6 +1,29 @@
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { Award, BookOpen, Compass, GraduationCap, Home, LogOut, Menu, Shield, X } from "lucide-react";
+import { Award, BookOpen, Compass, GraduationCap, Home, LogOut, Menu, Moon, Shield, Sun, X } from "lucide-react";
+
+const DARK_KEY = "edulife-dark";
+
+function useDarkMode() {
+  const [dark, setDark] = useState(false);
+
+  useEffect(() => {
+    setDark(document.documentElement.classList.contains("dark"));
+  }, []);
+
+  function toggle() {
+    const next = !dark;
+    document.documentElement.classList.toggle("dark", next);
+    try {
+      localStorage.setItem(DARK_KEY, String(next));
+    } catch {
+      // storage unavailable — silent
+    }
+    setDark(next);
+  }
+
+  return { dark, toggle };
+}
 
 interface ShellUser {
   displayName: string;
@@ -34,6 +57,7 @@ const navItems = [
 
 export function AppShell({ active, user, onLogout, header, children }: AppShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { dark, toggle: toggleDark } = useDarkMode();
 
   const userInitials = getInitials(user.displayName || user.email || "EL");
 
@@ -54,11 +78,11 @@ export function AppShell({ active, user, onLogout, header, children }: AppShellP
         }`}
         style={{ boxShadow: "var(--shadow-luxury)" }}
       >
-        <div className="flex h-16 items-center gap-3 border-b border-border/60 px-6">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-primary text-primary-foreground shadow-soft">
+        <div className="group flex h-16 items-center gap-3 border-b border-border/60 px-6">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-teal text-teal-foreground shadow-soft">
             <GraduationCap className="h-4 w-4" />
           </span>
-          <div>
+          <div className="opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
             <p className="text-display text-lg leading-none text-foreground">EduLife</p>
             <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
               Learner portal
@@ -103,13 +127,22 @@ export function AppShell({ active, user, onLogout, header, children }: AppShellP
 
         <div className="border-t border-border/60 p-4">
           <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-primary text-sm font-semibold text-primary-foreground">
+            <Link
+              to="/profile"
+              className="grid h-10 w-10 place-items-center rounded-full bg-gradient-primary text-sm font-semibold text-primary-foreground"
+              aria-label="Open profile"
+              onClick={() => setSidebarOpen(false)}
+            >
               {userInitials}
-            </div>
-            <div className="min-w-0 flex-1">
+            </Link>
+            <Link
+              to="/profile"
+              className="min-w-0 flex-1"
+              onClick={() => setSidebarOpen(false)}
+            >
               <p className="truncate text-sm font-medium text-foreground">{user.displayName}</p>
               <p className="truncate text-xs text-muted-foreground">{user.email}</p>
-            </div>
+            </Link>
             <button
               type="button"
               className="text-muted-foreground transition-colors hover:text-foreground"
@@ -134,6 +167,14 @@ export function AppShell({ active, user, onLogout, header, children }: AppShellP
               <Menu className="h-5 w-5" />
             </button>
             <div className="min-w-0 flex-1">{header}</div>
+            <button
+              type="button"
+              onClick={toggleDark}
+              className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
           </div>
         </header>
 

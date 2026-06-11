@@ -2,19 +2,28 @@ import { appEnv, getEnvConfigurationError } from "../env";
 import type {
   ApiErrorPayload,
   AuthSyncResponse,
+  AvatarUploadResponse,
   UserRole,
-  CourseDetail,
   Certificate,
+  CertificateDetail,
+  CertificateVerification,
+  CourseDetail,
   CourseProgress,
   CourseSummary,
   EnrolledCourse,
   EnrollmentResponse,
+  Exam,
+  ExamResult,
+  ExamStatus,
+  ExamSubmitRequest,
   LessonDetail,
   PageResponse,
   Profile,
+  UpdateProfileRequest,
 } from "./types";
 import {
   demoEnrollInCourse,
+  demoGetCertificate,
   demoGetCourseDetail,
   demoGetCourseProgress,
   demoGetLessonDetail,
@@ -25,6 +34,7 @@ import {
   demoMarkLessonComplete,
   demoSyncAuth,
   demoUnenrollFromCourse,
+  demoVerifyCertificate,
 } from "./demo";
 
 export class ApiClientError extends Error {
@@ -152,6 +162,39 @@ export function getProfile(getAccessToken: NonNullable<RequestOptions["getAccess
   return makeRequest<Profile>("api/v1/profile", { getAccessToken });
 }
 
+export function updateProfile(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  payload: UpdateProfileRequest,
+) {
+  if (appEnv.demoMode) {
+    throw new ApiClientError(501, "Profile editing is not available in website demo mode.");
+  }
+
+  return makeRequest<Profile>("api/v1/profile", {
+    method: "PUT",
+    body: payload,
+    getAccessToken,
+  });
+}
+
+export function uploadAvatar(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  file: File,
+) {
+  if (appEnv.demoMode) {
+    throw new ApiClientError(501, "Avatar uploads are not available in website demo mode.");
+  }
+
+  const body = new FormData();
+  body.append("file", file);
+
+  return makeRequest<AvatarUploadResponse>("api/v1/profile/avatar", {
+    method: "POST",
+    body,
+    getAccessToken,
+  });
+}
+
 export function listCourses(
   getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
   query: { q?: string; category?: string; page?: number; size?: number } = {},
@@ -265,7 +308,108 @@ export function listMyCertificates(
     return demoListMyCertificates();
   }
 
-  return makeRequest<Certificate[]>("api/v1/certificates", {
+  return makeRequest<Certificate[]>("api/v1/certificates/me", {
     getAccessToken,
   });
+}
+
+export function getCertificate(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  certificateId: string,
+) {
+  if (appEnv.demoMode) {
+    return demoGetCertificate(certificateId);
+  }
+
+  return makeRequest<CertificateDetail>(`api/v1/certificates/${certificateId}`, {
+    getAccessToken,
+  });
+}
+
+export async function downloadCertificate(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  certificateId: string,
+): Promise<Blob> {
+  if (appEnv.demoMode) {
+    throw new ApiClientError(501, "Certificate downloads are not available in website demo mode.");
+  }
+
+  const headers = new Headers();
+  let token = await getAccessToken(false);
+
+  async function executeRequest(accessToken: string | null) {
+    const requestHeaders = new Headers(headers);
+    if (accessToken) {
+      requestHeaders.set("Authorization", `Bearer ${accessToken}`);
+    }
+    return fetch(buildUrl(`api/v1/certificates/${certificateId}/download`), {
+      method: "GET",
+      headers: requestHeaders,
+    });
+  }
+
+  let response = await executeRequest(token);
+
+  if (response.status === 401) {
+    token = await getAccessToken(true);
+    response = await executeRequest(token);
+  }
+
+  if (!response.ok) {
+    await parseError(response);
+  }
+
+  return response.blob();
+}
+
+export function getExam(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  courseId: string,
+) {
+  if (appEnv.demoMode) {
+    throw new ApiClientError(501, "Exams are not available in website demo mode.");
+  }
+
+  return makeRequest<Exam>(`api/v1/courses/${courseId}/exam`, {
+    getAccessToken,
+  });
+}
+
+export function getExamStatus(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  courseId: string,
+) {
+  if (appEnv.demoMode) {
+    throw new ApiClientError(501, "Exams are not available in website demo mode.");
+  }
+
+  return makeRequest<ExamStatus>(`api/v1/courses/${courseId}/exam/status`, {
+    getAccessToken,
+  });
+}
+
+export function submitExam(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  courseId: string,
+  payload: ExamSubmitRequest,
+) {
+  if (appEnv.demoMode) {
+    throw new ApiClientError(501, "Exams are not available in website demo mode.");
+  }
+
+  return makeRequest<ExamResult>(`api/v1/courses/${courseId}/exam/submit`, {
+    method: "POST",
+    body: payload,
+    getAccessToken,
+  });
+}
+
+export function verifyCertificate(hash: string) {
+  if (appEnv.demoMode) {
+    return demoVerifyCertificate(hash);
+  }
+
+  return makeRequest<CertificateVerification>(
+    `api/v1/certificates/verify/${encodeURIComponent(hash)}`,
+  );
 }

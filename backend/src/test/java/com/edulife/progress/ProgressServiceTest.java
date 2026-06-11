@@ -36,6 +36,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 class ProgressServiceTest {
@@ -194,12 +195,13 @@ class ProgressServiceTest {
         Lesson l3 = mockLesson(LESSON_3, false);
         given(lessonRepository.findAllByCourseSectionIdOrderByDisplayOrderAsc(SECTION_ID)).willReturn(List.of(l1, l2, l3));
 
+        List<LessonProgress> completedLessons = List.of(
+                mockLessonProgress(LESSON_1),
+                mockLessonProgress(LESSON_2),
+                mockLessonProgress(LESSON_3)
+        );
         given(lessonProgressRepository.findAllByUserIdAndCourseId(USER_ID, COURSE_ID))
-                .willReturn(List.of(
-                        mockLessonProgress(LESSON_1),
-                        mockLessonProgress(LESSON_2),
-                        mockLessonProgress(LESSON_3)
-                ));
+                .willReturn(completedLessons);
 
         CourseProgressDto result = progressService.getCourseProgress(COURSE_ID);
 
@@ -223,8 +225,9 @@ class ProgressServiceTest {
         given(lessonRepository.findAllByCourseSectionIdOrderByDisplayOrderAsc(SECTION_ID)).willReturn(List.of(l1, l2, l3));
 
         // 1 of 3 completed → 33.3%
+        List<LessonProgress> completedLessons = List.of(mockLessonProgress(LESSON_1));
         given(lessonProgressRepository.findAllByUserIdAndCourseId(USER_ID, COURSE_ID))
-                .willReturn(List.of(mockLessonProgress(LESSON_1)));
+                .willReturn(completedLessons);
 
         CourseProgressDto result = progressService.getCourseProgress(COURSE_ID);
 
@@ -251,12 +254,12 @@ class ProgressServiceTest {
 
     private Lesson mockLesson(UUID id, boolean preview) {
         Lesson l = mock(Lesson.class);
-        given(l.getId()).willReturn(id);
-        given(l.getTitle()).willReturn("Lesson " + id.toString().substring(0, 8));
-        given(l.getLessonType()).willReturn("VIDEO");
-        given(l.getEstimatedDurationMinutes()).willReturn(10);
-        given(l.getDisplayOrder()).willReturn(1);
-        given(l.isPreview()).willReturn(preview);
+        lenient().when(l.getId()).thenReturn(id);
+        lenient().when(l.getTitle()).thenReturn("Lesson " + id.toString().substring(0, 8));
+        lenient().when(l.getLessonType()).thenReturn("VIDEO");
+        lenient().when(l.getEstimatedDurationMinutes()).thenReturn(10);
+        lenient().when(l.getDisplayOrder()).thenReturn(1);
+        lenient().when(l.isPreview()).thenReturn(preview);
         return l;
     }
 

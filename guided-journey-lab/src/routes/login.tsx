@@ -27,11 +27,20 @@ function LoginPage() {
   const navigate = useNavigate();
   const auth = useAuth();
 
+  const [signedIn, setSignedIn] = useState(false);
+
   useEffect(() => {
     if (auth.status === "authenticated") {
       navigate({ to: "/dashboard" });
+      return;
     }
-  }, [auth.status, navigate]);
+    // Once Firebase has accepted the credential, hand off to RequireAuth so its loading state
+    // takes over while syncAuth resolves. Without this the form stays mounted and the user
+    // sees no progress between sign-in and dashboard.
+    if (signedIn && auth.status === "loading") {
+      navigate({ to: "/dashboard" });
+    }
+  }, [auth.status, navigate, signedIn]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -40,12 +49,24 @@ function LoginPage() {
 
     try {
       await auth.login(email, password);
-      navigate({ to: "/dashboard" });
+      setSignedIn(true);
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Unable to sign in.");
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function handleEmailChange(value: string) {
+    setEmail(value);
+    if (submitError) setSubmitError(null);
+    if (auth.error) auth.clearError();
+  }
+
+  function handlePasswordChange(value: string) {
+    setPassword(value);
+    if (submitError) setSubmitError(null);
+    if (auth.error) auth.clearError();
   }
 
   return (
@@ -70,11 +91,13 @@ function LoginPage() {
 
         <div className="rounded-3xl border border-border bg-surface-elevated shadow-elevated p-10">
           {/* Logo */}
-          <div className="flex items-center gap-2 mb-8">
-            <span className="grid place-items-center h-9 w-9 rounded-xl bg-gradient-primary text-primary-foreground">
+          <div className="group flex items-center gap-2 mb-8">
+            <span className="grid place-items-center h-9 w-9 rounded-xl bg-teal text-teal-foreground">
               <GraduationCap className="h-5 w-5" />
             </span>
-            <span className="text-display text-xl text-foreground">EduLife</span>
+            <span className="text-display text-xl text-foreground opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
+              EduLife
+            </span>
           </div>
 
           <h1 className="text-display text-3xl text-foreground leading-tight">
@@ -100,7 +123,7 @@ function LoginPage() {
                 required
                 autoComplete="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => handleEmailChange(e.target.value)}
                 placeholder="you@example.com"
                 className="w-full h-12 rounded-xl border border-border bg-surface px-4 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
               />
@@ -114,12 +137,12 @@ function LoginPage() {
                 >
                   Password
                 </label>
-                <a
-                  href="#"
+                <Link
+                  to="/forgot-password"
                   className="text-xs text-primary hover:text-primary-glow transition-colors"
                 >
                   Forgot password?
-                </a>
+                </Link>
               </div>
               <div className="relative">
                 <input
@@ -128,7 +151,7 @@ function LoginPage() {
                   required
                   autoComplete="current-password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => handlePasswordChange(e.target.value)}
                   placeholder="••••••••"
                   className="w-full h-12 rounded-xl border border-border bg-surface px-4 pr-12 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
                 />
@@ -137,6 +160,7 @@ function LoginPage() {
                   onClick={() => setShowPassword((v) => !v)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-pressed={showPassword}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -150,14 +174,18 @@ function LoginPage() {
             <button
               type="submit"
               disabled={submitting || (!auth.configured && !appEnv.demoMode)}
-              className="group w-full h-12 inline-flex items-center justify-center gap-2 rounded-full bg-foreground text-background text-sm font-medium shadow-elevated hover:opacity-90 active:scale-[0.98] transition-all"
+              className="group w-full h-12 inline-flex items-center justify-center gap-2 rounded-full bg-foreground text-background text-sm font-medium shadow-elevated hover:opacity-90 active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none transition-all"
             >
               {submitting ? "Signing in..." : "Sign In"}
               <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
             </button>
 
             {(submitError || auth.error) && (
-              <div className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+              <div
+                role="alert"
+                aria-live="polite"
+                className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+              >
                 {submitError || auth.error}
               </div>
             )}

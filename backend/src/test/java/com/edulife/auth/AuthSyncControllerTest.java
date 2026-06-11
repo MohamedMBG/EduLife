@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -82,6 +83,46 @@ class AuthSyncControllerTest {
 
         assert firstResponse.equals(secondResponse);
         assert userRepository.findAll().size() == 1;
+    }
+
+    @Test
+    void syncHonorsTeacherIntentOnlyOnFirstLogin() throws Exception {
+        FirebaseToken decodedToken = org.mockito.Mockito.mock(FirebaseToken.class);
+
+        given(firebaseAuth.verifyIdToken("teacher-token")).willReturn(decodedToken);
+        given(decodedToken.getUid()).willReturn("firebase-uid-teacher");
+        given(decodedToken.getEmail()).willReturn("teacher@edulife.test");
+        given(decodedToken.isEmailVerified()).willReturn(true);
+
+        mockMvc.perform(post("/api/v1/auth/sync")
+                        .header("Authorization", "Bearer teacher-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"intendedRole\":\"TEACHER\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("TEACHER"));
+
+        // Role intent is registration-only; later syncs must not demote or mutate trusted DB role.
+        mockMvc.perform(post("/api/v1/auth/sync")
+                        .header("Authorization", "Bearer teacher-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("TEACHER"));
+    }
+
+    @Test
+    void syncPreventsAdminSelfAssignment() throws Exception {
+        FirebaseToken decodedToken = org.mockito.Mockito.mock(FirebaseToken.class);
+
+        given(firebaseAuth.verifyIdToken("admin-intent-token")).willReturn(decodedToken);
+        given(decodedToken.getUid()).willReturn("firebase-uid-admin-intent");
+        given(decodedToken.getEmail()).willReturn("admin-intent@edulife.test");
+        given(decodedToken.isEmailVerified()).willReturn(true);
+
+        mockMvc.perform(post("/api/v1/auth/sync")
+                        .header("Authorization", "Bearer admin-intent-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"intendedRole\":\"ADMIN\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("LEARNER"));
     }
 
     @Test

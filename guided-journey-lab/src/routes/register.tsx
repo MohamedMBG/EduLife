@@ -108,11 +108,13 @@ function RegisterPage() {
         </Link>
 
         <div className="rounded-3xl border border-border bg-surface-elevated shadow-elevated p-8">
-          <div className="flex items-center gap-2 mb-5">
-            <span className="grid place-items-center h-9 w-9 rounded-xl bg-gradient-primary text-primary-foreground">
+          <div className="group flex items-center gap-2 mb-5">
+            <span className="grid place-items-center h-9 w-9 rounded-xl bg-teal text-teal-foreground">
               <GraduationCap className="h-5 w-5" />
             </span>
-            <span className="text-display text-xl text-foreground">EduLife</span>
+            <span className="text-display text-xl text-foreground opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
+              EduLife
+            </span>
           </div>
 
           <AnimatePresence mode="wait">
@@ -267,6 +269,7 @@ function RegisterPage() {
                         onClick={() => setShowPassword((v) => !v)}
                         className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                         aria-label={showPassword ? "Hide password" : "Show password"}
+                        aria-pressed={showPassword}
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
@@ -301,6 +304,7 @@ function RegisterPage() {
                         onClick={() => setShowConfirm((v) => !v)}
                         className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                         aria-label={showConfirm ? "Hide password" : "Show password"}
+                        aria-pressed={showConfirm}
                       >
                         {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
@@ -320,7 +324,11 @@ function RegisterPage() {
                   </button>
 
                   {(submitError || auth.error) && (
-                    <div className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+                    <div
+                      role="alert"
+                      aria-live="polite"
+                      className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+                    >
                       {submitError || auth.error}
                     </div>
                   )}

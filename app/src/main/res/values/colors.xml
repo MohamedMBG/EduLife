@@ -101,4 +101,26 @@
     <!-- ══ EXAM ═══════════════════════════════════════════════════════ -->
     <color name="exam_pass_green">@color/brand_primary</color>
     <color name="exam_fail_red">@color/brand_error</color>
+
+    <!-- ══ CERTIFICATE (decorated) ════════════════════════════════════ -->
+    <color name="cert_paper">#FBF7EE</color>
+    <color name="cert_paper_alt">#F4ECDB</color>
+    <color name="cert_gold">#B8893A</color>
+    <color name="cert_gold_soft">#D9B873</color>
+    <color name="cert_gold_pale">#F2E3C0</color>
+    <color name="cert_ink">#1A2018</color>
+    <color name="cert_ink_muted">#5A5446</color>
+
+    <!-- ══ ADMIN BACK-OFFICE ═════════════════════════════════════════ -->
+    <color name="admin_background">#F0F4F8</color>
+    <color name="admin_header_bg">#FFFFFF</color>
+    <color name="admin_surface">#FFFFFF</color>
+    <color name="admin_border">#DDE4EC</color>
+    <color name="admin_text_primary">#0D1623</color>
+    <color name="admin_text_secondary">#5A6575</color>
+    <color name="admin_text_muted">#9AAAB8</color>
+    <!-- Indigo accent — clearly different from brand green -->
+    <color name="admin_accent">#3D5AF1</color>
+    <color name="admin_accent_surface">#EEF0FD</color>
+    <color name="admin_accent_dark">#2A3EC0</color>
 </resources>

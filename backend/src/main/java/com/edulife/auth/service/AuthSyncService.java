@@ -7,6 +7,7 @@ import com.edulife.users.entity.User;
 import com.edulife.users.model.UserRole;
 import com.edulife.users.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import java.util.UUID;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -40,15 +41,19 @@ public class AuthSyncService {
         }
 
         User user = userRepository.findByFirebaseUid(firebaseUid)
-                .orElseGet(() -> {
-                    User newUser = new User(firebaseUid, email);
-                    // intendedRole is only applied on first sync. ADMIN cannot be self-assigned.
-                    UserRole role = resolveIntendedRole(request);
-                    newUser.setRole(role);
-                    return userRepository.save(newUser);
-                });
+                .orElseGet(() -> createUserIfAbsent(firebaseUid, email, request));
 
         return new AuthSyncResponse(user.getId(), user.getRole());
+    }
+
+    private User createUserIfAbsent(String firebaseUid, String email, AuthSyncRequest request) {
+        // Browser auth listeners and multiple tabs can call /auth/sync at the same time.
+        // The database upsert keeps first sync idempotent instead of leaking a unique-key error.
+        UserRole role = resolveIntendedRole(request);
+        userRepository.insertForAuthSyncIfAbsent(UUID.randomUUID(), firebaseUid, email, role.name());
+
+        return userRepository.findByFirebaseUid(firebaseUid)
+                .orElseThrow(() -> new IllegalStateException("Auth sync failed to create or load the internal user."));
     }
 
     private UserRole resolveIntendedRole(AuthSyncRequest request) {

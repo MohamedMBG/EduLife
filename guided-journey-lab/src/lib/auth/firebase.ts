@@ -32,9 +32,9 @@ export async function getFirebaseAuth() {
     authPromise = import("firebase/auth").then(async (firebaseAuth) => {
       const auth = firebaseAuth.getAuth(getFirebaseApp());
 
-      // Browser-local persistence keeps the learner signed in across refreshes while still
-      // relying on Firebase's own token lifecycle instead of custom cookie logic.
-      await firebaseAuth.setPersistence(auth, firebaseAuth.browserLocalPersistence);
+      // Session persistence keeps tokens out of localStorage per CLAUDE.md security rule.
+      // Learner stays signed in across reloads in the same tab; closing the tab clears state.
+      await firebaseAuth.setPersistence(auth, firebaseAuth.browserSessionPersistence);
       return auth;
     });
   }

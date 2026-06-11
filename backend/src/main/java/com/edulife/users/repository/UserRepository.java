@@ -8,6 +8,9 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface UserRepository extends JpaRepository<User, UUID> {
 
@@ -18,6 +21,19 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     boolean existsByFirebaseUid(String firebaseUid);
 
     boolean existsByEmail(String email);
+
+    @Modifying
+    @Query(value = """
+            INSERT INTO users (id, firebase_uid, email, role)
+            VALUES (:id, :firebaseUid, :email, :role)
+            ON CONFLICT (firebase_uid) DO NOTHING
+            """, nativeQuery = true)
+    int insertForAuthSyncIfAbsent(
+            @Param("id") UUID id,
+            @Param("firebaseUid") String firebaseUid,
+            @Param("email") String email,
+            @Param("role") String role
+    );
 
     // Admin user list — role filter stays in the repository so paginated counts remain correct.
     Page<User> findAllByRole(UserRole role, Pageable pageable);

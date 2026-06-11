@@ -1,5 +1,9 @@
 package com.baghdad.edulife.core.network;
 
+import com.baghdad.edulife.features.admin.model.AdminPageResponse;
+import com.baghdad.edulife.features.admin.model.AdminRejectRequest;
+import com.baghdad.edulife.features.admin.model.AdminStats;
+import com.baghdad.edulife.features.admin.model.AdminTeacherRequest;
 import com.baghdad.edulife.features.auth.model.AuthSyncRequest;
 import com.baghdad.edulife.features.auth.model.AuthSyncResponse;
 import com.baghdad.edulife.features.certificates.model.CertificateDetail;
@@ -175,5 +179,26 @@ public interface ApiService {
 
     @GET("teacher-requests/me")
     Call<TeacherRequestResponse> getMyTeacherRequest();
+
+    // ── Admin endpoints (ADMIN role required) ─────────────────────────────
+
+    @GET("admin/metrics")
+    Call<AdminStats> getAdminStats();
+
+    @GET("admin/teacher-requests")
+    Call<AdminPageResponse<AdminTeacherRequest>> getAdminTeacherRequests(
+            @Query("status") String status,
+            @Query("page") int page,
+            @Query("size") int size
+    );
+
+    @PUT("admin/teacher-requests/{id}/approve")
+    Call<AdminTeacherRequest> approveTeacherRequest(@Path("id") String id);
+
+    @PUT("admin/teacher-requests/{id}/reject")
+    Call<AdminTeacherRequest> rejectTeacherRequest(
+            @Path("id") String id,
+            @Body AdminRejectRequest body
+    );
 }
 

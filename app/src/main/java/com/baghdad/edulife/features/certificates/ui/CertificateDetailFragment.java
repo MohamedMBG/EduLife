@@ -132,7 +132,9 @@ public class CertificateDetailFragment extends Fragment {
                     .setTitle(getString(R.string.cert_download_notification_title, cert.courseTitle))
                     .setDescription(cert.certificateNumber)
                     .addRequestHeader("Authorization", "Bearer " + token)
-                    .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                    .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
+                    .setAllowedOverMetered(true)
+                    .setAllowedOverRoaming(true)
                     .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
                     .setMimeType("application/pdf");
 
