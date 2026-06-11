@@ -3,6 +3,7 @@ package com.edulife.config;
 import com.edulife.common.error.ApiErrorWriter;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
+import io.github.bucket4j.ConsumptionProbe;
 import io.github.bucket4j.Refill;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -73,10 +74,17 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
         Bucket bucket = resolveBucket(request);
 
-        if (bucket != null && !bucket.tryConsume(1)) {
-            // Return the shared ApiError contract so clients can branch on RATE_LIMITED code.
-            apiErrorWriter.write(response, HttpStatus.TOO_MANY_REQUESTS, "Rate limit exceeded");
-            return;
+        if (bucket != null) {
+            ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
+            if (!probe.isConsumed()) {
+                // Round nanoseconds up to the nearest whole second so clients know exactly
+                // when to retry without hitting the limit again immediately.
+                long secondsToWait =
+                        (probe.getNanosToWaitForRefill() + 999_999_999L) / 1_000_000_000L;
+                response.setHeader("Retry-After", String.valueOf(secondsToWait));
+                apiErrorWriter.write(response, HttpStatus.TOO_MANY_REQUESTS, "Rate limit exceeded");
+                return;
+            }
         }
 
         chain.doFilter(request, response);
