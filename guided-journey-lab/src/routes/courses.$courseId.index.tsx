@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, BookOpen, CheckCircle2, CirclePlay, Clock3, Layers3 } from "lucide-react";
+import { ArrowLeft, BookOpen, CheckCircle2, CirclePlay, Clock3, GraduationCap, Layers3 } from "lucide-react";
 import type { ReactNode } from "react";
 import { AppShell } from "../components/app/AppShell";
 import {
@@ -11,7 +11,7 @@ import {
 } from "../lib/api/client";
 import { RequireAuth, useAuth } from "../lib/auth/auth-context";
 
-export const Route = createFileRoute("/courses/$courseId")({
+export const Route = createFileRoute("/courses/$courseId/")({
   component: CourseDetailRoute,
   head: () => ({ meta: [{ title: "Course Detail - EduLife" }] }),
 });
@@ -119,16 +119,36 @@ function CourseDetailPage() {
               </div>
 
               {myEnrollment ? (
-                nextLesson ? (
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  {nextLesson ? (
+                    <Link
+                      to="/learn/$courseId/$lessonId"
+                      params={{ courseId, lessonId: nextLesson.id }}
+                      className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-foreground shadow-elevated"
+                    >
+                      <CirclePlay className="h-4 w-4" />
+                      {completedLessonIds.size > 0 ? "Continue learning" : "Start course"}
+                    </Link>
+                  ) : null}
                   <Link
-                    to="/learn/$courseId/$lessonId"
-                    params={{ courseId, lessonId: nextLesson.id }}
-                    className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-foreground shadow-elevated"
+                    to="/courses/$courseId/resources"
+                    params={{ courseId }}
+                    className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-5 py-3 text-sm font-semibold text-primary-foreground hover:bg-white/20 transition-colors"
                   >
-                    <CirclePlay className="h-4 w-4" />
-                    {completedLessonIds.size > 0 ? "Continue learning" : "Start course"}
+                    <BookOpen className="h-4 w-4" />
+                    Resources
                   </Link>
-                ) : null
+                  {progressQuery.data && progressQuery.data.percentComplete >= 100 ? (
+                    <Link
+                      to="/courses/$courseId/exam"
+                      params={{ courseId }}
+                      className="inline-flex items-center gap-2 rounded-full bg-gold px-5 py-3 text-sm font-semibold text-gold-foreground shadow-gold"
+                    >
+                      <GraduationCap className="h-4 w-4" />
+                      Take final exam
+                    </Link>
+                  ) : null}
+                </div>
               ) : (
                 <button
                   type="button"

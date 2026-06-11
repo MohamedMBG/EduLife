@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useEffectEvent,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -26,6 +27,18 @@ type AuthStatus = "loading" | "authenticated" | "anonymous";
 
 const INTENDED_ROLE_KEY = "edulife_intended_role";
 
+const REGISTERABLE_ROLES: ReadonlySet<UserRole> = new Set(["LEARNER", "TEACHER", "GROUP_ADMIN"]);
+
+function readStoredIntendedRole(): UserRole | undefined {
+  const stored = localStorage.getItem(INTENDED_ROLE_KEY);
+
+  if (!stored) {
+    return undefined;
+  }
+
+  return REGISTERABLE_ROLES.has(stored as UserRole) ? (stored as UserRole) : undefined;
+}
+
 interface RegisterInput {
   name: string;
   email: string;
@@ -42,6 +55,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   register: (input: RegisterInput) => Promise<void>;
   logout: () => Promise<void>;
+  clearError: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -50,7 +64,7 @@ function getDisplayName(user: FirebaseUser) {
   return user.displayName?.trim() || user.email || "EduLife learner";
 }
 
-function getReadableAuthError(error: unknown) {
+export function getReadableAuthError(error: unknown) {
   if (error instanceof ApiClientError) {
     return error.message;
   }
@@ -61,12 +75,22 @@ function getReadableAuthError(error: unknown) {
       case "auth/user-not-found":
       case "auth/wrong-password":
         return "The email or password is incorrect.";
+      case "auth/invalid-email":
+        return "Enter a valid email address.";
+      case "auth/user-disabled":
+        return "This account has been disabled. Contact support.";
       case "auth/email-already-in-use":
         return "This email address already has an EduLife account.";
       case "auth/weak-password":
         return "Use a stronger password with at least 8 characters.";
       case "auth/too-many-requests":
         return "Too many attempts. Wait a moment before trying again.";
+      case "auth/network-request-failed":
+        return "Network error. Check your connection and try again.";
+      case "auth/operation-not-allowed":
+        return "Email/password sign-in is not enabled. Contact support.";
+      case "auth/missing-password":
+        return "Enter your password.";
       default:
         return "Authentication failed. Please try again.";
     }
@@ -77,6 +101,13 @@ function getReadableAuthError(error: unknown) {
   }
 
   return "Authentication failed. Please try again.";
+}
+
+class UnverifiedEmailError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "UnverifiedEmailError";
+  }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -119,28 +150,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   });
 
-  const hydrateSession = useEffectEvent(async (firebaseUser: FirebaseUser) => {
-    startTransition(() => {
-      setStatus("loading");
-      setError(null);
-    });
+  // Track the last Firebase uid we synced so background remounts (HMR, StrictMode double-invoke,
+  // tab refocus) do not re-hit the rate-limited /auth/sync endpoint. Token refreshes are handled
+  // separately by the client's 401-retry path using getIdToken(forceRefresh).
+  const syncedUidRef = useRef<string | null>(null);
 
+  const hydrateSession = useEffectEvent(async (firebaseUser: FirebaseUser) => {
     if (!firebaseUser.emailVerified) {
       // The backend rejects unverified learners on every protected endpoint, so the web app
       // clears the browser session early and keeps the user on the verification step.
       const auth = await getFirebaseAuth();
       await auth.signOut();
+      syncedUidRef.current = null;
       commitAnonymous("Email is not verified. Check your inbox before signing in.");
       return;
     }
 
-    const storedRole = localStorage.getItem(INTENDED_ROLE_KEY) as UserRole | null;
+    if (syncedUidRef.current === firebaseUser.uid && session) {
+      // Same user re-emitted by Firebase (token refresh, remount, etc.) — keep existing
+      // session instead of re-calling /auth/sync.
+      return;
+    }
+
+    startTransition(() => {
+      setStatus("loading");
+      setError(null);
+    });
+
+    const storedRole = readStoredIntendedRole();
     const sync = await syncAuth(
       async (forceRefresh) => firebaseUser.getIdToken(forceRefresh),
-      storedRole ?? undefined,
+      storedRole,
     );
     // Clear after first use — subsequent syncs must not re-apply the registration intent.
     localStorage.removeItem(INTENDED_ROLE_KEY);
+
+    syncedUidRef.current = firebaseUser.uid;
 
     commitAuthenticated({
       userId: sync.userId,
@@ -167,17 +212,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const auth = await getFirebaseAuth();
         const firebaseAuth = await getFirebaseAuthModule();
 
-        unsubscribe = firebaseAuth.onIdTokenChanged(auth, (firebaseUser) => {
+        // onAuthStateChanged fires only on sign-in/sign-out — NOT on background token refreshes.
+        // Using onIdTokenChanged here would call /auth/sync on every hourly refresh and on every
+        // remount, draining the backend's 30/min rate limit on the endpoint.
+        unsubscribe = firebaseAuth.onAuthStateChanged(auth, (firebaseUser) => {
           if (cancelled) {
             return;
           }
 
           if (!firebaseUser) {
+            syncedUidRef.current = null;
             commitAnonymous();
             return;
           }
 
           void hydrateSession(firebaseUser).catch((nextError) => {
+            syncedUidRef.current = null;
             void auth.signOut().catch(() => undefined);
             commitAnonymous(getReadableAuthError(nextError));
           });
@@ -196,9 +246,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function login(email: string, password: string) {
     setError(null);
 
+    const trimmedEmail = email.trim();
+
     if (appEnv.demoMode) {
-      const demoSession = await demoLogin(email, password);
-      commitAuthenticated(demoSession);
+      try {
+        const demoSession = await demoLogin(trimmedEmail, password);
+        commitAuthenticated(demoSession);
+      } catch (nextError) {
+        throw new Error(getReadableAuthError(nextError));
+      }
       return;
     }
 
@@ -206,27 +262,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(configError);
     }
 
-    const auth = await getFirebaseAuth();
-    const firebaseAuth = await getFirebaseAuthModule();
-    const credential = await firebaseAuth.signInWithEmailAndPassword(auth, email, password);
+    try {
+      const auth = await getFirebaseAuth();
+      const firebaseAuth = await getFirebaseAuthModule();
+      const credential = await firebaseAuth.signInWithEmailAndPassword(
+        auth,
+        trimmedEmail,
+        password,
+      );
 
-    if (!credential.user.emailVerified) {
-      // Resend verification so a learner is not stuck after forgetting the first message.
-      await firebaseAuth.sendEmailVerification(credential.user).catch(() => undefined);
-      await auth.signOut();
-      commitAnonymous("Email is not verified. A fresh verification link has been sent.");
-      return;
+      if (!credential.user.emailVerified) {
+        // Resend verification so a learner is not stuck after forgetting the first message.
+        await firebaseAuth.sendEmailVerification(credential.user).catch(() => undefined);
+        await auth.signOut();
+        throw new UnverifiedEmailError(
+          "Email is not verified. A fresh verification link has been sent.",
+        );
+      }
+
+      // hydrateSession runs from onIdTokenChanged once Firebase emits the new credential. Calling
+      // it here as well would race two concurrent /auth/sync requests and trip the firebase_uid
+      // unique constraint, so the listener is the single source of truth.
+    } catch (nextError) {
+      if (nextError instanceof UnverifiedEmailError) {
+        throw nextError;
+      }
+      throw new Error(getReadableAuthError(nextError));
     }
-
-    await hydrateSession(credential.user);
   }
 
   async function register(input: RegisterInput) {
     setError(null);
 
+    const trimmedEmail = input.email.trim();
+    const trimmedName = input.name.trim();
+
     if (appEnv.demoMode) {
-      const result = await demoRegister(input);
-      commitAnonymous(result.message);
+      try {
+        const result = await demoRegister({ ...input, email: trimmedEmail, name: trimmedName });
+        commitAnonymous(result.message);
+      } catch (nextError) {
+        throw new Error(getReadableAuthError(nextError));
+      }
       return;
     }
 
@@ -234,31 +311,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(configError);
     }
 
-    const auth = await getFirebaseAuth();
-    const firebaseAuth = await getFirebaseAuthModule();
-    const credential = await firebaseAuth.createUserWithEmailAndPassword(
-      auth,
-      input.email,
-      input.password,
-    );
+    try {
+      const auth = await getFirebaseAuth();
+      const firebaseAuth = await getFirebaseAuthModule();
+      const credential = await firebaseAuth.createUserWithEmailAndPassword(
+        auth,
+        trimmedEmail,
+        input.password,
+      );
 
-    if (input.name.trim()) {
-      await firebaseAuth.updateProfile(credential.user, { displayName: input.name.trim() });
+      if (trimmedName) {
+        await firebaseAuth.updateProfile(credential.user, { displayName: trimmedName });
+      }
+
+      // Persist intended role so it is passed to /auth/sync after email verification and sign-in.
+      if (
+        input.intendedRole &&
+        input.intendedRole !== "LEARNER" &&
+        REGISTERABLE_ROLES.has(input.intendedRole)
+      ) {
+        localStorage.setItem(INTENDED_ROLE_KEY, input.intendedRole);
+      }
+
+      await firebaseAuth.sendEmailVerification(credential.user);
+      await auth.signOut();
+      commitAnonymous(
+        "Account created. Check your inbox, verify your email, then sign in to sync your EduLife profile.",
+      );
+    } catch (nextError) {
+      throw new Error(getReadableAuthError(nextError));
     }
+  }
 
-    // Persist intended role so it is passed to /auth/sync after email verification and sign-in.
-    if (input.intendedRole && input.intendedRole !== "LEARNER") {
-      localStorage.setItem(INTENDED_ROLE_KEY, input.intendedRole);
-    }
-
-    await firebaseAuth.sendEmailVerification(credential.user);
-    await auth.signOut();
-    commitAnonymous(
-      "Account created. Check your inbox, verify your email, then sign in to sync your EduLife profile.",
-    );
+  function clearError() {
+    setError(null);
   }
 
   async function logout() {
+    syncedUidRef.current = null;
+
     if (appEnv.demoMode) {
       await demoLogout();
       commitAnonymous();
@@ -294,6 +385,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         register,
         logout,
+        clearError,
       }}
     >
       {children}

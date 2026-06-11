@@ -137,8 +137,79 @@ export interface LessonDetail {
 }
 
 export interface Certificate {
-  certificateId: string;
+  id: string;
   courseId: string;
   certificateNumber: string;
+  courseTitle: string;
   issuedAt: string;
+}
+
+export interface CertificateDetail {
+  id: string;
+  courseId: string;
+  certificateNumber: string;
+  studentName: string;
+  courseTitle: string;
+  issuerName: string;
+  issuedAt: string;
+  verificationHash: string;
+  pdfUrl: string | null;
+}
+
+export interface ExamChoice {
+  choiceId: string;
+  choiceText: string;
+}
+
+export interface ExamQuestion {
+  questionId: string;
+  questionText: string;
+  orderIndex: number;
+  choices: ExamChoice[];
+}
+
+export interface Exam {
+  examId: string;
+  courseId: string;
+  title: string;
+  passScore: number;
+  timeLimitMinutes: number | null;
+  questions: ExamQuestion[];
+}
+
+export interface ExamStatus {
+  examId: string;
+  passed: boolean;
+  failedAttempts: number;
+  maxAttemptsBeforeCooldown: number;
+  inCooldown: boolean;
+  cooldownEndsAt: string | null;
+}
+
+export interface ExamResult {
+  examId: string;
+  score: number;
+  passScore: number;
+  passed: boolean;
+  certificateNumber: string | null;
+  attemptsUsed: number;
+  cooldownEndsAt: string | null;
+}
+
+export interface ExamAnswer {
+  questionId: string;
+  choiceId: string;
+}
+
+export interface ExamSubmitRequest {
+  answers: ExamAnswer[];
+}
+
+export interface UpdateProfileRequest {
+  displayName: string;
+  bio: string;
+}
+
+export interface AvatarUploadResponse {
+  avatarUrl: string;
 }

@@ -1,5 +1,6 @@
 import type {
   Certificate,
+  CertificateDetail,
   CourseDetail,
   CourseProgress,
   EnrolledCourse,
@@ -71,7 +72,7 @@ interface DemoStore {
   certificates: DemoCertificateRecord[];
 }
 
-const DEMO_STORAGE_KEY = "edulife.website.demo.store.v1";
+const DEMO_STORAGE_KEY = "edulife.website.demo.store.v2";
 
 const demoCourses: DemoCourseTemplate[] = [
   {
@@ -264,9 +265,10 @@ function createInitialStore(): DemoStore {
     completedLessonIds: ["lesson-darija-1", "lesson-french-1", "lesson-french-2"],
     certificates: [
       {
-        certificateId: "certificate-french-ui",
+        id: "certificate-french-ui",
         courseId: "course-french-ui",
         certificateNumber: "EDU-DEMO-2026-0001",
+        courseTitle: "French UI Vocabulary",
         issuedAt: "2026-05-22T15:30:00Z",
         source: "seeded",
       },
@@ -398,18 +400,18 @@ function ensureCompletionCertificate(store: DemoStore, courseId: string) {
 
   // Demo mode does not include the exam engine, so it issues a synthetic certificate only after
   // every lesson is completed to keep the certificate screen explorable without a backend.
+  const newCertificate: DemoCertificateRecord = {
+    id: `certificate-${courseId}`,
+    courseId,
+    certificateNumber: `EDU-DEMO-${new Date().getFullYear()}-${String(store.certificates.length + 1).padStart(4, "0")}`,
+    courseTitle: course.title,
+    issuedAt: new Date().toISOString(),
+    source: "demo",
+  };
+
   return {
     ...store,
-    certificates: [
-      ...store.certificates,
-      {
-        certificateId: `certificate-${courseId}`,
-        courseId,
-        certificateNumber: `EDU-DEMO-${new Date().getFullYear()}-${String(store.certificates.length + 1).padStart(4, "0")}`,
-        issuedAt: new Date().toISOString(),
-        source: "demo",
-      },
-    ],
+    certificates: [...store.certificates, newCertificate],
   };
 }
 
@@ -747,4 +749,27 @@ export async function demoListMyCertificates(): Promise<Certificate[]> {
   requireSession(store);
 
   return [...store.certificates].sort((left, right) => right.issuedAt.localeCompare(left.issuedAt));
+}
+
+export async function demoGetCertificate(certificateId: string): Promise<CertificateDetail> {
+  const store = readStore();
+  const session = requireSession(store);
+
+  const record = store.certificates.find((certificate) => certificate.id === certificateId);
+
+  if (!record) {
+    throw new Error("Certificate not found");
+  }
+
+  return {
+    id: record.id,
+    courseId: record.courseId,
+    certificateNumber: record.certificateNumber,
+    studentName: session.displayName,
+    courseTitle: record.courseTitle,
+    issuerName: "EduLife Demo",
+    issuedAt: record.issuedAt,
+    verificationHash: `demo-${record.id}`,
+    pdfUrl: null,
+  };
 }

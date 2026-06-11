@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Award, BookOpen, CalendarDays, FileBadge2 } from "lucide-react";
+import { Award, ArrowRight, CalendarDays, FileBadge2 } from "lucide-react";
 import { AppShell } from "../components/app/AppShell";
 import { listMyCertificates, listMyEnrollments } from "../lib/api/client";
 import { RequireAuth, useAuth } from "../lib/auth/auth-context";
 
-export const Route = createFileRoute("/certificates")({
+export const Route = createFileRoute("/certificates/")({
   component: CertificatesRoute,
   head: () => ({ meta: [{ title: "Certificates - EduLife" }] }),
 });
@@ -65,7 +65,7 @@ function CertificatesPage() {
         <section className="grid gap-4 lg:grid-cols-2">
           {certificatesQuery.data.map((certificate) => (
             <article
-              key={certificate.certificateId}
+              key={certificate.id}
               className="rounded-3xl border border-border bg-surface-elevated p-6 shadow-soft"
             >
               <div className="flex items-start justify-between gap-4">
@@ -75,7 +75,7 @@ function CertificatesPage() {
                     Verified certificate
                   </p>
                   <h2 className="mt-4 text-xl font-semibold text-foreground">
-                    {courseTitles.get(certificate.courseId) || "Course completed"}
+                    {certificate.courseTitle || courseTitles.get(certificate.courseId) || "Course completed"}
                   </h2>
                 </div>
                 <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-soft">
@@ -105,11 +105,12 @@ function CertificatesPage() {
 
               <div className="mt-5 flex justify-end">
                 <Link
-                  to="/courses"
-                  className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground"
+                  to="/certificates/$certificateId"
+                  params={{ certificateId: certificate.id }}
+                  className="inline-flex items-center gap-2 rounded-full bg-gradient-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-soft"
                 >
-                  <BookOpen className="h-3.5 w-3.5" />
-                  Back to courses
+                  View certificate
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
             </article>

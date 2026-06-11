@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, CheckCircle2, CirclePlay, Clock3, ExternalLink, FileText } from "lucide-react";
+import { ArrowLeft, BookOpen, CheckCircle2, CirclePlay, Clock3 } from "lucide-react";
 import { AppShell } from "../components/app/AppShell";
+import { LessonContentRenderer } from "../components/lesson/LessonContentRenderer";
+import { LessonNotes } from "../components/lesson/LessonNotes";
 import {
   getCourseDetail,
   getLessonDetail,
@@ -106,6 +108,8 @@ function LessonPage() {
         <StateCard title="Loading lesson..." detail="Fetching lesson content and navigation state." />
       ) : lessonQuery.isError ? (
         <StateCard title="Lesson unavailable" detail={lessonQuery.error.message} />
+      ) : !lessonQuery.data ? (
+        <StateCard title="Lesson unavailable" detail="Lesson content could not be loaded." />
       ) : (
         <div className="space-y-6">
           <section className="rounded-3xl bg-gradient-to-br from-primary to-primary-glow px-6 py-8 text-primary-foreground shadow-elevated">
@@ -138,37 +142,9 @@ function LessonPage() {
           </section>
 
           <section className="grid gap-6 xl:grid-cols-[1.35fr_0.85fr]">
-            <article className="rounded-3xl border border-border bg-surface-elevated p-6 shadow-soft">
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-primary" />
-                <p className="text-sm font-semibold text-foreground">Lesson content</p>
-              </div>
-
-              {lessonQuery.data.contentBody ? (
-                <div className="prose prose-sm mt-5 max-w-none whitespace-pre-wrap text-foreground">
-                  {lessonQuery.data.contentBody}
-                </div>
-              ) : lessonQuery.data.contentUrl ? (
-                <div className="mt-5 rounded-2xl border border-border bg-background p-5">
-                  <p className="text-sm text-muted-foreground">
-                    This lesson is delivered from an external resource URL.
-                  </p>
-                  <a
-                    href={lessonQuery.data.contentUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-4 inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    Open resource
-                  </a>
-                </div>
-              ) : (
-                <div className="mt-5 rounded-2xl border border-border bg-background p-5 text-sm text-muted-foreground">
-                  No lesson body or resource URL is configured yet for this lesson.
-                </div>
-              )}
-            </article>
+            <div className="space-y-6">
+              <LessonContentRenderer lesson={lessonQuery.data} />
+            </div>
 
             <aside className="space-y-4">
               <div className="rounded-3xl border border-border bg-surface-elevated p-5 shadow-soft">
@@ -204,7 +180,7 @@ function LessonPage() {
                     type="button"
                     onClick={() => markCompleteMutation.mutate()}
                     disabled={lessonQuery.data.completed || markCompleteMutation.isPending}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background disabled:opacity-60"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background disabled:opacity-60 disabled:pointer-events-none"
                   >
                     <CheckCircle2 className="h-3.5 w-3.5" />
                     {lessonQuery.data.completed
@@ -243,8 +219,19 @@ function LessonPage() {
                       View certificates
                     </Link>
                   )}
+
+                  <Link
+                    to="/courses/$courseId/resources"
+                    params={{ courseId }}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground"
+                  >
+                    <BookOpen className="h-3.5 w-3.5" />
+                    Course resources
+                  </Link>
                 </div>
               </div>
+
+              <LessonNotes lessonId={lessonId} />
             </aside>
           </section>
         </div>

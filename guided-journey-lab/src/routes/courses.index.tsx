@@ -6,7 +6,7 @@ import { AppShell } from "../components/app/AppShell";
 import { getCourseProgress, listMyEnrollments, unenrollFromCourse } from "../lib/api/client";
 import { RequireAuth, useAuth } from "../lib/auth/auth-context";
 
-export const Route = createFileRoute("/courses")({
+export const Route = createFileRoute("/courses/")({
   component: CoursesRoute,
   head: () => ({ meta: [{ title: "My Courses - EduLife" }] }),
 });
