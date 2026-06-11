@@ -18,11 +18,14 @@ import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as CertificatesRouteImport } from './routes/certificates'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CoursesIndexRouteImport } from './routes/courses.index'
 import { Route as CertificatesIndexRouteImport } from './routes/certificates.index'
 import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
 import { Route as CertificatesCertificateIdRouteImport } from './routes/certificates.$certificateId'
+import { Route as AdminTeacherRequestsRouteImport } from './routes/admin.teacher-requests'
+import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 import { Route as CoursesCourseIdIndexRouteImport } from './routes/courses.$courseId.index'
 import { Route as LearnCourseIdLessonIdRouteImport } from './routes/learn.$courseId.$lessonId'
 import { Route as CoursesCourseIdResourcesRouteImport } from './routes/courses.$courseId.resources'
@@ -75,6 +78,11 @@ const CertificatesRoute = CertificatesRouteImport.update({
   path: '/certificates',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -101,6 +109,16 @@ const CertificatesCertificateIdRoute =
     path: '/$certificateId',
     getParentRoute: () => CertificatesRoute,
   } as any)
+const AdminTeacherRequestsRoute = AdminTeacherRequestsRouteImport.update({
+  id: '/teacher-requests',
+  path: '/teacher-requests',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AdminRoute,
+} as any)
 const CoursesCourseIdIndexRoute = CoursesCourseIdIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -136,6 +154,7 @@ const CoursesCourseIdExamResultRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/certificates': typeof CertificatesRouteWithChildren
   '/courses': typeof CoursesRouteWithChildren
   '/dashboard': typeof DashboardRoute
@@ -145,6 +164,8 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/teacher-requests': typeof AdminTeacherRequestsRoute
   '/certificates/$certificateId': typeof CertificatesCertificateIdRoute
   '/courses/$courseId': typeof CoursesCourseIdRouteWithChildren
   '/certificates/': typeof CertificatesIndexRoute
@@ -158,6 +179,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/explore': typeof ExploreRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -165,6 +187,8 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/teacher-requests': typeof AdminTeacherRequestsRoute
   '/certificates/$certificateId': typeof CertificatesCertificateIdRoute
   '/certificates': typeof CertificatesIndexRoute
   '/courses': typeof CoursesIndexRoute
@@ -178,6 +202,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/certificates': typeof CertificatesRouteWithChildren
   '/courses': typeof CoursesRouteWithChildren
   '/dashboard': typeof DashboardRoute
@@ -187,6 +212,8 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/teacher-requests': typeof AdminTeacherRequestsRoute
   '/certificates/$certificateId': typeof CertificatesCertificateIdRoute
   '/courses/$courseId': typeof CoursesCourseIdRouteWithChildren
   '/certificates/': typeof CertificatesIndexRoute
@@ -202,6 +229,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/certificates'
     | '/courses'
     | '/dashboard'
@@ -211,6 +239,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/profile'
     | '/register'
+    | '/admin/dashboard'
+    | '/admin/teacher-requests'
     | '/certificates/$certificateId'
     | '/courses/$courseId'
     | '/certificates/'
@@ -224,6 +254,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/dashboard'
     | '/explore'
     | '/forgot-password'
@@ -231,6 +262,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/profile'
     | '/register'
+    | '/admin/dashboard'
+    | '/admin/teacher-requests'
     | '/certificates/$certificateId'
     | '/certificates'
     | '/courses'
@@ -243,6 +276,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/certificates'
     | '/courses'
     | '/dashboard'
@@ -252,6 +286,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/profile'
     | '/register'
+    | '/admin/dashboard'
+    | '/admin/teacher-requests'
     | '/certificates/$certificateId'
     | '/courses/$courseId'
     | '/certificates/'
@@ -266,6 +302,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
   CertificatesRoute: typeof CertificatesRouteWithChildren
   CoursesRoute: typeof CoursesRouteWithChildren
   DashboardRoute: typeof DashboardRoute
@@ -343,6 +380,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CertificatesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -377,6 +421,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/certificates/$certificateId'
       preLoaderRoute: typeof CertificatesCertificateIdRouteImport
       parentRoute: typeof CertificatesRoute
+    }
+    '/admin/teacher-requests': {
+      id: '/admin/teacher-requests'
+      path: '/teacher-requests'
+      fullPath: '/admin/teacher-requests'
+      preLoaderRoute: typeof AdminTeacherRequestsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/dashboard': {
+      id: '/admin/dashboard'
+      path: '/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/courses/$courseId/': {
       id: '/courses/$courseId/'
@@ -422,6 +480,18 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AdminRouteChildren {
+  AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminTeacherRequestsRoute: typeof AdminTeacherRequestsRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminDashboardRoute: AdminDashboardRoute,
+  AdminTeacherRequestsRoute: AdminTeacherRequestsRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface CertificatesRouteChildren {
   CertificatesCertificateIdRoute: typeof CertificatesCertificateIdRoute
@@ -481,6 +551,7 @@ const CoursesRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
   CertificatesRoute: CertificatesRouteWithChildren,
   CoursesRoute: CoursesRouteWithChildren,
   DashboardRoute: DashboardRoute,

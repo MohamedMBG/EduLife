@@ -1,6 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
+import { useEffect } from "react";
 import {
   ArrowRight,
   Award,
@@ -8,10 +9,14 @@ import {
   CheckCircle2,
   Compass,
   GraduationCap,
+  Layers3,
+  ShieldCheck,
   UserCircle2,
+  Users,
 } from "lucide-react";
 import { AppShell } from "../components/app/AppShell";
 import {
+  getAdminMetrics,
   enrollInCourse,
   getCourseProgress,
   getProfile,
@@ -35,11 +40,37 @@ function DashboardRoute() {
 
 function DashboardPage() {
   const auth = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const isAdmin = auth.session?.role === "ADMIN";
+
+  // Redirect admin users to the dedicated admin dashboard.
+  useEffect(() => {
+    if (isAdmin) {
+      navigate({ to: "/admin/dashboard" });
+    }
+  }, [isAdmin, navigate]);
+  const isTeacher = auth.session?.role === "TEACHER";
+  const dashboardTitle = isAdmin
+    ? "Platform dashboard"
+    : isTeacher
+      ? "Teacher dashboard"
+      : "Learner dashboard";
+  const dashboardDetail = isAdmin
+    ? "Admin metrics and learner activity come from the Spring Boot backend."
+    : "Profile, enrollments, and discovery all come from the Spring Boot backend.";
 
   const profileQuery = useQuery({
     queryKey: ["profile"],
     queryFn: () => getProfile(auth.getAccessToken),
+  });
+
+  const adminMetricsQuery = useQuery({
+    queryKey: ["admin", "metrics"],
+    queryFn: () => getAdminMetrics(auth.getAccessToken),
+    // The backend enforces ADMIN on this endpoint; the UI mirrors that rule to avoid
+    // expected 403 errors for normal learner sessions.
+    enabled: isAdmin,
   });
 
   const enrollmentsQuery = useQuery({
@@ -82,6 +113,7 @@ function DashboardPage() {
     profile?.displayName?.split(" ").filter(Boolean)[0] ||
     auth.session?.displayName.split(" ").filter(Boolean)[0] ||
     "learner";
+  const adminMetrics = adminMetricsQuery.data;
 
   return (
     <AppShell
@@ -93,39 +125,90 @@ function DashboardPage() {
       onLogout={auth.logout}
       header={
         <div className="flex flex-col gap-1">
-          <p className="text-sm font-semibold text-foreground">Learner dashboard</p>
-          <p className="text-xs text-muted-foreground">
-            Profile, enrollments, and discovery all come from the Spring Boot backend.
-          </p>
+          <p className="text-sm font-semibold text-foreground">{dashboardTitle}</p>
+          <p className="text-xs text-muted-foreground">{dashboardDetail}</p>
         </div>
       }
     >
-      {profileQuery.isLoading || enrollmentsQuery.isLoading ? (
-        <StateCard title="Loading dashboard..." detail="Syncing your learner profile and courses." />
+      {profileQuery.isLoading ||
+      enrollmentsQuery.isLoading ||
+      (isAdmin && adminMetricsQuery.isLoading) ? (
+        <StateCard
+          title="Loading dashboard..."
+          detail="Syncing your learner profile and courses."
+        />
       ) : profileQuery.isError ? (
         <StateCard title="Dashboard unavailable" detail={profileQuery.error.message} />
       ) : enrollmentsQuery.isError ? (
         <StateCard title="Enrollments unavailable" detail={enrollmentsQuery.error.message} />
+      ) : isAdmin && adminMetricsQuery.isError ? (
+        <StateCard title="Admin metrics unavailable" detail={adminMetricsQuery.error.message} />
       ) : (
         <div className="space-y-8">
           <section className="rounded-3xl bg-gradient-to-br from-primary to-primary-glow px-6 py-8 text-primary-foreground shadow-elevated">
             <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs uppercase tracking-[0.16em]">
-              <GraduationCap className="h-3.5 w-3.5" />
-              Authenticated learner
+              {isAdmin ? (
+                <ShieldCheck className="h-3.5 w-3.5" />
+              ) : (
+                <GraduationCap className="h-3.5 w-3.5" />
+              )}
+              {isAdmin ? "Authenticated admin" : "Authenticated learner"}
             </p>
             <h1 className="mt-4 text-display text-4xl">Welcome back, {firstName}</h1>
             <p className="mt-2 max-w-2xl text-sm text-primary-foreground/75">
-              Your session is backed by Firebase auth plus `/api/v1/auth/sync`, so the website is
-              now using the same identity bridge as the Android app.
+              {isAdmin
+                ? "Your admin session is backed by Firebase auth plus `/api/v1/auth/sync`, then authorized by backend RBAC before metrics load."
+                : "Your session is backed by Firebase auth plus `/api/v1/auth/sync`, so the website is now using the same identity bridge as the Android app."}
             </p>
           </section>
 
-          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <MetricCard title="Display name" value={profile?.displayName || "Not set"} icon={<UserCircle2 className="h-5 w-5 text-primary" />} />
-            <MetricCard title="Enrolled courses" value={String(profile?.enrolledCourses ?? 0)} icon={<BookOpen className="h-5 w-5 text-primary" />} />
-            <MetricCard title="Completed lessons" value={String(profile?.completedLessons ?? 0)} icon={<CheckCircle2 className="h-5 w-5 text-teal-600" />} />
-            <MetricCard title="Certificates" value={String(profile?.certificates ?? 0)} icon={<GraduationCap className="h-5 w-5 text-amber-500" />} />
-          </section>
+          {isAdmin ? (
+            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <MetricCard
+                title="Learners"
+                value={String(adminMetrics?.totalLearners ?? 0)}
+                icon={<Users className="h-5 w-5 text-primary" />}
+              />
+              <MetricCard
+                title="Teachers"
+                value={String(adminMetrics?.totalTeachers ?? 0)}
+                icon={<ShieldCheck className="h-5 w-5 text-teal-600" />}
+              />
+              <MetricCard
+                title="Published courses"
+                value={String(adminMetrics?.totalCoursesPublished ?? 0)}
+                icon={<Layers3 className="h-5 w-5 text-primary" />}
+              />
+              <MetricCard
+                title="Certificates"
+                value={String(adminMetrics?.totalCertificates ?? 0)}
+                icon={<GraduationCap className="h-5 w-5 text-amber-500" />}
+              />
+            </section>
+          ) : (
+            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <MetricCard
+                title="Display name"
+                value={profile?.displayName || "Not set"}
+                icon={<UserCircle2 className="h-5 w-5 text-primary" />}
+              />
+              <MetricCard
+                title="Enrolled courses"
+                value={String(profile?.enrolledCourses ?? 0)}
+                icon={<BookOpen className="h-5 w-5 text-primary" />}
+              />
+              <MetricCard
+                title="Completed lessons"
+                value={String(profile?.completedLessons ?? 0)}
+                icon={<CheckCircle2 className="h-5 w-5 text-teal-600" />}
+              />
+              <MetricCard
+                title="Certificates"
+                value={String(profile?.certificates ?? 0)}
+                icon={<GraduationCap className="h-5 w-5 text-amber-500" />}
+              />
+            </section>
+          )}
 
           <section className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
             <div className="rounded-3xl border border-border bg-surface-elevated p-6 shadow-soft">
@@ -136,13 +219,22 @@ function DashboardPage() {
                     The next step in your current backend enrollment.
                   </p>
                 </div>
-                <Link
-                  to="/courses/$courseId"
-                  params={{ courseId: activeCourse.courseId }}
-                  className="rounded-full border border-primary/20 bg-primary/8 px-4 py-2 text-xs font-semibold text-primary"
-                >
-                  Open course
-                </Link>
+                {activeCourse ? (
+                  <Link
+                    to="/courses/$courseId"
+                    params={{ courseId: activeCourse.courseId }}
+                    className="rounded-full border border-primary/20 bg-primary/8 px-4 py-2 text-xs font-semibold text-primary"
+                  >
+                    Open course
+                  </Link>
+                ) : (
+                  <Link
+                    to="/explore"
+                    className="rounded-full border border-primary/20 bg-primary/8 px-4 py-2 text-xs font-semibold text-primary"
+                  >
+                    Browse catalog
+                  </Link>
+                )}
               </div>
 
               {activeCourse && activeProgress ? (
@@ -150,8 +242,12 @@ function DashboardPage() {
                   <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
                     Current course
                   </p>
-                  <h2 className="mt-2 text-xl font-semibold text-foreground">{activeCourse.title}</h2>
-                  <p className="mt-2 text-sm text-muted-foreground">{activeCourse.shortDescription}</p>
+                  <h2 className="mt-2 text-xl font-semibold text-foreground">
+                    {activeCourse.title}
+                  </h2>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {activeCourse.shortDescription}
+                  </p>
                   <div className="mt-4">
                     <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
                       <span>
@@ -171,8 +267,16 @@ function DashboardPage() {
                 </div>
               ) : (
                 <StateCard
-                  title="No active enrollment yet"
-                  detail="Browse the catalog and enroll in a course to start the learner flow."
+                  title={
+                    isAdmin
+                      ? "No learner enrollment on this admin account"
+                      : "No active enrollment yet"
+                  }
+                  detail={
+                    isAdmin
+                      ? "Admin accounts can still inspect the live catalog, but they are not required to have learner progress."
+                      : "Browse the catalog and enroll in a course to start the learner flow."
+                  }
                 />
               )}
             </div>
@@ -206,7 +310,9 @@ function DashboardPage() {
           <section className="space-y-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-foreground">Recommended from the live catalog</p>
+                <p className="text-sm font-semibold text-foreground">
+                  Recommended from the live catalog
+                </p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   Suggestions use the same published course endpoint as Explore.
                 </p>
@@ -232,7 +338,10 @@ function DashboardPage() {
             ) : exploreQuery.isError ? (
               <StateCard title="Suggestions unavailable" detail={exploreQuery.error.message} />
             ) : suggestedCourses.length === 0 ? (
-              <StateCard title="No suggestions yet" detail="You are already enrolled in the available seed courses." />
+              <StateCard
+                title="No suggestions yet"
+                detail="You are already enrolled in the available seed courses."
+              />
             ) : (
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {suggestedCourses.slice(0, 3).map((course) => (
@@ -284,15 +393,7 @@ function DashboardPage() {
   );
 }
 
-function MetricCard({
-  title,
-  value,
-  icon,
-}: {
-  title: string;
-  value: string;
-  icon: ReactNode;
-}) {
+function MetricCard({ title, value, icon }: { title: string; value: string; icon: ReactNode }) {
   return (
     <div className="rounded-3xl border border-border bg-surface-elevated p-5 shadow-soft">
       <div className="flex items-center justify-between">
