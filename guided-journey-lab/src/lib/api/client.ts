@@ -4,9 +4,10 @@ import type {
   AuthSyncResponse,
   AvatarUploadResponse,
   UserRole,
-  CourseDetail,
   Certificate,
   CertificateDetail,
+  CertificateVerification,
+  CourseDetail,
   CourseProgress,
   CourseSummary,
   EnrolledCourse,
@@ -22,17 +23,18 @@ import type {
 } from "./types";
 import {
   demoEnrollInCourse,
+  demoGetCertificate,
   demoGetCourseDetail,
   demoGetCourseProgress,
   demoGetLessonDetail,
   demoGetProfile,
   demoListCourses,
   demoListMyCertificates,
-  demoGetCertificate,
   demoListMyEnrollments,
   demoMarkLessonComplete,
   demoSyncAuth,
   demoUnenrollFromCourse,
+  demoVerifyCertificate,
 } from "./demo";
 
 export class ApiClientError extends Error {
@@ -400,4 +402,14 @@ export function submitExam(
     body: payload,
     getAccessToken,
   });
+}
+
+export function verifyCertificate(hash: string) {
+  if (appEnv.demoMode) {
+    return demoVerifyCertificate(hash);
+  }
+
+  return makeRequest<CertificateVerification>(
+    `api/v1/certificates/verify/${encodeURIComponent(hash)}`,
+  );
 }

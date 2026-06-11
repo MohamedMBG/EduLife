@@ -27,6 +27,7 @@ import { Route as CoursesCourseIdIndexRouteImport } from './routes/courses.$cour
 import { Route as LearnCourseIdLessonIdRouteImport } from './routes/learn.$courseId.$lessonId'
 import { Route as CoursesCourseIdResourcesRouteImport } from './routes/courses.$courseId.resources'
 import { Route as CoursesCourseIdExamRouteImport } from './routes/courses.$courseId.exam'
+import { Route as CertificatesVerifyHashRouteImport } from './routes/certificates.verify.$hash'
 import { Route as CoursesCourseIdExamResultRouteImport } from './routes/courses.$courseId.exam.result'
 
 const RegisterRoute = RegisterRouteImport.update({
@@ -121,6 +122,11 @@ const CoursesCourseIdExamRoute = CoursesCourseIdExamRouteImport.update({
   path: '/exam',
   getParentRoute: () => CoursesCourseIdRoute,
 } as any)
+const CertificatesVerifyHashRoute = CertificatesVerifyHashRouteImport.update({
+  id: '/verify/$hash',
+  path: '/verify/$hash',
+  getParentRoute: () => CertificatesRoute,
+} as any)
 const CoursesCourseIdExamResultRoute =
   CoursesCourseIdExamResultRouteImport.update({
     id: '/result',
@@ -143,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/courses/$courseId': typeof CoursesCourseIdRouteWithChildren
   '/certificates/': typeof CertificatesIndexRoute
   '/courses/': typeof CoursesIndexRoute
+  '/certificates/verify/$hash': typeof CertificatesVerifyHashRoute
   '/courses/$courseId/exam': typeof CoursesCourseIdExamRouteWithChildren
   '/courses/$courseId/resources': typeof CoursesCourseIdResourcesRoute
   '/learn/$courseId/$lessonId': typeof LearnCourseIdLessonIdRoute
@@ -161,6 +168,7 @@ export interface FileRoutesByTo {
   '/certificates/$certificateId': typeof CertificatesCertificateIdRoute
   '/certificates': typeof CertificatesIndexRoute
   '/courses': typeof CoursesIndexRoute
+  '/certificates/verify/$hash': typeof CertificatesVerifyHashRoute
   '/courses/$courseId/exam': typeof CoursesCourseIdExamRouteWithChildren
   '/courses/$courseId/resources': typeof CoursesCourseIdResourcesRoute
   '/learn/$courseId/$lessonId': typeof LearnCourseIdLessonIdRoute
@@ -183,6 +191,7 @@ export interface FileRoutesById {
   '/courses/$courseId': typeof CoursesCourseIdRouteWithChildren
   '/certificates/': typeof CertificatesIndexRoute
   '/courses/': typeof CoursesIndexRoute
+  '/certificates/verify/$hash': typeof CertificatesVerifyHashRoute
   '/courses/$courseId/exam': typeof CoursesCourseIdExamRouteWithChildren
   '/courses/$courseId/resources': typeof CoursesCourseIdResourcesRoute
   '/learn/$courseId/$lessonId': typeof LearnCourseIdLessonIdRoute
@@ -206,6 +215,7 @@ export interface FileRouteTypes {
     | '/courses/$courseId'
     | '/certificates/'
     | '/courses/'
+    | '/certificates/verify/$hash'
     | '/courses/$courseId/exam'
     | '/courses/$courseId/resources'
     | '/learn/$courseId/$lessonId'
@@ -224,6 +234,7 @@ export interface FileRouteTypes {
     | '/certificates/$certificateId'
     | '/certificates'
     | '/courses'
+    | '/certificates/verify/$hash'
     | '/courses/$courseId/exam'
     | '/courses/$courseId/resources'
     | '/learn/$courseId/$lessonId'
@@ -245,6 +256,7 @@ export interface FileRouteTypes {
     | '/courses/$courseId'
     | '/certificates/'
     | '/courses/'
+    | '/certificates/verify/$hash'
     | '/courses/$courseId/exam'
     | '/courses/$courseId/resources'
     | '/learn/$courseId/$lessonId'
@@ -394,6 +406,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CoursesCourseIdExamRouteImport
       parentRoute: typeof CoursesCourseIdRoute
     }
+    '/certificates/verify/$hash': {
+      id: '/certificates/verify/$hash'
+      path: '/verify/$hash'
+      fullPath: '/certificates/verify/$hash'
+      preLoaderRoute: typeof CertificatesVerifyHashRouteImport
+      parentRoute: typeof CertificatesRoute
+    }
     '/courses/$courseId/exam/result': {
       id: '/courses/$courseId/exam/result'
       path: '/result'
@@ -407,11 +426,13 @@ declare module '@tanstack/react-router' {
 interface CertificatesRouteChildren {
   CertificatesCertificateIdRoute: typeof CertificatesCertificateIdRoute
   CertificatesIndexRoute: typeof CertificatesIndexRoute
+  CertificatesVerifyHashRoute: typeof CertificatesVerifyHashRoute
 }
 
 const CertificatesRouteChildren: CertificatesRouteChildren = {
   CertificatesCertificateIdRoute: CertificatesCertificateIdRoute,
   CertificatesIndexRoute: CertificatesIndexRoute,
+  CertificatesVerifyHashRoute: CertificatesVerifyHashRoute,
 }
 
 const CertificatesRouteWithChildren = CertificatesRoute._addFileChildren(

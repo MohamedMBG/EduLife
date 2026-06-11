@@ -213,3 +213,12 @@ export interface UpdateProfileRequest {
 export interface AvatarUploadResponse {
   avatarUrl: string;
 }
+
+export interface CertificateVerification {
+  studentName: string;
+  courseTitle: string;
+  issuerName: string;
+  issuedAt: string;
+  certificateNumber: string;
+  valid: boolean;
+}

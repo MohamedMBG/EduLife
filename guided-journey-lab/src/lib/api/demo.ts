@@ -1,6 +1,7 @@
 import type {
   Certificate,
   CertificateDetail,
+  CertificateVerification,
   CourseDetail,
   CourseProgress,
   EnrolledCourse,
@@ -772,4 +773,15 @@ export async function demoGetCertificate(certificateId: string): Promise<Certifi
     verificationHash: `demo-${record.id}`,
     pdfUrl: null,
   };
+}
+
+export function demoVerifyCertificate(hash: string): Promise<CertificateVerification> {
+  return Promise.resolve({
+    studentName: "Demo Learner",
+    courseTitle: "French UI Vocabulary",
+    issuerName: "EduLife Platform",
+    issuedAt: "2026-05-22T15:30:00Z",
+    certificateNumber: `EL-DEMO-${hash.slice(0, 8).toUpperCase()}`,
+    valid: true,
+  });
 }
