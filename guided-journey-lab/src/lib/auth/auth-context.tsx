@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import type { User as FirebaseUser } from "firebase/auth";
 import { ApiClientError, syncAuth } from "../api/client";
 import type { UserRole } from "../api/types";
@@ -406,12 +406,14 @@ export function useAuth() {
 export function RequireAuth({ children }: { children: ReactNode }) {
   const auth = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (auth.status === "anonymous" && auth.configured) {
-      navigate({ to: "/login" });
+      // Carry the original path so login can return the user to the deep link they wanted.
+      navigate({ to: "/login", search: { redirect: location.href } });
     }
-  }, [auth.configured, auth.status, navigate]);
+  }, [auth.configured, auth.status, navigate, location.href]);
 
   if (auth.status === "loading") {
     return (
