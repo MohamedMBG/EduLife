@@ -6,8 +6,11 @@ import com.edulife.courses.model.CourseStatus;
 import com.edulife.courses.repository.CourseRepository;
 import com.edulife.enrollments.model.EnrollmentStatus;
 import com.edulife.enrollments.repository.EnrollmentRepository;
+import com.edulife.teacherrequests.model.RequestStatus;
+import com.edulife.teacherrequests.repository.TeacherRequestRepository;
 import com.edulife.users.model.UserRole;
 import com.edulife.users.repository.UserRepository;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,17 +21,20 @@ public class AdminMetricsService {
     private final CourseRepository courseRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final CertificateRepository certificateRepository;
+    private final TeacherRequestRepository teacherRequestRepository;
 
     public AdminMetricsService(
             UserRepository userRepository,
             CourseRepository courseRepository,
             EnrollmentRepository enrollmentRepository,
-            CertificateRepository certificateRepository
+            CertificateRepository certificateRepository,
+            TeacherRequestRepository teacherRequestRepository
     ) {
         this.userRepository = userRepository;
         this.courseRepository = courseRepository;
         this.enrollmentRepository = enrollmentRepository;
         this.certificateRepository = certificateRepository;
+        this.teacherRequestRepository = teacherRequestRepository;
     }
 
     @Transactional(readOnly = true)
@@ -41,7 +47,8 @@ public class AdminMetricsService {
                 courseRepository.countByStatus(CourseStatus.PUBLISHED),
                 courseRepository.countByStatus(CourseStatus.ARCHIVED),
                 enrollmentRepository.countByStatus(EnrollmentStatus.ACTIVE),
-                certificateRepository.count()
+                certificateRepository.count(),
+                teacherRequestRepository.findAllByStatus(RequestStatus.PENDING, Pageable.unpaged()).getTotalElements()
         );
     }
 }

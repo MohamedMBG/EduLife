@@ -8,5 +8,6 @@ public record AdminMetricsDto(
         long totalCoursesPublished,
         long totalCoursesArchived,
         long totalEnrollmentsActive,
-        long totalCertificates
+        long totalCertificates,
+        long pendingTeacherRequests
 ) {}
