@@ -17,8 +17,8 @@ export function Certificate() {
           <dl className="mt-10 grid grid-cols-2 gap-6 max-w-md">
             <div>
               <dt className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Standard</dt>
-              <dd className="mt-2 text-3xl text-display text-foreground">80%</dd>
-              <p className="text-sm text-muted-foreground">pass score</p>
+              <dd className="mt-2 text-3xl text-display text-foreground">Exam</dd>
+              <p className="text-sm text-muted-foreground">pass required</p>
             </div>
             <div>
               <dt className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Verified</dt>
