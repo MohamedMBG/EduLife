@@ -22,7 +22,6 @@
     <string name="onboarding_focus_icon_description">Focus symbol</string>
     <string name="onboarding_terms_icon_description">Privacy and terms shield</string>
     <!-- Auth (shared) -->
-    <string name="auth_google_unavailable">Google sign-in coming soon</string>
     <string name="auth_forgot_password_unavailable">Password recovery coming soon</string>
     <string name="auth_full_name_required">Full name is required</string>
     <string name="auth_email_required">Email is required</string>
@@ -63,8 +62,6 @@
     <string name="register_confirm_password_toggle">Show confirm password</string>
     <string name="register_terms_text">I agree to the Terms and Privacy Policy</string>
     <string name="register_create_button">Create account</string>
-    <string name="register_or">OR</string>
-    <string name="register_google_cta">Continue with Google</string>
     <string name="register_login_prompt">Already learning here? </string>
     <string name="auth_login_button_idle">Log in</string>
     <string name="auth_login_button_loading">Signing in…</string>

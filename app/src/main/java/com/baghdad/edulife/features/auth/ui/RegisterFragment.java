@@ -75,7 +75,6 @@ public class RegisterFragment extends Fragment {
         termsCheckbox = view.findViewById(R.id.termsCheckbox);
         createAccountButton = view.findViewById(R.id.createAccountButton);
 
-        View googleRegisterButton = view.findViewById(R.id.googleRegisterButton);
         View loginText = view.findViewById(R.id.loginText);
         ImageButton passwordVisibilityToggle = view.findViewById(R.id.passwordVisibilityToggle);
         ImageButton confirmPasswordVisibilityToggle =
@@ -92,10 +91,6 @@ public class RegisterFragment extends Fragment {
         continueRoleButton.setOnClickListener(v -> openCredentialsStep());
         backToRoleButton.setOnClickListener(v -> showRoleStep());
         createAccountButton.setOnClickListener(v -> handleRegister());
-
-        googleRegisterButton.setOnClickListener(v ->
-                Toast.makeText(requireContext(),
-                        R.string.auth_google_unavailable, Toast.LENGTH_SHORT).show());
 
         loginText.setOnClickListener(v ->
                 // Navigate back to the login screen; popUpTo in the nav graph action removes the register screen.

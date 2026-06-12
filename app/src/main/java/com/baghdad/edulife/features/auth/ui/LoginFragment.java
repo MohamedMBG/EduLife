@@ -53,11 +53,6 @@ public class LoginFragment extends Fragment {
 
         loginButton.setOnClickListener(v -> handleLogin());
 
-        view.findViewById(R.id.googleButton).setOnClickListener(v ->
-                // Google sign-in needs OAuth configuration, so this screen only exposes a visual placeholder.
-                Toast.makeText(requireContext(),
-                        R.string.auth_google_unavailable, Toast.LENGTH_SHORT).show());
-
         view.findViewById(R.id.forgotPasswordText).setOnClickListener(v ->
                 // Password recovery will be wired when the auth module receives reset endpoints.
                 Toast.makeText(requireContext(),
