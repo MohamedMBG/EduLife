@@ -7,6 +7,13 @@ import { appEnv } from "../lib/env";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
+  validateSearch: (search: Record<string, unknown>): { redirect?: string } => {
+    const redirect = typeof search.redirect === "string" ? search.redirect : undefined;
+    // Same-origin paths only — anything else would be an open redirect.
+    return redirect && redirect.startsWith("/") && !redirect.startsWith("//")
+      ? { redirect }
+      : {};
+  },
   head: () => ({
     meta: [
       { title: "Sign In — EduLife" },
@@ -26,21 +33,24 @@ function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
   const auth = useAuth();
+  const { redirect } = Route.useSearch();
 
   const [signedIn, setSignedIn] = useState(false);
 
   useEffect(() => {
+    // Deep links bounced here by RequireAuth carry the original path; return to it after auth.
+    const destination = redirect ?? "/dashboard";
     if (auth.status === "authenticated") {
-      navigate({ to: "/dashboard" });
+      navigate({ to: destination });
       return;
     }
     // Once Firebase has accepted the credential, hand off to RequireAuth so its loading state
     // takes over while syncAuth resolves. Without this the form stays mounted and the user
     // sees no progress between sign-in and dashboard.
     if (signedIn && auth.status === "loading") {
-      navigate({ to: "/dashboard" });
+      navigate({ to: destination });
     }
-  }, [auth.status, navigate, signedIn]);
+  }, [auth.status, navigate, signedIn, redirect]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

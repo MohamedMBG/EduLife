@@ -1,29 +1,7 @@
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { Award, BookOpen, Compass, GraduationCap, Home, LogOut, Menu, Moon, Shield, Sun, X } from "lucide-react";
-
-const DARK_KEY = "edulife-dark";
-
-function useDarkMode() {
-  const [dark, setDark] = useState(false);
-
-  useEffect(() => {
-    setDark(document.documentElement.classList.contains("dark"));
-  }, []);
-
-  function toggle() {
-    const next = !dark;
-    document.documentElement.classList.toggle("dark", next);
-    try {
-      localStorage.setItem(DARK_KEY, String(next));
-    } catch {
-      // storage unavailable — silent
-    }
-    setDark(next);
-  }
-
-  return { dark, toggle };
-}
+import { useDarkMode } from "@/hooks/use-dark-mode";
 
 interface ShellUser {
   displayName: string;
