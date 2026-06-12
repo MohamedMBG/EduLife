@@ -1,6 +1,8 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "tanstack-start-app",
+  // Renaming the worker means the next `wrangler deploy` creates/targets a worker named
+  // "edulife-web" — re-point any routes/custom domains from the old "tanstack-start-app" worker.
+  "name": "edulife-web",
   "compatibility_date": "2025-09-24",
   "compatibility_flags": ["nodejs_compat"],
   "main": "src/server.ts",
