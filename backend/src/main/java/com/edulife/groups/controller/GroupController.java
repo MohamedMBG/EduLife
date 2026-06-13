@@ -4,15 +4,19 @@ import com.edulife.groups.dto.AddMemberRequest;
 import com.edulife.groups.dto.AttachCourseRequest;
 import com.edulife.groups.dto.CreateGroupRequest;
 import com.edulife.groups.dto.GroupCourseDto;
+import com.edulife.groups.dto.GroupDetailDto;
 import com.edulife.groups.dto.GroupDto;
 import com.edulife.groups.dto.GroupMemberDto;
+import com.edulife.groups.dto.GroupSummaryDto;
 import com.edulife.groups.service.GroupService;
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,6 +33,18 @@ public class GroupController {
 
     public GroupController(GroupService groupService) {
         this.groupService = groupService;
+    }
+
+    /** GET /api/v1/groups — groups owned by the caller (ADMIN sees all). */
+    @GetMapping
+    public List<GroupSummaryDto> listMyGroups() {
+        return groupService.listMyGroups();
+    }
+
+    /** GET /api/v1/groups/{groupId} — members and attached courses; owner or ADMIN only. */
+    @GetMapping("/{groupId}")
+    public GroupDetailDto getGroupDetail(@PathVariable UUID groupId) {
+        return groupService.getGroupDetail(groupId);
     }
 
     @PostMapping

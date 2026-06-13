@@ -4,8 +4,11 @@ import com.edulife.common.error.ApiErrorWriter;
 import com.edulife.common.error.GlobalApiExceptionHandler;
 import com.edulife.groups.controller.GroupController;
 import com.edulife.groups.dto.GroupCourseDto;
+import com.edulife.groups.dto.GroupDetailDto;
 import com.edulife.groups.dto.GroupDto;
+import com.edulife.groups.dto.GroupMemberDetailDto;
 import com.edulife.groups.dto.GroupMemberDto;
+import com.edulife.groups.dto.GroupSummaryDto;
 import com.edulife.groups.service.GroupService;
 import com.edulife.security.SecurityConfig;
 import com.edulife.users.entity.User;
@@ -33,6 +36,7 @@ import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -127,6 +131,68 @@ class GroupControllerTest {
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(groupService);
+    }
+
+    @Test
+    void listGroupsReturns200ForGroupAdmin() throws Exception {
+        mockValidFirebaseToken();
+        mockUserRole(UserRole.GROUP_ADMIN);
+
+        given(groupService.listMyGroups()).willReturn(java.util.List.of(
+                new GroupSummaryDto(GROUP_ID, "Bac SM 2026", Instant.parse("2026-05-28T10:00:00Z"), 4, 2)));
+
+        mockMvc.perform(get("/api/v1/groups")
+                        .header("Authorization", "Bearer valid-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(GROUP_ID.toString()))
+                .andExpect(jsonPath("$[0].memberCount").value(4))
+                .andExpect(jsonPath("$[0].courseCount").value(2));
+    }
+
+    @Test
+    void listGroupsReturns403ForLearner() throws Exception {
+        mockValidFirebaseToken();
+        mockUserRole(UserRole.LEARNER);
+
+        mockMvc.perform(get("/api/v1/groups")
+                        .header("Authorization", "Bearer valid-token"))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(groupService);
+    }
+
+    @Test
+    void getGroupDetailReturns200ForOwner() throws Exception {
+        mockValidFirebaseToken();
+        mockUserRole(UserRole.GROUP_ADMIN);
+
+        given(groupService.getGroupDetail(GROUP_ID)).willReturn(new GroupDetailDto(
+                GROUP_ID,
+                "Bac SM 2026",
+                Instant.parse("2026-05-28T10:00:00Z"),
+                java.util.List.of(new GroupMemberDetailDto(
+                        USER_ID, "student@edulife.test", UserRole.LEARNER,
+                        Instant.parse("2026-05-28T10:05:00Z"))),
+                java.util.List.of()));
+
+        mockMvc.perform(get("/api/v1/groups/{groupId}", GROUP_ID)
+                        .header("Authorization", "Bearer valid-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Bac SM 2026"))
+                .andExpect(jsonPath("$.members[0].email").value("student@edulife.test"));
+    }
+
+    @Test
+    void getGroupDetailReturns403ForNonOwner() throws Exception {
+        mockValidFirebaseToken();
+        mockUserRole(UserRole.GROUP_ADMIN);
+
+        given(groupService.getGroupDetail(GROUP_ID))
+                .willThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Not the group owner"));
+
+        mockMvc.perform(get("/api/v1/groups/{groupId}", GROUP_ID)
+                        .header("Authorization", "Bearer valid-token"))
+                .andExpect(status().isForbidden());
     }
 
     @Test

@@ -11,4 +11,6 @@ public interface GroupCourseRepository extends JpaRepository<GroupCourse, GroupC
     boolean existsByGroupIdAndCourseId(UUID groupId, UUID courseId);
 
     List<GroupCourse> findAllByGroupId(UUID groupId);
+
+    long countByGroupId(UUID groupId);
 }

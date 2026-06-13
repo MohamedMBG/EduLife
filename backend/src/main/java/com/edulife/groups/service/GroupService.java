@@ -1,12 +1,17 @@
 package com.edulife.groups.service;
 
+import com.edulife.courses.entity.Course;
 import com.edulife.courses.repository.CourseRepository;
 import com.edulife.groups.dto.AddMemberRequest;
 import com.edulife.groups.dto.AttachCourseRequest;
 import com.edulife.groups.dto.CreateGroupRequest;
+import com.edulife.groups.dto.GroupCourseDetailDto;
 import com.edulife.groups.dto.GroupCourseDto;
+import com.edulife.groups.dto.GroupDetailDto;
 import com.edulife.groups.dto.GroupDto;
+import com.edulife.groups.dto.GroupMemberDetailDto;
 import com.edulife.groups.dto.GroupMemberDto;
+import com.edulife.groups.dto.GroupSummaryDto;
 import com.edulife.groups.entity.Group;
 import com.edulife.groups.entity.GroupCourse;
 import com.edulife.groups.entity.GroupMember;
@@ -18,7 +23,12 @@ import com.edulife.users.entity.User;
 import com.edulife.users.model.UserRole;
 import com.edulife.users.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -56,20 +66,106 @@ public class GroupService {
     }
 
     @Transactional
+    public List<GroupSummaryDto> listMyGroups() {
+        User currentUser = resolveCurrentUser();
+        List<Group> groups = currentUser.getRole() == UserRole.ADMIN
+                ? groupRepository.findAll()
+                : groupRepository.findAllByCreatedBy(currentUser.getId());
+
+        return groups.stream()
+                .sorted(Comparator.comparing(Group::getCreatedAt))
+                .map(group -> new GroupSummaryDto(
+                        group.getId(),
+                        group.getName(),
+                        group.getCreatedAt(),
+                        groupMemberRepository.countByGroupId(group.getId()),
+                        groupCourseRepository.countByGroupId(group.getId())
+                ))
+                .toList();
+    }
+
+    @Transactional
+    public GroupDetailDto getGroupDetail(UUID groupId) {
+        User currentUser = resolveCurrentUser();
+        Group group = loadGroupForManagement(groupId, currentUser);
+
+        List<GroupMember> members = groupMemberRepository.findAllByGroupId(group.getId());
+        Map<UUID, User> usersById = userRepository
+                .findAllById(members.stream().map(GroupMember::getUserId).toList())
+                .stream()
+                .collect(Collectors.toMap(User::getId, Function.identity()));
+
+        List<GroupMemberDetailDto> memberDtos = members.stream()
+                .sorted(Comparator.comparing(GroupMember::getAddedAt))
+                .map(member -> {
+                    User user = usersById.get(member.getUserId());
+                    return new GroupMemberDetailDto(
+                            member.getUserId(),
+                            user != null ? user.getEmail() : "(deleted user)",
+                            user != null ? user.getRole() : null,
+                            member.getAddedAt()
+                    );
+                })
+                .toList();
+
+        List<GroupCourse> attachments = groupCourseRepository.findAllByGroupId(group.getId());
+        Map<UUID, Course> coursesById = courseRepository
+                .findAllById(attachments.stream().map(GroupCourse::getCourseId).toList())
+                .stream()
+                .collect(Collectors.toMap(Course::getId, Function.identity()));
+
+        List<GroupCourseDetailDto> courseDtos = attachments.stream()
+                .sorted(Comparator.comparing(GroupCourse::getAttachedAt))
+                .map(attachment -> {
+                    Course course = coursesById.get(attachment.getCourseId());
+                    return new GroupCourseDetailDto(
+                            attachment.getCourseId(),
+                            course != null ? course.getTitle() : "(deleted course)",
+                            course != null ? course.getStatus().name() : null,
+                            attachment.getAttachedAt()
+                    );
+                })
+                .toList();
+
+        return new GroupDetailDto(group.getId(), group.getName(), group.getCreatedAt(), memberDtos, courseDtos);
+    }
+
+    @Transactional
     public GroupMemberDto addMember(UUID groupId, AddMemberRequest request) {
         User currentUser = resolveCurrentUser();
         Group group = loadGroupForManagement(groupId, currentUser);
 
-        if (!userRepository.existsById(request.userId())) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
-        }
-        if (groupMemberRepository.existsByGroupIdAndUserId(group.getId(), request.userId())) {
+        UUID memberUserId = resolveMemberUserId(request);
+
+        if (groupMemberRepository.existsByGroupIdAndUserId(group.getId(), memberUserId)) {
             // 409 keeps add-member idempotent from a learner-already-in-cohort perspective.
             throw new ResponseStatusException(HttpStatus.CONFLICT, "User already in group");
         }
 
-        GroupMember saved = groupMemberRepository.save(new GroupMember(group.getId(), request.userId()));
+        GroupMember saved = groupMemberRepository.save(new GroupMember(group.getId(), memberUserId));
         return new GroupMemberDto(saved.getGroupId(), saved.getUserId(), saved.getAddedAt());
+    }
+
+    private UUID resolveMemberUserId(AddMemberRequest request) {
+        boolean hasUserId = request.userId() != null;
+        boolean hasEmail = request.email() != null && !request.email().isBlank();
+
+        if (hasUserId == hasEmail) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Provide exactly one of userId or email");
+        }
+
+        if (hasUserId) {
+            if (!userRepository.existsById(request.userId())) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+            }
+            return request.userId();
+        }
+
+        return userRepository.findByEmail(request.email().trim().toLowerCase())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "No user with that email"))
+                .getId();
     }
 
     @Transactional

@@ -27,6 +27,9 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
     // CMS queries: teachers see only their own courses; admin sees all.
     List<Course> findAllByCreatedByUserId(UUID createdByUserId);
 
+    // Group admins review courses authored by the teachers inside their groups.
+    List<Course> findAllByCreatedByUserIdIn(java.util.Collection<UUID> createdByUserIds);
+
     // Full-text search via the search_vector tsvector column added in V13__course_fts.sql.
     // plainto_tsquery converts a raw user query into a tsquery without requiring special
     // syntax from the caller (unlike to_tsquery which needs explicit AND/OR operators).

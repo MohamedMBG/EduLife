@@ -61,11 +61,13 @@ public class CmsCourseController {
     }
 
     /**
-     * Transitions a DRAFT course to PUBLISHED. ADMIN only — teachers cannot self-publish.
+     * Transitions a DRAFT course to PUBLISHED. Teachers cannot self-publish: ADMIN can
+     * approve anything, GROUP_ADMIN only courses from teachers inside their groups
+     * (membership check lives in the service).
      * PUT /api/v1/cms/courses/{id}/publish
      */
     @PutMapping("/{id}/publish")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('GROUP_ADMIN','ADMIN')")
     public ResponseEntity<CourseAdminDto> publishCourse(@PathVariable UUID id) {
         return ResponseEntity.ok(cmsCourseService.publishCourse(id));
     }
