@@ -43,14 +43,23 @@ function DashboardPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isAdmin = auth.session?.role === "ADMIN";
+  const isTeacher = auth.session?.role === "TEACHER";
+  const isGroupAdmin = auth.session?.role === "GROUP_ADMIN";
+  // Only learners actually live on /dashboard; every other role is redirected to its own
+  // portal below, so we never run the learner queries or render the learner UI for them.
+  const isLearner = !isAdmin && !isTeacher && !isGroupAdmin;
 
-  // Redirect admin users to the dedicated admin dashboard.
+  // Each role has its own home: admins the admin console, teachers the Teaching Studio,
+  // group admins their groups dashboard.
   useEffect(() => {
     if (isAdmin) {
       navigate({ to: "/admin/dashboard" });
+    } else if (isTeacher) {
+      navigate({ to: "/teach" });
+    } else if (isGroupAdmin) {
+      navigate({ to: "/groups" });
     }
-  }, [isAdmin, navigate]);
-  const isTeacher = auth.session?.role === "TEACHER";
+  }, [isAdmin, isGroupAdmin, isTeacher, navigate]);
   const dashboardTitle = isAdmin
     ? "Platform dashboard"
     : isTeacher
@@ -63,24 +72,27 @@ function DashboardPage() {
   const profileQuery = useQuery({
     queryKey: ["profile"],
     queryFn: () => getProfile(auth.getAccessToken),
+    enabled: isLearner,
   });
 
   const adminMetricsQuery = useQuery({
     queryKey: ["admin", "metrics"],
     queryFn: () => getAdminMetrics(auth.getAccessToken),
-    // The backend enforces ADMIN on this endpoint; the UI mirrors that rule to avoid
-    // expected 403 errors for normal learner sessions.
-    enabled: isAdmin,
+    // Admins have their own AdminShell at /admin/dashboard and are redirected there, so this
+    // dashboard never needs the metrics call. Kept disabled to avoid a wasted request.
+    enabled: false,
   });
 
   const enrollmentsQuery = useQuery({
     queryKey: ["enrollments"],
     queryFn: () => listMyEnrollments(auth.getAccessToken),
+    enabled: isLearner,
   });
 
   const exploreQuery = useQuery({
     queryKey: ["courses", "dashboard"],
     queryFn: () => listCourses(auth.getAccessToken, { size: 6 }),
+    enabled: isLearner,
   });
 
   const progressQueries = useQueries({
@@ -114,6 +126,12 @@ function DashboardPage() {
     auth.session?.displayName.split(" ").filter(Boolean)[0] ||
     "learner";
   const adminMetrics = adminMetricsQuery.data;
+
+  // Non-learners are being redirected to their own portal — show a clean hand-off screen instead
+  // of flashing the learner dashboard (and skip every learner query above).
+  if (!isLearner) {
+    return <RedirectingScreen />;
+  }
 
   return (
     <AppShell
@@ -401,6 +419,19 @@ function MetricCard({ title, value, icon }: { title: string; value: string; icon
         {icon}
       </div>
       <p className="mt-3 text-display text-3xl text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function RedirectingScreen() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="rounded-3xl border border-border bg-surface-elevated px-6 py-5 text-center shadow-elevated">
+        <p className="text-sm font-medium text-foreground">Taking you to your workspace…</p>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Each role opens its own portal — teaching, groups, or the admin console.
+        </p>
+      </div>
     </div>
   );
 }

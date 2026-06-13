@@ -1,7 +1,8 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { Award, BookOpen, Compass, GraduationCap, Home, LogOut, Menu, Moon, Shield, Sun, X } from "lucide-react";
+import { Award, BookOpen, CheckCircle2, Compass, GraduationCap, Home, LayoutDashboard, LogOut, Menu, Moon, Shield, Sun, Users, X } from "lucide-react";
 import { useDarkMode } from "@/hooks/use-dark-mode";
+import { useAuth } from "@/lib/auth/auth-context";
 
 interface ShellUser {
   displayName: string;
@@ -9,7 +10,7 @@ interface ShellUser {
 }
 
 interface AppShellProps {
-  active: "dashboard" | "courses" | "explore" | "certificates" | "level";
+  active: "dashboard" | "courses" | "explore" | "certificates" | "level" | "teach" | "groups" | "approvals";
   user: ShellUser;
   onLogout: () => Promise<void> | void;
   header: ReactNode;
@@ -25,17 +26,56 @@ function getInitials(name: string) {
     .join("");
 }
 
-const navItems = [
-  { key: "dashboard", label: "Home", to: "/dashboard" as const, icon: Home },
-  { key: "courses", label: "My Courses", to: "/courses" as const, icon: BookOpen },
-  { key: "explore", label: "Explore", to: "/explore" as const, icon: Compass },
-  { key: "certificates", label: "Certificates", to: "/certificates" as const, icon: Award },
-  { key: "level", label: "Level & Progress", to: "/level" as const, icon: Shield },
-] as const;
+interface NavItem {
+  key: AppShellProps["active"];
+  label: string;
+  to: "/dashboard" | "/courses" | "/explore" | "/certificates" | "/level" | "/teach" | "/groups" | "/approvals";
+  icon: typeof Home;
+}
+
+// Sidebar entries mirror what each backend role can actually do: learners follow the
+// enroll → learn → exam → certificate flow, teachers author course content through the
+// CMS, and group admins manage cohorts (members + assigned courses) — not course authoring.
+const LEARNER_NAV: NavItem[] = [
+  { key: "dashboard", label: "Home", to: "/dashboard", icon: Home },
+  { key: "courses", label: "My Courses", to: "/courses", icon: BookOpen },
+  { key: "explore", label: "Explore", to: "/explore", icon: Compass },
+  { key: "certificates", label: "Certificates", to: "/certificates", icon: Award },
+  { key: "level", label: "Level & Progress", to: "/level", icon: Shield },
+];
+
+const TEACHER_NAV: NavItem[] = [
+  { key: "teach", label: "Teaching Studio", to: "/teach", icon: LayoutDashboard },
+  { key: "groups", label: "My Cohorts", to: "/groups", icon: Users },
+  { key: "explore", label: "Course Catalog", to: "/explore", icon: Compass },
+];
+
+const GROUP_ADMIN_NAV: NavItem[] = [
+  { key: "groups", label: "My Groups", to: "/groups", icon: Users },
+  { key: "approvals", label: "Course Approvals", to: "/approvals", icon: CheckCircle2 },
+  { key: "explore", label: "Course Catalog", to: "/explore", icon: Compass },
+];
+
+function getPortalForRole(role: string | undefined): { label: string; nav: NavItem[] } {
+  switch (role) {
+    case "TEACHER":
+      return { label: "Teacher portal", nav: TEACHER_NAV };
+    case "GROUP_ADMIN":
+      return { label: "Group admin portal", nav: GROUP_ADMIN_NAV };
+    case "ADMIN":
+      // Admins normally live in AdminShell; if they land on a learner route they get
+      // the full learner nav so nothing is hidden from them.
+      return { label: "Admin preview", nav: LEARNER_NAV };
+    default:
+      return { label: "Learner portal", nav: LEARNER_NAV };
+  }
+}
 
 export function AppShell({ active, user, onLogout, header, children }: AppShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { dark, toggle: toggleDark } = useDarkMode();
+  const auth = useAuth();
+  const portal = getPortalForRole(auth.session?.role);
 
   const userInitials = getInitials(user.displayName || user.email || "EL");
 
@@ -63,7 +103,7 @@ export function AppShell({ active, user, onLogout, header, children }: AppShellP
           <div className="opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
             <p className="text-display text-lg leading-none text-foreground">EduLife</p>
             <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-              Learner portal
+              {portal.label}
             </p>
           </div>
           <button
@@ -81,7 +121,7 @@ export function AppShell({ active, user, onLogout, header, children }: AppShellP
             Navigation
           </p>
           <div className="mt-3 space-y-1">
-            {navItems.map(({ key, label, to, icon: Icon }) => {
+            {portal.nav.map(({ key, label, to, icon: Icon }) => {
               const isActive = key === active;
 
               return (

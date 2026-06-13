@@ -457,6 +457,89 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+// Course authoring is a teacher activity; group admins manage cohorts, not content
+// (see AGENTS.md role matrix), so they are routed to /groups instead.
+const COURSE_AUTHOR_ROLES: ReadonlySet<string> = new Set(["TEACHER", "ADMIN"]);
+const GROUP_MANAGER_ROLES: ReadonlySet<string> = new Set(["TEACHER", "GROUP_ADMIN", "ADMIN"]);
+const COURSE_APPROVER_ROLES: ReadonlySet<string> = new Set(["GROUP_ADMIN", "ADMIN"]);
+
+function RequireRole({
+  allowed,
+  fallbackTo,
+  loadingMessage,
+  children,
+}: {
+  allowed: ReadonlySet<string>;
+  fallbackTo: "/dashboard" | "/groups";
+  loadingMessage: string;
+  children: ReactNode;
+}) {
+  const auth = useAuth();
+  const navigate = useNavigate();
+  const role = auth.session?.role;
+
+  useEffect(() => {
+    if (auth.status === "anonymous" && auth.configured) {
+      navigate({ to: "/login" });
+    } else if (auth.status === "authenticated" && role && !allowed.has(role)) {
+      // The backend would 403 these endpoints anyway; keep each role in its own portal.
+      navigate({ to: fallbackTo });
+    }
+  }, [allowed, auth.configured, auth.status, fallbackTo, navigate, role]);
+
+  if (auth.status === "loading") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="rounded-3xl border border-border bg-surface-elevated px-6 py-5 text-center shadow-elevated">
+          <p className="text-sm font-medium text-foreground">{loadingMessage}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (auth.status !== "authenticated" || !role || !allowed.has(role)) {
+    return null;
+  }
+
+  return <>{children}</>;
+}
+
+export function RequireTeacher({ children }: { children: ReactNode }) {
+  return (
+    <RequireRole
+      allowed={COURSE_AUTHOR_ROLES}
+      fallbackTo="/dashboard"
+      loadingMessage="Loading your teaching session…"
+    >
+      {children}
+    </RequireRole>
+  );
+}
+
+export function RequireGroupManager({ children }: { children: ReactNode }) {
+  return (
+    <RequireRole
+      allowed={GROUP_MANAGER_ROLES}
+      fallbackTo="/dashboard"
+      loadingMessage="Loading your groups…"
+    >
+      {children}
+    </RequireRole>
+  );
+}
+
+export function RequireCourseApprover({ children }: { children: ReactNode }) {
+  return (
+    <RequireRole
+      allowed={COURSE_APPROVER_ROLES}
+      fallbackTo="/dashboard"
+      loadingMessage="Loading course approvals…"
+    >
+      {children}
+    </RequireRole>
+  );
+}
+
 export function RequireAdmin({ children }: { children: ReactNode }) {
   const auth = useAuth();
   const navigate = useNavigate();
