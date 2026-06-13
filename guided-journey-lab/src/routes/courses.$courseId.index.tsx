@@ -110,11 +110,11 @@ function CourseDetailPage() {
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
               <div className="max-w-3xl">
                 <p className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.16em]">
-                  {courseQuery.data.level.replace("_", " ")} · {courseQuery.data.languageCode.toUpperCase()}
+                  {(courseQuery.data?.level ?? "").replace("_", " ")} · {(courseQuery.data?.languageCode ?? "").toUpperCase()}
                 </p>
-                <h1 className="mt-4 text-display text-4xl">{courseQuery.data.title}</h1>
+                <h1 className="mt-4 text-display text-4xl">{courseQuery.data?.title}</h1>
                 <p className="mt-3 text-sm leading-relaxed text-primary-foreground/75">
-                  {courseQuery.data.description || courseQuery.data.shortDescription}
+                  {courseQuery.data?.description || courseQuery.data?.shortDescription}
                 </p>
               </div>
 
@@ -166,7 +166,7 @@ function CourseDetailPage() {
           <section className="grid gap-4 md:grid-cols-3">
             <MetricCard
               title="Sections"
-              value={String(courseQuery.data.sections.length)}
+              value={String(courseQuery.data?.sections.length ?? 0)}
               icon={<Layers3 className="h-5 w-5 text-primary" />}
             />
             <MetricCard
@@ -186,7 +186,7 @@ function CourseDetailPage() {
           </section>
 
           <section className="space-y-4">
-            {courseQuery.data.sections.map((section) => (
+            {(courseQuery.data?.sections ?? []).map((section) => (
               <article
                 key={section.id}
                 className="rounded-3xl border border-border bg-surface-elevated p-5 shadow-soft"

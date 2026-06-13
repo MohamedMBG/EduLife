@@ -20,6 +20,8 @@ public record CourseAdminDto(
         CourseStatus status,
         Instant publishedAt,
         UUID createdByUserId,
+        // Lets reviewers (group admins / admins) see which teacher authored the course.
+        String createdByEmail,
         Instant createdAt,
         Instant updatedAt
 ) {}

@@ -56,14 +56,14 @@ function CertificatesPage() {
         <StateCard title="Loading certificates..." detail="Fetching your verified certificate history." />
       ) : certificatesQuery.isError ? (
         <StateCard title="Certificates unavailable" detail={certificatesQuery.error.message} />
-      ) : certificatesQuery.data.length === 0 ? (
+      ) : (certificatesQuery.data ?? []).length === 0 ? (
         <StateCard
           title="No certificates yet"
           detail="Pass a final exam first, then your certificate will appear here."
         />
       ) : (
         <section className="grid gap-4 lg:grid-cols-2">
-          {certificatesQuery.data.map((certificate) => (
+          {(certificatesQuery.data ?? []).map((certificate) => (
             <article
               key={certificate.id}
               className="rounded-3xl border border-border bg-surface-elevated p-6 shadow-soft"

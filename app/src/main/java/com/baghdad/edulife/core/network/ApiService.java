@@ -27,6 +27,11 @@ import com.baghdad.edulife.features.courses.model.ExamResultResponse;
 import com.baghdad.edulife.features.courses.model.ExamStatusResponse;
 import com.baghdad.edulife.features.courses.model.LessonDetail;
 import com.baghdad.edulife.features.courses.model.SubmitExamRequest;
+import com.baghdad.edulife.features.groupadmin.model.AddMemberRequest;
+import com.baghdad.edulife.features.groupadmin.model.AttachCourseRequest;
+import com.baghdad.edulife.features.groupadmin.model.CreateGroupRequest;
+import com.baghdad.edulife.features.groupadmin.model.GroupDetail;
+import com.baghdad.edulife.features.groupadmin.model.GroupSummary;
 import com.baghdad.edulife.features.profile.model.AvatarUploadResponse;
 import com.baghdad.edulife.features.profile.model.ProfileResponse;
 import com.baghdad.edulife.features.profile.model.SubmitTeacherRequestBody;
@@ -232,5 +237,38 @@ public interface ApiService {
 
     @DELETE("cms/sections/{sectionId}/lessons/{lessonId}")
     Call<Void> deleteCmsLesson(@Path("sectionId") String sectionId, @Path("lessonId") String lessonId);
+
+    /**
+     * Approves (publishes) a DRAFT course. GROUP_ADMIN may only approve courses authored by a
+     * teacher inside one of their groups; ADMIN may approve anything. Enforced server-side.
+     * PUT /api/v1/cms/courses/{id}/publish
+     */
+    @PUT("cms/courses/{id}/publish")
+    Call<CmsCourse> publishCmsCourse(@Path("id") String id);
+
+    // ── Group management — GROUP_ADMIN / TEACHER / ADMIN (ownership enforced server-side) ─
+
+    /** Groups owned by the caller (ADMIN sees all), with member/course counts. */
+    @GET("groups")
+    Call<List<GroupSummary>> getMyGroups();
+
+    /** Members and attached courses of one group; owner or ADMIN only. */
+    @GET("groups/{groupId}")
+    Call<GroupDetail> getGroupDetail(@Path("groupId") String groupId);
+
+    /** Creates a group owned by the caller. Body returned is ignored — callers reload the list. */
+    @POST("groups")
+    Call<Void> createGroup(@Body CreateGroupRequest request);
+
+    /** Adds a member by email so admins never need internal user ids. */
+    @POST("groups/{groupId}/members")
+    Call<Void> addGroupMember(@Path("groupId") String groupId, @Body AddMemberRequest request);
+
+    @DELETE("groups/{groupId}/members/{userId}")
+    Call<Void> removeGroupMember(@Path("groupId") String groupId, @Path("userId") String userId);
+
+    /** Attaches a published course to the group so its members get the cohort's curriculum. */
+    @POST("groups/{groupId}/courses")
+    Call<Void> attachGroupCourse(@Path("groupId") String groupId, @Body AttachCourseRequest request);
 }
 

@@ -5,12 +5,16 @@ import com.edulife.admin.dto.CreateCourseRequest;
 import com.edulife.admin.dto.UpdateCourseRequest;
 import com.edulife.courses.entity.Course;
 import com.edulife.courses.repository.CourseRepository;
+import com.edulife.groups.repository.GroupMemberRepository;
 import com.edulife.security.FirebaseAuthentication;
 import com.edulife.users.entity.User;
 import com.edulife.users.model.UserRole;
 import com.edulife.users.repository.UserRepository;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,28 +24,40 @@ import org.springframework.web.server.ResponseStatusException;
 
 /**
  * CMS course lifecycle management. TEACHERs can create and edit their own courses;
- * ADMINs can edit any course and transition status to PUBLISHED or ARCHIVED.
+ * GROUP_ADMINs review and publish courses authored by teachers inside their groups;
+ * standalone teachers remain outside any group review queue, so only platform ADMINs
+ * can approve or reject their course publication requests.
  */
 @Service
 public class CmsCourseService {
 
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
+    private final GroupMemberRepository groupMemberRepository;
 
-    public CmsCourseService(CourseRepository courseRepository, UserRepository userRepository) {
+    public CmsCourseService(
+            CourseRepository courseRepository,
+            UserRepository userRepository,
+            GroupMemberRepository groupMemberRepository
+    ) {
         this.courseRepository = courseRepository;
         this.userRepository = userRepository;
+        this.groupMemberRepository = groupMemberRepository;
     }
 
     @Transactional(readOnly = true)
-    // Teachers only see their own courses; admins see all. Ownership check stays in service
-    // so the controller remains free of business logic.
+    // Teachers see their own courses; group admins see courses authored by teachers in their
+    // groups; platform admins see all pending uploads, including standalone teachers with no
+    // institute group. Scoping stays in the service so controllers avoid business logic.
     public List<CourseAdminDto> listMyCourses() {
         User currentUser = resolveCurrentUser();
-        List<Course> courses = (currentUser.getRole() == UserRole.ADMIN)
-                ? courseRepository.findAll()
-                : courseRepository.findAllByCreatedByUserId(currentUser.getId());
-        return courses.stream().map(this::toDto).toList();
+        List<Course> courses = switch (currentUser.getRole()) {
+            case ADMIN -> courseRepository.findAll();
+            case GROUP_ADMIN -> courseRepository.findAllByCreatedByUserIdIn(
+                    groupMemberRepository.findMemberUserIdsManagedBy(currentUser.getId()));
+            default -> courseRepository.findAllByCreatedByUserId(currentUser.getId());
+        };
+        return toDtos(courses);
     }
 
     @Transactional
@@ -85,14 +101,29 @@ public class CmsCourseService {
     }
 
     @Transactional
-    // Only ADMIN can publish; this prevents teachers from self-publishing without review.
+    // Teachers cannot self-publish. ADMIN can publish anything; a GROUP_ADMIN approves only
+    // courses authored by teachers who are members of one of their groups. A teacher who
+    // chooses to stay independent is therefore reviewed only by the platform admin.
     public CourseAdminDto publishCourse(UUID courseId) {
         User currentUser = resolveCurrentUser();
-        requireAdmin(currentUser);
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
+        requirePublishAuthority(currentUser, course);
         course.publish();
         return toDto(course);
+    }
+
+    private void requirePublishAuthority(User user, Course course) {
+        if (user.getRole() == UserRole.ADMIN) {
+            return;
+        }
+        boolean managesAuthor = user.getRole() == UserRole.GROUP_ADMIN
+                && course.getCreatedByUserId() != null
+                && groupMemberRepository.existsMemberManagedBy(user.getId(), course.getCreatedByUserId());
+        if (!managesAuthor) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "You can only approve courses from teachers in your groups");
+        }
     }
 
     @Transactional
@@ -127,11 +158,33 @@ public class CmsCourseService {
         }
     }
 
+    private List<CourseAdminDto> toDtos(List<Course> courses) {
+        // Batch-resolve author emails so the list endpoint stays one query instead of N+1.
+        Map<UUID, String> emailsById = userRepository
+                .findAllById(courses.stream()
+                        .map(Course::getCreatedByUserId)
+                        .filter(Objects::nonNull)
+                        .distinct()
+                        .toList())
+                .stream()
+                .collect(Collectors.toMap(User::getId, User::getEmail, (a, b) -> a));
+        return courses.stream()
+                .map(c -> toDto(c, emailsById.get(c.getCreatedByUserId())))
+                .toList();
+    }
+
     private CourseAdminDto toDto(Course c) {
+        String createdByEmail = c.getCreatedByUserId() == null
+                ? null
+                : userRepository.findById(c.getCreatedByUserId()).map(User::getEmail).orElse(null);
+        return toDto(c, createdByEmail);
+    }
+
+    private CourseAdminDto toDto(Course c, String createdByEmail) {
         return new CourseAdminDto(
                 c.getId(), c.getSlug(), c.getTitle(), c.getShortDescription(),
                 c.getDescription(), c.getLanguageCode(), c.getLevel(), c.getImageUrl(),
-                c.getStatus(), c.getPublishedAt(), c.getCreatedByUserId(),
+                c.getStatus(), c.getPublishedAt(), c.getCreatedByUserId(), createdByEmail,
                 c.getCreatedAt(), c.getUpdatedAt()
         );
     }

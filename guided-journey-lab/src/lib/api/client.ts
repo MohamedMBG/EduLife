@@ -8,7 +8,13 @@ import type {
   Certificate,
   CertificateDetail,
   CertificateVerification,
+  CmsCourse,
+  CmsLesson,
+  CmsSection,
   CourseDetail,
+  CreateCmsCourseRequest,
+  CreateCmsLessonRequest,
+  CreateCmsSectionRequest,
   CourseProgress,
   CourseSummary,
   EnrolledCourse,
@@ -17,6 +23,8 @@ import type {
   ExamResult,
   ExamStatus,
   ExamSubmitRequest,
+  GroupDetail,
+  GroupSummary,
   LessonDetail,
   PageResponse,
   Profile,
@@ -197,6 +205,7 @@ export function getAdminMetrics(getAccessToken: NonNullable<RequestOptions["getA
       totalCoursesArchived: 0,
       totalEnrollmentsActive: 0,
       totalCertificates: 0,
+      pendingTeacherRequests: 0,
     });
   }
 
@@ -498,6 +507,196 @@ export function rejectTeacherRequest(
   return makeRequest<TeacherRequestSummary>(`api/v1/admin/teacher-requests/${requestId}/reject`, {
     method: "PUT",
     body: adminNote ? { adminNote } : {},
+    getAccessToken,
+  });
+}
+
+// ── CMS endpoints (TEACHER / GROUP_ADMIN / ADMIN; ownership enforced server-side) ──
+
+function assertCmsAvailable() {
+  if (appEnv.demoMode) {
+    throw new ApiClientError(501, "Course management is not available in website demo mode.");
+  }
+}
+
+export function listCmsCourses(getAccessToken: NonNullable<RequestOptions["getAccessToken"]>) {
+  assertCmsAvailable();
+
+  return makeRequest<CmsCourse[]>("api/v1/cms/courses", { getAccessToken });
+}
+
+export function createCmsCourse(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  payload: CreateCmsCourseRequest,
+) {
+  assertCmsAvailable();
+
+  return makeRequest<CmsCourse>("api/v1/cms/courses", {
+    method: "POST",
+    body: payload,
+    getAccessToken,
+  });
+}
+
+export function publishCmsCourse(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  courseId: string,
+) {
+  assertCmsAvailable();
+
+  // GROUP_ADMIN may only publish courses from teachers in their groups; ADMIN may publish any.
+  return makeRequest<CmsCourse>(`api/v1/cms/courses/${courseId}/publish`, {
+    method: "PUT",
+    getAccessToken,
+  });
+}
+
+export function listCmsSections(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  courseId: string,
+) {
+  assertCmsAvailable();
+
+  return makeRequest<CmsSection[]>(`api/v1/cms/courses/${courseId}/sections`, { getAccessToken });
+}
+
+export function createCmsSection(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  courseId: string,
+  payload: CreateCmsSectionRequest,
+) {
+  assertCmsAvailable();
+
+  return makeRequest<CmsSection>(`api/v1/cms/courses/${courseId}/sections`, {
+    method: "POST",
+    body: payload,
+    getAccessToken,
+  });
+}
+
+export function deleteCmsSection(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  courseId: string,
+  sectionId: string,
+) {
+  assertCmsAvailable();
+
+  return makeRequest<void>(`api/v1/cms/courses/${courseId}/sections/${sectionId}`, {
+    method: "DELETE",
+    getAccessToken,
+  });
+}
+
+export function listCmsLessons(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  sectionId: string,
+) {
+  assertCmsAvailable();
+
+  return makeRequest<CmsLesson[]>(`api/v1/cms/sections/${sectionId}/lessons`, { getAccessToken });
+}
+
+export function createCmsLesson(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  sectionId: string,
+  payload: CreateCmsLessonRequest,
+) {
+  assertCmsAvailable();
+
+  return makeRequest<CmsLesson>(`api/v1/cms/sections/${sectionId}/lessons`, {
+    method: "POST",
+    body: payload,
+    getAccessToken,
+  });
+}
+
+// ── Groups endpoints (TEACHER / GROUP_ADMIN / ADMIN; owner-scoped server-side) ──
+
+function assertGroupsAvailable() {
+  if (appEnv.demoMode) {
+    throw new ApiClientError(501, "Group management is not available in website demo mode.");
+  }
+}
+
+export function listMyGroups(getAccessToken: NonNullable<RequestOptions["getAccessToken"]>) {
+  assertGroupsAvailable();
+
+  return makeRequest<GroupSummary[]>("api/v1/groups", { getAccessToken });
+}
+
+export function getGroupDetail(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  groupId: string,
+) {
+  assertGroupsAvailable();
+
+  return makeRequest<GroupDetail>(`api/v1/groups/${groupId}`, { getAccessToken });
+}
+
+export function createGroup(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  name: string,
+) {
+  assertGroupsAvailable();
+
+  // The create endpoint returns the bare GroupDto (no counts) — callers refetch the list.
+  return makeRequest<{ id: string; name: string; createdAt: string }>("api/v1/groups", {
+    method: "POST",
+    body: { name },
+    getAccessToken,
+  });
+}
+
+export function addGroupMember(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  groupId: string,
+  email: string,
+) {
+  assertGroupsAvailable();
+
+  return makeRequest<unknown>(`api/v1/groups/${groupId}/members`, {
+    method: "POST",
+    body: { email },
+    getAccessToken,
+  });
+}
+
+export function removeGroupMember(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  groupId: string,
+  userId: string,
+) {
+  assertGroupsAvailable();
+
+  return makeRequest<void>(`api/v1/groups/${groupId}/members/${userId}`, {
+    method: "DELETE",
+    getAccessToken,
+  });
+}
+
+export function attachGroupCourse(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  groupId: string,
+  courseId: string,
+) {
+  assertGroupsAvailable();
+
+  return makeRequest<unknown>(`api/v1/groups/${groupId}/courses`, {
+    method: "POST",
+    body: { courseId },
+    getAccessToken,
+  });
+}
+
+export function deleteCmsLesson(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  sectionId: string,
+  lessonId: string,
+) {
+  assertCmsAvailable();
+
+  return makeRequest<void>(`api/v1/cms/sections/${sectionId}/lessons/${lessonId}`, {
+    method: "DELETE",
     getAccessToken,
   });
 }

@@ -116,6 +116,9 @@ public class LoginFragment extends Fragment {
                 action = R.id.action_loginFragment_to_adminDashboardFragment;
             } else if ("TEACHER".equals(role)) {
                 action = R.id.action_loginFragment_to_teacherDashboardFragment;
+            } else if ("GROUP_ADMIN".equals(role)) {
+                // Group admins manage cohorts and approvals, not the learner flow.
+                action = R.id.action_loginFragment_to_groupAdminDashboardFragment;
             } else {
                 action = R.id.action_loginFragment_to_homeFragment;
             }

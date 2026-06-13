@@ -373,4 +373,46 @@
     <string name="teacher_back_cd">Back</string>
     <string name="teacher_loading">Loading…</string>
     <string name="teacher_retry">Retry</string>
+
+    <!-- ── Group admin portal ─────────────────────────────────────────── -->
+    <string name="group_admin_portal_subtitle">GROUP ADMIN PORTAL</string>
+    <string name="group_admin_title">My Cohorts</string>
+    <string name="group_admin_subtitle_body">Manage your cohorts, members, and course approvals.</string>
+    <string name="group_admin_sign_out">Sign out</string>
+    <string name="group_admin_loading">Loading…</string>
+    <string name="group_admin_counts">%1$d members · %2$d courses</string>
+    <string name="group_admin_create_title">Create group</string>
+    <string name="group_admin_create_button">Create</string>
+    <string name="group_admin_cancel_button">Cancel</string>
+    <string name="group_admin_name_hint">Group name</string>
+    <string name="group_admin_empty_title">No groups yet</string>
+    <string name="group_admin_empty_body">Create a cohort to add members and assign courses.</string>
+
+    <!-- Group detail -->
+    <string name="group_detail_back">← Back</string>
+    <string name="group_detail_members_header">Members</string>
+    <string name="group_detail_members_empty">No members yet. Add learners by email.</string>
+    <string name="group_detail_courses_header">Courses</string>
+    <string name="group_detail_courses_empty">No courses assigned yet.</string>
+    <string name="group_member_add_title">Add member</string>
+    <string name="group_member_add_confirm">Add</string>
+    <string name="group_member_email_hint">Member email</string>
+    <string name="group_member_remove_title">Remove member</string>
+    <string name="group_member_remove_body">Remove %1$s from this group?</string>
+    <string name="group_member_remove_confirm">Remove</string>
+    <string name="group_course_assign_title">Assign course</string>
+    <string name="group_course_none_available">All published courses are already assigned.</string>
+
+    <!-- Course approvals -->
+    <string name="approvals_open_cta">Course Approvals</string>
+    <string name="approvals_title">Course Approvals</string>
+    <string name="approvals_authored_by">by %1$s</string>
+    <string name="approvals_approve_button">Approve &amp; publish</string>
+    <string name="approvals_pending_header">Pending review</string>
+    <string name="approvals_pending_empty">No courses awaiting approval.</string>
+    <string name="approvals_published_header">Published</string>
+    <string name="approvals_published_empty">No published courses yet.</string>
+    <string name="approvals_confirm_title">Approve course</string>
+    <string name="approvals_confirm_body">Publish \"%1$s\"? Learners will be able to enroll.</string>
+    <string name="approvals_confirm_approve">Approve</string>
 </resources>

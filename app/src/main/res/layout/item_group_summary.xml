@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    android:background="@drawable/bg_teacher_course_card"
+    android:orientation="vertical"
+    android:paddingHorizontal="18dp"
+    android:paddingVertical="18dp">
+
+    <TextView
+        android:id="@+id/groupName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/teacher_text_primary"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        tools:text="Pilot Cohort A" />
+
+    <TextView
+        android:id="@+id/groupCounts"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:textColor="@color/teacher_text_secondary"
+        android:textSize="13sp"
+        tools:text="3 members · 2 courses" />
+
+</LinearLayout>

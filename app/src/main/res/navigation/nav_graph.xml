@@ -36,6 +36,11 @@
             app:popUpTo="@id/nav_graph"
             app:popUpToInclusive="true" />
         <action
+            android:id="@+id/action_loginFragment_to_groupAdminDashboardFragment"
+            app:destination="@id/groupAdminDashboardFragment"
+            app:popUpTo="@id/nav_graph"
+            app:popUpToInclusive="true" />
+        <action
             android:id="@+id/action_loginFragment_to_registerFragment"
             app:destination="@id/registerFragment" />
     </fragment>
@@ -299,6 +304,44 @@
             app:argType="string"
             android:defaultValue="" />
     </fragment>
+
+    <!-- ── Group admin area ─────────────────────────────────────────── -->
+
+    <fragment
+        android:id="@+id/groupAdminDashboardFragment"
+        android:name="com.baghdad.edulife.features.groupadmin.ui.GroupAdminDashboardFragment"
+        android:label="My Cohorts">
+        <action
+            android:id="@+id/action_groupAdminDashboardFragment_to_loginFragment"
+            app:destination="@id/loginFragment"
+            app:popUpTo="@id/nav_graph"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_groupAdminDashboardFragment_to_groupDetailFragment"
+            app:destination="@id/groupDetailFragment" />
+        <action
+            android:id="@+id/action_groupAdminDashboardFragment_to_courseApprovalsFragment"
+            app:destination="@id/courseApprovalsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/groupDetailFragment"
+        android:name="com.baghdad.edulife.features.groupadmin.ui.GroupDetailFragment"
+        android:label="Group">
+        <argument
+            android:name="groupId"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="groupName"
+            app:argType="string"
+            android:defaultValue="" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/courseApprovalsFragment"
+        android:name="com.baghdad.edulife.features.groupadmin.ui.CourseApprovalsFragment"
+        android:label="Course Approvals" />
 
     <fragment
         android:id="@+id/lessonPlayerFragment"

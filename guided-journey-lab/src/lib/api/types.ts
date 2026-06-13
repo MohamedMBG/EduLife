@@ -239,6 +239,108 @@ export interface AvatarUploadResponse {
   avatarUrl: string;
 }
 
+export type CourseStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+
+export type CmsLessonType = "VIDEO" | "ARTICLE" | "RESOURCE";
+
+export interface CmsCourse {
+  id: string;
+  slug: string;
+  title: string;
+  shortDescription: string | null;
+  description: string;
+  languageCode: string;
+  level: string | null;
+  imageUrl: string | null;
+  status: CourseStatus;
+  publishedAt: string | null;
+  createdByUserId: string;
+  createdByEmail: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCmsCourseRequest {
+  title: string;
+  shortDescription?: string;
+  description: string;
+  languageCode: string;
+  level?: string;
+  imageUrl?: string;
+}
+
+export interface CmsSection {
+  id: string;
+  courseId: string;
+  title: string;
+  description: string | null;
+  displayOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCmsSectionRequest {
+  title: string;
+  description?: string;
+  displayOrder: number;
+}
+
+export interface CmsLesson {
+  id: string;
+  courseSectionId: string;
+  title: string;
+  summary: string | null;
+  lessonType: string;
+  estimatedDurationMinutes: number | null;
+  displayOrder: number;
+  preview: boolean;
+  contentUrl: string | null;
+  contentBody: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCmsLessonRequest {
+  title: string;
+  summary?: string;
+  lessonType: CmsLessonType;
+  estimatedDurationMinutes?: number;
+  displayOrder: number;
+  preview: boolean;
+  contentUrl?: string;
+  contentBody?: string;
+}
+
+export interface GroupSummary {
+  id: string;
+  name: string;
+  createdAt: string;
+  memberCount: number;
+  courseCount: number;
+}
+
+export interface GroupMemberDetail {
+  userId: string;
+  email: string;
+  role: UserRole | null;
+  addedAt: string;
+}
+
+export interface GroupCourseDetail {
+  courseId: string;
+  title: string;
+  status: CourseStatus | null;
+  attachedAt: string;
+}
+
+export interface GroupDetail {
+  id: string;
+  name: string;
+  createdAt: string;
+  members: GroupMemberDetail[];
+  courses: GroupCourseDetail[];
+}
+
 export interface CertificateVerification {
   studentName: string;
   courseTitle: string;
