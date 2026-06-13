@@ -31,7 +31,8 @@ public class CmsCourseController {
     }
 
     /**
-     * Lists courses the caller owns (TEACHER) or all courses (ADMIN).
+     * Lists courses the caller owns (TEACHER), courses from managed teachers
+     * (GROUP_ADMIN), or all upload requests including standalone teachers (ADMIN).
      * GET /api/v1/cms/courses
      */
     @GetMapping
@@ -63,7 +64,8 @@ public class CmsCourseController {
     /**
      * Transitions a DRAFT course to PUBLISHED. Teachers cannot self-publish: ADMIN can
      * approve anything, GROUP_ADMIN only courses from teachers inside their groups
-     * (membership check lives in the service).
+     * (membership check lives in the service). Standalone teachers stay in the
+     * platform admin review queue.
      * PUT /api/v1/cms/courses/{id}/publish
      */
     @PutMapping("/{id}/publish")

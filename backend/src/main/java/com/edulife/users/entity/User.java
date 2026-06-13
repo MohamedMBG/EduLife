@@ -76,6 +76,15 @@ public class User {
     }
 
     /**
+     * Re-links a verified email row to the current Firebase account. This is needed when a
+     * Firebase user is recreated and receives a new uid while the backend still has the same
+     * trusted email row.
+     */
+    public void relinkFirebaseUid(String firebaseUid) {
+        this.firebaseUid = firebaseUid;
+    }
+
+    /**
      * Strips identifying fields for a self-deleted account. The row stays alive so audit-bound
      * references (certificates, exam attempts) keep a stable user_id; only PII is cleared.
      */

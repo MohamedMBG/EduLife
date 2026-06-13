@@ -6,9 +6,11 @@ import com.edulife.groups.controller.GroupController;
 import com.edulife.groups.dto.GroupCourseDto;
 import com.edulife.groups.dto.GroupDetailDto;
 import com.edulife.groups.dto.GroupDto;
+import com.edulife.groups.dto.GroupJoinRequestDto;
 import com.edulife.groups.dto.GroupMemberDetailDto;
 import com.edulife.groups.dto.GroupMemberDto;
 import com.edulife.groups.dto.GroupSummaryDto;
+import com.edulife.groups.model.GroupJoinRequestStatus;
 import com.edulife.groups.service.GroupService;
 import com.edulife.security.SecurityConfig;
 import com.edulife.users.entity.User;
@@ -38,6 +40,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -48,6 +51,7 @@ class GroupControllerTest {
     private static final UUID GROUP_ID  = UUID.fromString("aaaaaaaa-1111-1111-1111-aaaaaaaaaaaa");
     private static final UUID USER_ID   = UUID.fromString("bbbbbbbb-2222-2222-2222-bbbbbbbbbbbb");
     private static final UUID COURSE_ID = UUID.fromString("cccccccc-3333-3333-3333-cccccccccccc");
+    private static final UUID REQUEST_ID = UUID.fromString("dddddddd-4444-4444-4444-dddddddddddd");
 
     @Autowired
     private MockMvc mockMvc;
@@ -131,6 +135,97 @@ class GroupControllerTest {
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(groupService);
+    }
+
+    @Test
+    void submitJoinRequestReturns201ForTeacher() throws Exception {
+        mockValidFirebaseToken();
+        mockUserRole(UserRole.TEACHER);
+
+        given(groupService.submitJoinRequest(eq(GROUP_ID), any()))
+                .willReturn(joinRequestDto(GroupJoinRequestStatus.PENDING));
+
+        mockMvc.perform(post("/api/v1/groups/{groupId}/join-requests", GROUP_ID)
+                        .header("Authorization", "Bearer valid-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"motivation\":\"I want institute backing for course review.\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(REQUEST_ID.toString()))
+                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.groupId").value(GROUP_ID.toString()));
+    }
+
+    @Test
+    void submitJoinRequestReturns403ForLearner() throws Exception {
+        mockValidFirebaseToken();
+        mockUserRole(UserRole.LEARNER);
+
+        mockMvc.perform(post("/api/v1/groups/{groupId}/join-requests", GROUP_ID)
+                        .header("Authorization", "Bearer valid-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"motivation\":\"Let me join.\"}"))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(groupService);
+    }
+
+    @Test
+    void listMyJoinRequestsReturns200ForTeacher() throws Exception {
+        mockValidFirebaseToken();
+        mockUserRole(UserRole.TEACHER);
+
+        given(groupService.listMyJoinRequests()).willReturn(java.util.List.of(
+                joinRequestDto(GroupJoinRequestStatus.PENDING)));
+
+        mockMvc.perform(get("/api/v1/groups/join-requests/mine")
+                        .header("Authorization", "Bearer valid-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(REQUEST_ID.toString()))
+                .andExpect(jsonPath("$[0].groupName").value("Institute A"));
+    }
+
+    @Test
+    void listGroupJoinRequestsReturns200ForGroupAdmin() throws Exception {
+        mockValidFirebaseToken();
+        mockUserRole(UserRole.GROUP_ADMIN);
+
+        given(groupService.listGroupJoinRequests(GROUP_ID, GroupJoinRequestStatus.PENDING))
+                .willReturn(java.util.List.of(joinRequestDto(GroupJoinRequestStatus.PENDING)));
+
+        mockMvc.perform(get("/api/v1/groups/{groupId}/join-requests?status=PENDING", GROUP_ID)
+                        .header("Authorization", "Bearer valid-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].requesterEmail").value("teacher@edulife.test"));
+    }
+
+    @Test
+    void approveJoinRequestReturns200ForGroupAdmin() throws Exception {
+        mockValidFirebaseToken();
+        mockUserRole(UserRole.GROUP_ADMIN);
+
+        given(groupService.approveJoinRequest(GROUP_ID, REQUEST_ID))
+                .willReturn(joinRequestDto(GroupJoinRequestStatus.APPROVED));
+
+        mockMvc.perform(put("/api/v1/groups/{groupId}/join-requests/{requestId}/approve", GROUP_ID, REQUEST_ID)
+                        .header("Authorization", "Bearer valid-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("APPROVED"));
+    }
+
+    @Test
+    void rejectJoinRequestReturns200ForGroupAdmin() throws Exception {
+        mockValidFirebaseToken();
+        mockUserRole(UserRole.GROUP_ADMIN);
+
+        given(groupService.rejectJoinRequest(eq(GROUP_ID), eq(REQUEST_ID), any()))
+                .willReturn(joinRequestDto(GroupJoinRequestStatus.REJECTED));
+
+        mockMvc.perform(put("/api/v1/groups/{groupId}/join-requests/{requestId}/reject", GROUP_ID, REQUEST_ID)
+                        .header("Authorization", "Bearer valid-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"adminNote\":\"Profile does not match this institute.\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("REJECTED"));
     }
 
     @Test
@@ -340,5 +435,21 @@ class GroupControllerTest {
         given(user.getId()).willReturn(USER_ID);
         given(user.getRole()).willReturn(role);
         given(userRepository.findByFirebaseUid("firebase-uid-123")).willReturn(Optional.of(user));
+    }
+
+    private GroupJoinRequestDto joinRequestDto(GroupJoinRequestStatus status) {
+        return new GroupJoinRequestDto(
+                REQUEST_ID,
+                GROUP_ID,
+                "Institute A",
+                USER_ID,
+                "teacher@edulife.test",
+                status,
+                "I want institute backing for course review.",
+                status == GroupJoinRequestStatus.REJECTED ? "Profile does not match this institute." : null,
+                status == GroupJoinRequestStatus.PENDING ? null : USER_ID,
+                status == GroupJoinRequestStatus.PENDING ? null : "groupadmin@edulife.test",
+                Instant.parse("2026-06-13T10:00:00Z"),
+                status == GroupJoinRequestStatus.PENDING ? null : Instant.parse("2026-06-13T11:00:00Z"));
     }
 }

@@ -25,7 +25,8 @@ import org.springframework.web.server.ResponseStatusException;
 /**
  * CMS course lifecycle management. TEACHERs can create and edit their own courses;
  * GROUP_ADMINs review and publish courses authored by teachers inside their groups;
- * ADMINs can edit any course and transition status to PUBLISHED or ARCHIVED.
+ * standalone teachers remain outside any group review queue, so only platform ADMINs
+ * can approve or reject their course publication requests.
  */
 @Service
 public class CmsCourseService {
@@ -46,8 +47,8 @@ public class CmsCourseService {
 
     @Transactional(readOnly = true)
     // Teachers see their own courses; group admins see courses authored by teachers in their
-    // groups (their review queue); admins see all. Scoping stays in the service so the
-    // controller remains free of business logic.
+    // groups; platform admins see all pending uploads, including standalone teachers with no
+    // institute group. Scoping stays in the service so controllers avoid business logic.
     public List<CourseAdminDto> listMyCourses() {
         User currentUser = resolveCurrentUser();
         List<Course> courses = switch (currentUser.getRole()) {
@@ -101,7 +102,8 @@ public class CmsCourseService {
 
     @Transactional
     // Teachers cannot self-publish. ADMIN can publish anything; a GROUP_ADMIN approves only
-    // courses authored by teachers who are members of one of their groups.
+    // courses authored by teachers who are members of one of their groups. A teacher who
+    // chooses to stay independent is therefore reviewed only by the platform admin.
     public CourseAdminDto publishCourse(UUID courseId) {
         User currentUser = resolveCurrentUser();
         Course course = courseRepository.findById(courseId)

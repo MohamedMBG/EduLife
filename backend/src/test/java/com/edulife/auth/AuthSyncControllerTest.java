@@ -1,5 +1,9 @@
 package com.edulife.auth;
 
+import com.edulife.groups.repository.GroupCourseRepository;
+import com.edulife.groups.repository.GroupJoinRequestRepository;
+import com.edulife.groups.repository.GroupMemberRepository;
+import com.edulife.groups.repository.GroupRepository;
 import com.edulife.users.repository.UserRepository;
 import com.google.firebase.ErrorCode;
 import com.google.firebase.auth.FirebaseAuth;
@@ -31,11 +35,29 @@ class AuthSyncControllerTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private GroupJoinRequestRepository groupJoinRequestRepository;
+
+    @Autowired
+    private GroupCourseRepository groupCourseRepository;
+
+    @Autowired
+    private GroupMemberRepository groupMemberRepository;
+
+    @Autowired
+    private GroupRepository groupRepository;
+
     @MockBean
     private FirebaseAuth firebaseAuth;
 
     @BeforeEach
     void cleanDatabase() {
+        // Auth sync tests assert user creation from a clean table. Group rows reference users,
+        // so test cleanup must remove group-owned data before deleting user identities.
+        groupJoinRequestRepository.deleteAll();
+        groupCourseRepository.deleteAll();
+        groupMemberRepository.deleteAll();
+        groupRepository.deleteAll();
         userRepository.deleteAll();
     }
 
@@ -171,5 +193,64 @@ class AuthSyncControllerTest {
                 .andExpect(jsonPath("$.status").value(401))
                 .andExpect(jsonPath("$.message").value("Authentication required"))
                 .andExpect(jsonPath("$.timestamp").exists());
+    }
+
+    @Test
+    void syncAssignsAdminStaffRoleByVerifiedEmailWithoutIntent() throws Exception {
+        // admin@edulife.test logs in with NO intendedRole. ADMIN can never be self-assigned, and
+        // the seed migrations no-op on a fresh DB, so without the staff allowlist this would be
+        // LEARNER. The allowlist must promote it to ADMIN purely from the verified email.
+        FirebaseToken decodedToken = org.mockito.Mockito.mock(FirebaseToken.class);
+
+        given(firebaseAuth.verifyIdToken("admin-staff-token")).willReturn(decodedToken);
+        given(decodedToken.getUid()).willReturn("firebase-uid-admin-staff");
+        given(decodedToken.getEmail()).willReturn("admin@edulife.test");
+        given(decodedToken.isEmailVerified()).willReturn(true);
+
+        mockMvc.perform(post("/api/v1/auth/sync")
+                        .header("Authorization", "Bearer admin-staff-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("ADMIN"));
+    }
+
+    @Test
+    void syncAssignsGroupAdminStaffRoleByVerifiedEmail() throws Exception {
+        // groupadmin@edulife.test with no intendedRole must resolve to GROUP_ADMIN, proving the
+        // staff role no longer depends on migration ordering or a first-login intendedRole.
+        FirebaseToken decodedToken = org.mockito.Mockito.mock(FirebaseToken.class);
+
+        given(firebaseAuth.verifyIdToken("ga-staff-token")).willReturn(decodedToken);
+        given(decodedToken.getUid()).willReturn("firebase-uid-ga-staff");
+        given(decodedToken.getEmail()).willReturn("groupadmin@edulife.test");
+        given(decodedToken.isEmailVerified()).willReturn(true);
+
+        mockMvc.perform(post("/api/v1/auth/sync")
+                        .header("Authorization", "Bearer ga-staff-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("GROUP_ADMIN"));
+
+        // Re-asserted on repeat login (no body) — stays GROUP_ADMIN, single row.
+        mockMvc.perform(post("/api/v1/auth/sync")
+                        .header("Authorization", "Bearer ga-staff-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("GROUP_ADMIN"));
+
+        assert userRepository.findAll().size() == 1;
+    }
+
+    @Test
+    void syncLeavesNonStaffEmailAsLearner() throws Exception {
+        // A normal learner email is not in the allowlist and must stay LEARNER.
+        FirebaseToken decodedToken = org.mockito.Mockito.mock(FirebaseToken.class);
+
+        given(firebaseAuth.verifyIdToken("learner-token")).willReturn(decodedToken);
+        given(decodedToken.getUid()).willReturn("firebase-uid-plain-learner");
+        given(decodedToken.getEmail()).willReturn("someone@edulife.test");
+        given(decodedToken.isEmailVerified()).willReturn(true);
+
+        mockMvc.perform(post("/api/v1/auth/sync")
+                        .header("Authorization", "Bearer learner-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("LEARNER"));
     }
 }
