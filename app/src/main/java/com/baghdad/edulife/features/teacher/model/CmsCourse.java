@@ -12,6 +12,8 @@ public class CmsCourse {
     public String status;
     public String publishedAt;
     public String createdByUserId;
+    // Lets approval reviewers (group admins) see which teacher authored a draft course.
+    public String createdByEmail;
     public String createdAt;
     public String updatedAt;
 }

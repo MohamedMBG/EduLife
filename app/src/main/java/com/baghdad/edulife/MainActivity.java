@@ -127,7 +127,9 @@ public class MainActivity extends AppCompatActivity {
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
         if (firebaseUser != null && sessionStorage.hasSession()) {
-            navGraph.setStartDestination(R.id.homeFragment);
+            // Route relaunches by role so teachers/admins/group-admins are not dropped into the
+            // learner home (LoginFragment routes the same way for the first sign-in of a session).
+            navGraph.setStartDestination(startDestinationForRole(sessionStorage.getRole()));
         } else if (onboardingPreferences.hasSeenOnboarding()) {
             navGraph.setStartDestination(R.id.loginFragment);
         } else {
@@ -135,5 +137,13 @@ public class MainActivity extends AppCompatActivity {
         }
 
         navController.setGraph(navGraph);
+    }
+
+    /** Maps the stored role to its home destination; unknown roles fall back to the learner flow. */
+    private int startDestinationForRole(String role) {
+        if ("ADMIN".equals(role)) return R.id.adminDashboardFragment;
+        if ("TEACHER".equals(role)) return R.id.teacherDashboardFragment;
+        if ("GROUP_ADMIN".equals(role)) return R.id.groupAdminDashboardFragment;
+        return R.id.homeFragment;
     }
 }
