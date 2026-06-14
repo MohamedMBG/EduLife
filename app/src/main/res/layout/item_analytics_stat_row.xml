@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Reusable label+value stat row. Used via <include> with scoped findViewById so each row
+     resolves its own statRowLabel / statRowValue. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    android:background="@drawable/bg_catalog_card"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingHorizontal="20dp"
+    android:paddingVertical="20dp">
+
+    <TextView
+        android:id="@+id/statRowLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textColor="@color/brand_text_secondary"
+        android:textSize="14sp"
+        tools:text="Active courses" />
+
+    <TextView
+        android:id="@+id/statRowValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:textColor="@color/brand_text_primary"
+        android:textSize="26sp"
+        android:textStyle="bold"
+        tools:text="12" />
+</LinearLayout>

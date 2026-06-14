@@ -19,4 +19,7 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, UUID> {
     long countByUserIdAndStatus(UUID userId, EnrollmentStatus status);
 
     long countByStatus(EnrollmentStatus status);
+
+    // Analytics (read-only): active enrollments for one course, used by teacher course analytics.
+    long countByCourseIdAndStatus(UUID courseId, EnrollmentStatus status);
 }
