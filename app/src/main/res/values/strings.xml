@@ -87,8 +87,22 @@
     <string name="catalog_open_course">Open course</string>
     <string name="catalog_course_language">Language: %1$s</string>
     <string name="home_eyebrow">Learner Dashboard</string>
-    <string name="home_welcome_title">Welcome back, %1$s</string>
+    <string name="home_welcome_title">Hey, %1$s 👋</string>
     <string name="home_welcome_subtitle">Continue with a calm, structured learning flow designed to keep momentum high.</string>
+    <string name="home_quick_advisor_title">Find My Course</string>
+    <string name="home_quick_advisor_subtitle">AI-powered guidance</string>
+    <string name="home_quick_planner_title">Study Plan</string>
+    <string name="home_career_advisor_title">Career Goal Advisor</string>
+    <string name="home_career_advisor_body">Tell EduLife what you want to achieve and get the best course match from the current catalog.</string>
+    <string name="home_career_advisor_cta">Find my course</string>
+    <string name="career_advisor_back">Back</string>
+    <string name="career_advisor_goal_echo">You: %1$s</string>
+    <string name="career_advisor_title">Career Goal Advisor</string>
+    <string name="career_advisor_subtitle">Describe what you want to achieve and we will match you with the best EduLife courses.</string>
+    <string name="career_advisor_goal_hint">e.g. Land my first frontend engineer role in 6 months</string>
+    <string name="career_advisor_analyze">Find my path</string>
+    <string name="career_advisor_initial_message">Tell EduLife your goal and we will surface the most relevant courses from the current catalog.</string>
+    <string name="career_advisor_results_title">Recommended for you</string>
     <string name="catalog_summary_loading">Refreshing your catalog…</string>
     <string name="catalog_summary_error">We could not refresh your catalog right now.</string>
     <string name="catalog_summary_empty">No courses match this view yet.</string>
@@ -415,4 +429,71 @@
     <string name="approvals_confirm_title">Approve course</string>
     <string name="approvals_confirm_body">Publish \"%1$s\"? Learners will be able to enroll.</string>
     <string name="approvals_confirm_approve">Approve</string>
+
+    <!-- ── Study Planner ── -->
+    <string name="planner_title">Study Planner</string>
+    <string name="planner_subtitle">Plan your week, track your hours, and stay focused.</string>
+    <string name="planner_goal_title">My Focus This Week</string>
+    <string name="planner_goal_hint">Write your main study objective (e.g., Prepare for English exam)</string>
+    <string name="planner_hours_title">Weekly Target Hours</string>
+    <string name="planner_hours_unit">%1$d hours</string>
+    <string name="planner_days_title">Planned Study Days</string>
+    <string name="planner_courses_title">Courses to Focus On</string>
+    <string name="planner_checklist_title">Weekly Study Checklist</string>
+    <string name="planner_checklist_empty">No tasks added for this week. Add one below!</string>
+    <string name="planner_add_task_hint">Add a study task (e.g., Watch video, do exercises)</string>
+    <string name="planner_add_task_btn">Add</string>
+    <string name="planner_logged_hours">%1$.1f / %2$d hours completed</string>
+    <string name="planner_log_hours_title">Log Study Time</string>
+    <string name="planner_log_label">Log time studied:</string>
+    <string name="planner_btn_log_30m">+30m</string>
+    <string name="planner_btn_log_1h">+1h</string>
+    <string name="planner_reset_title">Start New Week?</string>
+    <string name="planner_reset_message">This will reset your logged study hours and clear completed checklist tasks. Your goal text and day configuration will remain. Continue?</string>
+    <string name="planner_reset_btn">Start New Week</string>
+    <string name="planner_reset_btn_short">New Week</string>
+    <string name="planner_reset_cancel">Cancel</string>
+    <string name="planner_home_card_title">Weekly Study Plan</string>
+    <string name="planner_home_card_cta">View Plan</string>
+    <string name="planner_home_card_progress">%1$.1f / %2$d hours completed</string>
+    <string name="planner_home_card_empty">Set up your weekly study plan to stay on track</string>
+
+    <!-- ══ GAMIFICATION ══ -->
+    <string name="gamification_tab_title">Achievements</string>
+    <string name="gamification_title">Achievements</string>
+    <string name="gamification_eyebrow">Your Learning Journey</string>
+    <string name="gamification_total_xp">%1$d XP</string>
+    <string name="gamification_xp_to_next">%1$d XP to next level</string>
+    <string name="gamification_xp_max_level">Max level reached</string>
+    <string name="gamification_streak_title">Learning Streak</string>
+    <string name="gamification_streak_empty">Study every day to build your streak!</string>
+    <string name="gamification_streak_active">%1$d-day streak — keep it going!</string>
+    <string name="gamification_streak_one">1 day in a row. Tomorrow keeps it alive.</string>
+    <string name="gamification_stat_lessons">Lessons</string>
+    <string name="gamification_stat_courses">Courses</string>
+    <string name="gamification_stat_certs">Certificates</string>
+    <string name="gamification_badges_title">Badges</string>
+    <string name="gamification_badges_summary">%1$d of %2$d badges earned</string>
+    <string name="gamification_levels_title">Level Path</string>
+    <string name="gamification_levels_subtitle">Earn XP to climb the path from Novice to Master.</string>
+    <string name="gamification_level_row">Lvl %1$d · %2$s</string>
+    <string name="gamification_level_row_xp">%1$d XP</string>
+    <string name="gamification_xp_toast">+%1$d XP · %2$s</string>
+    <string name="gamification_xp_toast_simple">+%1$d XP</string>
+    <string name="gamification_levelup_toast">Level up! You are now %1$s.</string>
+    <string name="gamification_badge_toast">New badge: %1$s</string>
+    <string name="gamification_home_card_title">Achievements</string>
+    <string name="gamification_home_card_subtitle">Lvl %1$d · %2$d XP</string>
+    <string name="gamification_home_card_empty">Start a lesson to begin your journey</string>
+    <string name="gamification_home_card_streak">%1$d-day streak</string>
+    <string name="gamification_locked_label">Locked</string>
+    <string name="gamification_event_lesson">Lesson complete</string>
+    <string name="gamification_event_course">Course complete</string>
+    <string name="gamification_event_exam">Exam passed</string>
+    <string name="gamification_event_certificate">Certificate earned</string>
+    <string name="gamification_event_enrollment">Course enrolled</string>
+    <string name="gamification_event_streak_3">3-day streak bonus</string>
+    <string name="gamification_event_streak_7">7-day streak bonus</string>
+
 </resources>
+

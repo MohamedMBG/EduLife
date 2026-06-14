@@ -9,6 +9,14 @@
         android:icon="@drawable/ic_nav_courses"
         android:title="Courses" />
     <item
+        android:id="@+id/plannerFragment"
+        android:icon="@drawable/ic_nav_planner"
+        android:title="Planner" />
+    <item
+        android:id="@+id/gamificationFragment"
+        android:icon="@drawable/ic_nav_gamification"
+        android:title="@string/gamification_tab_title" />
+    <item
         android:id="@+id/profileFragment"
         android:icon="@drawable/ic_nav_profile"
         android:title="Profile" />

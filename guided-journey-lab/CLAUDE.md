@@ -324,7 +324,23 @@ Exam cooldown response additionally includes `cooldownEndsAt` field.
 - No local auth bypass.
 - No UI-only feature pretending to be complete.
 - No microservices, no direct DB access, no fake data in production paths.
-- No post-MVP features: payments, AI recommendations, real-time chat, gamification.
+- No post-MVP features: payments, AI recommendations, real-time chat.
+
+---
+
+## Gamification (Shared Spec)
+
+Gamification is a first-class feature and **must match Android exactly**.
+
+Authoritative spec lives in root `CLAUDE.md` → `## Gamification (Shared Spec)`.
+
+Web-specific notes:
+
+- XP, level thresholds, level names, badge ids/labels/conditions, streak rules **must not** diverge from the root spec.
+- XP is event-driven (lesson=25, course=100, exam_pass=150, cert=200, enrollment=10, daily_login=5, streak bonuses +30/+75) — do not derive XP as `lessons × 50` style shortcuts.
+- Backend has no gamification endpoints yet — derive state from `/enrollments/me`, `/certificates/me`, `/progress/courses/{id}`. If a backend gamification API ships, both clients switch to it together.
+- Any change to constants (XP values, level thresholds, level names, badge defs) must land in Android + Web in the same PR and update root `CLAUDE.md` spec.
+- Web has richer UI (quests, weekly chart, skill tree) — extra UI surfaces are fine as long as underlying constants match.
 
 ---
 

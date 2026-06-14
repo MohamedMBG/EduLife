@@ -134,4 +134,13 @@
     <color name="teacher_status_draft_text">#B87000</color>
     <color name="teacher_status_published_text">@color/brand_primary</color>
     <color name="teacher_status_archived_text">#888888</color>
+
+    <!-- ══ GAMIFICATION ══ -->
+    <color name="gamification_xp_gold">#D4A24A</color>
+    <color name="gamification_streak_orange">#F2994A</color>
+    <color name="gamification_badge_locked">#E1E8E4</color>
+    <color name="gamification_level_ring">#1B5E3A</color>
+    <color name="gamification_header_start">#1B5E3A</color>
+    <color name="gamification_header_end">#0E3B23</color>
+    <color name="gamification_toast_bg">#0D1E14</color>
 </resources>

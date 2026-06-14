@@ -1,10 +1,13 @@
 package com.baghdad.edulife.features.courses.ui;
 
+import android.content.res.ColorStateList;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
@@ -207,31 +210,78 @@ public class CourseDetailFragment extends Fragment {
         boolean isEnrolled = getArguments() != null && getArguments().getBoolean("isEnrolled", false);
         sectionContainer.removeAllViews();
         if (courseDetail.sections != null) {
+            int sectionIndex = 1;
             for (CourseSection section : courseDetail.sections) {
-                sectionContainer.addView(createSectionView(courseId, section, isEnrolled));
+                // Section index added to display a clean indicator ("SECTION 1", "SECTION 2", etc.)
+                sectionContainer.addView(createSectionView(courseId, section, isEnrolled, sectionIndex++));
             }
         }
     }
 
-    private View createSectionView(String courseId, CourseSection section, boolean isEnrolled) {
+    private View createSectionView(String courseId, CourseSection section, boolean isEnrolled, int sectionIndex) {
         LinearLayout sectionLayout = new LinearLayout(requireContext());
         sectionLayout.setOrientation(LinearLayout.VERTICAL);
-        sectionLayout.setPadding(0, 0, 0, dp(20));
+        sectionLayout.setPadding(0, 0, 0, dp(12));
 
+        // Add a divider line between sections to create clear visual boundaries.
+        if (sectionIndex > 1) {
+            View divider = new View(requireContext());
+            divider.setBackgroundColor(requireContext().getColor(R.color.brand_border));
+            LinearLayout.LayoutParams dividerParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(1)
+            );
+            dividerParams.topMargin = dp(8);
+            dividerParams.bottomMargin = dp(20);
+            sectionLayout.addView(divider);
+        }
+
+        // Section header row: container for section badge pill and bold title.
+        LinearLayout headerRow = new LinearLayout(requireContext());
+        headerRow.setOrientation(LinearLayout.HORIZONTAL);
+        headerRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        
+        // Section index pill badge to indicate learning sequence.
+        TextView badge = new TextView(requireContext());
+        badge.setText(String.format(Locale.getDefault(), "SECTION %d", sectionIndex));
+        badge.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
+        badge.setTextColor(requireContext().getColor(R.color.brand_primary));
+        badge.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        badge.setBackgroundResource(R.drawable.bg_lesson_type_badge);
+        badge.setPadding(dp(8), dp(4), dp(8), dp(4));
+        
+        LinearLayout.LayoutParams badgeParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        badgeParams.rightMargin = dp(12);
+        badge.setLayoutParams(badgeParams);
+
+        // Section title in bold text.
         TextView sectionTitle = new TextView(requireContext());
         sectionTitle.setText(section.title);
-        sectionTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
+        sectionTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
         sectionTitle.setTextColor(requireContext().getColor(R.color.catalog_text_primary));
         sectionTitle.setTypeface(sectionTitle.getTypeface(), Typeface.BOLD);
+        sectionTitle.setLayoutParams(new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
 
-        TextView sectionDescription = new TextView(requireContext());
-        sectionDescription.setText(section.description);
-        sectionDescription.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-        sectionDescription.setTextColor(requireContext().getColor(R.color.catalog_text_secondary));
-        sectionDescription.setPadding(0, dp(6), 0, dp(12));
+        headerRow.addView(badge);
+        headerRow.addView(sectionTitle);
+        sectionLayout.addView(headerRow);
 
-        sectionLayout.addView(sectionTitle);
-        sectionLayout.addView(sectionDescription);
+        // Subtitle section description to summarize learnings.
+        if (section.description != null && !section.description.isBlank()) {
+            TextView sectionDescription = new TextView(requireContext());
+            sectionDescription.setText(section.description);
+            sectionDescription.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+            sectionDescription.setTextColor(requireContext().getColor(R.color.catalog_text_secondary));
+            sectionDescription.setPadding(0, dp(6), 0, dp(14));
+            sectionLayout.addView(sectionDescription);
+        } else {
+            // Padding buffer if description is omitted.
+            headerRow.setPadding(0, 0, 0, dp(12));
+        }
 
         List<LessonSummary> lessons = section.lessons;
         if (lessons != null) {
@@ -245,9 +295,10 @@ public class CourseDetailFragment extends Fragment {
 
     private View createLessonView(String courseId, LessonSummary lesson, String sectionTitle, boolean isEnrolled) {
         LinearLayout lessonLayout = new LinearLayout(requireContext());
-        lessonLayout.setOrientation(LinearLayout.VERTICAL);
+        lessonLayout.setOrientation(LinearLayout.HORIZONTAL);
+        lessonLayout.setGravity(android.view.Gravity.CENTER_VERTICAL);
         lessonLayout.setBackgroundResource(R.drawable.bg_catalog_lesson_row);
-        lessonLayout.setPadding(dp(16), dp(14), dp(16), dp(14));
+        lessonLayout.setPadding(dp(16), dp(16), dp(16), dp(16));
 
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -256,37 +307,51 @@ public class CourseDetailFragment extends Fragment {
         params.bottomMargin = dp(12);
         lessonLayout.setLayoutParams(params);
 
-        // Header row: title + completion badge
-        LinearLayout headerRow = new LinearLayout(requireContext());
-        headerRow.setOrientation(LinearLayout.HORIZONTAL);
-        headerRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        // Add standard material click ripple effect to make items feel interactive.
+        TypedValue outValue = new TypedValue();
+        if (requireContext().getTheme().resolveAttribute(android.R.attr.selectableItemBackground, outValue, true)) {
+            lessonLayout.setForeground(requireContext().getDrawable(outValue.resourceId));
+        }
+
+        // Left icon area: displays circular shape representing the media category (video vs text).
+        ImageView typeIcon = new ImageView(requireContext());
+        int iconRes = "VIDEO".equalsIgnoreCase(lesson.lessonType)
+                ? R.drawable.ic_play_circle
+                : R.drawable.ic_description;
+        typeIcon.setImageResource(iconRes);
+        typeIcon.setBackgroundResource(R.drawable.bg_lesson_icon_container);
+        typeIcon.setPadding(dp(10), dp(10), dp(10), dp(10));
+        typeIcon.setImageTintList(ColorStateList.valueOf(requireContext().getColor(R.color.brand_primary)));
+
+        LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(dp(42), dp(42));
+        iconParams.rightMargin = dp(14);
+        typeIcon.setLayoutParams(iconParams);
+        lessonLayout.addView(typeIcon);
+
+        // Middle content area: vertically lists title, summary, and duration meta.
+        LinearLayout contentLayout = new LinearLayout(requireContext());
+        contentLayout.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams contentParams = new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+        contentLayout.setLayoutParams(contentParams);
 
         TextView lessonTitle = new TextView(requireContext());
-        LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
-                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
-        lessonTitle.setLayoutParams(titleParams);
         lessonTitle.setText(lesson.title);
-        lessonTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        lessonTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
         lessonTitle.setTextColor(requireContext().getColor(R.color.catalog_text_primary));
         lessonTitle.setTypeface(lessonTitle.getTypeface(), Typeface.BOLD);
+        contentLayout.addView(lessonTitle);
 
-        boolean completed = Boolean.TRUE.equals(lessonCompletionMap.get(lesson.id));
-        TextView completedBadge = new TextView(requireContext());
-        completedBadge.setText(R.string.progress_lesson_completed);
-        completedBadge.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
-        completedBadge.setTextColor(requireContext().getColor(R.color.catalog_primary));
-        completedBadge.setTypeface(completedBadge.getTypeface(), Typeface.BOLD);
-        completedBadge.setPadding(dp(8), 0, 0, 0);
-        completedBadge.setVisibility(completed ? View.VISIBLE : View.GONE);
-
-        headerRow.addView(lessonTitle);
-        headerRow.addView(completedBadge);
-
-        TextView lessonSummaryView = new TextView(requireContext());
-        lessonSummaryView.setText(lesson.summary);
-        lessonSummaryView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-        lessonSummaryView.setTextColor(requireContext().getColor(R.color.catalog_text_secondary));
-        lessonSummaryView.setPadding(0, dp(6), 0, dp(8));
+        if (lesson.summary != null && !lesson.summary.isBlank()) {
+            TextView lessonSummaryView = new TextView(requireContext());
+            lessonSummaryView.setText(lesson.summary);
+            lessonSummaryView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+            lessonSummaryView.setTextColor(requireContext().getColor(R.color.catalog_text_secondary));
+            lessonSummaryView.setPadding(0, dp(4), 0, dp(4));
+            lessonSummaryView.setMaxLines(2);
+            lessonSummaryView.setEllipsize(TextUtils.TruncateAt.END);
+            contentLayout.addView(lessonSummaryView);
+        }
 
         TextView lessonMeta = new TextView(requireContext());
         lessonMeta.setText(getString(
@@ -294,34 +359,53 @@ public class CourseDetailFragment extends Fragment {
                 normalizeLabel(lesson.lessonType),
                 lesson.estimatedDurationMinutes
         ));
-        lessonMeta.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        lessonMeta.setTextColor(requireContext().getColor(R.color.catalog_text_secondary));
+        lessonMeta.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
+        lessonMeta.setTextColor(requireContext().getColor(R.color.brand_text_muted));
+        contentLayout.addView(lessonMeta);
 
+        lessonLayout.addView(contentLayout);
+
+        // Right status indicator: Completed check, locked pad, preview chip, or standard play chevron.
         boolean accessible = isEnrolled || lesson.preview;
+        boolean completed = Boolean.TRUE.equals(lessonCompletionMap.get(lesson.id));
 
-        TextView accessText = new TextView(requireContext());
-        boolean isCompleted = lesson.id != null && Boolean.TRUE.equals(lessonCompletionMap.get(lesson.id));
-        if (isEnrolled) {
-            // Enrolled lessons stay accessible, but completed lessons need a clear visual marker
-            // so learners can scan the outline without reopening each lesson.
-            accessText.setText(isCompleted
-                    ? R.string.lesson_player_completed
-                    : R.string.course_detail_open_lesson);
-            accessText.setTextColor(requireContext().getColor(R.color.catalog_primary));
+        if (completed) {
+            // Show a premium green check circle for completed lessons.
+            ImageView checkIcon = new ImageView(requireContext());
+            checkIcon.setImageResource(R.drawable.ic_check_circle);
+            checkIcon.setImageTintList(ColorStateList.valueOf(requireContext().getColor(R.color.brand_primary)));
+            LinearLayout.LayoutParams statusParams = new LinearLayout.LayoutParams(dp(22), dp(22));
+            checkIcon.setLayoutParams(statusParams);
+            lessonLayout.addView(checkIcon);
+        } else if (!isEnrolled) {
+            if (lesson.preview) {
+                // Show custom preview pill for free sample content.
+                TextView previewBadge = new TextView(requireContext());
+                previewBadge.setText("PREVIEW");
+                previewBadge.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10);
+                previewBadge.setTextColor(requireContext().getColor(R.color.brand_primary));
+                previewBadge.setTypeface(previewBadge.getTypeface(), Typeface.BOLD);
+                previewBadge.setBackgroundResource(R.drawable.bg_catalog_badge);
+                previewBadge.setPadding(dp(8), dp(4), dp(8), dp(4));
+                lessonLayout.addView(previewBadge);
+            } else {
+                // Show a lock icon for content requiring enrollment.
+                ImageView lockIcon = new ImageView(requireContext());
+                lockIcon.setImageResource(R.drawable.ic_lock);
+                lockIcon.setImageTintList(ColorStateList.valueOf(requireContext().getColor(R.color.brand_text_secondary)));
+                LinearLayout.LayoutParams statusParams = new LinearLayout.LayoutParams(dp(18), dp(18));
+                lockIcon.setLayoutParams(statusParams);
+                lessonLayout.addView(lockIcon);
+            }
         } else {
-            accessText.setText(lesson.preview ? R.string.course_detail_preview : R.string.course_detail_locked);
-            accessText.setTextColor(requireContext().getColor(lesson.preview
-                    ? R.color.catalog_primary
-                    : R.color.catalog_warning));
+            // Show standard entry arrow to indicate interactive row.
+            ImageView arrowIcon = new ImageView(requireContext());
+            arrowIcon.setImageResource(R.drawable.ic_chevron_right);
+            arrowIcon.setImageTintList(ColorStateList.valueOf(requireContext().getColor(R.color.brand_text_secondary)));
+            LinearLayout.LayoutParams statusParams = new LinearLayout.LayoutParams(dp(18), dp(18));
+            arrowIcon.setLayoutParams(statusParams);
+            lessonLayout.addView(arrowIcon);
         }
-        accessText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        accessText.setPadding(0, dp(8), 0, 0);
-        accessText.setTypeface(accessText.getTypeface(), Typeface.BOLD);
-
-        lessonLayout.addView(headerRow);
-        lessonLayout.addView(lessonSummaryView);
-        lessonLayout.addView(lessonMeta);
-        lessonLayout.addView(accessText);
 
         if (accessible) {
             lessonLayout.setOnClickListener(v -> {
@@ -339,6 +423,7 @@ public class CourseDetailFragment extends Fragment {
                         .navigate(R.id.action_courseDetailFragment_to_lessonPlayerFragment, navArgs);
             });
         } else {
+            // Fades locked lessons slightly to visually signify restricted status.
             lessonLayout.setAlpha(0.55f);
         }
 

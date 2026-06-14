@@ -23,6 +23,9 @@ import com.baghdad.edulife.features.courses.model.CourseSummary;
 import com.baghdad.edulife.features.courses.model.EnrolledCourse;
 import com.baghdad.edulife.features.courses.viewmodel.CourseCatalogViewModel;
 import com.baghdad.edulife.features.courses.viewmodel.EnrollmentViewModel;
+import com.baghdad.edulife.features.gamification.data.GamificationPreferences;
+import com.baghdad.edulife.features.gamification.data.XpEngine;
+import com.baghdad.edulife.features.gamification.model.LevelInfo;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.Collections;
@@ -47,7 +50,6 @@ public class HomeFragment extends Fragment {
     private TextView beginnerFilterButton;
     private TextView intermediateFilterButton;
     private TextView welcomeTitle;
-    private TextView welcomeSubtitle;
     private TextView catalogSummaryText;
 
     public HomeFragment() {
@@ -82,7 +84,6 @@ public class HomeFragment extends Fragment {
         statusText = view.findViewById(R.id.statusText);
         retryButton = view.findViewById(R.id.retryButton);
         welcomeTitle = view.findViewById(R.id.welcomeTitle);
-        welcomeSubtitle = view.findViewById(R.id.welcomeSubtitle);
         catalogSummaryText = view.findViewById(R.id.catalogSummaryText);
 
         bindSessionData(view);
@@ -91,6 +92,34 @@ public class HomeFragment extends Fragment {
 
         retryButton.setOnClickListener(v -> reloadCurrentFilter());
         view.findViewById(R.id.logoutButton).setOnClickListener(v -> handleLogout(view));
+        // Career guidance starts from Home because it is a discovery helper before enrollment.
+        view.findViewById(R.id.careerAdvisorEntry).setOnClickListener(v ->
+                Navigation.findNavController(v)
+                        .navigate(R.id.action_homeFragment_to_careerAdvisorFragment));
+
+        // Planner starts from Home because it is a general tracking tool for the student.
+        view.findViewById(R.id.plannerHomeEntry).setOnClickListener(v ->
+                Navigation.findNavController(v)
+                        .navigate(R.id.action_homeFragment_to_plannerFragment));
+
+        // Gamification card opens the achievements dashboard.
+        view.findViewById(R.id.gamificationHomeEntry).setOnClickListener(v ->
+                Navigation.findNavController(v)
+                        .navigate(R.id.action_homeFragment_to_gamificationFragment));
+
+        bindGamificationCard(view);
+
+        // Load and bind study planner progress from local storage
+        com.baghdad.edulife.features.courses.data.PlannerPreferences plannerPrefs =
+                new com.baghdad.edulife.features.courses.data.PlannerPreferences(requireContext());
+        float completed = plannerPrefs.getCompletedHours();
+        int target = plannerPrefs.getTargetHours();
+        TextView plannerProgressText = view.findViewById(R.id.plannerHomeProgressText);
+        if (completed > 0) {
+            plannerProgressText.setText(getString(R.string.planner_home_card_progress, completed, target));
+        } else {
+            plannerProgressText.setText(R.string.planner_home_card_empty);
+        }
 
         enrollmentViewModel.getMyEnrollments().observe(getViewLifecycleOwner(), courses -> {
             enrolledCourseIds.clear();
@@ -212,10 +241,9 @@ public class HomeFragment extends Fragment {
 
     private void bindSessionData(@NonNull View view) {
         String role = sessionStorage.getRole();
-        String userId = sessionStorage.getUserId();
 
         // Fall back to Firebase identity when backend sync has not populated SessionStorage yet,
-        // so the header never shows "Unknown" while the user is clearly logged in.
+        // so the greeting never shows "Learner" while the user is clearly logged in.
         com.google.firebase.auth.FirebaseUser firebaseUser =
                 FirebaseAuth.getInstance().getCurrentUser();
         if ((role == null || role.isBlank()) && firebaseUser != null) {
@@ -229,18 +257,9 @@ public class HomeFragment extends Fragment {
                 role = "Student";
             }
         }
-        if ((userId == null || userId.isBlank()) && firebaseUser != null) {
-            userId = firebaseUser.getUid();
-        }
 
-        TextView roleText = view.findViewById(R.id.roleText);
-        TextView userIdText = view.findViewById(R.id.userIdText);
-
-        roleText.setText(getString(R.string.catalog_signed_in_as, role != null ? role : "Student"));
-        userIdText.setText(getString(R.string.catalog_internal_id, userId != null ? userId : "Unavailable"));
-        // Keep the home hero personal even when backend sync has not filled the local session yet.
+        // Compact header only shows the personalized greeting — session details live on the Profile page.
         welcomeTitle.setText(getString(R.string.home_welcome_title, firstNameFromIdentity(role)));
-        welcomeSubtitle.setText(R.string.home_welcome_subtitle);
     }
 
     private String firstNameFromIdentity(String identity) {
@@ -259,6 +278,31 @@ public class HomeFragment extends Fragment {
             return "Learner";
         }
         return first.substring(0, 1).toUpperCase() + first.substring(1);
+    }
+
+    private void bindGamificationCard(@NonNull View view) {
+        GamificationPreferences gamificationPrefs = new GamificationPreferences(requireContext());
+        XpEngine engine = new XpEngine(gamificationPrefs);
+        int totalXp = gamificationPrefs.getTotalXp();
+        int streak = gamificationPrefs.getStreak();
+        LevelInfo levelInfo = engine.computeLevelInfo(totalXp);
+
+        TextView subtitle = view.findViewById(R.id.gamificationHomeSubtitle);
+        TextView streakChip = view.findViewById(R.id.gamificationHomeStreak);
+
+        if (totalXp <= 0) {
+            subtitle.setText(R.string.gamification_home_card_empty);
+        } else {
+            subtitle.setText(getString(R.string.gamification_home_card_subtitle,
+                    levelInfo.level, totalXp));
+        }
+
+        if (streak > 0) {
+            streakChip.setVisibility(View.VISIBLE);
+            streakChip.setText(getString(R.string.gamification_home_card_streak, streak));
+        } else {
+            streakChip.setVisibility(View.GONE);
+        }
     }
 
     private void openCourseDetail(CourseSummary courseSummary) {

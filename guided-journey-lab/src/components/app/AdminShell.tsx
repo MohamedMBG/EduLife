@@ -1,17 +1,16 @@
 import type { ReactNode } from "react";
 import { Link, useRouter } from "@tanstack/react-router";
 import {
-  BarChart3,
   GraduationCap,
   LayoutDashboard,
   LogOut,
+  ShieldAlert,
   ShieldCheck,
-  Users,
 } from "lucide-react";
 import { useAuth } from "../../lib/auth/auth-context";
 
 interface AdminShellProps {
-  active: "dashboard" | "teacher-requests" | "users";
+  active: "dashboard" | "teacher-requests";
   children: ReactNode;
 }
 
@@ -31,15 +30,9 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     key: "teacher-requests",
-    label: "Teacher Requests",
+    label: "Teacher requests",
     icon: <GraduationCap className="h-4 w-4" />,
     href: "/admin/teacher-requests",
-  },
-  {
-    key: "users",
-    label: "Users",
-    icon: <Users className="h-4 w-4" />,
-    href: "/admin/users",
   },
 ];
 
@@ -55,22 +48,27 @@ export function AdminShell({ active, children }: AdminShellProps) {
   return (
     <div className="flex min-h-screen bg-[oklch(0.955_0.006_240)]">
       {/* Sidebar */}
-      <aside className="hidden w-60 flex-col border-r border-border bg-surface-elevated lg:flex">
+      <aside className="hidden w-72 flex-col border-r border-border bg-surface-elevated lg:flex">
         {/* Brand */}
         <div className="border-b border-border px-6 py-5">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[oklch(0.40_0.19_250)] text-white">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[oklch(0.40_0.19_250)] text-white">
               <ShieldCheck className="h-4 w-4" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-foreground">EduLife</p>
-              <p className="text-xs text-muted-foreground">Admin console</p>
+              <p className="text-display text-lg leading-none text-foreground">EduLife</p>
+              <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                Platform admin
+              </p>
             </div>
           </div>
         </div>
 
         {/* Nav */}
-        <nav className="flex flex-col gap-1 p-3 pt-4">
+        <nav className="flex flex-col gap-1 p-4 pt-5">
+          <p className="px-3 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            Operations
+          </p>
           {NAV_ITEMS.map((item) => {
             const isActive = item.key === active;
             return (
@@ -90,6 +88,17 @@ export function AdminShell({ active, children }: AdminShellProps) {
             );
           })}
         </nav>
+
+        <div className="mx-4 rounded-2xl border border-[oklch(0.78_0.08_250)] bg-[oklch(0.94_0.03_250)] p-4">
+          <div className="flex items-center gap-2 text-[oklch(0.35_0.17_250)]">
+            <ShieldAlert className="h-4 w-4" />
+            <p className="text-xs font-bold uppercase tracking-[0.16em]">Admin scope</p>
+          </div>
+          <p className="mt-2 text-xs leading-relaxed text-[oklch(0.35_0.08_250)]">
+            Course approval, teacher access, and platform totals are server-authorized by backend
+            RBAC.
+          </p>
+        </div>
 
         {/* Footer */}
         <div className="mt-auto border-t border-border p-4">
@@ -140,7 +149,7 @@ export function AdminShell({ active, children }: AdminShellProps) {
 
       {/* Main content */}
       <main className="flex-1 overflow-auto pt-14 lg:pt-0">
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">{children}</div>
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</div>
       </main>
     </div>
   );
