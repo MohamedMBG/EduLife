@@ -13,6 +13,8 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.baghdad.edulife.R;
+import com.baghdad.edulife.features.gamification.model.XpEvent;
+import com.baghdad.edulife.features.gamification.ui.XpToastHelper;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -57,6 +59,13 @@ public class ExamResultFragment extends Fragment {
             retryMessage.setVisibility(View.GONE);
             if (certificateNumber != null && !certificateNumber.isBlank()) {
                 certNumber.setText(getString(R.string.exam_result_cert_number, certificateNumber));
+            }
+            if (savedInstanceState == null) {
+                XpToastHelper.award(requireContext(), XpEvent.EXAM_PASS);
+                if (certificateNumber != null && !certificateNumber.isBlank()) {
+                    XpToastHelper.award(requireContext(), XpEvent.COURSE_COMPLETE);
+                    XpToastHelper.award(requireContext(), XpEvent.CERTIFICATE_EARNED);
+                }
             }
         } else {
             scoreCircle.setBackgroundTintList(

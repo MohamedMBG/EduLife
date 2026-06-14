@@ -173,57 +173,61 @@ function LessonPage() {
                 )}
               </div>
 
-              <div className="rounded-3xl border border-border bg-surface-elevated p-5 shadow-soft">
+              <div className="rounded-3xl border border-border bg-surface-elevated p-6 shadow-soft">
                 <p className="text-sm font-semibold text-foreground">Lesson actions</p>
                 <div className="mt-4 space-y-3">
                   <button
                     type="button"
                     onClick={() => markCompleteMutation.mutate()}
                     disabled={lessonQuery.data.completed || markCompleteMutation.isPending}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background disabled:opacity-60 disabled:pointer-events-none"
+                    className={`inline-flex w-full items-center justify-center gap-2 rounded-full px-4 py-2.5 text-xs font-bold transition-all duration-200 ${
+                      lessonQuery.data.completed
+                        ? "bg-teal-600 text-white shadow-soft pointer-events-none opacity-90"
+                        : "bg-primary text-primary-foreground hover:bg-primary-dark hover:shadow-elevated"
+                    }`}
                   >
-                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    <CheckCircle2 className="h-4 w-4" />
                     {lessonQuery.data.completed
-                      ? "Already completed"
+                      ? "Lesson Completed"
                       : markCompleteMutation.isPending
-                        ? "Saving..."
-                        : "Mark complete"}
+                        ? "Saving progress..."
+                        : "Mark as Done"}
                   </button>
+
+                  {nextLesson ? (
+                    <Link
+                      to="/learn/$courseId/$lessonId"
+                      params={{ courseId, lessonId: nextLesson.id }}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-foreground px-4 py-2.5 text-xs font-bold text-background shadow-soft hover:bg-foreground/90 transition-all duration-200 hover:scale-[1.01]"
+                    >
+                      <CirclePlay className="h-4 w-4" />
+                      Next lesson
+                    </Link>
+                  ) : (
+                    <Link
+                      to="/certificates"
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gold px-4 py-2.5 text-xs font-bold text-gold-foreground shadow-gold hover:opacity-95 transition-all duration-200"
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      View certificates
+                    </Link>
+                  )}
 
                   {previousLesson ? (
                     <Link
                       to="/learn/$courseId/$lessonId"
                       params={{ courseId, lessonId: previousLesson.id }}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground"
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground hover:border-foreground/30 hover:bg-muted/10 transition-colors"
                     >
                       <ArrowLeft className="h-3.5 w-3.5" />
                       Previous lesson
                     </Link>
                   ) : null}
 
-                  {nextLesson ? (
-                    <Link
-                      to="/learn/$courseId/$lessonId"
-                      params={{ courseId, lessonId: nextLesson.id }}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-primary/20 bg-primary/8 px-4 py-2 text-xs font-semibold text-primary"
-                    >
-                      <CirclePlay className="h-3.5 w-3.5" />
-                      Next lesson
-                    </Link>
-                  ) : (
-                    <Link
-                      to="/certificates"
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-primary/20 bg-primary/8 px-4 py-2 text-xs font-semibold text-primary"
-                    >
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                      View certificates
-                    </Link>
-                  )}
-
                   <Link
                     to="/courses/$courseId/resources"
                     params={{ courseId }}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground hover:border-foreground/30 hover:bg-muted/10 transition-colors"
                   >
                     <BookOpen className="h-3.5 w-3.5" />
                     Course resources

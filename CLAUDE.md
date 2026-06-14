@@ -395,6 +395,86 @@ From `AGENTS.md`:
 
 ---
 
+## Gamification (Shared Spec)
+
+Gamification is a first-class feature.
+
+Android and Web must use the **same concepts, same constants, same rules**.
+
+A learner with the same activity must see the same XP, level, streak, and badges on both platforms.
+
+### XP Events
+
+| Event              | XP    |
+| ------------------ | ----- |
+| Lesson completed   | 25    |
+| Course completed   | 100   |
+| Exam passed        | 150   |
+| Certificate earned | 200   |
+| Enrollment         | 10    |
+| Daily login        | 5     |
+| 3-day streak bonus | +30   |
+| 7-day streak bonus | +75   |
+
+Streak bonuses awarded once per streak run (flag persisted, reset when streak breaks).
+
+### Levels
+
+Ten tiers. XP thresholds:
+
+```text
+[0, 250, 600, 1100, 1800, 2700, 3900, 5500, 7500, 10000]
+```
+
+Level names (index 1 → 10):
+
+```text
+Novice, Curious, Explorer, Seeker, Thinker, Achiever, Scholar, Expert, Sage, Master
+```
+
+Level computed by binary search against thresholds. Capped at 10.
+
+### Streaks
+
+* Derived from activity dates (lesson completion, cert earned, daily login).
+* Consecutive days = current streak. Missed day = reset to 1 on next activity.
+* Longest streak tracked separately.
+* 3-day and 7-day bonuses awarded once per active streak run.
+
+### Badges
+
+Twelve badges. Same id, label, unlock condition, and rarity on both platforms.
+
+| Id              | Label          | Unlock                    | Rarity    |
+| --------------- | -------------- | ------------------------- | --------- |
+| first_flame     | First Flame    | 1 lesson completed        | Common    |
+| bookworm        | Bookworm       | 10 lessons completed      | Rare      |
+| speed_run       | Speed Run      | 3 lessons in 1 day        | Rare      |
+| sharp_mind      | Sharp Mind     | 1 exam passed             | Epic      |
+| graduate        | Graduate       | 1 certificate earned      | Epic      |
+| on_a_roll       | On A Roll      | 5 lessons in 7 days       | Common    |
+| dedicated       | Dedicated      | 14-day streak             | Epic      |
+| star_learner    | Star Learner   | 30-day streak             | Legendary |
+| scholar         | Scholar        | Reach level 7             | Epic      |
+| master          | Master         | Reach level 10            | Legendary |
+| trophy_hunter   | Trophy Hunter  | 3 certificates earned     | Legendary |
+| inferno         | Inferno        | 60-day streak             | Legendary |
+
+### Storage
+
+* Client-side state on both platforms (Android SharedPreferences, Web derived from API + local cache).
+* Backend has no gamification tables yet — derive from existing activity endpoints (`/enrollments/me`, `/certificates/me`, `/progress/courses/{id}`).
+* If backend gamification is added later, both clients must switch to backend as source of truth at the same time.
+
+### Rules
+
+* Never diverge XP values, level thresholds, level names, or badge defs across platforms.
+* Any change to gamification constants must land in Android **and** Web in the same PR.
+* No platform-only badges. No platform-only levels.
+* Backend exam scoring still authoritative — XP awarded only after backend confirms pass.
+
+---
+
 ## MVP Boundaries
 
 Do not build:
@@ -404,7 +484,6 @@ Do not build:
 * revenue sharing
 * real-time chat
 * AI recommendations
-* gamification
 * discussions
 * notifications
 * CMS

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Gradient header for the gamification dashboard — warm gold tones
+     distinguish it from the green brand header used on Home/Profile. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient
+        android:angle="135"
+        android:startColor="#1B5E3A"
+        android:centerColor="#24734A"
+        android:endColor="#2D8A59" />
+</shape>

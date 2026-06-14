@@ -25,6 +25,7 @@ import retrofit2.Response;
 public class CourseRepository {
 
     private static final int DEFAULT_PAGE_SIZE = 20;
+    private static final int ADVISOR_PAGE_SIZE = 50;
 
     private final ApiService apiService;
 
@@ -118,6 +119,34 @@ public class CourseRepository {
             @Override
             public void onFailure(@NonNull Call<CoursePageResponse<CourseSummary>> call, @NonNull Throwable t) {
                 callback.onError("Catalog network error: " + safeMessage(t));
+            }
+        });
+    }
+
+    public void loadCoursesForAdvisor(CourseCatalogCallback callback) {
+        // The advisor must compare against the published catalog as a whole, not the currently
+        // selected Home filter, otherwise career guidance could miss a stronger course match.
+        apiService.getCourses(null, 0, ADVISOR_PAGE_SIZE).enqueue(new Callback<CoursePageResponse<CourseSummary>>() {
+            @Override
+            public void onResponse(
+                    @NonNull Call<CoursePageResponse<CourseSummary>> call,
+                    @NonNull Response<CoursePageResponse<CourseSummary>> response
+            ) {
+                if (!response.isSuccessful()) {
+                    callback.onError("Advisor failed to load courses. Status: " + response.code());
+                    return;
+                }
+
+                CoursePageResponse<CourseSummary> body = response.body();
+                List<CourseSummary> courses = body != null && body.content != null
+                        ? body.content
+                        : Collections.emptyList();
+                callback.onSuccess(courses);
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<CoursePageResponse<CourseSummary>> call, @NonNull Throwable t) {
+                callback.onError("Advisor network error: " + safeMessage(t));
             }
         });
     }

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Completed/disabled state shows green text on a light mint background -->
+    <item android:color="@color/brand_primary" android:state_enabled="false" />
+    <!-- Default state is white text on forest green -->
+    <item android:color="@color/white" />
+</selector>

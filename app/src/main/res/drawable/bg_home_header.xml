@@ -4,5 +4,5 @@
         android:startColor="@color/brand_primary"
         android:endColor="@color/brand_primary_dark"
         android:angle="135" />
-    <corners android:bottomLeftRadius="28dp" android:bottomRightRadius="28dp" />
+    <corners android:bottomLeftRadius="24dp" android:bottomRightRadius="24dp" />
 </shape>

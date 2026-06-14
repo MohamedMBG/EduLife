@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
 
         NavController navController = navHostFragment.getNavController();
 
-        int[] tabDestinations = {R.id.homeFragment, R.id.coursesFragment, R.id.profileFragment};
+        int[] tabDestinations = {R.id.homeFragment, R.id.coursesFragment, R.id.plannerFragment, R.id.gamificationFragment, R.id.profileFragment};
         NavOptions tabOptions = new NavOptions.Builder()
                 .setLaunchSingleTop(true)
                 .setRestoreState(true)
@@ -79,11 +79,15 @@ public class MainActivity extends AppCompatActivity {
             int id = destination.getId();
             boolean isMainTab = id == R.id.homeFragment
                     || id == R.id.coursesFragment
+                    || id == R.id.plannerFragment
+                    || id == R.id.gamificationFragment
                     || id == R.id.profileFragment;
             bottomNav.setVisibility(isMainTab ? View.VISIBLE : View.GONE);
-            if (id == R.id.homeFragment)       bottomNav.setItemActiveIndex(0);
-            else if (id == R.id.coursesFragment) bottomNav.setItemActiveIndex(1);
-            else if (id == R.id.profileFragment) bottomNav.setItemActiveIndex(2);
+            if (id == R.id.homeFragment)             bottomNav.setItemActiveIndex(0);
+            else if (id == R.id.coursesFragment)      bottomNav.setItemActiveIndex(1);
+            else if (id == R.id.plannerFragment)      bottomNav.setItemActiveIndex(2);
+            else if (id == R.id.gamificationFragment) bottomNav.setItemActiveIndex(3);
+            else if (id == R.id.profileFragment)      bottomNav.setItemActiveIndex(4);
         });
 
         observeSessionExpiry(navController);

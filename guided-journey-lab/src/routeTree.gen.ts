@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TeachRouteImport } from './routes/teach'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PlannerRouteImport } from './routes/planner'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LevelRouteImport } from './routes/level'
 import { Route as GroupsRouteImport } from './routes/groups'
@@ -21,6 +22,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as CertificatesRouteImport } from './routes/certificates'
 import { Route as ApprovalsRouteImport } from './routes/approvals'
+import { Route as AdvisorRouteImport } from './routes/advisor'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TeachIndexRouteImport } from './routes/teach.index'
@@ -53,6 +55,11 @@ const RegisterRoute = RegisterRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlannerRoute = PlannerRouteImport.update({
+  id: '/planner',
+  path: '/planner',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -98,6 +105,11 @@ const CertificatesRoute = CertificatesRouteImport.update({
 const ApprovalsRoute = ApprovalsRouteImport.update({
   id: '/approvals',
   path: '/approvals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdvisorRoute = AdvisorRouteImport.update({
+  id: '/advisor',
+  path: '/advisor',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -197,6 +209,7 @@ const CoursesCourseIdExamResultRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/advisor': typeof AdvisorRoute
   '/approvals': typeof ApprovalsRoute
   '/certificates': typeof CertificatesRouteWithChildren
   '/courses': typeof CoursesRouteWithChildren
@@ -206,6 +219,7 @@ export interface FileRoutesByFullPath {
   '/groups': typeof GroupsRouteWithChildren
   '/level': typeof LevelRoute
   '/login': typeof LoginRoute
+  '/planner': typeof PlannerRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/teach': typeof TeachRouteWithChildren
@@ -229,12 +243,14 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/advisor': typeof AdvisorRoute
   '/approvals': typeof ApprovalsRoute
   '/dashboard': typeof DashboardRoute
   '/explore': typeof ExploreRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/level': typeof LevelRoute
   '/login': typeof LoginRoute
+  '/planner': typeof PlannerRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -257,6 +273,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/advisor': typeof AdvisorRoute
   '/approvals': typeof ApprovalsRoute
   '/certificates': typeof CertificatesRouteWithChildren
   '/courses': typeof CoursesRouteWithChildren
@@ -266,6 +283,7 @@ export interface FileRoutesById {
   '/groups': typeof GroupsRouteWithChildren
   '/level': typeof LevelRoute
   '/login': typeof LoginRoute
+  '/planner': typeof PlannerRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/teach': typeof TeachRouteWithChildren
@@ -291,6 +309,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/advisor'
     | '/approvals'
     | '/certificates'
     | '/courses'
@@ -300,6 +319,7 @@ export interface FileRouteTypes {
     | '/groups'
     | '/level'
     | '/login'
+    | '/planner'
     | '/profile'
     | '/register'
     | '/teach'
@@ -323,12 +343,14 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/advisor'
     | '/approvals'
     | '/dashboard'
     | '/explore'
     | '/forgot-password'
     | '/level'
     | '/login'
+    | '/planner'
     | '/profile'
     | '/register'
     | '/admin/dashboard'
@@ -350,6 +372,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/advisor'
     | '/approvals'
     | '/certificates'
     | '/courses'
@@ -359,6 +382,7 @@ export interface FileRouteTypes {
     | '/groups'
     | '/level'
     | '/login'
+    | '/planner'
     | '/profile'
     | '/register'
     | '/teach'
@@ -383,6 +407,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  AdvisorRoute: typeof AdvisorRoute
   ApprovalsRoute: typeof ApprovalsRoute
   CertificatesRoute: typeof CertificatesRouteWithChildren
   CoursesRoute: typeof CoursesRouteWithChildren
@@ -392,6 +417,7 @@ export interface RootRouteChildren {
   GroupsRoute: typeof GroupsRouteWithChildren
   LevelRoute: typeof LevelRoute
   LoginRoute: typeof LoginRoute
+  PlannerRoute: typeof PlannerRoute
   ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
   TeachRoute: typeof TeachRouteWithChildren
@@ -419,6 +445,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/planner': {
+      id: '/planner'
+      path: '/planner'
+      fullPath: '/planner'
+      preLoaderRoute: typeof PlannerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -482,6 +515,13 @@ declare module '@tanstack/react-router' {
       path: '/approvals'
       fullPath: '/approvals'
       preLoaderRoute: typeof ApprovalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/advisor': {
+      id: '/advisor'
+      path: '/advisor'
+      fullPath: '/advisor'
+      preLoaderRoute: typeof AdvisorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -709,6 +749,7 @@ const TeachRouteWithChildren = TeachRoute._addFileChildren(TeachRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  AdvisorRoute: AdvisorRoute,
   ApprovalsRoute: ApprovalsRoute,
   CertificatesRoute: CertificatesRouteWithChildren,
   CoursesRoute: CoursesRouteWithChildren,
@@ -718,6 +759,7 @@ const rootRouteChildren: RootRouteChildren = {
   GroupsRoute: GroupsRouteWithChildren,
   LevelRoute: LevelRoute,
   LoginRoute: LoginRoute,
+  PlannerRoute: PlannerRoute,
   ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
   TeachRoute: TeachRouteWithChildren,

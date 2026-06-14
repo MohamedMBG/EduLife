@@ -17,6 +17,8 @@ import androidx.navigation.Navigation;
 import com.baghdad.edulife.R;
 import com.baghdad.edulife.features.courses.model.EnrollUiState;
 import com.baghdad.edulife.features.courses.viewmodel.EnrollmentViewModel;
+import com.baghdad.edulife.features.gamification.model.XpEvent;
+import com.baghdad.edulife.features.gamification.ui.XpToastHelper;
 
 import java.util.Locale;
 
@@ -68,6 +70,10 @@ public class EnrollCourseFragment extends Fragment {
                                 ? R.string.enroll_already_enrolled
                                 : R.string.enroll_success,
                         Toast.LENGTH_SHORT).show();
+
+                if (!state.alreadyEnrolled) {
+                    XpToastHelper.award(requireContext(), XpEvent.ENROLLMENT);
+                }
 
                 NavController nav = Navigation.findNavController(view);
                 NavOptions opts = new NavOptions.Builder()

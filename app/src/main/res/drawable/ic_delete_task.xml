@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Trash bin path -->
+    <path
+        android:pathData="M3,6H21M19,6V20C19,21.1 18.1,22 17,22H7C5.9,22 5,21.1 5,20V6M8,6V4C8,2.9 8.9,2 10,2H14C15.1,2 16,2.9 16,4V6"
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#C44040"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- Trash lid lines inside -->
+    <path
+        android:pathData="M10,11V17M14,11V17"
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#C44040"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

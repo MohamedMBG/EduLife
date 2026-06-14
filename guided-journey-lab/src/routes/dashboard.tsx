@@ -1,11 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowRight,
   Award,
   BookOpen,
+  BrainCircuit,
+  CalendarDays,
   CheckCircle2,
   Compass,
   GraduationCap,
@@ -48,6 +50,20 @@ function DashboardPage() {
   // Only learners actually live on /dashboard; every other role is redirected to its own
   // portal below, so we never run the learner queries or render the learner UI for them.
   const isLearner = !isAdmin && !isTeacher && !isGroupAdmin;
+
+  // Load study planner progress from localStorage
+  const isClient = typeof window !== "undefined";
+  const [plannerProgress, setPlannerProgress] = useState({ completed: 0, target: 10 });
+
+  useEffect(() => {
+    if (isClient) {
+      const compVal = localStorage.getItem("edulife_planner_completed_hours");
+      const targetVal = localStorage.getItem("edulife_planner_target_hours");
+      const completed = compVal ? parseFloat(compVal) : 0;
+      const target = targetVal ? parseInt(targetVal, 10) : 10;
+      setPlannerProgress({ completed, target });
+    }
+  }, [isClient]);
 
   // Each role has its own home: admins the admin console, teachers the Teaching Studio,
   // group admins their groups dashboard.
@@ -226,6 +242,59 @@ function DashboardPage() {
                 icon={<GraduationCap className="h-5 w-5 text-amber-500" />}
               />
             </section>
+          )}
+
+          {!isAdmin && (
+            <div className="grid gap-6 md:grid-cols-2">
+              <section className="rounded-3xl border border-border bg-surface-elevated p-6 shadow-soft flex flex-col justify-between">
+                <div className="flex items-start gap-4">
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+                    <BrainCircuit className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Not sure what to take?</p>
+                    <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                      Tell the Career Goal Advisor what you want to achieve. It checks the live
+                      catalog and explains one best course option.
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-6 flex justify-end">
+                  <Link
+                    to="/advisor"
+                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-xs font-semibold text-background cursor-pointer"
+                  >
+                    Open advisor
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              </section>
+
+              <section className="rounded-3xl border border-border bg-surface-elevated p-6 shadow-soft flex flex-col justify-between">
+                <div className="flex items-start gap-4">
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+                    <CalendarDays className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Weekly Study Planner</p>
+                    <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                      {plannerProgress.completed > 0
+                        ? `${plannerProgress.completed.toFixed(1)} of ${plannerProgress.target} hours completed this week.`
+                        : "Set up your weekly study plan, track your study hours and stay focused."}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-6 flex justify-end">
+                  <Link
+                    to="/planner"
+                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-xs font-semibold text-background cursor-pointer"
+                  >
+                    Open planner
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              </section>
+            </div>
           )}
 
           <section className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">

@@ -26,6 +26,8 @@ import androidx.navigation.Navigation;
 
 import com.baghdad.edulife.R;
 import com.baghdad.edulife.features.courses.data.CourseRepository;
+import com.baghdad.edulife.features.gamification.model.XpEvent;
+import com.baghdad.edulife.features.gamification.ui.XpToastHelper;
 import com.baghdad.edulife.features.courses.model.CourseDetail;
 import com.baghdad.edulife.features.courses.model.CourseDetailUiState;
 import com.baghdad.edulife.features.courses.model.CourseSection;
@@ -50,6 +52,7 @@ public class LessonPlayerFragment extends Fragment {
     private String lessonId = "";
     private boolean isPreview;
     private boolean viewerOpened;
+    private boolean xpAwarded;
 
     private LessonPlayerViewModel viewModel;
     private OnBackPressedCallback viewerBackCallback;
@@ -146,9 +149,15 @@ public class LessonPlayerFragment extends Fragment {
         });
 
         viewModel.completed.observe(getViewLifecycleOwner(), completed -> {
-            if (!Boolean.TRUE.equals(completed) || markCompleteButton == null) return;
-            markCompleteButton.setEnabled(false);
-            markCompleteButton.setText(R.string.lesson_player_completed);
+            if (!Boolean.TRUE.equals(completed)) return;
+            if (markCompleteButton != null) {
+                markCompleteButton.setEnabled(false);
+                markCompleteButton.setText(R.string.lesson_player_completed);
+            }
+            if (!isPreview && !courseId.isBlank() && !lessonId.isBlank() && !xpAwarded) {
+                xpAwarded = true;
+                XpToastHelper.award(requireContext(), XpEvent.LESSON_COMPLETE);
+            }
         });
 
         viewModel.completionError.observe(getViewLifecycleOwner(), reason -> {

@@ -17,7 +17,7 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="260dp"
-        android:background="@color/lesson_player_video_bg">
+        android:background="@drawable/bg_lesson_player_gradient">
 
         <!-- Placeholder thumbnail / play area -->
         <LinearLayout
@@ -254,7 +254,7 @@
         android:background="@drawable/bg_lesson_complete_button"
         android:text="@string/lesson_player_mark_complete"
         android:textAllCaps="false"
-        android:textColor="@color/white"
+        android:textColor="@color/color_lesson_complete_text"
         android:textSize="15sp"
         android:textStyle="bold" />
 
