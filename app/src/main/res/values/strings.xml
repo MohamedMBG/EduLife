@@ -495,5 +495,78 @@
     <string name="gamification_event_streak_3">3-day streak bonus</string>
     <string name="gamification_event_streak_7">7-day streak bonus</string>
 
+    <!-- ── Analytics dashboards (Phase B) ───────────────────────────── -->
+    <string name="analytics_retry">Retry</string>
+
+    <!-- Student analytics -->
+    <string name="analytics_student_title">My Learning Stats</string>
+    <string name="analytics_student_subtitle">Your progress across EduLife</string>
+    <string name="analytics_student_eyebrow">ANALYTICS</string>
+    <string name="analytics_student_loading">Loading your stats…</string>
+    <string name="analytics_student_section">Overview</string>
+    <string name="analytics_student_enrollments">Active courses</string>
+    <string name="analytics_student_lessons">Lessons completed</string>
+    <string name="analytics_student_attempts">Exam attempts</string>
+    <string name="analytics_student_passed">Exams passed</string>
+    <string name="analytics_student_certificates">Certificates</string>
+
+    <!-- Profile entry point -->
+    <string name="profile_analytics_row_title">My Learning Stats</string>
+    <string name="profile_analytics_row_subtitle">Progress, exams, and certificates</string>
+
+    <!-- Teacher analytics -->
+    <string name="analytics_teacher_title">Course Performance</string>
+    <string name="analytics_teacher_subtitle">How your courses are doing</string>
+    <string name="analytics_teacher_eyebrow">ANALYTICS</string>
+    <string name="analytics_teacher_loading">Loading course analytics…</string>
+    <string name="analytics_teacher_empty_title">No courses yet</string>
+    <string name="analytics_teacher_empty_body">Create a course to start seeing performance analytics here.</string>
+    <string name="analytics_teacher_cta_title">Course Analytics</string>
+    <string name="analytics_teacher_cta_subtitle">Enrollments, completion, pass rate</string>
+    <string name="analytics_teacher_enrollments">Enrolled</string>
+    <string name="analytics_teacher_completion">Completion</string>
+    <string name="analytics_teacher_passrate">Pass rate</string>
+    <string name="analytics_teacher_certificates">Certificates</string>
+    <string name="analytics_teacher_attempts_label">Exam attempts (passed/total)</string>
+
+    <!-- Platform analytics -->
+    <string name="analytics_platform_title">Platform Analytics</string>
+    <string name="analytics_platform_subtitle">Global activity overview</string>
+    <string name="analytics_platform_eyebrow">ANALYTICS</string>
+    <string name="analytics_platform_loading">Loading platform analytics…</string>
+    <string name="analytics_platform_section_users">Users</string>
+    <string name="analytics_platform_section_content">Content &amp; activity</string>
+    <string name="analytics_platform_learners">Learners</string>
+    <string name="analytics_platform_teachers">Teachers</string>
+    <string name="analytics_platform_group_admins">Group admins</string>
+    <string name="analytics_platform_admins">Admins</string>
+    <string name="analytics_platform_courses_published">Published courses</string>
+    <string name="analytics_platform_courses_draft">Draft courses</string>
+    <string name="analytics_platform_enrollments">Active enrollments</string>
+    <string name="analytics_platform_attempts">Exam attempts</string>
+    <string name="analytics_platform_passed">Exams passed</string>
+    <string name="analytics_platform_certificates">Certificates</string>
+    <string name="analytics_platform_cta_title">Platform Analytics</string>
+    <string name="analytics_platform_cta_subtitle">Users, courses, exams, certificates</string>
+
+    <!-- ── Cohort / progress analytics (Phase C) ───────────────────── -->
+    <string name="analytics_trend_loading">Loading…</string>
+    <string name="analytics_trend_empty">No activity yet</string>
+
+    <!-- Student monthly progress -->
+    <string name="analytics_student_trend_section">Monthly progress (lessons)</string>
+
+    <!-- Funnel stage labels (shared) -->
+    <string name="analytics_funnel_section">Completion funnel</string>
+    <string name="analytics_funnel_enrolled">Enrolled</string>
+    <string name="analytics_funnel_started">Started</string>
+    <string name="analytics_funnel_completed">Completed</string>
+    <string name="analytics_funnel_passed">Passed exam</string>
+    <string name="analytics_funnel_certified">Certified</string>
+
+    <!-- Platform cohort sections -->
+    <string name="analytics_platform_cohorts_section">Enrollments by month</string>
+    <string name="analytics_platform_cert_trend_section">Certificates by month</string>
+
 </resources>
 

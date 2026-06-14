@@ -120,6 +120,12 @@ public class ProfileFragment extends Fragment {
                 Navigation.findNavController(v)
                         .navigate(R.id.action_profileFragment_to_certificatesFragment));
 
+        // Student analytics entry point. Available to every signed-in user; the backend scopes
+        // the summary to the caller, so no role check is needed on the client.
+        view.findViewById(R.id.profileAnalyticsRow).setOnClickListener(v ->
+                Navigation.findNavController(v)
+                        .navigate(R.id.action_profileFragment_to_studentAnalyticsFragment));
+
         String role = sessionStorage.getRole();
         View becomeTeacherRow = view.findViewById(R.id.profileBecomeTeacherRow);
         if ("LEARNER".equalsIgnoreCase(role)) {

@@ -117,6 +117,9 @@
         <action
             android:id="@+id/action_profileFragment_to_teacherRequestFragment"
             app:destination="@id/teacherRequestFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_studentAnalyticsFragment"
+            app:destination="@id/studentAnalyticsFragment" />
     </fragment>
 
     <fragment
@@ -286,6 +289,9 @@
         <action
             android:id="@+id/action_adminDashboardFragment_to_teacherRequestsFragment"
             app:destination="@id/teacherRequestsFragment" />
+        <action
+            android:id="@+id/action_adminDashboardFragment_to_platformAnalyticsFragment"
+            app:destination="@id/platformAnalyticsFragment" />
     </fragment>
 
     <fragment
@@ -307,6 +313,9 @@
         <action
             android:id="@+id/action_teacherDashboardFragment_to_cmsCourseDetailFragment"
             app:destination="@id/cmsCourseDetailFragment" />
+        <action
+            android:id="@+id/action_teacherDashboardFragment_to_teacherAnalyticsFragment"
+            app:destination="@id/teacherAnalyticsFragment" />
     </fragment>
 
     <fragment
@@ -418,5 +427,22 @@
         android:id="@+id/gamificationFragment"
         android:name="com.baghdad.edulife.features.gamification.ui.GamificationFragment"
         android:label="Achievements" />
+
+    <!-- ── Analytics dashboards (Phase B) ───────────────────────────── -->
+
+    <fragment
+        android:id="@+id/studentAnalyticsFragment"
+        android:name="com.baghdad.edulife.features.analytics.ui.StudentAnalyticsFragment"
+        android:label="My Learning Stats" />
+
+    <fragment
+        android:id="@+id/teacherAnalyticsFragment"
+        android:name="com.baghdad.edulife.features.analytics.ui.TeacherAnalyticsFragment"
+        android:label="Course Performance" />
+
+    <fragment
+        android:id="@+id/platformAnalyticsFragment"
+        android:name="com.baghdad.edulife.features.analytics.ui.PlatformAnalyticsFragment"
+        android:label="Platform Analytics" />
 
 </navigation>

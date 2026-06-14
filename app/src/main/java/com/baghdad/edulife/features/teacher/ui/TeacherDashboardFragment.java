@@ -79,6 +79,11 @@ public class TeacherDashboardFragment extends Fragment {
 
         retryButton.setOnClickListener(v -> viewModel.loadCourses());
 
+        // Owned-course analytics. Backend scopes to this teacher's courses; no client-side scoping.
+        view.findViewById(R.id.teacherAnalyticsCta).setOnClickListener(v ->
+                Navigation.findNavController(view)
+                        .navigate(R.id.action_teacherDashboardFragment_to_teacherAnalyticsFragment));
+
         fabButton.setOnClickListener(v -> showCreateCourseDialog());
 
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::render);

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link, useRouter } from "@tanstack/react-router";
 import {
+  BarChart3,
   GraduationCap,
   LayoutDashboard,
   LogOut,
@@ -10,7 +11,7 @@ import {
 import { useAuth } from "../../lib/auth/auth-context";
 
 interface AdminShellProps {
-  active: "dashboard" | "teacher-requests";
+  active: "dashboard" | "analytics" | "teacher-requests";
   children: ReactNode;
 }
 
@@ -27,6 +28,12 @@ const NAV_ITEMS: NavItem[] = [
     label: "Dashboard",
     icon: <LayoutDashboard className="h-4 w-4" />,
     href: "/admin/dashboard",
+  },
+  {
+    key: "analytics",
+    label: "Analytics",
+    icon: <BarChart3 className="h-4 w-4" />,
+    href: "/admin/analytics",
   },
   {
     key: "teacher-requests",

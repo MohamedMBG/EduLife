@@ -106,6 +106,85 @@ export interface AdminMetrics {
   pendingTeacherRequests: number;
 }
 
+export interface StudentAnalyticsSummary {
+  activeEnrollments: number;
+  lessonsCompleted: number;
+  examAttempts: number;
+  examsPassed: number;
+  certificatesEarned: number;
+}
+
+export interface TeacherCourseAnalytics {
+  courseId: string;
+  title: string;
+  status: string;
+  activeEnrollments: number;
+  learnersWithProgress: number;
+  learnersCompleted: number;
+  completionRatePercent: number;
+  examAttempts: number;
+  examsPassed: number;
+  passRatePercent: number;
+  certificatesIssued: number;
+}
+
+export interface TeacherAnalytics {
+  totalCourses: number;
+  courses: TeacherCourseAnalytics[];
+}
+
+export interface PlatformAnalytics {
+  learners: number;
+  teachers: number;
+  groupAdmins: number;
+  admins: number;
+  coursesDraft: number;
+  coursesPublished: number;
+  coursesArchived: number;
+  activeEnrollments: number;
+  totalExamAttempts: number;
+  totalExamsPassed: number;
+  totalCertificates: number;
+}
+
+export interface Funnel {
+  enrolled: number;
+  started: number;
+  completed: number;
+  passed: number;
+  certified: number;
+}
+
+export interface MonthCount {
+  month: string;
+  count: number;
+}
+
+export interface StudentProgressTrend {
+  totalLessons: number;
+  lessonsByMonth: MonthCount[];
+}
+
+export interface TeacherCohortAnalytics {
+  courseCount: number;
+  funnel: Funnel;
+  enrollmentCohorts: MonthCount[];
+}
+
+export interface GroupCohortAnalytics {
+  groupId: string;
+  groupName: string;
+  memberCount: number;
+  courseCount: number;
+  funnel: Funnel;
+}
+
+export interface PlatformCohortAnalytics {
+  funnel: Funnel;
+  enrollmentCohorts: MonthCount[];
+  certificateTrend: MonthCount[];
+}
+
 export type TeacherRequestStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 export interface TeacherRequestSummary {

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Reusable stat tile (label + value) for the platform grid. Included multiple times; each
+     instance resolves its own tileLabel / tileValue via scoped findViewById. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_admin_stat_card"
+    android:orientation="vertical"
+    android:paddingHorizontal="18dp"
+    android:paddingVertical="18dp">
+
+    <TextView
+        android:id="@+id/tileLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/admin_text_secondary"
+        android:textSize="12sp"
+        tools:text="Learners" />
+
+    <TextView
+        android:id="@+id/tileValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:textColor="@color/admin_text_primary"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        tools:text="2 430" />
+</LinearLayout>
