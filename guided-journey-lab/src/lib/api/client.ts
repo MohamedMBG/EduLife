@@ -24,10 +24,17 @@ import type {
   ExamStatus,
   ExamSubmitRequest,
   GroupDetail,
+  GroupCohortAnalytics,
   GroupSummary,
   LessonDetail,
+  PlatformAnalytics,
+  PlatformCohortAnalytics,
   PageResponse,
   Profile,
+  StudentAnalyticsSummary,
+  StudentProgressTrend,
+  TeacherAnalytics,
+  TeacherCohortAnalytics,
   TeacherRequestSummary,
   TeacherRequestStatus,
   UpdateProfileRequest,
@@ -211,6 +218,126 @@ export function getAdminMetrics(getAccessToken: NonNullable<RequestOptions["getA
 
   // This endpoint is intentionally admin-only; callers should gate it by the synced backend role.
   return makeRequest<AdminMetrics>("api/v1/admin/metrics", { getAccessToken });
+}
+
+function emptyFunnel() {
+  return { enrolled: 0, started: 0, completed: 0, passed: 0, certified: 0 };
+}
+
+// ── Analytics endpoints (server-scoped by authenticated user / role) ──────────
+
+export function getStudentAnalyticsSummary(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+) {
+  if (appEnv.demoMode) {
+    return Promise.resolve<StudentAnalyticsSummary>({
+      activeEnrollments: 0,
+      lessonsCompleted: 0,
+      examAttempts: 0,
+      examsPassed: 0,
+      certificatesEarned: 0,
+    });
+  }
+
+  // The backend resolves the student from the Firebase token; no user id is sent from the web app.
+  return makeRequest<StudentAnalyticsSummary>("api/v1/analytics/me/summary", { getAccessToken });
+}
+
+export function getStudentProgressTrend(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+) {
+  if (appEnv.demoMode) {
+    return Promise.resolve<StudentProgressTrend>({ totalLessons: 0, lessonsByMonth: [] });
+  }
+
+  return makeRequest<StudentProgressTrend>("api/v1/analytics/me/progress-trend", {
+    getAccessToken,
+  });
+}
+
+export function getTeacherAnalytics(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+) {
+  if (appEnv.demoMode) {
+    return Promise.resolve<TeacherAnalytics>({ totalCourses: 0, courses: [] });
+  }
+
+  // Teacher ownership is enforced server-side from the resolved user; the client sends no teacherId.
+  return makeRequest<TeacherAnalytics>("api/v1/analytics/teacher/courses", { getAccessToken });
+}
+
+export function getTeacherCohortAnalytics(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+) {
+  if (appEnv.demoMode) {
+    return Promise.resolve<TeacherCohortAnalytics>({
+      courseCount: 0,
+      funnel: emptyFunnel(),
+      enrollmentCohorts: [],
+    });
+  }
+
+  return makeRequest<TeacherCohortAnalytics>("api/v1/analytics/teacher/cohorts", {
+    getAccessToken,
+  });
+}
+
+export function getGroupCohortAnalytics(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  groupId: string,
+) {
+  if (appEnv.demoMode) {
+    return Promise.resolve<GroupCohortAnalytics>({
+      groupId,
+      groupName: "Demo group",
+      memberCount: 0,
+      courseCount: 0,
+      funnel: emptyFunnel(),
+    });
+  }
+
+  // Backend re-checks group ownership, so a foreign groupId still returns 403.
+  return makeRequest<GroupCohortAnalytics>(`api/v1/analytics/group/${groupId}/cohorts`, {
+    getAccessToken,
+  });
+}
+
+export function getPlatformAnalytics(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+) {
+  if (appEnv.demoMode) {
+    return Promise.resolve<PlatformAnalytics>({
+      learners: 0,
+      teachers: 0,
+      groupAdmins: 0,
+      admins: 0,
+      coursesDraft: 0,
+      coursesPublished: 0,
+      coursesArchived: 0,
+      activeEnrollments: 0,
+      totalExamAttempts: 0,
+      totalExamsPassed: 0,
+      totalCertificates: 0,
+    });
+  }
+
+  return makeRequest<PlatformAnalytics>("api/v1/analytics/platform", { getAccessToken });
+}
+
+export function getPlatformCohortAnalytics(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+) {
+  if (appEnv.demoMode) {
+    return Promise.resolve<PlatformCohortAnalytics>({
+      funnel: emptyFunnel(),
+      enrollmentCohorts: [],
+      certificateTrend: [],
+    });
+  }
+
+  return makeRequest<PlatformCohortAnalytics>("api/v1/analytics/platform/cohorts", {
+    getAccessToken,
+  });
 }
 
 export function updateProfile(

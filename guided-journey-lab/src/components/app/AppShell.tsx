@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { Award, BookOpen, BrainCircuit, CalendarDays, CheckCircle2, Compass, GraduationCap, Home, LayoutDashboard, LogOut, Menu, Moon, Shield, Sun, Users, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Award, BarChart3, BookOpen, BrainCircuit, CalendarDays, CheckCircle2, Compass, GraduationCap, Home, LayoutDashboard, LogOut, Menu, Moon, Shield, Sun, Users, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useDarkMode } from "@/hooks/use-dark-mode";
 import { useAuth } from "@/lib/auth/auth-context";
 import { motion } from "framer-motion";
@@ -11,7 +11,7 @@ interface ShellUser {
 }
 
 interface AppShellProps {
-  active: "dashboard" | "advisor" | "courses" | "explore" | "certificates" | "level" | "teach" | "groups" | "approvals" | "planner";
+  active: "dashboard" | "advisor" | "courses" | "explore" | "certificates" | "level" | "teach" | "groups" | "approvals" | "planner" | "analytics";
   user: ShellUser;
   onLogout: () => Promise<void> | void;
   header: ReactNode;
@@ -30,7 +30,7 @@ function getInitials(name: string) {
 interface NavItem {
   key: AppShellProps["active"];
   label: string;
-  to: "/dashboard" | "/advisor" | "/courses" | "/explore" | "/certificates" | "/level" | "/teach" | "/groups" | "/approvals" | "/planner";
+  to: "/dashboard" | "/advisor" | "/courses" | "/explore" | "/certificates" | "/level" | "/teach" | "/groups" | "/approvals" | "/planner" | "/analytics";
   icon: typeof Home;
 }
 
@@ -41,6 +41,7 @@ const LEARNER_NAV: NavItem[] = [
   { key: "dashboard", label: "Home", to: "/dashboard", icon: Home },
   { key: "advisor", label: "Career Advisor", to: "/advisor", icon: BrainCircuit },
   { key: "planner", label: "Study Planner", to: "/planner", icon: CalendarDays },
+  { key: "analytics", label: "Analytics", to: "/analytics", icon: BarChart3 },
   { key: "courses", label: "My Courses", to: "/courses", icon: BookOpen },
   { key: "explore", label: "Explore", to: "/explore", icon: Compass },
   { key: "certificates", label: "Certificates", to: "/certificates", icon: Award },
@@ -49,12 +50,14 @@ const LEARNER_NAV: NavItem[] = [
 
 const TEACHER_NAV: NavItem[] = [
   { key: "teach", label: "Teaching Studio", to: "/teach", icon: LayoutDashboard },
+  { key: "analytics", label: "Analytics", to: "/analytics", icon: BarChart3 },
   { key: "groups", label: "My Cohorts", to: "/groups", icon: Users },
   { key: "explore", label: "Course Catalog", to: "/explore", icon: Compass },
 ];
 
 const GROUP_ADMIN_NAV: NavItem[] = [
   { key: "groups", label: "My Groups", to: "/groups", icon: Users },
+  { key: "analytics", label: "Analytics", to: "/analytics", icon: BarChart3 },
   { key: "approvals", label: "Course Approvals", to: "/approvals", icon: CheckCircle2 },
   { key: "explore", label: "Course Catalog", to: "/explore", icon: Compass },
 ];

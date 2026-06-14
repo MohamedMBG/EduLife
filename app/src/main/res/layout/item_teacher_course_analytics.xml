@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="14dp"
+    android:background="@drawable/bg_teacher_course_card"
+    android:orientation="vertical"
+    android:paddingHorizontal="20dp"
+    android:paddingVertical="20dp">
+
+    <!-- Title + status -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/analyticsCourseTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="@color/teacher_text_primary"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:maxLines="2"
+            android:ellipsize="end"
+            tools:text="Math Bac SM — Algebra Foundations" />
+
+        <TextView
+            android:id="@+id/analyticsCourseStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:textColor="@color/teacher_text_secondary"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.08"
+            tools:text="PUBLISHED" />
+    </LinearLayout>
+
+    <!-- Metric grid row 1: Enrolled | Completion -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:orientation="horizontal"
+        android:weightSum="2">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/analytics_teacher_enrollments"
+                android:textColor="@color/teacher_text_secondary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/analyticsEnrolled"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/teacher_text_primary"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                tools:text="42" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/analytics_teacher_completion"
+                android:textColor="@color/teacher_text_secondary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/analyticsCompletion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/teacher_text_primary"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                tools:text="68.0%" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Metric grid row 2: Pass rate | Certificates -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        android:weightSum="2">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/analytics_teacher_passrate"
+                android:textColor="@color/teacher_text_secondary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/analyticsPassRate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/teacher_text_primary"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                tools:text="80.0%" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/analytics_teacher_certificates"
+                android:textColor="@color/teacher_text_secondary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/analyticsCertificates"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/teacher_text_primary"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                tools:text="17" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Attempts footnote -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/analytics_teacher_attempts_label"
+        android:textColor="@color/teacher_text_secondary"
+        android:textSize="11sp" />
+
+    <TextView
+        android:id="@+id/analyticsAttempts"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:textColor="@color/teacher_text_primary"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        tools:text="20 / 25" />
+</LinearLayout>
