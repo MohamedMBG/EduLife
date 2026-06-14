@@ -71,6 +71,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        // Enables java.time.* (and other API 26+ stdlib) on minSdk 24 via D8 desugaring.
+        isCoreLibraryDesugaringEnabled = true
     }
 }
 
@@ -120,4 +122,7 @@ dependencies {
     // Pinned to 1.1.0-alpha06 because the stable 1.0.0 line drags in the deprecated
     // androidx.security.crypto.MasterKeys helper and lacks the newer MasterKey.Builder API.
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
+
+    // Backports java.time.* (Instant, LocalDate, DateTimeFormatter) for minSdk 24.
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
 }
