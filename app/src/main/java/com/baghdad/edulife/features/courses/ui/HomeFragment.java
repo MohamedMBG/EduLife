@@ -152,7 +152,12 @@ public class HomeFragment extends Fragment {
     private void setupRecyclerView(@NonNull View view) {
         RecyclerView courseRecyclerView = view.findViewById(R.id.courseRecyclerView);
         courseCatalogAdapter = new CourseCatalogAdapter(this::openCourseDetail);
-        courseRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        int spanCount = getResources().getInteger(R.integer.course_grid_span);
+        if (spanCount > 1) {
+            courseRecyclerView.setLayoutManager(new androidx.recyclerview.widget.GridLayoutManager(requireContext(), spanCount));
+        } else {
+            courseRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        }
         courseRecyclerView.setAdapter(courseCatalogAdapter);
     }
 

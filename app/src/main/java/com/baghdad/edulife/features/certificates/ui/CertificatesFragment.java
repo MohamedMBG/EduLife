@@ -63,7 +63,12 @@ public class CertificatesFragment extends Fragment {
 
         RecyclerView recycler = view.findViewById(R.id.certsRecycler);
         adapter = new CertificateAdapter(this::downloadCertificate, this::openCertDetail);
-        recycler.setLayoutManager(new LinearLayoutManager(requireContext()));
+        int spanCount = getResources().getInteger(R.integer.cert_grid_span);
+        if (spanCount > 1) {
+            recycler.setLayoutManager(new androidx.recyclerview.widget.GridLayoutManager(requireContext(), spanCount));
+        } else {
+            recycler.setLayoutManager(new LinearLayoutManager(requireContext()));
+        }
         recycler.setAdapter(adapter);
 
         ProgressBar progress = view.findViewById(R.id.certsProgress);
