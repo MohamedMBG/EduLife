@@ -2,7 +2,7 @@
 <!-- Quick-action card for Study Planner on home — amber-tinted to differentiate from advisor card -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="#18FFE0A0" />
-    <stroke android:width="1dp" android:color="#28FFD080" />
-    <corners android:radius="16dp" />
+    <solid android:color="#22F2994A" /> <!-- Translucent orange -->
+    <stroke android:width="1.5dp" android:color="#55F2994A" /> <!-- Glowing orange border -->
+    <corners android:radius="18dp" />
 </shape>

@@ -139,7 +139,12 @@ public class PlannerFragment extends Fragment {
         taskInput = view.findViewById(R.id.taskInput);
         Button addTaskButton = view.findViewById(R.id.addTaskButton);
 
-        tasksRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        int spanCount = getResources().getInteger(R.integer.planner_grid_span);
+        if (spanCount > 1) {
+            tasksRecyclerView.setLayoutManager(new androidx.recyclerview.widget.GridLayoutManager(requireContext(), spanCount));
+        } else {
+            tasksRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        }
         taskAdapter = new PlannerTaskAdapter(new PlannerTaskAdapter.PlannerTaskListener() {
             @Override
             public void onTaskToggled(String taskId) {
@@ -304,12 +309,12 @@ public class PlannerFragment extends Fragment {
                     requireContext().getColor(R.color.brand_primary)));
             checkBox.setTextColor(requireContext().getColor(R.color.brand_text_primary));
             checkBox.setChecked(focusCourseIds.contains(course.courseId));
-            checkBox.setPadding(dp(8), dp(10), dp(8), dp(10));
+            checkBox.setPadding(dp(8), dp(6), dp(8), dp(6));
             checkBox.setTextSize(14);
             LinearLayout.LayoutParams cbParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            cbParams.setMargins(0, dp(2), 0, dp(2));
+            cbParams.setMargins(0, dp(1), 0, dp(1));
             checkBox.setLayoutParams(cbParams);
 
             // Prevent recursion when rendering

@@ -77,6 +77,10 @@ public class CoursesFragment extends Fragment {
 
         adapter = new EnrolledCourseAdapter(this::handleOpenCourse, this::handleUnenroll);
         recycler = view.findViewById(R.id.coursesRecycler);
+        int spanCount = getResources().getInteger(R.integer.course_grid_span);
+        if (spanCount > 1) {
+            recycler.setLayoutManager(new androidx.recyclerview.widget.GridLayoutManager(requireContext(), spanCount));
+        }
         recycler.setAdapter(adapter);
 
         filterAll = view.findViewById(R.id.filterAll);
