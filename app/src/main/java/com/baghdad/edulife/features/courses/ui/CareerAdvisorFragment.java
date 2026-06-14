@@ -76,6 +76,10 @@ public class CareerAdvisorFragment extends Fragment {
         cardIcon = view.findViewById(R.id.careerAdvisorCardIcon);
 
         adapter = new CareerRecommendationAdapter(this::openRecommendedCourse);
+        int spanCount = getResources().getInteger(R.integer.course_grid_span);
+        if (spanCount > 1) {
+            recommendationRecycler.setLayoutManager(new androidx.recyclerview.widget.GridLayoutManager(requireContext(), spanCount));
+        }
         recommendationRecycler.setAdapter(adapter);
 
         view.findViewById(R.id.careerAdvisorBackButton)
