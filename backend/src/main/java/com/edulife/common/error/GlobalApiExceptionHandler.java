@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 public class GlobalApiExceptionHandler {
@@ -133,6 +135,13 @@ public class GlobalApiExceptionHandler {
         // Map Spring's multipart size violation onto the public 413 contract so clients can
         // surface a stable error code for the avatar upload limit.
         return build(HttpStatus.PAYLOAD_TOO_LARGE, "Uploaded file exceeds the maximum allowed size");
+    }
+
+    @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class})
+    public ResponseEntity<ApiError> handleNotFound(Exception exception) {
+        // Missing controller or static-resource mappings must surface as 404, not the generic 500
+        // handler below; otherwise a stale deploy that lacks a new endpoint looks like a server bug.
+        return build(HttpStatus.NOT_FOUND, "Resource not found");
     }
 
     @ExceptionHandler(Exception.class)
