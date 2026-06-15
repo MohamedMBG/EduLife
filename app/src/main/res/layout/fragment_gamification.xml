@@ -52,6 +52,7 @@
 
             <!-- Level ring with level number -->
             <FrameLayout
+                android:id="@+id/levelRingContainer"
                 android:layout_width="88dp"
                 android:layout_height="88dp"
                 android:layout_marginTop="20dp"
