@@ -101,6 +101,16 @@ public class GamificationFragment extends Fragment {
 
     private boolean isFirstRender = true;
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        // App-resume refetch — clients refetch /gamification/me after enroll,
+        // lesson, exam, certificate, and resume per the backend-source-of-truth rule.
+        if (viewModel != null) {
+            viewModel.refreshState();
+        }
+    }
+
     private void render(GamificationUiState state) {
         if (state == null || state.levelInfo == null) return;
 

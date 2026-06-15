@@ -109,7 +109,6 @@ Do not implement these in the MVP:
 - Payments
 - Revenue split / payouts
 - Advanced analytics
-- Gamification
 - Social feed
 - Microservices
 - Event-driven architecture
@@ -212,6 +211,7 @@ backend/
   exams/
   certificates/
   groups/
+  gamification/
   admin/
 ```
 
@@ -348,7 +348,6 @@ Deferred entities:
 - MentorshipSession
 - AIConversation
 - Recommendation
-- GamificationBadge
 
 Do not implement deferred entities unless explicitly requested or formally scheduled.
 

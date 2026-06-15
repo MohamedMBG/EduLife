@@ -1,6 +1,8 @@
 package com.edulife.profiles.repository;
 
 import com.edulife.profiles.entity.Profile;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -8,4 +10,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ProfileRepository extends JpaRepository<Profile, UUID> {
 
     Optional<Profile> findByUserId(UUID userId);
+
+    List<Profile> findAllByUserIdIn(Collection<UUID> userIds);
 }

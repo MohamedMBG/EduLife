@@ -7,90 +7,125 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import com.baghdad.edulife.features.gamification.data.GamificationPreferences;
-import com.baghdad.edulife.features.gamification.data.XpEngine;
+import com.baghdad.edulife.features.analytics.data.AnalyticsRepository;
+import com.baghdad.edulife.features.analytics.model.StudentAnalyticsSummary;
+import com.baghdad.edulife.features.gamification.data.GamificationRepository;
 import com.baghdad.edulife.features.gamification.model.Badge;
 import com.baghdad.edulife.features.gamification.model.GamificationUiState;
 import com.baghdad.edulife.features.gamification.model.LevelInfo;
-import com.baghdad.edulife.features.gamification.model.XpAwardResult;
-import com.baghdad.edulife.features.gamification.model.XpEvent;
-
-import java.util.List;
 
 /**
- * ViewModel for the gamification feature. Owns the GamificationPreferences and
- * XpEngine instances, exposing a single LiveData<GamificationUiState> for the UI.
+ * Backend-fetched gamification state. All progression numbers come from the
+ * server; this ViewModel only orchestrates the request and exposes LiveData.
  *
- * Uses AndroidViewModel so it can access the application context for SharedPreferences
- * without leaking an Activity reference.
+ * No local XP / level / streak / badge math lives here — that rule is enforced
+ * by the gamification spec in CLAUDE.md so a learner sees identical state on
+ * Android and web.
  */
 public class GamificationViewModel extends AndroidViewModel {
 
-    private final GamificationPreferences prefs;
-    private final XpEngine engine;
+    private final GamificationRepository gamificationRepository;
+    private final AnalyticsRepository analyticsRepository;
 
     private final MutableLiveData<GamificationUiState> _uiState = new MutableLiveData<>();
     public final LiveData<GamificationUiState> uiState = _uiState;
 
-    /** Holds the most recent XP award result for the toast/snackbar to consume */
-    private final MutableLiveData<XpAwardResult> _lastAward = new MutableLiveData<>();
-    public final LiveData<XpAwardResult> lastAward = _lastAward;
+    private final MutableLiveData<String> _errorMessage = new MutableLiveData<>();
+    public final LiveData<String> errorMessage = _errorMessage;
+
+    private final MutableLiveData<Boolean> _isLoading = new MutableLiveData<>(false);
+    public final LiveData<Boolean> isLoading = _isLoading;
+
+    private GamificationUiState lastGamificationState;
+    private StudentAnalyticsSummary lastAnalytics;
 
     public GamificationViewModel(@NonNull Application application) {
         super(application);
-        prefs = new GamificationPreferences(application);
-        engine = new XpEngine(prefs);
-        engine.reconcileBadges();
-        refreshState();
+        this.gamificationRepository = new GamificationRepository();
+        this.analyticsRepository = new AnalyticsRepository();
     }
 
     /**
-     * Awards XP for a given event, updates persisted state, and refreshes the UI LiveData.
-     * Also emits the award result to lastAward so callers can show toast feedback.
+     * Pulls the latest gamification state (and the matching analytics counters
+     * used by the dashboard cards) from the backend. Safe to call on resume,
+     * after enrol/lesson/exam/cert success, or on pull-to-refresh.
      */
-    public XpAwardResult awardXp(XpEvent event) {
-        XpAwardResult result = engine.awardXp(event);
-        _lastAward.postValue(result);
-        refreshState();
-        return result;
-    }
-
-    /** Re-reads all gamification state from preferences and emits a fresh UI state. */
     public void refreshState() {
-        int totalXp = prefs.getTotalXp();
-        LevelInfo levelInfo = engine.computeLevelInfo(totalXp);
-        int streak = prefs.getStreak();
-        List<Badge> badges = engine.getAllBadges();
+        _isLoading.postValue(true);
 
-        GamificationUiState state = new GamificationUiState(
-                totalXp,
-                levelInfo,
-                streak,
-                badges,
-                prefs.getLessonsCompleted(),
-                prefs.getCoursesEnrolled(),
-                prefs.getCertificatesEarned()
+        gamificationRepository.loadMyState(new GamificationRepository.StateCallback() {
+            @Override
+            public void onSuccess(GamificationUiState state) {
+                lastGamificationState = state;
+                emitMerged();
+            }
+
+            @Override
+            public void onError(String message) {
+                _isLoading.postValue(false);
+                _errorMessage.postValue(message);
+            }
+        });
+
+        analyticsRepository.loadStudentSummary(new AnalyticsRepository.StudentCallback() {
+            @Override
+            public void onSuccess(StudentAnalyticsSummary summary) {
+                lastAnalytics = summary;
+                emitMerged();
+            }
+
+            @Override
+            public void onError(String message) {
+                // Counters are a "nice to have" card on the gamification screen.
+                // A failure here must not block the level / streak / badges that
+                // already arrived from the gamification endpoint.
+                emitMerged();
+            }
+        });
+    }
+
+    private void emitMerged() {
+        if (lastGamificationState == null) {
+            return;
+        }
+        int lessons = lastAnalytics != null ? (int) lastAnalytics.lessonsCompleted : 0;
+        int courses = lastAnalytics != null ? (int) lastAnalytics.activeEnrollments : 0;
+        int certs = lastAnalytics != null ? (int) lastAnalytics.certificatesEarned : 0;
+
+        GamificationUiState merged = new GamificationUiState(
+                lastGamificationState.totalXp,
+                lastGamificationState.levelInfo,
+                lastGamificationState.streak,
+                lastGamificationState.badges,
+                lessons,
+                courses,
+                certs
         );
-        _uiState.postValue(state);
+        _uiState.postValue(merged);
+        _isLoading.postValue(false);
     }
 
-    /** Clears the last award so it is not re-consumed on config change. */
-    public void clearLastAward() {
-        _lastAward.setValue(null);
+    /** Convenience accessor for callers that just want the cached level info. */
+    public LevelInfo getCachedLevelInfo() {
+        return lastGamificationState == null ? null : lastGamificationState.levelInfo;
     }
 
-    /** Convenience accessor for other fragments that need quick level info without full UI state. */
-    public LevelInfo getCurrentLevelInfo() {
-        return engine.computeLevelInfo(prefs.getTotalXp());
+    /** Convenience accessor for the cached streak value. */
+    public int getCachedStreak() {
+        return lastGamificationState == null ? 0 : lastGamificationState.streak;
     }
 
-    /** Convenience accessor for current streak count. */
-    public int getCurrentStreak() {
-        return prefs.getStreak();
+    /** Convenience accessor for cached total XP. */
+    public int getCachedTotalXp() {
+        return lastGamificationState == null ? 0 : lastGamificationState.totalXp;
     }
 
-    /** Convenience accessor for total XP. */
-    public int getTotalXp() {
-        return prefs.getTotalXp();
+    /** Returns true once any badges have been earned (server-reported). */
+    public boolean hasAnyBadge() {
+        if (lastGamificationState == null || lastGamificationState.badges == null) return false;
+        for (Badge b : lastGamificationState.badges) {
+            if (b.earned) return true;
+        }
+        return false;
     }
 }

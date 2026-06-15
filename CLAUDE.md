@@ -462,16 +462,43 @@ Twelve badges. Same id, label, unlock condition, and rarity on both platforms.
 
 ### Storage
 
-* Client-side state on both platforms (Android SharedPreferences, Web derived from API + local cache).
-* Backend has no gamification tables yet — derive from existing activity endpoints (`/enrollments/me`, `/certificates/me`, `/progress/courses/{id}`).
-* If backend gamification is added later, both clients must switch to backend as source of truth at the same time.
+* **Backend is the single source of truth.** Tables: `user_gamification_state`,
+  `gamification_xp_events` (append-only with `dedup_key`), `user_badges`.
+* Constants live in `com.edulife.gamification.model` (`XpEventType`,
+  `LevelTable`, `BadgeCatalog`) — defined exactly once.
+* Clients (Android + Web) consume `/api/v1/gamification/*` and never compute
+  XP, level, streak, or badge unlocks locally.
+
+### API
+
+* `GET /api/v1/gamification/me` — current learner's xp/level/streak/badges.
+* `GET /api/v1/gamification/leaderboard?limit=N` — global all-time top N.
+* `GET /api/v1/gamification/badges` — badge definition catalog.
+
+### Emission
+
+Backend services emit XP from authoritative actions; no client trigger is
+accepted:
+
+* `EnrollmentService.enroll` → ENROLLMENT
+* `ProgressService.markLessonComplete` → LESSON_COMPLETED (and COURSE_COMPLETED
+  when 100 %)
+* `ExamService.submitExam` on pass → EXAM_PASSED, then CERTIFICATE_EARNED
+* `DailyLoginXpFilter` → DAILY_LOGIN once per UTC day per learner
+
+Streak bonuses (3-day, 7-day) award once per active streak run inside the
+service.
 
 ### Rules
 
-* Never diverge XP values, level thresholds, level names, or badge defs across platforms.
-* Any change to gamification constants must land in Android **and** Web in the same PR.
+* Never diverge XP values, level thresholds, level names, or badge defs.
+  Change them in `com.edulife.gamification.model` only.
+* Clients are presentation layers; no client may recompute progression.
 * No platform-only badges. No platform-only levels.
-* Backend exam scoring still authoritative — XP awarded only after backend confirms pass.
+* Backend exam scoring stays authoritative — XP is awarded inside the same
+  flow as the pass result.
+* Real-time updates use polling; clients refetch `/me` after enroll, lesson
+  completion, exam pass, certificate issue, and app resume.
 
 ---
 

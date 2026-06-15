@@ -26,8 +26,8 @@ import androidx.navigation.Navigation;
 
 import com.baghdad.edulife.R;
 import com.baghdad.edulife.features.courses.data.CourseRepository;
-import com.baghdad.edulife.features.gamification.model.XpEvent;
-import com.baghdad.edulife.features.gamification.ui.XpToastHelper;
+import com.baghdad.edulife.features.gamification.data.GamificationRepository;
+import com.baghdad.edulife.features.gamification.model.GamificationUiState;
 import com.baghdad.edulife.features.courses.model.CourseDetail;
 import com.baghdad.edulife.features.courses.model.CourseDetailUiState;
 import com.baghdad.edulife.features.courses.model.CourseSection;
@@ -156,7 +156,13 @@ public class LessonPlayerFragment extends Fragment {
             }
             if (!isPreview && !courseId.isBlank() && !lessonId.isBlank() && !xpAwarded) {
                 xpAwarded = true;
-                XpToastHelper.award(requireContext(), XpEvent.LESSON_COMPLETE);
+                // Backend awards lesson XP inside ProgressService.markLessonComplete
+                // (and the course-completion XP if this lesson finished the course).
+                // The client only refetches authoritative state.
+                new GamificationRepository().loadMyState(new GamificationRepository.StateCallback() {
+                    @Override public void onSuccess(GamificationUiState ignored) {}
+                    @Override public void onError(String ignored) {}
+                });
             }
         });
 

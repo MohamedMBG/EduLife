@@ -32,6 +32,9 @@ import com.baghdad.edulife.features.courses.model.ExamResultResponse;
 import com.baghdad.edulife.features.courses.model.ExamStatusResponse;
 import com.baghdad.edulife.features.courses.model.LessonDetail;
 import com.baghdad.edulife.features.courses.model.SubmitExamRequest;
+import com.baghdad.edulife.features.gamification.model.BadgeResponse;
+import com.baghdad.edulife.features.gamification.model.GamificationStateResponse;
+import com.baghdad.edulife.features.gamification.model.LeaderboardEntryResponse;
 import com.baghdad.edulife.features.groupadmin.model.AddMemberRequest;
 import com.baghdad.edulife.features.groupadmin.model.AttachCourseRequest;
 import com.baghdad.edulife.features.groupadmin.model.CreateGroupRequest;
@@ -222,6 +225,19 @@ public interface ApiService {
     /** Global completion funnel + enrollment/certificate trends. ADMIN only (server-side). */
     @GET("analytics/platform/cohorts")
     Call<PlatformCohortAnalytics> getPlatformCohorts();
+
+    // ── Gamification (backend = single source of truth) ────────────────────
+    // Clients consume these endpoints and never compute XP, level, streak, or
+    // badge unlocks locally — see CLAUDE.md gamification spec.
+
+    @GET("gamification/me")
+    Call<GamificationStateResponse> getMyGamificationState();
+
+    @GET("gamification/leaderboard")
+    Call<List<LeaderboardEntryResponse>> getGamificationLeaderboard(@Query("limit") int limit);
+
+    @GET("gamification/badges")
+    Call<List<BadgeResponse>> getGamificationBadges();
 
     // ── Admin endpoints (ADMIN role required) ─────────────────────────────
 

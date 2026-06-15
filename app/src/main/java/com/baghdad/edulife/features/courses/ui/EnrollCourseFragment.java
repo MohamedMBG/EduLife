@@ -17,8 +17,8 @@ import androidx.navigation.Navigation;
 import com.baghdad.edulife.R;
 import com.baghdad.edulife.features.courses.model.EnrollUiState;
 import com.baghdad.edulife.features.courses.viewmodel.EnrollmentViewModel;
-import com.baghdad.edulife.features.gamification.model.XpEvent;
-import com.baghdad.edulife.features.gamification.ui.XpToastHelper;
+import com.baghdad.edulife.features.gamification.data.GamificationRepository;
+import com.baghdad.edulife.features.gamification.model.GamificationUiState;
 
 import java.util.Locale;
 
@@ -72,7 +72,13 @@ public class EnrollCourseFragment extends Fragment {
                         Toast.LENGTH_SHORT).show();
 
                 if (!state.alreadyEnrolled) {
-                    XpToastHelper.award(requireContext(), XpEvent.ENROLLMENT);
+                    // Backend awards the XP inside EnrollmentService; the client only
+                    // refetches the authoritative state so the home / gamification cards
+                    // reflect the new total on the next render.
+                    new GamificationRepository().loadMyState(new GamificationRepository.StateCallback() {
+                        @Override public void onSuccess(GamificationUiState ignored) {}
+                        @Override public void onError(String ignored) {}
+                    });
                 }
 
                 NavController nav = Navigation.findNavController(view);
