@@ -13,8 +13,8 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 
 import com.baghdad.edulife.R;
-import com.baghdad.edulife.features.gamification.model.XpEvent;
-import com.baghdad.edulife.features.gamification.ui.XpToastHelper;
+import com.baghdad.edulife.features.gamification.data.GamificationRepository;
+import com.baghdad.edulife.features.gamification.model.GamificationUiState;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -61,11 +61,13 @@ public class ExamResultFragment extends Fragment {
                 certNumber.setText(getString(R.string.exam_result_cert_number, certificateNumber));
             }
             if (savedInstanceState == null) {
-                XpToastHelper.award(requireContext(), XpEvent.EXAM_PASS);
-                if (certificateNumber != null && !certificateNumber.isBlank()) {
-                    XpToastHelper.award(requireContext(), XpEvent.COURSE_COMPLETE);
-                    XpToastHelper.award(requireContext(), XpEvent.CERTIFICATE_EARNED);
-                }
+                // Backend awards exam-pass, course-completion (when 100%), and
+                // certificate XP inside ExamService.submitExam. The client only
+                // refetches authoritative state so the next screen render is fresh.
+                new GamificationRepository().loadMyState(new GamificationRepository.StateCallback() {
+                    @Override public void onSuccess(GamificationUiState ignored) {}
+                    @Override public void onError(String ignored) {}
+                });
             }
         } else {
             scoreCircle.setBackgroundTintList(

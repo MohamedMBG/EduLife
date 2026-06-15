@@ -6,6 +6,7 @@ import com.edulife.courses.repository.CourseSectionRepository;
 import com.edulife.courses.repository.LessonRepository;
 import com.edulife.enrollments.model.EnrollmentStatus;
 import com.edulife.enrollments.repository.EnrollmentRepository;
+import com.edulife.gamification.service.GamificationService;
 import com.edulife.progress.dto.CourseProgressDto;
 import com.edulife.progress.entity.CourseProgress;
 import com.edulife.progress.entity.LessonProgress;
@@ -35,6 +36,7 @@ public class ProgressService {
     private final CourseSectionRepository sectionRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final UserRepository userRepository;
+    private final GamificationService gamificationService;
 
     public ProgressService(
             LessonProgressRepository lessonProgressRepository,
@@ -42,13 +44,15 @@ public class ProgressService {
             LessonRepository lessonRepository,
             CourseSectionRepository sectionRepository,
             EnrollmentRepository enrollmentRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            GamificationService gamificationService) {
         this.lessonProgressRepository = lessonProgressRepository;
         this.courseProgressRepository = courseProgressRepository;
         this.lessonRepository         = lessonRepository;
         this.sectionRepository        = sectionRepository;
         this.enrollmentRepository     = enrollmentRepository;
         this.userRepository           = userRepository;
+        this.gamificationService      = gamificationService;
     }
 
     @Transactional
@@ -70,6 +74,16 @@ public class ProgressService {
         if (!lessonProgressRepository.existsByUserIdAndLessonId(user.getId(), lessonId)) {
             lessonProgressRepository.save(new LessonProgress(user.getId(), lessonId, courseId));
             syncCourseProgress(user.getId(), courseId);
+
+            gamificationService.onLessonCompleted(user.getId(), lessonId);
+
+            // Course-completion XP fires exactly once per course because the dedup key inside
+            // GamificationService is "course:" + courseId + ":" + userId.
+            long total = lessonRepository.countByCourseId(courseId);
+            long completed = lessonProgressRepository.countByUserIdAndCourseId(user.getId(), courseId);
+            if (total > 0 && completed >= total) {
+                gamificationService.onCourseCompleted(user.getId(), courseId);
+            }
         }
     }
 

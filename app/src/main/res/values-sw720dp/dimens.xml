@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Screen paddings for 10" tablets -->
+    <dimen name="screen_padding_horizontal">120dp</dimen>
+    <dimen name="form_padding_horizontal">180dp</dimen>
+    <dimen name="header_padding_horizontal">120dp</dimen>
+    <dimen name="detail_padding_horizontal">120dp</dimen>
+
+    <!-- Maximum width for forms on large screens -->
+    <dimen name="max_form_width">480dp</dimen>
+
+    <!-- Grid columns for list items -->
+    <integer name="course_grid_span">3</integer>
+    <integer name="cert_grid_span">3</integer>
+    <integer name="planner_grid_span">3</integer>
+</resources>

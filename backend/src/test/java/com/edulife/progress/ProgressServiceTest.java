@@ -6,6 +6,7 @@ import com.edulife.courses.repository.CourseSectionRepository;
 import com.edulife.courses.repository.LessonRepository;
 import com.edulife.enrollments.model.EnrollmentStatus;
 import com.edulife.enrollments.repository.EnrollmentRepository;
+import com.edulife.gamification.service.GamificationService;
 import com.edulife.progress.dto.CourseProgressDto;
 import com.edulife.progress.entity.CourseProgress;
 import com.edulife.progress.entity.LessonProgress;
@@ -54,6 +55,7 @@ class ProgressServiceTest {
     @Mock private CourseSectionRepository sectionRepository;
     @Mock private EnrollmentRepository enrollmentRepository;
     @Mock private UserRepository userRepository;
+    @Mock private GamificationService gamificationService;
 
     @InjectMocks
     private ProgressService progressService;

@@ -9,7 +9,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.core.widget.ImageViewCompat;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -21,10 +20,16 @@ import java.util.List;
 
 /**
  * Adapter for showing badges in a grid on the Gamification dashboard.
+ * Equipped with staggered entrance animations and click listener callbacks.
  */
 public class BadgeAdapter extends RecyclerView.Adapter<BadgeAdapter.ViewHolder> {
 
+    public interface OnBadgeClickListener {
+        void onBadgeClick(Badge badge);
+    }
+
     private final List<Badge> badges = new ArrayList<>();
+    private OnBadgeClickListener clickListener;
 
     public void submitList(List<Badge> newBadges) {
         badges.clear();
@@ -32,6 +37,10 @@ public class BadgeAdapter extends RecyclerView.Adapter<BadgeAdapter.ViewHolder> 
             badges.addAll(newBadges);
         }
         notifyDataSetChanged();
+    }
+
+    public void setOnBadgeClickListener(OnBadgeClickListener listener) {
+        this.clickListener = listener;
     }
 
     @NonNull
@@ -44,7 +53,20 @@ public class BadgeAdapter extends RecyclerView.Adapter<BadgeAdapter.ViewHolder> 
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.bind(badges.get(position));
+        holder.bind(badges.get(position), clickListener);
+
+        // Staggered grid fade & zoom-in entrance animation
+        holder.itemView.setScaleX(0.7f);
+        holder.itemView.setScaleY(0.7f);
+        holder.itemView.setAlpha(0.0f);
+        holder.itemView.animate()
+                .scaleX(1.0f)
+                .scaleY(1.0f)
+                .alpha(1.0f)
+                .setDuration(450)
+                .setStartDelay(position * 60L) // 60ms staggered delay
+                .setInterpolator(new android.view.animation.OvershootInterpolator(1.1f))
+                .start();
     }
 
     @Override
@@ -68,7 +90,7 @@ public class BadgeAdapter extends RecyclerView.Adapter<BadgeAdapter.ViewHolder> 
             badgeLockIcon = itemView.findViewById(R.id.badgeLockIcon);
         }
 
-        void bind(Badge badge) {
+        void bind(Badge badge, OnBadgeClickListener listener) {
             badgeIcon.setImageResource(badge.iconResId);
             badgeName.setText(badge.name);
             badgeDescription.setText(badge.description);
@@ -91,6 +113,12 @@ public class BadgeAdapter extends RecyclerView.Adapter<BadgeAdapter.ViewHolder> 
                 ImageViewCompat.setImageTintList(badgeLockIcon,
                         ColorStateList.valueOf(itemView.getContext().getColor(R.color.brand_text_muted)));
             }
+
+            itemView.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onBadgeClick(badge);
+                }
+            });
         }
     }
 }

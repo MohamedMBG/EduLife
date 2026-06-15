@@ -23,9 +23,8 @@ import com.baghdad.edulife.features.courses.model.CourseSummary;
 import com.baghdad.edulife.features.courses.model.EnrolledCourse;
 import com.baghdad.edulife.features.courses.viewmodel.CourseCatalogViewModel;
 import com.baghdad.edulife.features.courses.viewmodel.EnrollmentViewModel;
-import com.baghdad.edulife.features.gamification.data.GamificationPreferences;
-import com.baghdad.edulife.features.gamification.data.XpEngine;
-import com.baghdad.edulife.features.gamification.model.LevelInfo;
+import com.baghdad.edulife.features.gamification.data.GamificationRepository;
+import com.baghdad.edulife.features.gamification.model.GamificationUiState;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.Collections;
@@ -152,7 +151,12 @@ public class HomeFragment extends Fragment {
     private void setupRecyclerView(@NonNull View view) {
         RecyclerView courseRecyclerView = view.findViewById(R.id.courseRecyclerView);
         courseCatalogAdapter = new CourseCatalogAdapter(this::openCourseDetail);
-        courseRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        int spanCount = getResources().getInteger(R.integer.course_grid_span);
+        if (spanCount > 1) {
+            courseRecyclerView.setLayoutManager(new androidx.recyclerview.widget.GridLayoutManager(requireContext(), spanCount));
+        } else {
+            courseRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        }
         courseRecyclerView.setAdapter(courseCatalogAdapter);
     }
 
@@ -280,26 +284,53 @@ public class HomeFragment extends Fragment {
         return first.substring(0, 1).toUpperCase() + first.substring(1);
     }
 
-    private void bindGamificationCard(@NonNull View view) {
-        GamificationPreferences gamificationPrefs = new GamificationPreferences(requireContext());
-        XpEngine engine = new XpEngine(gamificationPrefs);
-        int totalXp = gamificationPrefs.getTotalXp();
-        int streak = gamificationPrefs.getStreak();
-        LevelInfo levelInfo = engine.computeLevelInfo(totalXp);
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Refetch gamification state on resume so the home card reflects any
+        // backend-side XP/level/streak changes earned while the screen was hidden
+        // (e.g. lesson completion, enrol, exam pass, daily-login bonus).
+        View root = getView();
+        if (root != null) {
+            bindGamificationCard(root);
+        }
+    }
 
+    private void bindGamificationCard(@NonNull View view) {
         TextView subtitle = view.findViewById(R.id.gamificationHomeSubtitle);
         TextView streakChip = view.findViewById(R.id.gamificationHomeStreak);
 
-        if (totalXp <= 0) {
+        // Initial empty render — the backend is the source of truth, so we wait
+        // for /gamification/me to come back before showing any number.
+        subtitle.setText(R.string.gamification_home_card_empty);
+        streakChip.setVisibility(View.GONE);
+
+        new GamificationRepository().loadMyState(new GamificationRepository.StateCallback() {
+            @Override
+            public void onSuccess(GamificationUiState state) {
+                if (!isAdded() || getView() == null) return;
+                requireActivity().runOnUiThread(() -> applyGamificationCard(subtitle, streakChip, state));
+            }
+
+            @Override
+            public void onError(String message) {
+                // Card stays in the empty state — no platform-local fallback is
+                // allowed per the backend-source-of-truth rule.
+            }
+        });
+    }
+
+    private void applyGamificationCard(TextView subtitle, TextView streakChip, GamificationUiState state) {
+        if (state.totalXp <= 0) {
             subtitle.setText(R.string.gamification_home_card_empty);
         } else {
-            subtitle.setText(getString(R.string.gamification_home_card_subtitle,
-                    levelInfo.level, totalXp));
+            int level = state.levelInfo != null ? state.levelInfo.level : 1;
+            subtitle.setText(getString(R.string.gamification_home_card_subtitle, level, state.totalXp));
         }
 
-        if (streak > 0) {
+        if (state.streak > 0) {
             streakChip.setVisibility(View.VISIBLE);
-            streakChip.setText(getString(R.string.gamification_home_card_streak, streak));
+            streakChip.setText(getString(R.string.gamification_home_card_streak, state.streak));
         } else {
             streakChip.setVisibility(View.GONE);
         }

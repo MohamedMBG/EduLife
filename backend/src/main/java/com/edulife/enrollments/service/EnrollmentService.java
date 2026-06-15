@@ -8,6 +8,7 @@ import com.edulife.enrollments.dto.EnrollmentResponse;
 import com.edulife.enrollments.entity.Enrollment;
 import com.edulife.enrollments.model.EnrollmentStatus;
 import com.edulife.enrollments.repository.EnrollmentRepository;
+import com.edulife.gamification.service.GamificationService;
 import com.edulife.progress.service.ProgressService;
 import com.edulife.security.FirebaseAuthentication;
 import com.edulife.users.entity.User;
@@ -32,16 +33,19 @@ public class EnrollmentService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final ProgressService progressService;
+    private final GamificationService gamificationService;
 
     public EnrollmentService(
             EnrollmentRepository enrollmentRepository,
             CourseRepository courseRepository,
             UserRepository userRepository,
-            ProgressService progressService) {
+            ProgressService progressService,
+            GamificationService gamificationService) {
         this.enrollmentRepository = enrollmentRepository;
         this.courseRepository = courseRepository;
         this.userRepository = userRepository;
         this.progressService = progressService;
+        this.gamificationService = gamificationService;
     }
 
     @Transactional
@@ -68,6 +72,11 @@ public class EnrollmentService {
         }
 
         progressService.initializeCourseProgress(user.getId(), courseId);
+
+        // Dedup key is the enrollment id, so a reactivated row will not double-award. XP
+        // emission runs in REQUIRES_NEW so a gamification failure cannot roll back the
+        // enrollment — backend remains the source of truth, but enrollment is authoritative.
+        gamificationService.onEnrollment(user.getId(), enrollment.getId());
 
         return new EnrollmentResponse(
                 enrollment.getId(),

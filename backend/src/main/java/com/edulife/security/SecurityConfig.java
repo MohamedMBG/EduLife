@@ -2,9 +2,14 @@ package com.edulife.security;
 
 import com.edulife.common.error.ApiErrorWriter;
 import com.edulife.config.RateLimitFilter;
+import com.edulife.gamification.security.DailyLoginXpFilter;
+import com.edulife.gamification.service.GamificationService;
 import com.edulife.users.repository.UserRepository;
 import com.google.firebase.auth.FirebaseAuth;
+import java.time.Clock;
 import java.time.Duration;
+import java.util.Optional;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,6 +49,20 @@ public class SecurityConfig {
         return new RateLimitFilter(apiErrorWriter);
     }
 
+    /**
+     * The daily-login filter only registers when the gamification module is present so test
+     * slices that mock out the gamification service do not need to recreate it.
+     */
+    @Bean
+    @ConditionalOnBean(GamificationService.class)
+    public DailyLoginXpFilter dailyLoginXpFilter(
+            UserRepository userRepository,
+            GamificationService gamificationService,
+            Clock gamificationClock
+    ) {
+        return new DailyLoginXpFilter(userRepository, gamificationService, gamificationClock);
+    }
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource(CorsProperties properties) {
         CorsConfiguration config = new CorsConfiguration();
@@ -64,11 +83,12 @@ public class SecurityConfig {
             HttpSecurity http,
             FirebaseTokenFilter firebaseTokenFilter,
             RateLimitFilter rateLimitFilter,
+            Optional<DailyLoginXpFilter> dailyLoginXpFilter,
             ApiErrorWriter apiErrorWriter,
             CorsConfigurationSource corsConfigurationSource
     ) throws Exception {
 
-        return http
+        http
                 // EduLife mobile clients use Bearer tokens only, so CSRF protection for cookie
                 // sessions would add noise without improving the current threat model.
                 .csrf(csrf -> csrf.disable())
@@ -118,7 +138,14 @@ public class SecurityConfig {
                         .accessDeniedHandler((request, response, accessDeniedException) ->
                                 apiErrorWriter.write(response, HttpStatus.FORBIDDEN, "Access denied")
                         )
-                )
-                .build();
+                );
+
+        // Daily-login XP runs after rate limiting so rejected requests do not earn XP. Wiring
+        // is optional so WebMvcTest slices without the gamification module still build.
+        if (dailyLoginXpFilter.isPresent()) {
+            http.addFilterAfter(dailyLoginXpFilter.get(), RateLimitFilter.class);
+        }
+
+        return http.build();
     }
 }

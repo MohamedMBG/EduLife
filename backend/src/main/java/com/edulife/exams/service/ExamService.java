@@ -18,6 +18,7 @@ import com.edulife.exams.repository.ExamAttemptRepository;
 import com.edulife.exams.repository.ExamChoiceRepository;
 import com.edulife.exams.repository.ExamQuestionRepository;
 import com.edulife.exams.repository.ExamRepository;
+import com.edulife.gamification.service.GamificationService;
 import com.edulife.security.FirebaseAuthentication;
 import com.edulife.users.entity.User;
 import com.edulife.users.repository.UserRepository;
@@ -46,6 +47,7 @@ public class ExamService {
     private final CertificateService certificateService;
     private final EnrollmentRepository enrollmentRepository;
     private final UserRepository userRepository;
+    private final GamificationService gamificationService;
 
     public ExamService(
             ExamRepository examRepository,
@@ -54,7 +56,8 @@ public class ExamService {
             ExamAttemptRepository attemptRepository,
             CertificateService certificateService,
             EnrollmentRepository enrollmentRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            GamificationService gamificationService) {
         this.examRepository = examRepository;
         this.questionRepository = questionRepository;
         this.choiceRepository = choiceRepository;
@@ -62,6 +65,7 @@ public class ExamService {
         this.certificateService = certificateService;
         this.enrollmentRepository = enrollmentRepository;
         this.userRepository = userRepository;
+        this.gamificationService = gamificationService;
     }
 
     public ExamDto getExam(UUID courseId) {
@@ -190,9 +194,14 @@ public class ExamService {
 
         String certificateNumber = null;
         if (passed) {
+            // XP for the pass is awarded before the certificate so the dedup key tied to the
+            // exam attempt id is recorded even if certificate generation fails downstream.
+            gamificationService.onExamPassed(user.getId(), savedAttempt.getId());
+
             CertificateDetailDto cert = certificateService.generateCertificateAfterExamPass(
                     user.getId(), courseId, savedAttempt.getId());
             certificateNumber = cert.certificateNumber();
+            gamificationService.onCertificateEarned(user.getId(), cert.id());
         }
 
         long totalFailed = attemptRepository.countByUserIdAndExamIdAndPassedFalse(user.getId(), exam.getId());

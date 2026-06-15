@@ -16,8 +16,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:minHeight="840dp"
-        android:paddingStart="28dp"
-        android:paddingEnd="28dp">
+        android:paddingStart="@dimen/form_padding_horizontal"
+        android:paddingEnd="@dimen/form_padding_horizontal">
 
         <View
             android:id="@+id/topMintBlob"
@@ -49,6 +49,7 @@
             android:layout_marginTop="40dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
+            app:layout_constraintWidth_max="@dimen/max_form_width"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
@@ -132,6 +133,7 @@
             android:textColor="@color/brand_text_primary"
             android:textSize="34sp"
             android:textStyle="bold"
+            app:layout_constraintWidth_max="@dimen/max_form_width"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/stepIndicatorText" />
@@ -140,7 +142,6 @@
             android:id="@+id/infoPanel"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
             android:background="@drawable/bg_auth_info_panel"
             android:gravity="center_vertical"
             android:orientation="horizontal"
@@ -148,9 +149,10 @@
             android:paddingTop="14dp"
             android:paddingEnd="16dp"
             android:paddingBottom="14dp"
+            app:layout_constraintWidth_max="@dimen/max_form_width"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/titleText">
+            app:layout_constraintTop_toBottomOf="@+id/titleText">
 
             <FrameLayout
                 android:layout_width="36dp"
@@ -183,6 +185,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:orientation="vertical"
+            app:layout_constraintWidth_max="@dimen/max_form_width"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/infoPanel">
