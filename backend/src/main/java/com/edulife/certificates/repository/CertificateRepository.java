@@ -11,6 +11,9 @@ public interface CertificateRepository extends JpaRepository<Certificate, UUID> 
     boolean existsByUserIdAndCourseId(UUID userId, UUID courseId);
     boolean existsByUserIdAndExamAttemptId(UUID userId, UUID examAttemptId);
     long countByUserId(UUID userId);
+
+    // Analytics (read-only): certificates issued for one course, used by teacher course analytics.
+    long countByCourseId(UUID courseId);
     Optional<Certificate> findByIdAndUserId(UUID id, UUID userId);
     Optional<Certificate> findByVerificationHash(String verificationHash);
     Optional<Certificate> findByUserIdAndCourseId(UUID userId, UUID courseId);

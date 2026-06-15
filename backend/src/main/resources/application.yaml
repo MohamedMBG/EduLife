@@ -16,6 +16,17 @@ spring:
   flyway:
     enabled: true
 
+  mvc:
+    # Surface unknown routes through the same @ExceptionHandler pipeline so missing endpoints
+    # return the public 404 contract instead of being swallowed into Whitelabel or bubbled as 500.
+    throw-exception-if-no-handler-found: true
+
+  web:
+    resources:
+      # Static-resource fallback would otherwise catch /api/v1/... before NoHandlerFoundException
+      # is raised, masking missing API endpoints. Disabled so unknown API paths reach the handler.
+      add-mappings: false
+
   servlet:
     multipart:
       # Matches the avatar contract (5MB); request size adds a small overhead margin for the

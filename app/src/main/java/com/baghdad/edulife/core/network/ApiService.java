@@ -4,6 +4,11 @@ import com.baghdad.edulife.features.admin.model.AdminPageResponse;
 import com.baghdad.edulife.features.admin.model.AdminRejectRequest;
 import com.baghdad.edulife.features.admin.model.AdminStats;
 import com.baghdad.edulife.features.admin.model.AdminTeacherRequest;
+import com.baghdad.edulife.features.analytics.model.PlatformAnalytics;
+import com.baghdad.edulife.features.analytics.model.PlatformCohortAnalytics;
+import com.baghdad.edulife.features.analytics.model.StudentAnalyticsSummary;
+import com.baghdad.edulife.features.analytics.model.StudentProgressTrend;
+import com.baghdad.edulife.features.analytics.model.TeacherAnalytics;
 import com.baghdad.edulife.features.teacher.model.CmsCourse;
 import com.baghdad.edulife.features.teacher.model.CmsLesson;
 import com.baghdad.edulife.features.teacher.model.CmsSection;
@@ -190,6 +195,33 @@ public interface ApiService {
 
     @GET("teacher-requests/me")
     Call<TeacherRequestResponse> getMyTeacherRequest();
+
+    // ── Analytics (Phase A backend, read-only) ────────────────────────────
+    // Scope is enforced entirely server-side. The client sends no ids/roles; it renders the
+    // response as-is. The Firebase Bearer token + 401 refresh/retry are handled globally by
+    // FirebaseAuthInterceptor / FirebaseTokenAuthenticator, same as every other call here.
+
+    /** Student's own summary. Any authenticated learner; backend scopes to the caller. */
+    @GET("analytics/me/summary")
+    Call<StudentAnalyticsSummary> getMyAnalyticsSummary();
+
+    /** Teacher's owned-course performance. TEACHER/ADMIN only; backend scopes to owned courses. */
+    @GET("analytics/teacher/courses")
+    Call<TeacherAnalytics> getTeacherAnalytics();
+
+    /** Global platform counts. ADMIN only (enforced server-side). */
+    @GET("analytics/platform")
+    Call<PlatformAnalytics> getPlatformAnalytics();
+
+    // ── Cohort / progress analytics (Phase C, read-only, server-scoped) ────
+
+    /** Student's own lessons-completed-per-month trend. Scoped to the caller server-side. */
+    @GET("analytics/me/progress-trend")
+    Call<StudentProgressTrend> getMyProgressTrend();
+
+    /** Global completion funnel + enrollment/certificate trends. ADMIN only (server-side). */
+    @GET("analytics/platform/cohorts")
+    Call<PlatformCohortAnalytics> getPlatformCohorts();
 
     // ── Admin endpoints (ADMIN role required) ─────────────────────────────
 

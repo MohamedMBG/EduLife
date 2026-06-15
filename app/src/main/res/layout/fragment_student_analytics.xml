@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/brand_background"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="40dp">
+
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp"
+            android:paddingTop="32dp"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/analytics_student_eyebrow"
+                android:textColor="@color/brand_primary"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.12" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/analytics_student_title"
+                android:textColor="@color/brand_text_primary"
+                android:textSize="26sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/analytics_student_subtitle"
+                android:textColor="@color/brand_text_secondary"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- Loading / error state card -->
+        <LinearLayout
+            android:id="@+id/studentStateCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/bg_catalog_card"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp"
+            android:paddingVertical="32dp"
+            android:gravity="center"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/studentLoadingIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:indicatorColor="@color/brand_primary"
+                android:indeterminate="true"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/studentStateText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:textColor="@color/brand_text_secondary"
+                android:textSize="14sp"
+                android:gravity="center"
+                tools:text="@string/analytics_student_loading" />
+
+            <TextView
+                android:id="@+id/studentRetryButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:background="@drawable/bg_catalog_filter_button_active"
+                android:paddingHorizontal="24dp"
+                android:paddingVertical="10dp"
+                android:text="@string/analytics_retry"
+                android:textColor="@color/brand_text_on_primary"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- Content -->
+        <LinearLayout
+            android:id="@+id/studentContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp"
+            android:paddingTop="20dp"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:text="@string/analytics_student_section"
+                android:textColor="@color/brand_text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.10" />
+
+            <!-- Stat rows (label + value). Reused include keeps spacing consistent. Inner
+                 label/value ids are resolved per-row via scoped findViewById in the fragment. -->
+            <include layout="@layout/item_analytics_stat_row" android:id="@+id/rowEnrollments"
+                android:layout_width="match_parent" android:layout_height="wrap_content" />
+            <include layout="@layout/item_analytics_stat_row" android:id="@+id/rowLessons"
+                android:layout_width="match_parent" android:layout_height="wrap_content" />
+            <include layout="@layout/item_analytics_stat_row" android:id="@+id/rowAttempts"
+                android:layout_width="match_parent" android:layout_height="wrap_content" />
+            <include layout="@layout/item_analytics_stat_row" android:id="@+id/rowPassed"
+                android:layout_width="match_parent" android:layout_height="wrap_content" />
+            <include layout="@layout/item_analytics_stat_row" android:id="@+id/rowCertificates"
+                android:layout_width="match_parent" android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+        <!-- Phase C: monthly progress trend section. Loads independently of the summary above;
+             rows are inflated at runtime into studentTrendContainer. -->
+        <LinearLayout
+            android:id="@+id/studentTrendSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp"
+            android:paddingTop="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:text="@string/analytics_student_trend_section"
+                android:textColor="@color/brand_text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.10" />
+
+            <TextView
+                android:id="@+id/studentTrendStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:textColor="@color/brand_text_secondary"
+                android:textSize="14sp"
+                tools:text="@string/analytics_trend_loading" />
+
+            <LinearLayout
+                android:id="@+id/studentTrendContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

@@ -22,6 +22,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as CertificatesRouteImport } from './routes/certificates'
 import { Route as ApprovalsRouteImport } from './routes/approvals'
+import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AdvisorRouteImport } from './routes/advisor'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -35,6 +36,7 @@ import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
 import { Route as CertificatesCertificateIdRouteImport } from './routes/certificates.$certificateId'
 import { Route as AdminTeacherRequestsRouteImport } from './routes/admin.teacher-requests'
 import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as CoursesCourseIdIndexRouteImport } from './routes/courses.$courseId.index'
 import { Route as LearnCourseIdLessonIdRouteImport } from './routes/learn.$courseId.$lessonId'
 import { Route as CoursesCourseIdResourcesRouteImport } from './routes/courses.$courseId.resources'
@@ -107,6 +109,11 @@ const ApprovalsRoute = ApprovalsRouteImport.update({
   path: '/approvals',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AnalyticsRoute = AnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdvisorRoute = AdvisorRouteImport.update({
   id: '/advisor',
   path: '/advisor',
@@ -173,6 +180,11 @@ const AdminDashboardRoute = AdminDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AdminRoute,
+} as any)
 const CoursesCourseIdIndexRoute = CoursesCourseIdIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -210,6 +222,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/advisor': typeof AdvisorRoute
+  '/analytics': typeof AnalyticsRoute
   '/approvals': typeof ApprovalsRoute
   '/certificates': typeof CertificatesRouteWithChildren
   '/courses': typeof CoursesRouteWithChildren
@@ -223,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/teach': typeof TeachRouteWithChildren
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/teacher-requests': typeof AdminTeacherRequestsRoute
   '/certificates/$certificateId': typeof CertificatesCertificateIdRoute
@@ -244,6 +258,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/advisor': typeof AdvisorRoute
+  '/analytics': typeof AnalyticsRoute
   '/approvals': typeof ApprovalsRoute
   '/dashboard': typeof DashboardRoute
   '/explore': typeof ExploreRoute
@@ -253,6 +268,7 @@ export interface FileRoutesByTo {
   '/planner': typeof PlannerRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/teacher-requests': typeof AdminTeacherRequestsRoute
   '/certificates/$certificateId': typeof CertificatesCertificateIdRoute
@@ -274,6 +290,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/advisor': typeof AdvisorRoute
+  '/analytics': typeof AnalyticsRoute
   '/approvals': typeof ApprovalsRoute
   '/certificates': typeof CertificatesRouteWithChildren
   '/courses': typeof CoursesRouteWithChildren
@@ -287,6 +304,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/teach': typeof TeachRouteWithChildren
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/teacher-requests': typeof AdminTeacherRequestsRoute
   '/certificates/$certificateId': typeof CertificatesCertificateIdRoute
@@ -310,6 +328,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/advisor'
+    | '/analytics'
     | '/approvals'
     | '/certificates'
     | '/courses'
@@ -323,6 +342,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/register'
     | '/teach'
+    | '/admin/analytics'
     | '/admin/dashboard'
     | '/admin/teacher-requests'
     | '/certificates/$certificateId'
@@ -344,6 +364,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/advisor'
+    | '/analytics'
     | '/approvals'
     | '/dashboard'
     | '/explore'
@@ -353,6 +374,7 @@ export interface FileRouteTypes {
     | '/planner'
     | '/profile'
     | '/register'
+    | '/admin/analytics'
     | '/admin/dashboard'
     | '/admin/teacher-requests'
     | '/certificates/$certificateId'
@@ -373,6 +395,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/advisor'
+    | '/analytics'
     | '/approvals'
     | '/certificates'
     | '/courses'
@@ -386,6 +409,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/register'
     | '/teach'
+    | '/admin/analytics'
     | '/admin/dashboard'
     | '/admin/teacher-requests'
     | '/certificates/$certificateId'
@@ -408,6 +432,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   AdvisorRoute: typeof AdvisorRoute
+  AnalyticsRoute: typeof AnalyticsRoute
   ApprovalsRoute: typeof ApprovalsRoute
   CertificatesRoute: typeof CertificatesRouteWithChildren
   CoursesRoute: typeof CoursesRouteWithChildren
@@ -517,6 +542,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApprovalsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/analytics': {
+      id: '/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/advisor': {
       id: '/advisor'
       path: '/advisor'
@@ -608,6 +640,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDashboardRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/courses/$courseId/': {
       id: '/courses/$courseId/'
       path: '/'
@@ -654,11 +693,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminTeacherRequestsRoute: typeof AdminTeacherRequestsRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   AdminTeacherRequestsRoute: AdminTeacherRequestsRoute,
 }
@@ -750,6 +791,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   AdvisorRoute: AdvisorRoute,
+  AnalyticsRoute: AnalyticsRoute,
   ApprovalsRoute: ApprovalsRoute,
   CertificatesRoute: CertificatesRouteWithChildren,
   CoursesRoute: CoursesRouteWithChildren,

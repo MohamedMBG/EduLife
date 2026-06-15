@@ -71,6 +71,11 @@ public class AdminDashboardFragment extends Fragment {
                 Navigation.findNavController(view).navigate(
                         R.id.action_adminDashboardFragment_to_teacherRequestsFragment));
 
+        // Global analytics overview (ADMIN-only endpoint, enforced server-side).
+        view.findViewById(R.id.adminAnalyticsCta).setOnClickListener(v ->
+                Navigation.findNavController(view).navigate(
+                        R.id.action_adminDashboardFragment_to_platformAnalyticsFragment));
+
         view.findViewById(R.id.adminUsersCta).setOnClickListener(v ->
                 // User management screen is a post-MVP item — acknowledged but not built yet.
                 android.widget.Toast.makeText(requireContext(),
