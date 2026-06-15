@@ -4,98 +4,128 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="22dp"
+    android:layout_marginBottom="16dp"
     android:foreground="?attr/selectableItemBackground"
     android:clickable="true"
     android:focusable="true"
-    app:cardCornerRadius="22dp"
-    app:cardElevation="6dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="3dp"
+    app:cardBackgroundColor="@color/brand_surface"
     app:cardUseCompatPadding="false">
 
-    <FrameLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="240dp">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-        <ImageView
-            android:id="@+id/courseHeroImage"
+        <!-- Top Half: Course Hero Image + Level Badge -->
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="centerCrop"
-            android:src="@drawable/bg_course_hero_beginner"
-            android:contentDescription="@null" />
+            android:layout_height="140dp">
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@drawable/bg_course_scrim" />
+            <ImageView
+                android:id="@+id/courseHeroImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/bg_course_hero_beginner"
+                android:contentDescription="@null" />
 
-        <TextView
-            android:id="@+id/courseLevelText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="top|end"
-            android:layout_marginTop="14dp"
-            android:layout_marginEnd="14dp"
-            android:background="@drawable/bg_course_pill_light"
-            android:fontFamily="sans-serif-medium"
-            android:paddingStart="12dp"
-            android:paddingTop="6dp"
-            android:paddingEnd="12dp"
-            android:paddingBottom="6dp"
-            android:textColor="@color/brand_primary"
-            android:textSize="11sp"
-            android:textStyle="bold"
-            tools:text="Beginner" />
+            <!-- Level badge (positioned at top-left) -->
+            <TextView
+                android:id="@+id/courseLevelText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|start"
+                android:layout_marginTop="12dp"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/bg_course_pill_light"
+                android:fontFamily="sans-serif-medium"
+                android:paddingStart="12dp"
+                android:paddingTop="5dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="5dp"
+                android:textColor="@color/brand_primary"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                tools:text="Beginner" />
+        </FrameLayout>
 
+        <!-- Bottom Half: Details & Meta info on light surface -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
             android:orientation="vertical"
-            android:paddingStart="22dp"
-            android:paddingTop="22dp"
-            android:paddingEnd="28dp"
-            android:paddingBottom="22dp">
+            android:padding="16dp">
 
             <TextView
                 android:id="@+id/courseTitleText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
-                android:fontFamily="sans-serif-black"
+                android:fontFamily="sans-serif-medium"
                 android:maxLines="2"
-                android:shadowColor="#80000000"
-                android:shadowDx="0"
-                android:shadowDy="1"
-                android:shadowRadius="4"
-                android:textColor="#FFFFFFFF"
-                android:textSize="22sp"
+                android:textColor="@color/brand_text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold"
                 tools:text="Math Bac SM - Algebra Foundations" />
 
             <TextView
                 android:id="@+id/courseDescriptionText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:alpha="0.88"
+                android:layout_marginTop="6dp"
                 android:ellipsize="end"
                 android:lineSpacingMultiplier="1.25"
                 android:maxLines="2"
-                android:textColor="#FFFFFFFF"
-                android:textSize="12sp"
+                android:textColor="@color/brand_text_secondary"
+                android:textSize="13sp"
                 tools:text="A structured algebra refresher for Moroccan Bac Sciences Math students." />
+
+            <!-- Progress row — visible only for enrolled courses -->
+            <LinearLayout
+                android:id="@+id/courseProgressLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <ProgressBar
+                    android:id="@+id/courseProgressBar"
+                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_width="0dp"
+                    android:layout_height="6dp"
+                    android:layout_weight="1"
+                    android:progressDrawable="@drawable/bg_planner_progress_bar"
+                    android:max="100"
+                    android:progress="0" />
+
+                <TextView
+                    android:id="@+id/courseProgressText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:textColor="@color/brand_primary"
+                    android:textStyle="bold"
+                    android:textSize="12sp"
+                    tools:text="45%" />
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
+                android:layout_marginTop="16dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
+                <!-- Rating badge -->
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/bg_course_pill_dark"
+                    android:background="@drawable/bg_badge_dialog_pill"
+                    android:backgroundTint="@color/brand_surface_muted"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingStart="10dp"
@@ -116,8 +146,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:fontFamily="sans-serif-medium"
-                        android:textColor="#FFFFFFFF"
+                        android:textColor="@color/brand_text_primary"
                         android:textSize="12sp"
+                        android:textStyle="bold"
                         tools:text="4.8" />
 
                     <TextView
@@ -125,75 +156,47 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="6dp"
-                        android:alpha="0.75"
-                        android:textColor="#FFFFFFFF"
+                        android:textColor="@color/brand_text_secondary"
                         android:textSize="11sp"
                         tools:text="(124)" />
                 </LinearLayout>
 
+                <!-- Language label -->
                 <TextView
                     android:id="@+id/courseLanguageText"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_marginStart="8dp"
-                    android:alpha="0.85"
-                    android:background="@drawable/bg_course_pill_dark"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:paddingStart="10dp"
-                    android:paddingTop="5dp"
-                    android:paddingEnd="10dp"
-                    android:paddingBottom="5dp"
-                    android:textColor="#FFFFFFFF"
-                    android:textSize="11sp"
+                    android:textColor="@color/brand_text_secondary"
+                    android:textSize="12sp"
+                    android:gravity="center_vertical"
+                    android:drawableStart="@drawable/ic_book_open"
+                    android:drawablePadding="6dp"
+                    android:drawableTint="@color/brand_text_secondary"
                     tools:text="Language: French" />
 
+                <!-- Action Button -->
                 <TextView
                     android:id="@+id/openCourseButton"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="36dp"
                     android:layout_marginStart="8dp"
-                    android:background="@drawable/bg_course_cta_button"
+                    android:background="@drawable/bg_enroll_cta_button"
+                    app:backgroundTint="@null"
                     android:fontFamily="sans-serif-medium"
-                    android:paddingStart="14dp"
-                    android:paddingTop="8dp"
-                    android:paddingEnd="14dp"
-                    android:paddingBottom="8dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:gravity="center"
                     android:text="@string/catalog_open_course"
                     android:textAllCaps="false"
-                    android:textColor="@color/brand_primary"
+                    android:textColor="@color/white"
                     android:textSize="12sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- Progress row — visible only for enrolled courses -->
-            <LinearLayout
-                android:id="@+id/courseProgressLayout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:visibility="gone">
-
-                <ProgressBar
-                    android:id="@+id/courseProgressBar"
-                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-                    android:layout_width="0dp"
-                    android:layout_height="4dp"
-                    android:layout_weight="1"
-                    android:max="100"
-                    android:progress="0" />
-
-                <TextView
-                    android:id="@+id/courseProgressText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:textColor="#CCFFFFFF"
-                    android:textSize="11sp" />
-            </LinearLayout>
         </LinearLayout>
-    </FrameLayout>
+    </LinearLayout>
 </com.google.android.material.card.MaterialCardView>
