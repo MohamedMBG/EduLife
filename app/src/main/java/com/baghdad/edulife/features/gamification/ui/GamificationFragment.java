@@ -91,6 +91,7 @@ public class GamificationFragment extends Fragment {
         badgeAdapter = new BadgeAdapter();
         badgesRecyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 4));
         badgesRecyclerView.setAdapter(badgeAdapter);
+        badgeAdapter.setOnBadgeClickListener(this::showBadgeDetailDialog);
 
         renderLevelList();
 
@@ -98,13 +99,34 @@ public class GamificationFragment extends Fragment {
         viewModel.refreshState();
     }
 
+    private boolean isFirstRender = true;
+
     private void render(GamificationUiState state) {
         if (state == null || state.levelInfo == null) return;
 
         levelNumberText.setText(String.valueOf(state.levelInfo.level));
         levelTitleText.setText(state.levelInfo.title);
-        totalXpText.setText(getString(R.string.gamification_total_xp, state.totalXp));
-        xpProgressBar.setProgress(Math.max(0, Math.min(100, state.levelInfo.progressPercent)));
+
+        if (isFirstRender) {
+            isFirstRender = false;
+            animateXpText(totalXpText, state.totalXp);
+            animateProgressBar(xpProgressBar, Math.max(0, Math.min(100, state.levelInfo.progressPercent)));
+            animateNumber(statLessonsCount, state.lessonsCompleted);
+            animateNumber(statCoursesCount, state.coursesEnrolled);
+            animateNumber(statCertsCount, state.certificatesEarned);
+
+            View levelRing = getView() != null ? getView().findViewById(R.id.levelRingContainer) : null;
+            if (levelRing != null) {
+                animateViewScale(levelRing);
+            }
+            animateViewPop(streakCountText);
+        } else {
+            totalXpText.setText(getString(R.string.gamification_total_xp, state.totalXp));
+            xpProgressBar.setProgress(Math.max(0, Math.min(100, state.levelInfo.progressPercent)));
+            statLessonsCount.setText(String.valueOf(state.lessonsCompleted));
+            statCoursesCount.setText(String.valueOf(state.coursesEnrolled));
+            statCertsCount.setText(String.valueOf(state.certificatesEarned));
+        }
 
         if (state.levelInfo.xpForNextLevel == Integer.MAX_VALUE) {
             xpProgressLabel.setText(R.string.gamification_xp_max_level);
@@ -121,10 +143,6 @@ public class GamificationFragment extends Fragment {
         } else {
             streakDescription.setText(getString(R.string.gamification_streak_active, state.streak));
         }
-
-        statLessonsCount.setText(String.valueOf(state.lessonsCompleted));
-        statCoursesCount.setText(String.valueOf(state.coursesEnrolled));
-        statCertsCount.setText(String.valueOf(state.certificatesEarned));
 
         int earned = 0;
         for (Badge b : state.badges) {
@@ -210,5 +228,126 @@ public class GamificationFragment extends Fragment {
 
     private int dp(int value) {
         return Math.round(value * getResources().getDisplayMetrics().density);
+    }
+
+    private void animateNumber(TextView textView, int endValue) {
+        if (endValue <= 0) {
+            textView.setText("0");
+            return;
+        }
+        android.animation.ValueAnimator animator = android.animation.ValueAnimator.ofInt(0, endValue);
+        animator.setDuration(1200);
+        animator.addUpdateListener(animation -> textView.setText(animation.getAnimatedValue().toString()));
+        animator.setInterpolator(new android.view.animation.DecelerateInterpolator());
+        animator.start();
+    }
+
+    private void animateXpText(TextView textView, int endXp) {
+        if (endXp <= 0) {
+            textView.setText(getString(R.string.gamification_total_xp, 0));
+            return;
+        }
+        android.animation.ValueAnimator animator = android.animation.ValueAnimator.ofInt(0, endXp);
+        animator.setDuration(1200);
+        animator.addUpdateListener(animation -> {
+            int currentXp = (int) animation.getAnimatedValue();
+            textView.setText(getString(R.string.gamification_total_xp, currentXp));
+        });
+        animator.setInterpolator(new android.view.animation.DecelerateInterpolator());
+        animator.start();
+    }
+
+    private void animateProgressBar(ProgressBar progressBar, int progress) {
+        android.animation.ObjectAnimator animator = android.animation.ObjectAnimator.ofInt(progressBar, "progress", 0, progress);
+        animator.setDuration(1200);
+        animator.setInterpolator(new android.view.animation.DecelerateInterpolator());
+        animator.start();
+    }
+
+    private void animateViewScale(View view) {
+        view.setScaleX(0f);
+        view.setScaleY(0f);
+        view.animate()
+                .scaleX(1f)
+                .scaleY(1f)
+                .setDuration(800)
+                .setStartDelay(200)
+                .setInterpolator(new android.view.animation.OvershootInterpolator(1.3f));
+    }
+
+    private void animateViewPop(View view) {
+        view.setScaleX(0.5f);
+        view.setScaleY(0.5f);
+        view.animate()
+                .scaleX(1f)
+                .scaleY(1f)
+                .setDuration(800)
+                .setInterpolator(new android.view.animation.OvershootInterpolator(2.0f));
+    }
+
+    private void showBadgeDetailDialog(com.baghdad.edulife.features.gamification.model.Badge badge) {
+        if (getContext() == null) return;
+
+        android.app.Dialog dialog = new android.app.Dialog(requireContext());
+        dialog.setContentView(R.layout.dialog_badge_detail);
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        android.widget.ImageView dialogBadgeIcon = dialog.findViewById(R.id.dialogBadgeIcon);
+        TextView dialogBadgeName = dialog.findViewById(R.id.dialogBadgeName);
+        TextView dialogBadgeRarity = dialog.findViewById(R.id.dialogBadgeRarity);
+        TextView dialogBadgeDesc = dialog.findViewById(R.id.dialogBadgeDesc);
+        TextView dialogBadgeStatus = dialog.findViewById(R.id.dialogBadgeStatus);
+        View dialogCloseButton = dialog.findViewById(R.id.dialogCloseButton);
+
+        dialogBadgeIcon.setImageResource(badge.iconResId);
+        dialogBadgeName.setText(badge.name);
+        dialogBadgeDesc.setText(badge.description);
+
+        String rarityLabel = badge.rarity.name().substring(0, 1) + badge.rarity.name().substring(1).toLowerCase();
+        dialogBadgeRarity.setText(rarityLabel);
+
+        int rarityTextColor;
+        int rarityBgColor;
+        switch (badge.rarity) {
+            case COMMON:
+                rarityTextColor = requireContext().getColor(R.color.brand_primary);
+                rarityBgColor = requireContext().getColor(R.color.brand_primary_surface);
+                break;
+            case RARE:
+                rarityTextColor = requireContext().getColor(R.color.admin_accent);
+                rarityBgColor = requireContext().getColor(R.color.admin_accent_surface);
+                break;
+            case EPIC:
+                rarityTextColor = 0xFF9B51E0; // Purple
+                rarityBgColor = 0xFFF2E8FC;
+                break;
+            case LEGENDARY:
+                rarityTextColor = requireContext().getColor(R.color.gamification_xp_gold);
+                rarityBgColor = 0xFFFFF8E7;
+                break;
+            default:
+                rarityTextColor = requireContext().getColor(R.color.brand_text_secondary);
+                rarityBgColor = requireContext().getColor(R.color.brand_surface_muted);
+        }
+        dialogBadgeRarity.setTextColor(rarityTextColor);
+        dialogBadgeRarity.setBackgroundTintList(android.content.res.ColorStateList.valueOf(rarityBgColor));
+
+        if (badge.earned) {
+            dialogBadgeStatus.setText("Earned 🎉");
+            dialogBadgeStatus.setTextColor(requireContext().getColor(R.color.brand_primary));
+            dialogBadgeStatus.setBackgroundTintList(android.content.res.ColorStateList.valueOf(requireContext().getColor(R.color.brand_primary_surface)));
+            dialogBadgeIcon.setAlpha(1.0f);
+        } else {
+            dialogBadgeStatus.setText("Locked 🔒");
+            dialogBadgeStatus.setTextColor(requireContext().getColor(R.color.brand_text_secondary));
+            dialogBadgeStatus.setBackgroundTintList(android.content.res.ColorStateList.valueOf(requireContext().getColor(R.color.brand_surface_muted)));
+            dialogBadgeIcon.setAlpha(0.35f);
+        }
+
+        dialogCloseButton.setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
     }
 }
