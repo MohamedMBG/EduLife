@@ -92,8 +92,8 @@
 
     <fragment
         android:id="@+id/careerAdvisorFragment"
-        android:name="com.baghdad.edulife.features.courses.ui.CareerAdvisorFragment"
-        android:label="Career Advisor">
+        android:name="com.baghdad.edulife.features.advisor.ui.AdvisorFragment"
+        android:label="AI Advisor">
         <action
             android:id="@+id/action_careerAdvisorFragment_to_courseDetailFragment"
             app:destination="@id/courseDetailFragment" />

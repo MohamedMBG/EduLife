@@ -23,6 +23,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
  *  - POST /api/v1/auth/sync                              30 calls / minute  per principal
  *  - POST /api/v1/enrollments                            20 calls / hour    per principal
  *  - POST /api/v1/courses/{courseId}/exam/submit          5 calls / hour    per principal
+ *  - POST /api/v1/advisor/recommend                      10 calls / hour    per principal
  *  - GET  /api/v1/certificates/verify/{hash}             30 calls / minute  per client IP
  *
  * The certificate verify endpoint is public (no Firebase auth), so a per-IP bucket prevents
@@ -53,6 +54,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
             Bandwidth.classic(20, Refill.intervally(20, Duration.ofHours(1)));
     private static final Bandwidth EXAM_LIMIT =
             Bandwidth.classic(5, Refill.intervally(5, Duration.ofHours(1)));
+    private static final Bandwidth ADVISOR_LIMIT =
+            Bandwidth.classic(10, Refill.intervally(10, Duration.ofHours(1)));
     // Cert verify is the only public endpoint behind this filter; per-IP cap defends against
     // hash enumeration without blocking legitimate employer/institution checks.
     private static final Bandwidth CERT_VERIFY_LIMIT =
@@ -119,6 +122,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
         if (EXAM_SUBMIT_PATTERN.matcher(path).matches()) {
             return buckets.computeIfAbsent("exam:" + principal,
                     k -> Bucket.builder().addLimit(EXAM_LIMIT).build());
+        }
+
+        if ("/api/v1/advisor/recommend".equals(path)) {
+            return buckets.computeIfAbsent("advisor:" + principal,
+                    k -> Bucket.builder().addLimit(ADVISOR_LIMIT).build());
         }
 
         return null;

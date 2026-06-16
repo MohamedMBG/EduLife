@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/brand_background"
+    android:fitsSystemWindows="false"
+    android:orientation="vertical"
+    tools:context=".features.advisor.ui.AdvisorFragment">
+
+    <!-- Header -->
+    <LinearLayout
+        android:id="@+id/advisorHeaderLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_home_header"
+        android:orientation="vertical"
+        android:paddingStart="24dp"
+        android:paddingTop="36dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="28dp">
+
+        <ImageView
+            android:id="@+id/advisorBackButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_back_button"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
+            android:padding="11dp"
+            android:src="@drawable/ic_back_white"
+            android:contentDescription="@string/career_advisor_back" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/career_advisor_title"
+            android:textColor="@color/white"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:lineSpacingMultiplier="1.25"
+            android:text="@string/career_advisor_subtitle"
+            android:textColor="@color/brand_text_on_primary_muted"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingStart="@dimen/screen_padding_horizontal"
+        android:paddingTop="20dp"
+        android:paddingEnd="@dimen/screen_padding_horizontal"
+        android:paddingBottom="40dp"
+        android:fillViewport="true">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintWidth_max="@dimen/max_form_width"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent">
+
+                <!-- Input card -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:background="@drawable/bg_advisor_input_card"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Describe your goal"
+                        android:textColor="@color/brand_text_primary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Tell us what career path, subjects, or skills you want to master."
+                        android:textColor="@color/brand_text_secondary"
+                        android:textSize="12sp" />
+
+                    <EditText
+                        android:id="@+id/advisorGoalInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="110dp"
+                        android:layout_marginTop="16dp"
+                        android:background="@drawable/bg_advisor_input_field"
+                        android:gravity="top|start"
+                        android:hint="@string/career_advisor_goal_hint"
+                        android:imeOptions="actionDone"
+                        android:inputType="textMultiLine|textCapSentences"
+                        android:maxLines="4"
+                        android:paddingStart="16dp"
+                        android:paddingTop="14dp"
+                        android:paddingEnd="16dp"
+                        android:paddingBottom="14dp"
+                        android:textColor="@color/brand_text_primary"
+                        android:textColorHint="@color/brand_text_muted"
+                        android:textSize="14sp" />
+
+                    <Button
+                        android:id="@+id/advisorAnalyzeButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:layout_marginTop="14dp"
+                        android:background="@drawable/bg_enroll_cta_button"
+                        android:text="@string/career_advisor_analyze"
+                        android:textAllCaps="false"
+                        android:textColor="@color/white"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        app:backgroundTint="@null" />
+                </LinearLayout>
+
+                <!-- Loading card -->
+                <LinearLayout
+                    android:id="@+id/advisorLoadingCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:background="@drawable/bg_advisor_guidance_card"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="24dp"
+                    android:visibility="gone">
+
+                    <ProgressBar
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:indeterminateTint="@color/brand_primary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:text="Consulting AI advisor..."
+                        android:textColor="@color/brand_text_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:gravity="center"
+                        android:text="Matching your goal against the current course catalog..."
+                        android:textColor="@color/brand_text_secondary"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <!-- User goal echo -->
+                <TextView
+                    android:id="@+id/advisorGoalEcho"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:background="@drawable/bg_advisor_bubble"
+                    android:drawableStart="@drawable/ic_login_user"
+                    android:drawablePadding="12dp"
+                    android:drawableTint="@color/brand_text_secondary"
+                    android:lineSpacingMultiplier="1.25"
+                    android:paddingStart="16dp"
+                    android:paddingTop="14dp"
+                    android:paddingEnd="16dp"
+                    android:paddingBottom="14dp"
+                    android:textColor="@color/brand_text_primary"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    tools:text="You: I want to become a software developer." />
+
+                <!-- Advisor response card -->
+                <LinearLayout
+                    android:id="@+id/advisorResponseCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:background="@drawable/bg_advisor_guidance_card"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:id="@+id/advisorCardIcon"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_focus_sparkle"
+                            app:tint="@color/brand_text_secondary" />
+
+                        <TextView
+                            android:id="@+id/advisorCardTitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:text="AI Career Guide"
+                            android:textColor="@color/brand_text_primary"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/advisorAssistantMessage"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:lineSpacingMultiplier="1.35"
+                        android:text="@string/career_advisor_initial_message"
+                        android:textColor="@color/brand_text_body"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <!-- Empty state -->
+                <TextView
+                    android:id="@+id/advisorEmptyState"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:background="@drawable/bg_advisor_guidance_card"
+                    android:gravity="center"
+                    android:paddingStart="20dp"
+                    android:paddingTop="24dp"
+                    android:paddingEnd="20dp"
+                    android:paddingBottom="24dp"
+                    android:text="No match — try a clearer goal."
+                    android:textColor="@color/brand_text_secondary"
+                    android:textSize="14sp"
+                    android:visibility="gone" />
+
+                <!-- Error card with retry -->
+                <LinearLayout
+                    android:id="@+id/advisorErrorCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:background="@drawable/bg_login_error_card"
+                    android:orientation="vertical"
+                    android:paddingStart="18dp"
+                    android:paddingTop="16dp"
+                    android:paddingEnd="18dp"
+                    android:paddingBottom="16dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/advisorErrorText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:lineSpacingMultiplier="1.25"
+                        android:textColor="@color/brand_error"
+                        android:textSize="14sp"
+                        tools:text="Network error. Check your connection." />
+
+                    <Button
+                        android:id="@+id/advisorRetryButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_enroll_cta_button"
+                        android:text="Retry"
+                        android:textAllCaps="false"
+                        android:textColor="@color/white"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:visibility="gone"
+                        app:backgroundTint="@null" />
+                </LinearLayout>
+
+                <!-- Results title -->
+                <TextView
+                    android:id="@+id/advisorResultsTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
+                    android:text="@string/career_advisor_results_title"
+                    android:textColor="@color/brand_text_primary"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+
+                <!-- Recommendations list -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/advisorRecycler"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    android:overScrollMode="never"
+                    android:visibility="gone"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+            </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>
