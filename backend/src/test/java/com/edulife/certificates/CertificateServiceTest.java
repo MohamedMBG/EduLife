@@ -8,11 +8,14 @@ import com.edulife.certificates.exception.CertificateNotDownloadableException;
 import com.edulife.certificates.exception.CertificateNotFoundException;
 import com.edulife.certificates.repository.CertificateRepository;
 import com.edulife.certificates.service.CertificatePdfService;
+import com.edulife.certificates.service.CertificatePdfPayload;
 import com.edulife.certificates.service.CertificateService;
 import com.edulife.courses.entity.Course;
 import com.edulife.courses.repository.CourseRepository;
 import com.edulife.profiles.entity.Profile;
 import com.edulife.profiles.repository.ProfileRepository;
+import com.edulife.users.entity.User;
+import com.edulife.users.repository.UserRepository;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Optional;
@@ -45,6 +48,7 @@ class CertificateServiceTest {
     @Mock private CertificateRepository certificateRepository;
     @Mock private ProfileRepository profileRepository;
     @Mock private CourseRepository courseRepository;
+    @Mock private UserRepository userRepository;
     @Mock private CertificatePdfService pdfService;
 
     @TempDir
@@ -73,7 +77,7 @@ class CertificateServiceTest {
         given(profileRepository.findByUserId(LEARNER_ID)).willReturn(Optional.of(learnerProfile));
         given(courseRepository.findById(COURSE_ID)).willReturn(Optional.of(course));
         given(profileRepository.findByUserId(TEACHER_ID)).willReturn(Optional.of(teacherProfile));
-        given(pdfService.generatePdf(any(Certificate.class))).willReturn(new byte[]{37, 80, 68, 70});
+        given(pdfService.generatePdf(any(CertificatePdfPayload.class))).willReturn(new byte[]{37, 80, 68, 70});
         given(certificateRepository.save(any(Certificate.class))).willAnswer(invocation -> savedCertificate(invocation.getArgument(0)));
 
         CertificateDetailDto dto = service.generateCertificateAfterExamPass(LEARNER_ID, COURSE_ID, ATTEMPT_ID);
@@ -111,7 +115,7 @@ class CertificateServiceTest {
         CertificateService service = service();
         byte[] pdf = new byte[]{37, 80, 68, 70, 1, 2, 3};
         given(certificateRepository.findById(CERT_ID)).willReturn(Optional.of(ownedCertificate(LEARNER_ID)));
-        given(pdfService.generatePdf(any(Certificate.class))).willReturn(pdf);
+        given(pdfService.generatePdf(any(CertificatePdfPayload.class))).willReturn(pdf);
 
         byte[] result = service.getCertificatePdfForDownload(LEARNER_ID, CERT_ID);
 
@@ -147,6 +151,47 @@ class CertificateServiceTest {
                 .isInstanceOf(CertificateNotDownloadableException.class);
     }
 
+    @Test
+    void downloadResolvesHistoricalMissingSnapshotsWithoutUsingLearnerPlaceholder() throws Exception {
+        CertificateService service = service();
+        Certificate cert = new Certificate(LEARNER_ID, COURSE_ID, ATTEMPT_ID, "EL-2026-LEGACY",
+                null, null, null, null, "legacyhashvaluelegacyhashvalue", null);
+        ReflectionTestUtils.setField(cert, "id", CERT_ID);
+        ReflectionTestUtils.setField(cert, "issuedAt", Instant.parse("2026-06-16T10:00:00Z"));
+
+        Course course = new Course(
+                COURSE_ID,
+                "long-course",
+                "Professional Android Development With Firebase Certificates",
+                "Short",
+                "Full description",
+                "en",
+                "ADVANCED",
+                null,
+                TEACHER_ID
+        );
+        Profile teacherProfile = new Profile(TEACHER_ID);
+        teacherProfile.update("Dr. Real Teacher", null);
+
+        given(certificateRepository.findById(CERT_ID)).willReturn(Optional.of(cert));
+        given(profileRepository.findByUserId(LEARNER_ID)).willReturn(Optional.empty());
+        given(userRepository.findById(LEARNER_ID)).willReturn(Optional.of(user(LEARNER_ID, "amina.long-name@example.com")));
+        given(courseRepository.findById(COURSE_ID)).willReturn(Optional.of(course));
+        given(profileRepository.findByUserId(TEACHER_ID)).willReturn(Optional.of(teacherProfile));
+        given(pdfService.generatePdf(any(CertificatePdfPayload.class))).willReturn(new byte[]{37, 80, 68, 70});
+
+        service.getCertificatePdfForDownload(LEARNER_ID, CERT_ID);
+
+        ArgumentCaptor<CertificatePdfPayload> payload = ArgumentCaptor.forClass(CertificatePdfPayload.class);
+        verify(pdfService).generatePdf(payload.capture());
+        assertThat(payload.getValue().learnerName()).isEqualTo("Amina Long Name");
+        assertThat(payload.getValue().teacherName()).isEqualTo("Dr. Real Teacher");
+        assertThat(payload.getValue().courseTitle()).isEqualTo("Professional Android Development With Firebase Certificates");
+        assertThat(payload.getValue().courseLevel()).isEqualTo("ADVANCED");
+        assertThat(payload.getValue().verificationHash()).isEqualTo("legacyhashvaluelegacyhashvalue");
+        assertThat(payload.getValue().learnerName()).isNotEqualTo("EduLife Learner");
+    }
+
     private CertificateService service() {
         CertificateStorageProperties properties = new CertificateStorageProperties();
         properties.setStorageDir(tempDir.toString());
@@ -155,9 +200,16 @@ class CertificateServiceTest {
                 certificateRepository,
                 profileRepository,
                 courseRepository,
+                userRepository,
                 pdfService,
                 properties
         );
+    }
+
+    private User user(UUID id, String email) {
+        User user = new User("firebase-" + id, email);
+        ReflectionTestUtils.setField(user, "id", id);
+        return user;
     }
 
     private Certificate ownedCertificate(UUID ownerId) {

@@ -14,6 +14,8 @@ import com.edulife.courses.entity.Course;
 import com.edulife.courses.repository.CourseRepository;
 import com.edulife.profiles.entity.Profile;
 import com.edulife.profiles.repository.ProfileRepository;
+import com.edulife.users.entity.User;
+import com.edulife.users.repository.UserRepository;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,6 +38,7 @@ public class CertificateService {
     private final CertificateRepository certificateRepository;
     private final ProfileRepository profileRepository;
     private final CourseRepository courseRepository;
+    private final UserRepository userRepository;
     private final CertificatePdfService pdfService;
     private final CertificateStorageProperties storageProperties;
 
@@ -43,11 +46,13 @@ public class CertificateService {
             CertificateRepository certificateRepository,
             ProfileRepository profileRepository,
             CourseRepository courseRepository,
+            UserRepository userRepository,
             CertificatePdfService pdfService,
             CertificateStorageProperties storageProperties) {
         this.certificateRepository = certificateRepository;
         this.profileRepository = profileRepository;
         this.courseRepository = courseRepository;
+        this.userRepository = userRepository;
         this.pdfService = pdfService;
         this.storageProperties = storageProperties;
     }
@@ -59,21 +64,18 @@ public class CertificateService {
             return toDetailDto(existing);
         }
 
-        String learnerName = resolveUserDisplayName(userId, "learner");
+        String learnerName = resolveLearnerName(userId);
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new CertificateGenerationException("Course not found for certificate generation"));
-        if (course.getCreatedByUserId() == null) {
-            throw new CertificateGenerationException("Course is missing an instructor for certificate generation");
-        }
-        String teacherName = resolveUserDisplayName(course.getCreatedByUserId(), "teacher");
-        String courseTitle = requireText(course.getTitle(), "Course title is missing for certificate generation");
-        String courseLevel = requireText(course.getLevel(), "Course level is missing for certificate generation");
+        String teacherName = resolveTeacherName(course);
+        String courseTitle = fallbackText(course.getTitle(), "EduLife Course");
+        String courseLevel = fallbackText(course.getLevel(), "All Levels");
 
         String certificateNumber = generateCertificateNumber();
         String verificationHash = generateVerificationHash(certificateNumber, userId, courseId);
 
         // Persist the certificate first so the snapshot (and the @PrePersist issuedAt) is the single
-        // source of truth the PDF renders from — both at issue time and on every later download.
+        // source of truth the PDF renders from at issue time and on every later download.
         Certificate cert = new Certificate(userId, courseId, examAttemptId, certificateNumber,
                 learnerName, teacherName, courseTitle, courseLevel, verificationHash, null);
         cert = certificateRepository.save(cert);
@@ -82,7 +84,7 @@ public class CertificateService {
         // download endpoint regenerates from the snapshot, so a storage hiccup must never fail
         // issuance (which is tied to the authoritative exam-pass result).
         try {
-            byte[] pdfBytes = pdfService.generatePdf(cert);
+            byte[] pdfBytes = pdfService.generatePdf(toPdfPayload(cert));
             Path pdfPath = savePdf(cert.getId(), pdfBytes);
             cert.setPdfUrl(pdfPath.toString());
             cert = certificateRepository.save(cert);
@@ -109,11 +111,12 @@ public class CertificateService {
     public CertificateVerificationDto verifyCertificate(String verificationHash) {
         Certificate cert = certificateRepository.findByVerificationHash(verificationHash)
                 .orElseThrow(() -> new CertificateNotFoundException("Certificate not found for the given verification hash"));
+        ResolvedCertificateData data = resolveCertificateData(cert);
         return new CertificateVerificationDto(
-                cert.getLearnerNameSnapshot(),
-                cert.getTeacherNameSnapshot(),
-                cert.getCourseTitleSnapshot(),
-                cert.getCourseLevelSnapshot(),
+                data.learnerName(),
+                data.teacherName(),
+                data.courseTitle(),
+                data.courseLevel(),
                 cert.getIssuedAt(),
                 cert.getCertificateNumber(),
                 cert.getVerificationHash(),
@@ -136,7 +139,7 @@ public class CertificateService {
         // Regenerate from the snapshot rather than reading a possibly-missing stored file. This keeps
         // the verification hash identical to the one shown in the UI (it is read, never recomputed).
         try {
-            return pdfService.generatePdf(cert);
+            return pdfService.generatePdf(toPdfPayload(cert));
         } catch (Exception e) {
             throw new CertificateGenerationException("Failed to render certificate PDF", e);
         }
@@ -148,19 +151,51 @@ public class CertificateService {
         return "EL-" + year + "-" + unique;
     }
 
-    private String resolveUserDisplayName(UUID userId, String roleDescription) {
-        return profileRepository.findByUserId(userId)
-                .map(Profile::getDisplayName)
-                .filter(name -> name != null && !name.isBlank())
-                .orElseThrow(() -> new CertificateGenerationException(
-                        "Missing " + roleDescription + " full name for certificate generation"));
+    private String resolveLearnerName(UUID userId) {
+        return resolveUserDisplayName(userId, "Learner " + shortUuid(userId));
     }
 
-    private String requireText(String value, String message) {
-        if (value == null || value.isBlank()) {
-            throw new CertificateGenerationException(message);
+    private String resolveTeacherName(Course course) {
+        if (course.getCreatedByUserId() == null) {
+            return "EduLife Instructor";
         }
-        return value;
+        return resolveUserDisplayName(course.getCreatedByUserId(), "EduLife Instructor");
+    }
+
+    private String resolveUserDisplayName(UUID userId, String fallbackName) {
+        String profileName = profileRepository.findByUserId(userId)
+                .map(Profile::getDisplayName)
+                .filter(name -> name != null && !name.isBlank())
+                .filter(name -> !"DELETED_USER".equalsIgnoreCase(name.trim()))
+                .orElse(null);
+        if (profileName != null) {
+            return profileName;
+        }
+        return userRepository.findById(userId)
+                .map(User::getEmail)
+                .filter(email -> email != null && !email.isBlank())
+                .map(this::readableNameFromEmail)
+                .orElse(fallbackName);
+    }
+
+    private String readableNameFromEmail(String email) {
+        String localPart = email.split("@", 2)[0].replaceAll("[._-]+", " ").trim();
+        if (localPart.isBlank()) {
+            return email;
+        }
+        StringBuilder readable = new StringBuilder();
+        for (String part : localPart.split("\\s+")) {
+            if (!part.isBlank()) {
+                readable.append(Character.toUpperCase(part.charAt(0)))
+                        .append(part.substring(1).toLowerCase())
+                        .append(' ');
+            }
+        }
+        return readable.toString().trim();
+    }
+
+    private String fallbackText(String value, String fallback) {
+        return value == null || value.isBlank() ? fallback : value;
     }
 
     private String generateVerificationHash(String certificateNumber, UUID userId, UUID courseId) {
@@ -183,31 +218,89 @@ public class CertificateService {
     }
 
     private CertificateSummaryDto toSummaryDto(Certificate cert) {
+        ResolvedCertificateData data = resolveCertificateData(cert);
         return new CertificateSummaryDto(
                 cert.getId(),
                 cert.getCourseId(),
                 cert.getCertificateNumber(),
-                cert.getLearnerNameSnapshot(),
-                cert.getTeacherNameSnapshot(),
-                cert.getCourseTitleSnapshot(),
-                cert.getCourseLevelSnapshot(),
+                data.learnerName(),
+                data.teacherName(),
+                data.courseTitle(),
+                data.courseLevel(),
                 cert.getIssuedAt(),
                 cert.getVerificationHash()
         );
     }
 
     private CertificateDetailDto toDetailDto(Certificate cert) {
+        ResolvedCertificateData data = resolveCertificateData(cert);
         return new CertificateDetailDto(
                 cert.getId(),
                 cert.getCourseId(),
                 cert.getCertificateNumber(),
-                cert.getLearnerNameSnapshot(),
-                cert.getTeacherNameSnapshot(),
-                cert.getCourseTitleSnapshot(),
-                cert.getCourseLevelSnapshot(),
+                data.learnerName(),
+                data.teacherName(),
+                data.courseTitle(),
+                data.courseLevel(),
                 cert.getIssuedAt(),
                 cert.getVerificationHash(),
                 cert.getPdfUrl()
         );
     }
+
+    private CertificatePdfPayload toPdfPayload(Certificate cert) {
+        ResolvedCertificateData data = resolveCertificateData(cert);
+        return new CertificatePdfPayload(
+                data.learnerName(),
+                data.teacherName(),
+                data.courseTitle(),
+                data.courseLevel(),
+                cert.getIssuedAt(),
+                cert.getCertificateNumber(),
+                cert.getVerificationHash()
+        );
+    }
+
+    private ResolvedCertificateData resolveCertificateData(Certificate cert) {
+        Course course = null;
+        if (hasMissingCourseOrTeacherSnapshot(cert)) {
+            course = courseRepository.findById(cert.getCourseId()).orElse(null);
+        }
+        // Historical rows may predate snapshot columns. Resolve missing values for display/PDF
+        // without touching the verification hash or trusting client-provided identity values.
+        String learnerName = isBlank(cert.getLearnerNameSnapshot())
+                ? resolveLearnerName(cert.getUserId())
+                : cert.getLearnerNameSnapshot();
+        String teacherName = isBlank(cert.getTeacherNameSnapshot())
+                ? (course == null ? "EduLife Instructor" : resolveTeacherName(course))
+                : cert.getTeacherNameSnapshot();
+        String courseTitle = isBlank(cert.getCourseTitleSnapshot())
+                ? (course == null ? "EduLife Course" : fallbackText(course.getTitle(), "EduLife Course"))
+                : cert.getCourseTitleSnapshot();
+        String courseLevel = isBlank(cert.getCourseLevelSnapshot())
+                ? (course == null ? "All Levels" : fallbackText(course.getLevel(), "All Levels"))
+                : cert.getCourseLevelSnapshot();
+        return new ResolvedCertificateData(learnerName, teacherName, courseTitle, courseLevel);
+    }
+
+    private boolean hasMissingCourseOrTeacherSnapshot(Certificate cert) {
+        return isBlank(cert.getTeacherNameSnapshot())
+                || isBlank(cert.getCourseTitleSnapshot())
+                || isBlank(cert.getCourseLevelSnapshot());
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    private String shortUuid(UUID id) {
+        return id.toString().substring(0, 8);
+    }
+
+    private record ResolvedCertificateData(
+            String learnerName,
+            String teacherName,
+            String courseTitle,
+            String courseLevel
+    ) {}
 }

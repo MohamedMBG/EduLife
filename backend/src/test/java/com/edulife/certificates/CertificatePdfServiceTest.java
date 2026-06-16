@@ -3,9 +3,11 @@ package com.edulife.certificates;
 import com.edulife.certificates.config.CertificateStorageProperties;
 import com.edulife.certificates.entity.Certificate;
 import com.edulife.certificates.service.CertificatePdfService;
+import com.edulife.certificates.service.CertificatePdfPayload;
 import java.time.Instant;
 import java.util.UUID;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -70,10 +72,52 @@ class CertificatePdfServiceTest {
         assertThat(text).contains("June 16, 2026");
         // The certificate prints the leading 16 chars of the verification hash as the code.
         assertThat(text).contains(HASH.substring(0, 16));
+        assertThat(text.replaceAll("\\s+", "")).contains(HASH);
+        assertThat(text).doesNotContain("EduLife Learner");
     }
 
     @Test
-    void generatePdfFallsBackForMissingSnapshotFields() throws Exception {
+    void generatePdfUsesLandscapeA4PageForQrSafeZone() throws Exception {
+        byte[] pdf = pdfService().generatePdf(certificate());
+
+        try (PDDocument document = PDDocument.load(pdf)) {
+            assertThat(document.getNumberOfPages()).isEqualTo(1);
+            PDRectangle mediaBox = document.getPage(0).getMediaBox();
+            assertThat(mediaBox.getWidth()).isGreaterThan(mediaBox.getHeight());
+            assertThat(mediaBox.getWidth()).isBetween(830f, 850f);
+            assertThat(mediaBox.getHeight()).isBetween(590f, 610f);
+        }
+    }
+
+    @Test
+    void generatePdfWrapsLongNamesCourseTitleAndFullVerificationHash() throws Exception {
+        CertificatePdfPayload payload = new CertificatePdfPayload(
+                "Amina Zahra El Mansouri With A Very Long Learner Name For Layout Testing",
+                "Professor Mohammed Amine El Fassi",
+                "Advanced Android Development, Firebase Identity, Secure Certificate Verification, and Exam Automation",
+                "ADVANCED",
+                Instant.parse("2026-06-16T10:00:00Z"),
+                "EL-2026-LONGDATA",
+                HASH
+        );
+
+        byte[] pdf = pdfService().generatePdf(payload);
+
+        String text;
+        try (PDDocument document = PDDocument.load(pdf)) {
+            text = new PDFTextStripper().getText(document);
+        }
+
+        assertThat(text).contains("Amina Zahra El Mansouri");
+        assertThat(text).contains("Professor Mohammed Amine El Fassi");
+        assertThat(text).contains("Advanced Android Development");
+        assertThat(text).contains("ADVANCED");
+        assertThat(text.replaceAll("\\s+", "")).contains(HASH);
+        assertThat(text).doesNotContain("EduLife Learner");
+    }
+
+    @Test
+    void generatePdfKeepsTeacherFallbackAsLastResortOnly() throws Exception {
         Certificate cert = new Certificate(LEARNER_ID, COURSE_ID, ATTEMPT_ID, "EL-2026-FALLBACK",
                 null, null, null, null, HASH, null);
         ReflectionTestUtils.setField(cert, "issuedAt", Instant.parse("2026-06-16T10:00:00Z"));
@@ -85,9 +129,10 @@ class CertificatePdfServiceTest {
             text = new PDFTextStripper().getText(document);
         }
 
-        assertThat(text).contains("EduLife Learner");
+        assertThat(text).contains("Learner");
         assertThat(text).contains("EduLife Instructor");
         assertThat(text).contains("EduLife Course");
         assertThat(text).contains("All Levels");
+        assertThat(text).doesNotContain("EduLife Learner");
     }
 }

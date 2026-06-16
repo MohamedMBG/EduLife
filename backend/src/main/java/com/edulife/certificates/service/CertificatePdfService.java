@@ -50,22 +50,36 @@ public class CertificatePdfService {
      * certificate number are always taken verbatim from the entity to keep the credential authentic.
      */
     public byte[] generatePdf(Certificate cert) throws Exception {
-        String verificationHash = cert.getVerificationHash() == null ? "" : cert.getVerificationHash();
+        return generatePdf(CertificatePdfPayload.fromCertificate(cert));
+    }
+
+    /**
+     * Builds PDF bytes from a resolved render payload. The verification hash is read as-is and is
+     * never recomputed here, preserving the certificate's original public verification identity.
+     */
+    public byte[] generatePdf(CertificatePdfPayload payload) throws Exception {
+        String verificationHash = safeText(payload.verificationHash());
         String verifyUrl = storageProperties.getPublicBaseUrl() + "/verify/" + verificationHash;
-        Instant issuedAt = cert.getIssuedAt() != null ? cert.getIssuedAt() : Instant.now();
+        Instant issuedAt = payload.issuedAt() != null ? payload.issuedAt() : Instant.now();
 
         Map<String, Object> templateVars = new HashMap<>();
-        templateVars.put("learnerName", fallback(cert.getLearnerNameSnapshot(), "EduLife Learner"));
-        templateVars.put("courseTitle", fallback(cert.getCourseTitleSnapshot(), "EduLife Course"));
-        templateVars.put("courseLevel", fallback(cert.getCourseLevelSnapshot(), "All Levels"));
-        templateVars.put("teacherName", fallback(cert.getTeacherNameSnapshot(), "EduLife Instructor"));
-        templateVars.put("issuedAt", DATE_FORMATTER.format(issuedAt));
-        templateVars.put("certificateNumber", fallback(cert.getCertificateNumber(), "EduLife Certificate"));
+        templateVars.put("learnerName", fallback(payload.learnerName(), "Learner"));
+        templateVars.put("courseTitle", fallback(payload.courseTitle(), "EduLife Course"));
+        templateVars.put("courseLevel", fallback(payload.courseLevel(), "All Levels"));
+        templateVars.put("teacherName", fallback(payload.teacherName(), "EduLife Instructor"));
+        templateVars.put("issuedAt", formatCertificateDate(issuedAt));
+        templateVars.put("certificateNumber", fallback(payload.certificateNumber(), "EduLife Certificate"));
         templateVars.put("verificationCode", shortCode(verificationHash));
+        templateVars.put("verificationHash", verificationHash);
+        // The QR image points at the public verification URL; it carries no private internal IDs.
         templateVars.put("qrCodeDataUri", generateQrCodeDataUri(verifyUrl));
 
         String html = renderCertificateHtml(templateVars);
         return htmlToPdf(html);
+    }
+
+    private String safeText(String value) {
+        return value == null ? "" : value.trim();
     }
 
     private String fallback(String value, String defaultValue) {
@@ -77,6 +91,10 @@ public class CertificatePdfService {
             return verificationHash;
         }
         return verificationHash.substring(0, 16) + "...";
+    }
+
+    private String formatCertificateDate(Instant issuedAt) {
+        return DATE_FORMATTER.format(issuedAt);
     }
 
     private String generateQrCodeDataUri(String content) throws Exception {
