@@ -1,6 +1,7 @@
 package com.baghdad.edulife.features.analytics.ui;
 
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -9,34 +10,64 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.baghdad.edulife.R;
-import com.baghdad.edulife.features.analytics.model.AnalyticsFormat;
-import com.baghdad.edulife.features.analytics.model.StudentAnalyticsSummary;
-import com.baghdad.edulife.features.analytics.model.StudentAnalyticsUiState;
-import com.baghdad.edulife.features.analytics.model.StudentProgressTrend;
-import com.baghdad.edulife.features.analytics.model.StudentTrendUiState;
-import com.baghdad.edulife.features.analytics.viewmodel.StudentAnalyticsViewModel;
+import com.baghdad.edulife.features.analytics.model.AnalyticsInsight;
+import com.baghdad.edulife.features.analytics.model.StudyAnalytics;
+import com.baghdad.edulife.features.analytics.model.StudyAnalyticsUiState;
+import com.baghdad.edulife.features.analytics.ui.widget.WeeklyBarChartView;
+import com.baghdad.edulife.features.analytics.viewmodel.StudyAnalyticsViewModel;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 
+import java.util.List;
+
 /**
- * Student's own analytics summary. Renders the four required states (loading / error / empty /
- * success). Empty is folded into success: a synced learner always receives a summary object, which
- * may be all-zero — that is shown as zeros rather than a separate empty screen.
+ * Redesigned learner Study Analytics screen. Renders loading / error / success (empty folded into
+ * success as zeroed values). All data comes from {@link StudyAnalyticsViewModel}; this fragment only
+ * binds views — no business logic or API calls here.
  */
 public class StudentAnalyticsFragment extends Fragment {
 
-    private StudentAnalyticsViewModel viewModel;
+    private StudyAnalyticsViewModel viewModel;
 
+    // State overlay
     private View stateCard;
     private CircularProgressIndicator loadingIndicator;
     private TextView stateText;
     private TextView retryButton;
     private View content;
 
-    // Phase C trend section views.
-    private TextView trendStatus;
-    private LinearLayout trendContainer;
+    // Hero
+    private CircularProgressIndicator overallRing;
+    private TextView overallPercent;
+    private TextView overallCaption;
+    private TextView heroLessons;
+    private TextView heroCourses;
+    private TextView heroCertificates;
+
+    // Weekly
+    private WeeklyBarChartView weeklyChart;
+    private TextView weeklySummary;
+
+    // Courses
+    private RecyclerView coursesList;
+    private TextView coursesEmpty;
+    private CourseProgressAdapter coursesAdapter;
+
+    // Exam
+    private TextView examAverage;
+    private TextView examPassed;
+    private TextView examBest;
+
+    // Streak
+    private TextView streakCurrent;
+    private TextView streakBest;
+    private TextView streakWeek;
+
+    // Insights
+    private LinearLayout insightsCard;
 
     public StudentAnalyticsFragment() {
         super(R.layout.fragment_student_analytics);
@@ -46,47 +77,58 @@ public class StudentAnalyticsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        viewModel = new ViewModelProvider(this).get(StudentAnalyticsViewModel.class);
+        viewModel = new ViewModelProvider(this).get(StudyAnalyticsViewModel.class);
 
         stateCard = view.findViewById(R.id.studentStateCard);
         loadingIndicator = view.findViewById(R.id.studentLoadingIndicator);
         stateText = view.findViewById(R.id.studentStateText);
         retryButton = view.findViewById(R.id.studentRetryButton);
         content = view.findViewById(R.id.studentContent);
-        trendStatus = view.findViewById(R.id.studentTrendStatus);
-        trendContainer = view.findViewById(R.id.studentTrendContainer);
 
-        // Static labels on each reusable stat row; values are bound on success.
-        labelOf(view, R.id.rowEnrollments).setText(R.string.analytics_student_enrollments);
-        labelOf(view, R.id.rowLessons).setText(R.string.analytics_student_lessons);
-        labelOf(view, R.id.rowAttempts).setText(R.string.analytics_student_attempts);
-        labelOf(view, R.id.rowPassed).setText(R.string.analytics_student_passed);
-        labelOf(view, R.id.rowCertificates).setText(R.string.analytics_student_certificates);
+        overallRing = view.findViewById(R.id.studyOverallRing);
+        overallPercent = view.findViewById(R.id.studyOverallPercent);
+        overallCaption = view.findViewById(R.id.studyOverallCaption);
+        heroLessons = view.findViewById(R.id.studyHeroLessons);
+        heroCourses = view.findViewById(R.id.studyHeroCourses);
+        heroCertificates = view.findViewById(R.id.studyHeroCertificates);
 
-        // Retry re-issues the load; the ViewModel flips back to loading first.
+        weeklyChart = view.findViewById(R.id.studyWeeklyChart);
+        weeklySummary = view.findViewById(R.id.studyWeeklySummary);
+
+        coursesList = view.findViewById(R.id.studyCoursesList);
+        coursesEmpty = view.findViewById(R.id.studyCoursesEmpty);
+        coursesAdapter = new CourseProgressAdapter();
+        coursesList.setLayoutManager(new LinearLayoutManager(requireContext()));
+        coursesList.setAdapter(coursesAdapter);
+
+        examAverage = view.findViewById(R.id.studyExamAverage);
+        examPassed = view.findViewById(R.id.studyExamPassed);
+        examBest = view.findViewById(R.id.studyExamBest);
+
+        streakCurrent = view.findViewById(R.id.studyStreakCurrent);
+        streakBest = view.findViewById(R.id.studyStreakBest);
+        streakWeek = view.findViewById(R.id.studyStreakWeek);
+
+        insightsCard = view.findViewById(R.id.studyInsightsCard);
+
         retryButton.setOnClickListener(v -> viewModel.load());
 
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::render);
-        viewModel.getTrendState().observe(getViewLifecycleOwner(), this::renderTrend);
 
         // Only trigger the first load if nothing has been fetched yet, so rotation reuses state.
-        StudentAnalyticsUiState current = viewModel.getUiState().getValue();
-        if (current == null || (current.loading && current.summary == null)) {
+        StudyAnalyticsUiState current = viewModel.getUiState().getValue();
+        if (current == null || (current.loading && current.analytics == null)) {
             viewModel.load();
-        }
-        StudentTrendUiState trend = viewModel.getTrendState().getValue();
-        if (trend == null || (trend.loading && trend.trend == null)) {
-            viewModel.loadTrend();
         }
     }
 
-    private void render(@Nullable StudentAnalyticsUiState state) {
+    private void render(@Nullable StudyAnalyticsUiState state) {
         if (state == null) return;
 
         if (state.loading) {
             stateCard.setVisibility(View.VISIBLE);
             loadingIndicator.setVisibility(View.VISIBLE);
-            stateText.setText(R.string.analytics_student_loading);
+            stateText.setText(R.string.study_loading);
             retryButton.setVisibility(View.GONE);
             content.setVisibility(View.GONE);
             return;
@@ -95,7 +137,7 @@ public class StudentAnalyticsFragment extends Fragment {
         if (state.errorMessage != null) {
             stateCard.setVisibility(View.VISIBLE);
             loadingIndicator.setVisibility(View.GONE);
-            stateText.setText(state.errorMessage);
+            stateText.setText(R.string.study_error_generic);
             retryButton.setVisibility(View.VISIBLE);
             content.setVisibility(View.GONE);
             return;
@@ -103,57 +145,69 @@ public class StudentAnalyticsFragment extends Fragment {
 
         stateCard.setVisibility(View.GONE);
         content.setVisibility(View.VISIBLE);
-        bind(state.summary);
+        bind(state.analytics);
     }
 
-    private void bind(@Nullable StudentAnalyticsSummary s) {
-        if (s == null) return;
-        valueOf(R.id.rowEnrollments).setText(AnalyticsFormat.count(s.activeEnrollments));
-        valueOf(R.id.rowLessons).setText(AnalyticsFormat.count(s.lessonsCompleted));
-        valueOf(R.id.rowAttempts).setText(AnalyticsFormat.count(s.examAttempts));
-        valueOf(R.id.rowPassed).setText(AnalyticsFormat.count(s.examsPassed));
-        valueOf(R.id.rowCertificates).setText(AnalyticsFormat.count(s.certificatesEarned));
-    }
+    private void bind(@Nullable StudyAnalytics a) {
+        if (a == null) return;
 
-    /**
-     * Renders the monthly trend section independently of the summary: status text for
-     * loading/error/empty, inflated rows for success.
-     */
-    private void renderTrend(@Nullable StudentTrendUiState state) {
-        if (state == null) return;
-
-        if (state.loading) {
-            trendStatus.setVisibility(View.VISIBLE);
-            trendStatus.setText(R.string.analytics_trend_loading);
-            AnalyticsRows.clear(trendContainer);
-            return;
+        // Hero
+        overallRing.setProgressCompat(a.overallProgressPercent, true);
+        overallPercent.setText(getString(R.string.analytics_percent_value, a.overallProgressPercent));
+        if (a.overallProgressPercent > 0 || a.activeCourses > 0) {
+            overallCaption.setText(getString(
+                    R.string.study_overall_caption, a.overallProgressPercent, a.currentPathTitle));
+        } else {
+            overallCaption.setText(R.string.study_overall_caption_empty);
         }
-        if (state.errorMessage != null) {
-            trendStatus.setVisibility(View.VISIBLE);
-            trendStatus.setText(state.errorMessage);
-            AnalyticsRows.clear(trendContainer);
-            return;
+        heroLessons.setText(String.valueOf(a.completedLessons));
+        heroCourses.setText(String.valueOf(a.activeCourses));
+        heroCertificates.setText(String.valueOf(a.certificatesEarned));
+
+        // Weekly chart
+        if (a.weekly != null) {
+            weeklyChart.setData(a.weekly.days);
+            weeklySummary.setText(getString(R.string.study_weekly_summary,
+                    a.weekly.totalLessonsThisWeek, a.weekly.daysStudiedThisWeek));
         }
 
-        StudentProgressTrend trend = state.trend;
-        boolean empty = trend == null || trend.lessonsByMonth == null || trend.lessonsByMonth.isEmpty();
-        if (empty) {
-            trendStatus.setVisibility(View.VISIBLE);
-            trendStatus.setText(R.string.analytics_trend_empty);
-            AnalyticsRows.clear(trendContainer);
-            return;
+        // Courses
+        List<?> courses = a.courses;
+        boolean hasCourses = courses != null && !courses.isEmpty();
+        coursesList.setVisibility(hasCourses ? View.VISIBLE : View.GONE);
+        coursesEmpty.setVisibility(hasCourses ? View.GONE : View.VISIBLE);
+        coursesAdapter.submitList(a.courses);
+
+        // Exam
+        if (a.exam != null) {
+            examAverage.setText(getString(R.string.analytics_percent_value, a.exam.averageScore));
+            examPassed.setText(String.valueOf(a.exam.passedExams));
+            examBest.setText(getString(R.string.analytics_percent_value, a.exam.bestScore));
         }
 
-        trendStatus.setVisibility(View.GONE);
-        AnalyticsRows.renderMonths(trendContainer, trend.lessonsByMonth);
+        // Streak
+        if (a.streak != null) {
+            streakCurrent.setText(getString(R.string.study_streak_days, a.streak.currentStreak));
+            streakBest.setText(getString(R.string.study_streak_days, a.streak.bestStreak));
+            streakWeek.setText(getString(R.string.study_streak_days_short, a.streak.daysStudiedThisWeek));
+        }
+
+        bindInsights(a.insights);
     }
 
-    // Scoped lookups: each included row carries its own statRowLabel / statRowValue.
-    private TextView labelOf(View root, int rowId) {
-        return root.findViewById(rowId).findViewById(R.id.statRowLabel);
-    }
-
-    private TextView valueOf(int rowId) {
-        return requireView().findViewById(rowId).findViewById(R.id.statRowValue);
+    /** Inflates one insight row per message into the insights card; clears any previous rows. */
+    private void bindInsights(@Nullable List<AnalyticsInsight> insights) {
+        insightsCard.removeAllViews();
+        if (insights == null || insights.isEmpty()) {
+            insightsCard.setVisibility(View.GONE);
+            return;
+        }
+        insightsCard.setVisibility(View.VISIBLE);
+        LayoutInflater inflater = LayoutInflater.from(requireContext());
+        for (AnalyticsInsight insight : insights) {
+            View row = inflater.inflate(R.layout.item_study_insight, insightsCard, false);
+            ((TextView) row.findViewById(R.id.insightMessage)).setText(insight.message);
+            insightsCard.addView(row);
+        }
     }
 }

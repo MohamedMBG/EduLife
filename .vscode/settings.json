@@ -1,0 +1,12 @@
+{
+  // The workflow docs contain many Mermaid blocks, so keep the renderer limit above the default.
+  "markdown-mermaid.maxTextSize": 200000,
+  "markdown-mermaid.languages": [
+    "mermaid"
+  ],
+  "markdown-mermaid.darkModeTheme": "dark",
+  "markdown-mermaid.lightModeTheme": "default",
+  "markdown-mermaid.maxHeight": "80vh",
+  "markdown-mermaid.controls.show": "always",
+  "markdown.preview.security.level": "allowInsecureContent"
+}

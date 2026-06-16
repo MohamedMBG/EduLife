@@ -137,7 +137,7 @@ class AnalyticsControllerTest {
     void studentSummary_allowedForAnyAuthenticatedLearner() throws Exception {
         mockTokenForRole(UserRole.LEARNER);
         given(analyticsService.getMyStudentSummary())
-                .willReturn(new StudentAnalyticsSummaryDto(2, 7, 3, 1, 1));
+                .willReturn(new StudentAnalyticsSummaryDto(2, 7, 3, 1, 1, 82, 95));
 
         mockMvc.perform(get("/api/v1/analytics/me/summary").header("Authorization", "Bearer t"))
                 .andExpect(status().isOk())

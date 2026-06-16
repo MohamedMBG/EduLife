@@ -74,12 +74,17 @@ public class AnalyticsService {
     public StudentAnalyticsSummaryDto getMyStudentSummary() {
         UUID userId = resolveCurrentUser().getId();
 
+        Double avgScore = examAttemptRepository.averageScoreByUserId(userId);
+        Integer bestScore = examAttemptRepository.maxScoreByUserId(userId);
+
         return new StudentAnalyticsSummaryDto(
                 enrollmentRepository.countByUserIdAndStatus(userId, EnrollmentStatus.ACTIVE),
                 lessonProgressRepository.countByUserId(userId),
                 examAttemptRepository.countByUserId(userId),
                 examAttemptRepository.countByUserIdAndPassedTrue(userId),
-                certificateRepository.countByUserId(userId)
+                certificateRepository.countByUserId(userId),
+                avgScore == null ? 0 : (int) Math.round(avgScore),
+                bestScore == null ? 0 : bestScore
         );
     }
 

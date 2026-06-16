@@ -104,8 +104,8 @@ export function AppShell({ active, user, onLogout, header, children }: AppShellP
         style={{ boxShadow: "var(--shadow-luxury)" }}
       >
         <div className={`flex h-16 items-center border-b border-border/60 px-6 ${isCollapsed ? "md:px-4 md:justify-center" : "gap-3"}`}>
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-teal text-teal-foreground shadow-soft">
-            <GraduationCap className="h-4.5 w-4.5" />
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-primary text-primary-foreground shadow-bezel">
+            <GraduationCap className="h-4.5 w-4.5" strokeWidth={1.5} />
           </span>
           {!isCollapsed && (
             <div className="transition-opacity duration-200">
@@ -154,7 +154,7 @@ export function AppShell({ active, user, onLogout, header, children }: AppShellP
                       : "w-full px-3 gap-3"
                   } ${
                     isActive
-                      ? "bg-primary/10 text-primary shadow-soft"
+                      ? "bg-primary/10 text-primary shadow-bezel ring-1 ring-primary/15"
                       : "text-muted-foreground hover:bg-accent/70 hover:text-foreground"
                   }`}
                   onClick={() => setSidebarOpen(false)}

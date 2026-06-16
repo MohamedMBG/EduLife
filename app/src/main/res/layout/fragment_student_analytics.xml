@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Redesigned learner Study Analytics screen. Single NestedScrollView; the content column holds
+     the hero summary, weekly bar chart, course performance list, exam stats, streak, and insights.
+     Loading / error states are an overlay card; empty is folded into success (zeroed values). -->
 <androidx.core.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -12,55 +15,78 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingBottom="40dp">
+        android:paddingBottom="48dp">
 
-        <!-- Header -->
+        <!-- ── Header ─────────────────────────────────────────────── -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingHorizontal="24dp"
-            android:paddingTop="32dp"
-            android:paddingBottom="8dp">
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="@dimen/study_screen_padding"
+            android:paddingTop="28dp"
+            android:paddingBottom="4dp">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="@string/analytics_student_eyebrow"
-                android:textColor="@color/brand_primary"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.12" />
+                android:layout_weight="1"
+                android:orientation="vertical">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="@string/analytics_student_title"
-                android:textColor="@color/brand_text_primary"
-                android:textSize="26sp"
-                android:textStyle="bold" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/study_eyebrow"
+                    android:textColor="@color/brand_primary"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.12" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="@string/analytics_student_subtitle"
-                android:textColor="@color/brand_text_secondary"
-                android:textSize="14sp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/study_title"
+                    android:textColor="@color/brand_text_primary"
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/study_subtitle"
+                    android:textColor="@color/brand_text_secondary"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <FrameLayout
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/bg_study_insight_dot">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_book_open"
+                    app:tint="@color/brand_primary"
+                    android:contentDescription="@string/study_avatar_desc" />
+            </FrameLayout>
         </LinearLayout>
 
-        <!-- Loading / error state card -->
+        <!-- ── Loading / error overlay ────────────────────────────── -->
         <LinearLayout
             android:id="@+id/studentStateCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="24dp"
-            android:layout_marginTop="24dp"
-            android:background="@drawable/bg_catalog_card"
+            android:layout_marginHorizontal="@dimen/study_screen_padding"
+            android:layout_marginTop="@dimen/study_section_gap"
+            android:background="@drawable/bg_study_card"
             android:orientation="vertical"
             android:paddingHorizontal="24dp"
-            android:paddingVertical="32dp"
+            android:paddingVertical="36dp"
             android:gravity="center"
             android:visibility="gone"
             tools:visibility="visible">
@@ -78,11 +104,11 @@
                 android:id="@+id/studentStateText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
+                android:layout_marginTop="16dp"
                 android:textColor="@color/brand_text_secondary"
                 android:textSize="14sp"
                 android:gravity="center"
-                tools:text="@string/analytics_student_loading" />
+                tools:text="@string/study_loading" />
 
             <TextView
                 android:id="@+id/studentRetryButton"
@@ -91,84 +117,579 @@
                 android:layout_marginTop="18dp"
                 android:background="@drawable/bg_catalog_filter_button_active"
                 android:paddingHorizontal="24dp"
-                android:paddingVertical="10dp"
-                android:text="@string/analytics_retry"
+                android:paddingVertical="11dp"
+                android:text="@string/study_retry"
                 android:textColor="@color/brand_text_on_primary"
                 android:textSize="13sp"
                 android:textStyle="bold"
                 android:visibility="gone" />
         </LinearLayout>
 
-        <!-- Content -->
+        <!-- ── Content ────────────────────────────────────────────── -->
         <LinearLayout
             android:id="@+id/studentContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="24dp"
+            android:paddingHorizontal="@dimen/study_screen_padding"
             android:paddingTop="20dp"
             android:visibility="gone"
             tools:visibility="visible">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:text="@string/analytics_student_section"
-                android:textColor="@color/brand_text_secondary"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.10" />
-
-            <!-- Stat rows (label + value). Reused include keeps spacing consistent. Inner
-                 label/value ids are resolved per-row via scoped findViewById in the fragment. -->
-            <include layout="@layout/item_analytics_stat_row" android:id="@+id/rowEnrollments"
-                android:layout_width="match_parent" android:layout_height="wrap_content" />
-            <include layout="@layout/item_analytics_stat_row" android:id="@+id/rowLessons"
-                android:layout_width="match_parent" android:layout_height="wrap_content" />
-            <include layout="@layout/item_analytics_stat_row" android:id="@+id/rowAttempts"
-                android:layout_width="match_parent" android:layout_height="wrap_content" />
-            <include layout="@layout/item_analytics_stat_row" android:id="@+id/rowPassed"
-                android:layout_width="match_parent" android:layout_height="wrap_content" />
-            <include layout="@layout/item_analytics_stat_row" android:id="@+id/rowCertificates"
-                android:layout_width="match_parent" android:layout_height="wrap_content" />
-
-        </LinearLayout>
-
-        <!-- Phase C: monthly progress trend section. Loads independently of the summary above;
-             rows are inflated at runtime into studentTrendContainer. -->
-        <LinearLayout
-            android:id="@+id/studentTrendSection"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingHorizontal="24dp"
-            android:paddingTop="8dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:text="@string/analytics_student_trend_section"
-                android:textColor="@color/brand_text_secondary"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.10" />
-
-            <TextView
-                android:id="@+id/studentTrendStatus"
+            <!-- Hero: overall progress ring + caption + quick stats -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
+                android:background="@drawable/bg_study_hero"
+                android:orientation="vertical"
+                android:padding="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <FrameLayout
+                        android:layout_width="@dimen/study_ring_size"
+                        android:layout_height="@dimen/study_ring_size">
+
+                        <com.google.android.material.progressindicator.CircularProgressIndicator
+                            android:id="@+id/studyOverallRing"
+                            android:layout_width="@dimen/study_ring_size"
+                            android:layout_height="@dimen/study_ring_size"
+                            android:indeterminate="false"
+                            app:indicatorColor="@color/brand_text_on_primary"
+                            app:trackColor="#40FFFFFF"
+                            app:indicatorSize="@dimen/study_ring_size"
+                            app:trackThickness="@dimen/study_ring_thickness"
+                            app:trackCornerRadius="8dp"
+                            tools:progress="68" />
+
+                        <TextView
+                            android:id="@+id/studyOverallPercent"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:textColor="@color/brand_text_on_primary"
+                            android:textSize="30sp"
+                            android:textStyle="bold"
+                            tools:text="68%" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="20dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/study_overall_label"
+                            android:textColor="@color/brand_text_on_primary_muted"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.08" />
+
+                        <TextView
+                            android:id="@+id/studyOverallCaption"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:textColor="@color/brand_text_on_primary"
+                            android:textSize="15sp"
+                            android:lineSpacingExtra="2dp"
+                            tools:text="You completed 68% of your current learning path" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Quick stat row on the hero -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="22dp"
+                    android:orientation="horizontal"
+                    android:baselineAligned="false">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/studyHeroLessons"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/brand_text_on_primary"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            tools:text="42" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/study_stat_lessons"
+                            android:textColor="@color/brand_text_on_primary_muted"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="32dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="#33FFFFFF" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/studyHeroCourses"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/brand_text_on_primary"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            tools:text="3" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/study_stat_courses"
+                            android:textColor="@color/brand_text_on_primary_muted"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="32dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="#33FFFFFF" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/studyHeroCertificates"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/brand_text_on_primary"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            tools:text="1" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/study_stat_certificates"
+                            android:textColor="@color/brand_text_on_primary_muted"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Weekly activity -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/study_section_gap"
+                android:background="@drawable/bg_study_card"
+                android:orientation="vertical"
+                android:padding="@dimen/study_card_padding">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/study_weekly_title"
+                    android:textColor="@color/brand_text_primary"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/study_weekly_subtitle"
+                    android:textColor="@color/brand_text_secondary"
+                    android:textSize="13sp" />
+
+                <com.baghdad.edulife.features.analytics.ui.widget.WeeklyBarChartView
+                    android:id="@+id/studyWeeklyChart"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/study_chart_height"
+                    android:layout_marginTop="16dp"
+                    android:contentDescription="@string/study_chart_desc" />
+
+                <TextView
+                    android:id="@+id/studyWeeklySummary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:textColor="@color/brand_primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    tools:text="17 lessons across 6 days" />
+            </LinearLayout>
+
+            <!-- Course performance -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/study_section_gap"
+                android:text="@string/study_courses_title"
+                android:textColor="@color/brand_text_primary"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:layout_marginBottom="14dp"
+                android:text="@string/study_courses_subtitle"
+                android:textColor="@color/brand_text_secondary"
+                android:textSize="13sp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/studyCoursesList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:overScrollMode="never"
+                tools:itemCount="3"
+                tools:listitem="@layout/item_course_progress_analytics" />
+
+            <TextView
+                android:id="@+id/studyCoursesEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_study_card"
+                android:padding="@dimen/study_card_padding"
+                android:text="@string/study_courses_empty"
                 android:textColor="@color/brand_text_secondary"
                 android:textSize="14sp"
-                tools:text="@string/analytics_trend_loading" />
+                android:visibility="gone"
+                tools:visibility="gone" />
 
+            <!-- Exam performance -->
             <LinearLayout
-                android:id="@+id/studentTrendContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical" />
+                android:layout_marginTop="@dimen/study_section_gap"
+                android:background="@drawable/bg_study_card"
+                android:orientation="vertical"
+                android:padding="@dimen/study_card_padding">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <FrameLayout
+                        android:layout_width="@dimen/study_icon_badge"
+                        android:layout_height="@dimen/study_icon_badge"
+                        android:background="@drawable/bg_study_insight_dot">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_trophy"
+                            android:contentDescription="@null" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="14dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/study_exam_title"
+                            android:textColor="@color/brand_text_primary"
+                            android:textSize="17sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/study_exam_subtitle"
+                            android:textColor="@color/brand_text_secondary"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:orientation="horizontal"
+                    android:baselineAligned="false">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/bg_study_card_tinted"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:paddingVertical="16dp">
+
+                        <TextView
+                            android:id="@+id/studyExamAverage"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/brand_primary"
+                            android:textSize="22sp"
+                            android:textStyle="bold"
+                            tools:text="84%" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/study_exam_average"
+                            android:textColor="@color/brand_text_secondary"
+                            android:textSize="12sp"
+                            android:gravity="center" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginHorizontal="3dp"
+                        android:background="@drawable/bg_study_card_tinted"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:paddingVertical="16dp">
+
+                        <TextView
+                            android:id="@+id/studyExamPassed"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/brand_primary"
+                            android:textSize="22sp"
+                            android:textStyle="bold"
+                            tools:text="5" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/study_exam_passed"
+                            android:textColor="@color/brand_text_secondary"
+                            android:textSize="12sp"
+                            android:gravity="center" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:background="@drawable/bg_study_card_tinted"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:paddingVertical="16dp">
+
+                        <TextView
+                            android:id="@+id/studyExamBest"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/brand_primary"
+                            android:textSize="22sp"
+                            android:textStyle="bold"
+                            tools:text="95%" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/study_exam_best"
+                            android:textColor="@color/brand_text_secondary"
+                            android:textSize="12sp"
+                            android:gravity="center" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Streak -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/study_section_gap"
+                android:background="@drawable/bg_study_card"
+                android:orientation="vertical"
+                android:padding="@dimen/study_card_padding">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <FrameLayout
+                        android:layout_width="@dimen/study_icon_badge"
+                        android:layout_height="@dimen/study_icon_badge"
+                        android:background="@drawable/bg_study_streak_icon">
+
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_flame"
+                            android:contentDescription="@string/study_streak_icon_desc" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="14dp"
+                        android:text="@string/study_streak_title"
+                        android:textColor="@color/brand_text_primary"
+                        android:textSize="17sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:orientation="horizontal"
+                    android:baselineAligned="false">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/studyStreakCurrent"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/brand_text_primary"
+                            android:textSize="22sp"
+                            android:textStyle="bold"
+                            tools:text="4 days" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/study_streak_current"
+                            android:textColor="@color/brand_text_secondary"
+                            android:textSize="12sp"
+                            android:gravity="center" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="32dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="@color/brand_border" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/studyStreakBest"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/brand_text_primary"
+                            android:textSize="22sp"
+                            android:textStyle="bold"
+                            tools:text="11 days" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/study_streak_best"
+                            android:textColor="@color/brand_text_secondary"
+                            android:textSize="12sp"
+                            android:gravity="center" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="32dp"
+                        android:layout_gravity="center_vertical"
+                        android:background="@color/brand_border" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/studyStreakWeek"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/brand_text_primary"
+                            android:textSize="22sp"
+                            android:textStyle="bold"
+                            tools:text="6 / 7" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/study_streak_week"
+                            android:textColor="@color/brand_text_secondary"
+                            android:textSize="12sp"
+                            android:gravity="center" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Insights -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/study_section_gap"
+                android:layout_marginBottom="12dp"
+                android:text="@string/study_insights_title"
+                android:textColor="@color/brand_text_primary"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/studyInsightsCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_study_card"
+                android:orientation="vertical"
+                android:paddingHorizontal="@dimen/study_card_padding"
+                android:paddingVertical="8dp" />
         </LinearLayout>
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

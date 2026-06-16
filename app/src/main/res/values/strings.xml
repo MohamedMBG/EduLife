@@ -511,6 +511,57 @@
     <string name="analytics_student_passed">Exams passed</string>
     <string name="analytics_student_certificates">Certificates</string>
 
+    <!-- ── Study Analytics (redesigned learner screen) ─────────────── -->
+    <string name="study_title">Study Analytics</string>
+    <string name="study_subtitle">Track your learning progress and stay consistent</string>
+    <string name="study_eyebrow">YOUR PROGRESS</string>
+    <string name="study_loading">Loading your analytics…</string>
+    <string name="study_error_generic">We couldn\'t load your analytics. Please try again.</string>
+    <string name="study_retry">Try again</string>
+    <string name="study_avatar_desc">Your profile</string>
+
+    <!-- Overall progress hero -->
+    <string name="study_overall_label">Overall progress</string>
+    <string name="study_overall_caption">You completed %1$d%% of %2$s</string>
+    <string name="study_overall_caption_empty">Enroll in a course to start tracking your progress</string>
+    <string name="study_stat_lessons">Lessons</string>
+    <string name="study_stat_courses">Courses</string>
+    <string name="study_stat_certificates">Certificates</string>
+
+    <!-- Weekly activity -->
+    <string name="study_weekly_title">This week</string>
+    <string name="study_weekly_subtitle">Lessons completed over the last 7 days</string>
+    <string name="study_weekly_summary">%1$d lessons across %2$d days</string>
+    <string name="study_chart_desc">Weekly study activity bar chart</string>
+
+    <!-- Course performance -->
+    <string name="study_courses_title">Course performance</string>
+    <string name="study_courses_subtitle">Your enrolled courses</string>
+    <string name="study_courses_empty">You haven\'t enrolled in any courses yet.</string>
+    <string name="analytics_percent_value">%1$d%%</string>
+    <string name="analytics_course_lessons_of">%1$d / %2$d lessons</string>
+    <string name="analytics_course_last_activity">Last activity: %1$s</string>
+
+    <!-- Exam performance -->
+    <string name="study_exam_title">Exam performance</string>
+    <string name="study_exam_subtitle">How you\'re doing on assessments</string>
+    <string name="study_exam_average">Average score</string>
+    <string name="study_exam_passed">Passed</string>
+    <string name="study_exam_best">Best score</string>
+
+    <!-- Streak -->
+    <string name="study_streak_title">Learning streak</string>
+    <string name="study_streak_current">Current streak</string>
+    <string name="study_streak_best">Best streak</string>
+    <string name="study_streak_week">This week</string>
+    <string name="study_streak_days">%1$d days</string>
+    <string name="study_streak_days_short">%1$d / 7</string>
+    <string name="study_streak_icon_desc">Streak flame</string>
+
+    <!-- Insights -->
+    <string name="study_insights_title">Insights</string>
+    <string name="study_insight_icon_desc">Insight</string>
+
     <!-- Profile entry point -->
     <string name="profile_analytics_row_title">My Learning Stats</string>
     <string name="profile_analytics_row_subtitle">Progress, exams, and certificates</string>
@@ -570,4 +621,3 @@
     <string name="analytics_platform_cert_trend_section">Certificates by month</string>
 
 </resources>
-

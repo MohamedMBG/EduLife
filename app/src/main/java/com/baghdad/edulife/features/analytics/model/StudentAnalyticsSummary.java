@@ -11,4 +11,6 @@ public class StudentAnalyticsSummary {
     public long examAttempts;
     public long examsPassed;
     public long certificatesEarned;
+    public int averageExamScore;
+    public int bestExamScore;
 }

@@ -174,7 +174,7 @@ function CoursesPage() {
             {filteredCourses.map((course) => (
               <article
                 key={course.enrollmentId}
-                className="rounded-3xl border border-border bg-surface-elevated p-5 shadow-soft"
+                className="group relative overflow-hidden rounded-3xl hairline bg-surface-elevated p-5 shadow-soft transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:shadow-elevated"
               >
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
                   <div className="h-28 w-full overflow-hidden rounded-2xl bg-muted sm:w-44">
@@ -266,19 +266,25 @@ function MetricCard({
   icon: ReactNode;
 }) {
   return (
-    <div className="rounded-3xl border border-border bg-surface-elevated p-5 shadow-soft">
+    <div className="group relative overflow-hidden rounded-2xl hairline bg-surface-elevated p-5 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:shadow-elevated">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{title}</p>
-        {icon}
+        <p className="text-[10px] uppercase tracking-[0.2em] font-mono text-muted-foreground">
+          {title}
+        </p>
+        <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/8 group-hover:bg-primary/12 transition-colors duration-500">
+          {icon}
+        </span>
       </div>
-      <p className="mt-3 text-display text-3xl text-foreground">{value}</p>
+      <p className="mt-5 text-display text-3xl lg:text-4xl text-foreground leading-none">
+        {value}
+      </p>
     </div>
   );
 }
 
 function StateCard({ title, detail }: { title: string; detail: string }) {
   return (
-    <div className="rounded-3xl border border-border bg-surface-elevated px-6 py-10 text-center shadow-soft">
+    <div className="rounded-3xl hairline bg-surface-elevated px-6 py-12 text-center">
       <p className="text-sm font-semibold text-foreground">{title}</p>
       <p className="mt-2 text-sm text-muted-foreground">{detail}</p>
     </div>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Premium gradient hero card behind the overall-progress summary. Deep brand green diagonal. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="135"
+        android:startColor="@color/brand_primary"
+        android:endColor="@color/brand_primary_dark" />
+    <corners android:radius="@dimen/study_card_radius_large" />
+</shape>

@@ -65,7 +65,10 @@
       "Bash(xargs grep -l \"admin\")",
       "Bash(xargs grep -l \"admin@\")",
       "Bash(xargs grep -l \"admin\\\\|ADMIN\")",
-      "Bash(xargs grep -l \"syncAuth\\\\|auth/sync\")"
+      "Bash(xargs grep -l \"syncAuth\\\\|auth/sync\")",
+      "Bash(npx --yes skills add https://github.com/Leonxlnx/taste-skill --skill \"design-taste-frontend\")",
+      "Bash(npx --yes skills add https://github.com/Leonxlnx/taste-skill --skill \"redesign-existing-projects\")",
+      "Bash(npx --yes skills add https://github.com/Leonxlnx/taste-skill --skill \"high-end-visual-design\")"
     ]
   }
 }

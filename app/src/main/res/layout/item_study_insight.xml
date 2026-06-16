@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One insight row: round lightbulb badge + message. Inflated at runtime into the insights card. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingVertical="10dp">
+
+    <FrameLayout
+        android:layout_width="@dimen/study_icon_badge"
+        android:layout_height="@dimen/study_icon_badge"
+        android:background="@drawable/bg_study_insight_dot">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_lightbulb"
+            android:contentDescription="@string/study_insight_icon_desc" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/insightMessage"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="14dp"
+        android:textColor="@color/brand_text_body"
+        android:textSize="14sp"
+        android:lineSpacingExtra="2dp"
+        tools:text="You're close to finishing Web Development — keep going!" />
+</LinearLayout>

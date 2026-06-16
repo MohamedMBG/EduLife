@@ -14,4 +14,16 @@
     <integer name="course_grid_span">1</integer>
     <integer name="cert_grid_span">1</integer>
     <integer name="planner_grid_span">1</integer>
+
+    <!-- Study Analytics screen -->
+    <dimen name="study_screen_padding">20dp</dimen>
+    <dimen name="study_section_gap">24dp</dimen>
+    <dimen name="study_card_padding">20dp</dimen>
+    <dimen name="study_card_gap">12dp</dimen>
+    <dimen name="study_card_radius">20dp</dimen>
+    <dimen name="study_card_radius_large">24dp</dimen>
+    <dimen name="study_chart_height">180dp</dimen>
+    <dimen name="study_ring_size">120dp</dimen>
+    <dimen name="study_ring_thickness">10dp</dimen>
+    <dimen name="study_icon_badge">40dp</dimen>
 </resources>

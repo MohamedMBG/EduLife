@@ -1,0 +1,6 @@
+{
+  // Required for Mermaid rendering on VS Code versions before built-in Mermaid support.
+  "recommendations": [
+    "bierner.markdown-mermaid"
+  ]
+}

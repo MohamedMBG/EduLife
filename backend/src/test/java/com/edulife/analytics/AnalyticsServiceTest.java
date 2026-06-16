@@ -87,6 +87,8 @@ class AnalyticsServiceTest {
         given(examAttemptRepository.countByUserId(OWNER_ID)).willReturn(3L);
         given(examAttemptRepository.countByUserIdAndPassedTrue(OWNER_ID)).willReturn(1L);
         given(certificateRepository.countByUserId(OWNER_ID)).willReturn(1L);
+        given(examAttemptRepository.averageScoreByUserId(OWNER_ID)).willReturn(82.4);
+        given(examAttemptRepository.maxScoreByUserId(OWNER_ID)).willReturn(96);
 
         StudentAnalyticsSummaryDto dto = analyticsService.getMyStudentSummary();
 
@@ -95,9 +97,28 @@ class AnalyticsServiceTest {
         assertThat(dto.examAttempts()).isEqualTo(3L);
         assertThat(dto.examsPassed()).isEqualTo(1L);
         assertThat(dto.certificatesEarned()).isEqualTo(1L);
+        assertThat(dto.averageExamScore()).isEqualTo(82);
+        assertThat(dto.bestExamScore()).isEqualTo(96);
         // Every count was keyed by the resolved id — no other user id is ever used.
         verify(enrollmentRepository).countByUserIdAndStatus(OWNER_ID, EnrollmentStatus.ACTIVE);
         verify(certificateRepository).countByUserId(OWNER_ID);
+    }
+
+    @Test
+    void studentSummary_handlesNullScoreAggregatesForLearnerWithNoAttempts() {
+        givenResolvedUser();
+        given(enrollmentRepository.countByUserIdAndStatus(OWNER_ID, EnrollmentStatus.ACTIVE)).willReturn(0L);
+        given(lessonProgressRepository.countByUserId(OWNER_ID)).willReturn(0L);
+        given(examAttemptRepository.countByUserId(OWNER_ID)).willReturn(0L);
+        given(examAttemptRepository.countByUserIdAndPassedTrue(OWNER_ID)).willReturn(0L);
+        given(certificateRepository.countByUserId(OWNER_ID)).willReturn(0L);
+        given(examAttemptRepository.averageScoreByUserId(OWNER_ID)).willReturn(null);
+        given(examAttemptRepository.maxScoreByUserId(OWNER_ID)).willReturn(null);
+
+        StudentAnalyticsSummaryDto dto = analyticsService.getMyStudentSummary();
+
+        assertThat(dto.averageExamScore()).isZero();
+        assertThat(dto.bestExamScore()).isZero();
     }
 
     // ── teacher analytics ownership ─────────────────────────────────────────────
