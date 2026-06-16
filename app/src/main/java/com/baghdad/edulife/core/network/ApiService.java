@@ -41,6 +41,8 @@ import com.baghdad.edulife.features.groupadmin.model.CreateGroupRequest;
 import com.baghdad.edulife.features.groupadmin.model.GroupDetail;
 import com.baghdad.edulife.features.groupadmin.model.GroupSummary;
 import com.baghdad.edulife.features.profile.model.AvatarUploadResponse;
+import com.baghdad.edulife.features.advisor.model.AdvisorRequest;
+import com.baghdad.edulife.features.advisor.model.AdvisorResponse;
 import com.baghdad.edulife.features.profile.model.ProfileResponse;
 import com.baghdad.edulife.features.profile.model.SubmitTeacherRequestBody;
 import com.baghdad.edulife.features.profile.model.TeacherRequestResponse;
@@ -318,5 +320,15 @@ public interface ApiService {
     /** Attaches a published course to the group so its members get the cohort's curriculum. */
     @POST("groups/{groupId}/courses")
     Call<Void> attachGroupCourse(@Path("groupId") String groupId, @Body AttachCourseRequest request);
+
+    // ── AI Advisor ──────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Returns up to 2 AI-ranked course recommendations for the given learner goal.
+     * Rate-limited to 10 requests per hour per user (returns 429 when exceeded).
+     * Endpoint: POST /api/v1/advisor/recommend
+     */
+    @POST("advisor/recommend")
+    Call<AdvisorResponse> requestAdvisorRecommendation(@Body AdvisorRequest request);
 }
 

@@ -580,6 +580,26 @@ export function submitExam(
   });
 }
 
+export interface AdvisorApiResponse {
+  message: string;
+  recommendations: Array<{ courseId: string; reason: string; score: number }>;
+}
+
+export function requestAdvisorRecommendation(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  goal: string,
+) {
+  if (appEnv.demoMode) {
+    throw new ApiClientError(501, "AI Advisor is not available in demo mode.");
+  }
+
+  return makeRequest<AdvisorApiResponse>("api/v1/advisor/recommend", {
+    method: "POST",
+    body: { goal },
+    getAccessToken,
+  });
+}
+
 export function verifyCertificate(hash: string) {
   if (appEnv.demoMode) {
     return demoVerifyCertificate(hash);

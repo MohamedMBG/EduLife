@@ -25,6 +25,7 @@ const demoMode = isTruthyFlag(readOptionalEnv("VITE_DEMO_MODE"));
 
 export const appEnv = {
   demoMode,
+  advisorAiEnabled: isTruthyFlag(readOptionalEnv("VITE_ADVISOR_AI_ENABLED")),
   apiBaseUrl: readEnv("VITE_API_BASE_URL").replace(/\/+$/, ""),
   firebase: {
     apiKey: readEnv("VITE_FIREBASE_API_KEY"),

@@ -9,13 +9,20 @@ import {
   BrainCircuit,
   CheckCircle2,
   Compass,
+  RefreshCw,
   Sparkles,
   Send,
 } from "lucide-react";
 import { AppShell } from "../components/app/AppShell";
-import { enrollInCourse, listCourses, listMyEnrollments } from "../lib/api/client";
+import {
+  enrollInCourse,
+  listCourses,
+  listMyEnrollments,
+  requestAdvisorRecommendation,
+} from "../lib/api/client";
 import { analyzeCareerGoal, type AdvisorResult, type CourseRecommendation } from "../lib/career/advisor";
 import { RequireAuth, useAuth } from "../lib/auth/auth-context";
+import { appEnv } from "../lib/env";
 
 export const Route = createFileRoute("/advisor")({
   component: AdvisorRoute,
@@ -43,6 +50,8 @@ interface ChatMessage {
   text: string;
   recommendations?: CourseRecommendation[];
   isLoading?: boolean;
+  isError?: boolean;
+  retryGoal?: string;
 }
 
 function AdvisorRoute() {
@@ -75,7 +84,12 @@ function AdvisorPage() {
     },
   });
 
-  // Track chat messages inside a React state array to support conversational history
+  // Fast lookup: courseId → CourseSummary for joining backend recommendation IDs with catalog
+  const courseMap = useMemo(
+    () => new Map((coursesQuery.data?.content ?? []).map((c) => [c.id, c])),
+    [coursesQuery.data?.content],
+  );
+
   const [messages, setMessages] = useState<ChatMessage[]>(() => [
     {
       id: "welcome",
@@ -86,7 +100,6 @@ function AdvisorPage() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Smooth scroll viewport to focus on the latest assistant bubbles as they arrive
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: "smooth" });
@@ -98,18 +111,15 @@ function AdvisorPage() {
   const goalReady = trimmedGoal.length >= 4;
   const catalogCount = coursesQuery.data?.totalElements ?? coursesQuery.data?.content.length ?? 0;
 
-  // Triggers AI lookup, appends user & bot messages, and controls typing delays
-  function handleAnalyze(customGoal?: string) {
+  async function handleAnalyze(customGoal?: string) {
     const targetGoal = (customGoal ?? trimmedGoal).trim();
     if (targetGoal.length < 4) return;
 
     // 1. Append user bubble
-    const userMsgId = Date.now().toString();
-    const updatedMessages = [
-      ...messages,
-      { id: userMsgId, sender: "user" as const, text: targetGoal },
-    ];
-    setMessages(updatedMessages);
+    setMessages((prev) => [
+      ...prev,
+      { id: Date.now().toString(), sender: "user" as const, text: targetGoal },
+    ]);
     setGoal("");
 
     // 2. Append typing indicator bubble
@@ -119,23 +129,88 @@ function AdvisorPage() {
       { id: botLoadingId, sender: "bot" as const, text: "", isLoading: true },
     ]);
 
-    // 3. Process recommendations with simulated lag to create a realistic conversational AI feel
-    setTimeout(() => {
-      const result = analyzeCareerGoal(targetGoal, coursesQuery.data?.content ?? []);
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === botLoadingId
-            ? {
-                id: botLoadingId,
-                sender: "bot" as const,
-                text: result.message,
-                recommendations: result.recommendations,
-                isLoading: false,
-              }
-            : msg
-        )
-      );
-    }, 650);
+    if (appEnv.advisorAiEnabled) {
+      // 3a. AI path: call backend, join courseIds with catalog, fall back on failure
+      try {
+        const apiResult = await requestAdvisorRecommendation(auth.getAccessToken, targetGoal);
+
+        // Only keep IDs that exist in the locally-fetched catalog (second-layer guard)
+        const recommendations = apiResult.recommendations
+          .filter((r) => courseMap.has(r.courseId))
+          .map((r) => ({
+            course: courseMap.get(r.courseId)!,
+            reason: r.reason,
+            score: r.score,
+          }));
+
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === botLoadingId
+              ? {
+                  id: botLoadingId,
+                  sender: "bot" as const,
+                  text: apiResult.message,
+                  recommendations,
+                  isLoading: false,
+                }
+              : msg,
+          ),
+        );
+      } catch {
+        // Fallback: use rule-based advisor when catalog is available
+        const catalog = coursesQuery.data?.content ?? [];
+        if (catalog.length > 0) {
+          const result = analyzeCareerGoal(targetGoal, catalog);
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === botLoadingId
+                ? {
+                    id: botLoadingId,
+                    sender: "bot" as const,
+                    text: result.message,
+                    recommendations: result.recommendations,
+                    isLoading: false,
+                  }
+                : msg,
+            ),
+          );
+        } else {
+          // Catalog empty + API failed: show error state with retry
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === botLoadingId
+                ? {
+                    id: botLoadingId,
+                    sender: "bot" as const,
+                    text: "Unable to reach the advisor right now. Please check your connection and try again.",
+                    isLoading: false,
+                    isError: true,
+                    retryGoal: targetGoal,
+                  }
+                : msg,
+            ),
+          );
+        }
+      }
+    } else {
+      // 3b. Feature flag off: use rule-based with simulated lag (keep existing UX)
+      setTimeout(() => {
+        const result = analyzeCareerGoal(targetGoal, coursesQuery.data?.content ?? []);
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === botLoadingId
+              ? {
+                  id: botLoadingId,
+                  sender: "bot" as const,
+                  text: result.message,
+                  recommendations: result.recommendations,
+                  isLoading: false,
+                }
+              : msg,
+          ),
+        );
+      }, 650);
+    }
   }
 
   function handleQuickStart(text: string) {
@@ -234,13 +309,27 @@ function AdvisorPage() {
                               <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "300ms" }} />
                             </div>
                           ) : (
-                            <p className="whitespace-pre-line">{msg.text}</p>
+                            <>
+                              <p className="whitespace-pre-line">{msg.text}</p>
+                              {/* Retry button — only when error state */}
+                              {msg.isError && msg.retryGoal && (
+                                <motion.button
+                                  type="button"
+                                  whileTap={{ scale: 0.96 }}
+                                  onClick={() => handleAnalyze(msg.retryGoal)}
+                                  className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-primary/25 bg-primary/5 hover:bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary transition-all cursor-pointer"
+                                >
+                                  <RefreshCw className="h-3.5 w-3.5" />
+                                  Retry
+                                </motion.button>
+                              )}
+                            </>
                           )}
                         </div>
                       </motion.div>
 
                       {/* Inline Course Recommendations */}
-                      {!msg.isLoading && msg.recommendations && msg.recommendations.length > 0 && (
+                      {!msg.isLoading && !msg.isError && Array.isArray(msg.recommendations) && msg.recommendations.length > 0 && (
                         <div className="pl-11 pr-4 space-y-4">
                           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-1.5">
                             <Sparkles className="h-3.5 w-3.5 text-primary animate-pulse" />
@@ -261,6 +350,15 @@ function AdvisorPage() {
                               );
                             })}
                           </div>
+                        </div>
+                      )}
+
+                      {/* Empty state — API succeeded but no matching courses */}
+                      {!msg.isLoading && !msg.isError && Array.isArray(msg.recommendations) && msg.recommendations.length === 0 && (
+                        <div className="pl-11 pr-4">
+                          <p className="text-xs text-muted-foreground font-medium">
+                            No match — try a clearer goal.
+                          </p>
                         </div>
                       )}
                     </div>
@@ -456,7 +554,7 @@ function RecommendationCard({
             </div>
 
             <h2 className="mt-4 text-2xl font-bold text-foreground leading-tight">{course.title}</h2>
-            
+
             {/* Shaded advisor reasoning card block */}
             <div className="mt-4 bg-primary/5 dark:bg-primary/10 border border-primary/10 rounded-2xl p-4 flex gap-3 items-start shadow-sm">
               <Sparkles className="h-4 w-4 text-primary shrink-0 mt-0.5 animate-pulse" />

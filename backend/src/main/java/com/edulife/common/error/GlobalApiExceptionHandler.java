@@ -1,5 +1,6 @@
 package com.edulife.common.error;
 
+import com.edulife.advisor.exception.AdvisorException;
 import com.edulife.certificates.exception.CertificateAccessDeniedException;
 import com.edulife.certificates.exception.CertificateAlreadyExistsException;
 import com.edulife.certificates.exception.CertificateGenerationException;
@@ -28,6 +29,12 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 public class GlobalApiExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalApiExceptionHandler.class);
+
+    @ExceptionHandler(AdvisorException.class)
+    public ResponseEntity<ApiError> handleAdvisorError(AdvisorException ex) {
+        log.error("Advisor service error.", ex);
+        return build(HttpStatus.SERVICE_UNAVAILABLE, "Advisor service is temporarily unavailable");
+    }
 
     @ExceptionHandler(CertificateNotFoundException.class)
     public ResponseEntity<ApiError> handleCertificateNotFound(CertificateNotFoundException ex) {
