@@ -31,14 +31,26 @@ public class Certificate {
     @Column(name = "certificate_number", nullable = false, unique = true, length = 50)
     private String certificateNumber;
 
-    @Column(name = "student_name", length = 200)
-    private String studentName;
+    @Column(name = "learner_name_snapshot", length = 200)
+    private String learnerNameSnapshot;
 
-    @Column(name = "course_title", length = 255)
-    private String courseTitle;
+    @Column(name = "teacher_name_snapshot", length = 200)
+    private String teacherNameSnapshot;
 
-    @Column(name = "issuer_name", length = 200)
-    private String issuerName;
+    @Column(name = "course_title_snapshot", length = 255)
+    private String courseTitleSnapshot;
+
+    @Column(name = "course_level_snapshot", length = 50)
+    private String courseLevelSnapshot;
+
+    @Column(name = "student_name", insertable = false, updatable = false, length = 200)
+    private String legacyStudentName;
+
+    @Column(name = "course_title", insertable = false, updatable = false, length = 255)
+    private String legacyCourseTitle;
+
+    @Column(name = "issuer_name", insertable = false, updatable = false, length = 200)
+    private String legacyIssuerName;
 
     @Column(name = "verification_hash", length = 128, unique = true)
     private String verificationHash;
@@ -61,15 +73,18 @@ public class Certificate {
     }
 
     public Certificate(UUID userId, UUID courseId, UUID examAttemptId, String certificateNumber,
-                       String studentName, String courseTitle, String issuerName,
+                       String learnerNameSnapshot, String teacherNameSnapshot,
+                       String courseTitleSnapshot, String courseLevelSnapshot,
                        String verificationHash, String pdfUrl) {
         this.userId = userId;
         this.courseId = courseId;
         this.examAttemptId = examAttemptId;
         this.certificateNumber = certificateNumber;
-        this.studentName = studentName;
-        this.courseTitle = courseTitle;
-        this.issuerName = issuerName;
+        // Snapshots preserve the certificate as issued even if profiles or course metadata change later.
+        this.learnerNameSnapshot = learnerNameSnapshot;
+        this.teacherNameSnapshot = teacherNameSnapshot;
+        this.courseTitleSnapshot = courseTitleSnapshot;
+        this.courseLevelSnapshot = courseLevelSnapshot;
         this.verificationHash = verificationHash;
         this.pdfUrl = pdfUrl;
     }
@@ -85,13 +100,24 @@ public class Certificate {
     public UUID getCourseId() { return courseId; }
     public UUID getExamAttemptId() { return examAttemptId; }
     public String getCertificateNumber() { return certificateNumber; }
-    public String getStudentName() { return studentName; }
-    public String getCourseTitle() { return courseTitle; }
-    public String getIssuerName() { return issuerName; }
+    public String getLearnerNameSnapshot() {
+        return firstPresent(learnerNameSnapshot, legacyStudentName);
+    }
+    public String getTeacherNameSnapshot() {
+        return firstPresent(teacherNameSnapshot, legacyIssuerName);
+    }
+    public String getCourseTitleSnapshot() {
+        return firstPresent(courseTitleSnapshot, legacyCourseTitle);
+    }
+    public String getCourseLevelSnapshot() { return courseLevelSnapshot; }
     public String getVerificationHash() { return verificationHash; }
     public String getPdfUrl() { return pdfUrl; }
     public Instant getIssuedAt() { return issuedAt; }
     public Instant getCreatedAt() { return createdAt; }
 
     public void setPdfUrl(String pdfUrl) { this.pdfUrl = pdfUrl; }
+
+    private String firstPresent(String current, String legacy) {
+        return current != null && !current.isBlank() ? current : legacy;
+    }
 }

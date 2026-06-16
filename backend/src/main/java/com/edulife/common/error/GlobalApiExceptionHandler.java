@@ -4,6 +4,7 @@ import com.edulife.advisor.exception.AdvisorException;
 import com.edulife.certificates.exception.CertificateAccessDeniedException;
 import com.edulife.certificates.exception.CertificateAlreadyExistsException;
 import com.edulife.certificates.exception.CertificateGenerationException;
+import com.edulife.certificates.exception.CertificateNotDownloadableException;
 import com.edulife.certificates.exception.CertificateNotFoundException;
 import com.edulife.exams.exception.ExamAlreadyPassedException;
 import com.edulife.exams.exception.ExamCooldownException;
@@ -48,6 +49,11 @@ public class GlobalApiExceptionHandler {
 
     @ExceptionHandler(CertificateAlreadyExistsException.class)
     public ResponseEntity<ApiError> handleCertificateAlreadyExists(CertificateAlreadyExistsException ex) {
+        return build(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(CertificateNotDownloadableException.class)
+    public ResponseEntity<ApiError> handleCertificateNotDownloadable(CertificateNotDownloadableException ex) {
         return build(HttpStatus.CONFLICT, ex.getMessage());
     }
 

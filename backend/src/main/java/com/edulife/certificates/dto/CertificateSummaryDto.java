@@ -7,6 +7,10 @@ public record CertificateSummaryDto(
         UUID id,
         UUID courseId,
         String certificateNumber,
+        String learnerName,
+        String teacherName,
         String courseTitle,
-        Instant issuedAt
+        String courseLevel,
+        Instant issuedAt,
+        String verificationHash
 ) {}

@@ -4,6 +4,7 @@ import com.edulife.certificates.controller.CertificateController;
 import com.edulife.certificates.dto.CertificateDetailDto;
 import com.edulife.certificates.dto.CertificateSummaryDto;
 import com.edulife.certificates.dto.CertificateVerificationDto;
+import com.edulife.certificates.exception.CertificateAccessDeniedException;
 import com.edulife.certificates.exception.CertificateNotFoundException;
 import com.edulife.certificates.service.CertificateService;
 import com.edulife.common.error.ApiErrorWriter;
@@ -72,7 +73,8 @@ class CertificateControllerTest {
 
         CertificateSummaryDto summary = new CertificateSummaryDto(
                 CERT_ID, COURSE_ID, "EL-2026-ABC123DEF456",
-                "Algebra Foundations", Instant.parse("2026-05-01T10:00:00Z"));
+                "Jane Doe", "Prof. Smith", "Algebra Foundations", "BEGINNER",
+                Instant.parse("2026-05-01T10:00:00Z"), "abc123hashvalue");
 
         given(certificateService.getMyCertificates(USER_ID)).willReturn(List.of(summary));
 
@@ -80,7 +82,11 @@ class CertificateControllerTest {
                         .header("Authorization", "Bearer valid-token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(CERT_ID.toString()))
+                .andExpect(jsonPath("$[0].learnerName").value("Jane Doe"))
+                .andExpect(jsonPath("$[0].teacherName").value("Prof. Smith"))
                 .andExpect(jsonPath("$[0].courseTitle").value("Algebra Foundations"))
+                .andExpect(jsonPath("$[0].courseLevel").value("BEGINNER"))
+                .andExpect(jsonPath("$[0].verificationHash").value("abc123hashvalue"))
                 .andExpect(jsonPath("$[0].certificateNumber").value("EL-2026-ABC123DEF456"));
     }
 
@@ -91,7 +97,7 @@ class CertificateControllerTest {
 
         CertificateDetailDto detail = new CertificateDetailDto(
                 CERT_ID, COURSE_ID, "EL-2026-ABC123DEF456",
-                "Jane Doe", "Algebra Foundations", "Prof. Smith",
+                "Jane Doe", "Prof. Smith", "Algebra Foundations", "BEGINNER",
                 Instant.parse("2026-05-01T10:00:00Z"), "abc123hashvalue",
                 "storage/certificates/certificate-" + CERT_ID + ".pdf");
 
@@ -101,8 +107,11 @@ class CertificateControllerTest {
                         .header("Authorization", "Bearer valid-token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(CERT_ID.toString()))
-                .andExpect(jsonPath("$.studentName").value("Jane Doe"))
-                .andExpect(jsonPath("$.courseTitle").value("Algebra Foundations"));
+                .andExpect(jsonPath("$.learnerName").value("Jane Doe"))
+                .andExpect(jsonPath("$.teacherName").value("Prof. Smith"))
+                .andExpect(jsonPath("$.courseTitle").value("Algebra Foundations"))
+                .andExpect(jsonPath("$.courseLevel").value("BEGINNER"))
+                .andExpect(jsonPath("$.verificationHash").value("abc123hashvalue"));
     }
 
     @Test
@@ -124,15 +133,18 @@ class CertificateControllerTest {
     void verifyCertificateWithoutTokenReturns200BecausePublic() throws Exception {
         String hash = "abc123hashvalue";
         CertificateVerificationDto dto = new CertificateVerificationDto(
-                "Jane Doe", "Algebra Foundations", "Prof. Smith",
-                Instant.parse("2026-05-01T10:00:00Z"), "EL-2026-ABC123DEF456", true);
+                "Jane Doe", "Prof. Smith", "Algebra Foundations", "BEGINNER",
+                Instant.parse("2026-05-01T10:00:00Z"), "EL-2026-ABC123DEF456",
+                "abc123hashvalue", true);
 
         given(certificateService.verifyCertificate(hash)).willReturn(dto);
 
         mockMvc.perform(get("/api/v1/certificates/verify/{hash}", hash))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.valid").value(true))
-                .andExpect(jsonPath("$.studentName").value("Jane Doe"))
+                .andExpect(jsonPath("$.learnerName").value("Jane Doe"))
+                .andExpect(jsonPath("$.teacherName").value("Prof. Smith"))
+                .andExpect(jsonPath("$.courseLevel").value("BEGINNER"))
                 .andExpect(jsonPath("$.certificateNumber").value("EL-2026-ABC123DEF456"));
     }
 
@@ -153,8 +165,9 @@ class CertificateControllerTest {
         String testIp = "203.0.113.42";
         String hash = "ratelimit-hash";
         CertificateVerificationDto dto = new CertificateVerificationDto(
-                "Jane Doe", "Algebra Foundations", "Prof. Smith",
-                Instant.parse("2026-05-01T10:00:00Z"), "EL-2026-ABC123DEF456", true);
+                "Jane Doe", "Prof. Smith", "Algebra Foundations", "BEGINNER",
+                Instant.parse("2026-05-01T10:00:00Z"), "EL-2026-ABC123DEF456",
+                "abc123hashvalue", true);
 
         given(certificateService.verifyCertificate(hash)).willReturn(dto);
 
@@ -187,6 +200,35 @@ class CertificateControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_PDF))
                 .andExpect(header().string("Content-Disposition",
                         "attachment; filename=\"certificate-" + CERT_ID + ".pdf\""));
+    }
+
+    @Test
+    void downloadMissingCertificateReturns404() throws Exception {
+        mockValidFirebaseToken();
+        mockUserResolution();
+
+        given(certificateService.getCertificatePdfForDownload(USER_ID, CERT_ID))
+                .willThrow(new CertificateNotFoundException("Certificate not found"));
+
+        mockMvc.perform(get("/api/v1/certificates/{id}/download", CERT_ID)
+                        .header("Authorization", "Bearer valid-token"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.message").value("Certificate not found"));
+    }
+
+    @Test
+    void downloadCertificateOwnedByAnotherLearnerReturns403() throws Exception {
+        mockValidFirebaseToken();
+        mockUserResolution();
+
+        given(certificateService.getCertificatePdfForDownload(USER_ID, CERT_ID))
+                .willThrow(new CertificateAccessDeniedException("This certificate belongs to another learner"));
+
+        mockMvc.perform(get("/api/v1/certificates/{id}/download", CERT_ID)
+                        .header("Authorization", "Bearer valid-token"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403));
     }
 
     private void mockValidFirebaseToken() throws Exception {

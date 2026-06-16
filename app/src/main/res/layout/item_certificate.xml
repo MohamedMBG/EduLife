@@ -69,6 +69,22 @@
                     android:textColor="@color/brand_primary"
                     android:textSize="12sp" />
 
+                <TextView
+                    android:id="@+id/certCourseLevel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textColor="@color/brand_text_secondary"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/certTeacherName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textColor="@color/brand_text_muted"
+                    android:textSize="12sp" />
+
             </LinearLayout>
         </LinearLayout>
 

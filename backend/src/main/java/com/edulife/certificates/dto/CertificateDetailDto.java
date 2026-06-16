@@ -7,9 +7,10 @@ public record CertificateDetailDto(
         UUID id,
         UUID courseId,
         String certificateNumber,
-        String studentName,
+        String learnerName,
+        String teacherName,
         String courseTitle,
-        String issuerName,
+        String courseLevel,
         Instant issuedAt,
         String verificationHash,
         String pdfUrl

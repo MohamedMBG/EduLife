@@ -155,16 +155,17 @@ body {
 
       <div class="presented">This certifies that</div>
 
-      <div class="student-name" th:text="${studentName}">Student Name</div>
+      <div class="student-name" th:text="${learnerName}"></div>
 
       <div class="body-text">
-        has successfully completed all requirements and passed the final examination for the course
+        has successfully completed the final examination requirements for
       </div>
 
-      <div class="course-title" th:text="${courseTitle}">Course Title</div>
+      <div class="course-title" th:text="${courseTitle}"></div>
 
       <div class="body-text">
-        achieving a passing score and demonstrating mastery of the subject matter.
+        at <strong th:text="${courseLevel}"></strong> level, instructed by
+        <strong th:text="${teacherName}"></strong>.
       </div>
 
       <table class="footer-table">
@@ -172,7 +173,7 @@ body {
           <td class="footer-left-cell">
             <div>
               <div class="meta-label">Instructor</div>
-              <div th:text="${issuerName}">Instructor Name</div>
+              <div th:text="${teacherName}"></div>
             </div>
             <div class="meta-row">
               <div class="meta-label">Issue Date</div>
@@ -188,7 +189,7 @@ body {
             </div>
           </td>
           <td class="footer-center-cell">
-            <div class="signature-block" th:text="${issuerName}">Instructor Name</div>
+            <div class="signature-block" th:text="${teacherName}"></div>
             <div class="sig-role">Authorized Signatory</div>
           </td>
           <td class="footer-right-cell">

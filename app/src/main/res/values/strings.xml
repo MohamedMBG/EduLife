@@ -294,10 +294,11 @@
     <string name="cert_detail_issuer_label">Issued by</string>
     <string name="cert_detail_hash_label">Verification</string>
     <string name="cert_detail_share">Share Certificate</string>
-    <string name="cert_share_text">I completed %1$s!\n\nCertificate: %2$s\nIssued: %3$s\nVerification: %4$s\n\nVerified by EduLife</string>
+    <string name="cert_share_text">%1$s successfully completed %2$s at %3$s level, instructed by %4$s.\n\nCertificate: %5$s\nIssued: %6$s\nVerification: %7$s\n\nVerified by EduLife</string>
     <string name="cert_detail_eyebrow">Certificate of Completion</string>
     <string name="cert_detail_award_clause">This certificate is proudly presented to</string>
     <string name="cert_detail_for_completing">for successfully completing the course</string>
+    <string name="cert_detail_completion_sentence">This certifies that %1$s has successfully completed %2$s at %3$s level, instructed by %4$s.</string>
     <string name="cert_detail_signature_label">Authorized signature</string>
     <string name="cert_detail_date_label">Date of issue</string>
     <string name="cert_seal_description">Official seal</string>

@@ -3,10 +3,12 @@ package com.edulife.certificates.dto;
 import java.time.Instant;
 
 public record CertificateVerificationDto(
-        String studentName,
+        String learnerName,
+        String teacherName,
         String courseTitle,
-        String issuerName,
+        String courseLevel,
         Instant issuedAt,
         String certificateNumber,
+        String verificationHash,
         boolean valid
 ) {}

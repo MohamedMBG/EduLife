@@ -93,11 +93,19 @@ public class CertificateDetailFragment extends Fragment {
         ((TextView) view.findViewById(R.id.certDetailNumber))
                 .setText(cert.certificateNumber != null ? cert.certificateNumber : "");
         ((TextView) view.findViewById(R.id.certDetailStudentName))
-                .setText(cert.studentName != null ? cert.studentName : "—");
+                .setText(cert.learnerName != null ? cert.learnerName : "");
         ((TextView) view.findViewById(R.id.certDetailIssuer))
-                .setText(cert.issuerName != null ? cert.issuerName : "EduLife");
+                .setText(cert.teacherName != null ? cert.teacherName : "");
         ((TextView) view.findViewById(R.id.certDetailHash))
-                .setText(cert.verificationHash != null ? cert.verificationHash : "—");
+                .setText(cert.verificationHash != null ? cert.verificationHash : "");
+        // This sentence mirrors the backend certificate snapshot so the on-screen view
+        // and downloaded PDF describe the same issued credential.
+        ((TextView) view.findViewById(R.id.certDetailCompletionText))
+                .setText(getString(R.string.cert_detail_completion_sentence,
+                        cert.learnerName != null ? cert.learnerName : "",
+                        cert.courseTitle != null ? cert.courseTitle : "",
+                        cert.courseLevel != null ? cert.courseLevel : "",
+                        cert.teacherName != null ? cert.teacherName : ""));
 
         TextView dateView = view.findViewById(R.id.certDetailIssuedDate);
         if (cert.issuedAt != null) {
@@ -152,7 +160,10 @@ public class CertificateDetailFragment extends Fragment {
     private void shareCert(CertificateDetail cert) {
         String date = cert.issuedAt != null ? formatDate(cert.issuedAt) : "";
         String text = getString(R.string.cert_share_text,
+                cert.learnerName != null ? cert.learnerName : "",
                 cert.courseTitle != null ? cert.courseTitle : "",
+                cert.courseLevel != null ? cert.courseLevel : "",
+                cert.teacherName != null ? cert.teacherName : "",
                 cert.certificateNumber != null ? cert.certificateNumber : "",
                 date,
                 cert.verificationHash != null ? cert.verificationHash : "");

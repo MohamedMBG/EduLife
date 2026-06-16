@@ -194,6 +194,8 @@ public class ExamService {
 
         String certificateNumber = null;
         if (passed) {
+            // Certificates are issued only from the server-side final-exam pass branch;
+            // lesson completion alone must never create a certificate.
             // XP for the pass is awarded before the certificate so the dedup key tied to the
             // exam attempt id is recorded even if certificate generation fails downstream.
             gamificationService.onExamPassed(user.getId(), savedAttempt.getId());

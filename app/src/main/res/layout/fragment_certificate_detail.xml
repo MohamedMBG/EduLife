@@ -190,6 +190,17 @@
                     android:textSize="22sp"
                     android:textStyle="bold" />
 
+                <TextView
+                    android:id="@+id/certDetailCompletionText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:fontFamily="serif"
+                    android:gravity="center"
+                    android:lineSpacingMultiplier="1.45"
+                    android:textColor="@color/cert_ink_muted"
+                    android:textSize="13sp" />
+
                 <!-- Bottom ornament -->
                 <ImageView
                     android:layout_width="160dp"

@@ -5,64 +5,50 @@ import com.edulife.certificates.dto.CertificateDetailDto;
 import com.edulife.certificates.dto.CertificateSummaryDto;
 import com.edulife.certificates.dto.CertificateVerificationDto;
 import com.edulife.certificates.entity.Certificate;
+import com.edulife.certificates.exception.CertificateAccessDeniedException;
 import com.edulife.certificates.exception.CertificateGenerationException;
+import com.edulife.certificates.exception.CertificateNotDownloadableException;
 import com.edulife.certificates.exception.CertificateNotFoundException;
 import com.edulife.certificates.repository.CertificateRepository;
 import com.edulife.courses.entity.Course;
 import com.edulife.courses.repository.CourseRepository;
 import com.edulife.profiles.entity.Profile;
 import com.edulife.profiles.repository.ProfileRepository;
-import com.edulife.users.repository.UserRepository;
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.client.j2se.MatrixToImageWriter;
-import com.google.zxing.common.BitMatrix;
-import com.google.zxing.qrcode.QRCodeWriter;
-import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
-import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
-import java.time.Instant;
 import java.time.Year;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.util.Base64;
 import java.util.HexFormat;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.context.Context;
-import org.thymeleaf.spring6.SpringTemplateEngine;
 
 @Service
 @EnableConfigurationProperties(CertificateStorageProperties.class)
 public class CertificateService {
 
-    private static final DateTimeFormatter DATE_FORMATTER =
-            DateTimeFormatter.ofPattern("MMMM d, yyyy").withZone(ZoneOffset.UTC);
+    private static final Logger log = LoggerFactory.getLogger(CertificateService.class);
 
     private final CertificateRepository certificateRepository;
-    private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
     private final CourseRepository courseRepository;
-    private final SpringTemplateEngine templateEngine;
+    private final CertificatePdfService pdfService;
     private final CertificateStorageProperties storageProperties;
 
     public CertificateService(
             CertificateRepository certificateRepository,
-            UserRepository userRepository,
             ProfileRepository profileRepository,
             CourseRepository courseRepository,
-            SpringTemplateEngine templateEngine,
+            CertificatePdfService pdfService,
             CertificateStorageProperties storageProperties) {
         this.certificateRepository = certificateRepository;
-        this.userRepository = userRepository;
         this.profileRepository = profileRepository;
         this.courseRepository = courseRepository;
-        this.templateEngine = templateEngine;
+        this.pdfService = pdfService;
         this.storageProperties = storageProperties;
     }
 
@@ -73,54 +59,39 @@ public class CertificateService {
             return toDetailDto(existing);
         }
 
-        String studentName = profileRepository.findByUserId(userId)
-                .map(Profile::getDisplayName)
-                .filter(name -> name != null && !name.isBlank())
-                .orElse("EduLife Learner");
-
-        Course course = courseRepository.findById(courseId).orElse(null);
-        String courseTitle = course != null ? course.getTitle() : "Course";
-
-        String issuerName = "EduLife";
-        if (course != null && course.getCreatedByUserId() != null) {
-            issuerName = profileRepository.findByUserId(course.getCreatedByUserId())
-                    .map(Profile::getDisplayName)
-                    .filter(name -> name != null && !name.isBlank())
-                    .orElse("EduLife");
+        String learnerName = resolveUserDisplayName(userId, "learner");
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new CertificateGenerationException("Course not found for certificate generation"));
+        if (course.getCreatedByUserId() == null) {
+            throw new CertificateGenerationException("Course is missing an instructor for certificate generation");
         }
+        String teacherName = resolveUserDisplayName(course.getCreatedByUserId(), "teacher");
+        String courseTitle = requireText(course.getTitle(), "Course title is missing for certificate generation");
+        String courseLevel = requireText(course.getLevel(), "Course level is missing for certificate generation");
 
         String certificateNumber = generateCertificateNumber();
         String verificationHash = generateVerificationHash(certificateNumber, userId, courseId);
 
+        // Persist the certificate first so the snapshot (and the @PrePersist issuedAt) is the single
+        // source of truth the PDF renders from — both at issue time and on every later download.
+        Certificate cert = new Certificate(userId, courseId, examAttemptId, certificateNumber,
+                learnerName, teacherName, courseTitle, courseLevel, verificationHash, null);
+        cert = certificateRepository.save(cert);
+
+        // Pre-render and cache a copy on disk for convenience/audit. This is best-effort: the
+        // download endpoint regenerates from the snapshot, so a storage hiccup must never fail
+        // issuance (which is tied to the authoritative exam-pass result).
         try {
-            String verifyUrl = storageProperties.getPublicBaseUrl() + "/verify/" + verificationHash;
-            String qrCodeDataUri = generateQrCodeDataUri(verifyUrl);
-
-            Map<String, Object> templateVars = Map.of(
-                    "studentName", studentName,
-                    "courseTitle", courseTitle,
-                    "issuerName", issuerName,
-                    "issuedAt", DATE_FORMATTER.format(Instant.now()),
-                    "certificateNumber", certificateNumber,
-                    "verificationCode", verificationHash.substring(0, 16) + "...",
-                    "qrCodeDataUri", qrCodeDataUri
-            );
-
-            String html = renderCertificateHtml(templateVars);
-            byte[] pdfBytes = htmlToPdf(html);
-
-            Certificate cert = new Certificate(userId, courseId, examAttemptId, certificateNumber,
-                    studentName, courseTitle, issuerName, verificationHash, null);
-            cert = certificateRepository.save(cert);
-
+            byte[] pdfBytes = pdfService.generatePdf(cert);
             Path pdfPath = savePdf(cert.getId(), pdfBytes);
             cert.setPdfUrl(pdfPath.toString());
             cert = certificateRepository.save(cert);
-
-            return toDetailDto(cert);
         } catch (Exception e) {
-            throw new CertificateGenerationException("Failed to generate certificate PDF", e);
+            log.warn("Could not pre-render certificate PDF for {}; it will be generated on download.",
+                    cert.getId(), e);
         }
+
+        return toDetailDto(cert);
     }
 
     public List<CertificateSummaryDto> getMyCertificates(UUID userId) {
@@ -139,35 +110,35 @@ public class CertificateService {
         Certificate cert = certificateRepository.findByVerificationHash(verificationHash)
                 .orElseThrow(() -> new CertificateNotFoundException("Certificate not found for the given verification hash"));
         return new CertificateVerificationDto(
-                cert.getStudentName(),
-                cert.getCourseTitle(),
-                cert.getIssuerName(),
+                cert.getLearnerNameSnapshot(),
+                cert.getTeacherNameSnapshot(),
+                cert.getCourseTitleSnapshot(),
+                cert.getCourseLevelSnapshot(),
                 cert.getIssuedAt(),
                 cert.getCertificateNumber(),
+                cert.getVerificationHash(),
                 true
         );
     }
 
     public byte[] getCertificatePdfForDownload(UUID userId, UUID certificateId) {
-        Certificate cert = certificateRepository.findByIdAndUserId(certificateId, userId)
+        // Look up by id first so we can distinguish "missing" (404) from "owned by another learner"
+        // (403) instead of collapsing both into a not-found.
+        Certificate cert = certificateRepository.findById(certificateId)
                 .orElseThrow(() -> new CertificateNotFoundException("Certificate not found"));
-
-        String pdfUrl = cert.getPdfUrl();
-        if (pdfUrl == null || pdfUrl.isBlank()) {
-            throw new CertificateNotFoundException("PDF not available for this certificate");
+        if (!userId.equals(cert.getUserId())) {
+            throw new CertificateAccessDeniedException("This certificate belongs to another learner");
+        }
+        if (cert.getVerificationHash() == null || cert.getVerificationHash().isBlank()) {
+            throw new CertificateNotDownloadableException("Certificate is not eligible for download");
         }
 
+        // Regenerate from the snapshot rather than reading a possibly-missing stored file. This keeps
+        // the verification hash identical to the one shown in the UI (it is read, never recomputed).
         try {
-            Path storageRoot = Path.of(storageProperties.getStorageDir()).toAbsolutePath().normalize();
-            Path target = Path.of(pdfUrl).toAbsolutePath().normalize();
-            if (!target.startsWith(storageRoot)) {
-                throw new CertificateNotFoundException("PDF not available for this certificate");
-            }
-            return Files.readAllBytes(target);
-        } catch (CertificateNotFoundException e) {
-            throw e;
+            return pdfService.generatePdf(cert);
         } catch (Exception e) {
-            throw new CertificateGenerationException("Could not read certificate PDF from storage", e);
+            throw new CertificateGenerationException("Failed to render certificate PDF", e);
         }
     }
 
@@ -175,6 +146,21 @@ public class CertificateService {
         String year = String.valueOf(Year.now().getValue());
         String unique = UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();
         return "EL-" + year + "-" + unique;
+    }
+
+    private String resolveUserDisplayName(UUID userId, String roleDescription) {
+        return profileRepository.findByUserId(userId)
+                .map(Profile::getDisplayName)
+                .filter(name -> name != null && !name.isBlank())
+                .orElseThrow(() -> new CertificateGenerationException(
+                        "Missing " + roleDescription + " full name for certificate generation"));
+    }
+
+    private String requireText(String value, String message) {
+        if (value == null || value.isBlank()) {
+            throw new CertificateGenerationException(message);
+        }
+        return value;
     }
 
     private String generateVerificationHash(String certificateNumber, UUID userId, UUID courseId) {
@@ -185,31 +171,6 @@ public class CertificateService {
             );
         } catch (Exception e) {
             throw new CertificateGenerationException("Failed to generate verification hash", e);
-        }
-    }
-
-    private String generateQrCodeDataUri(String content) throws Exception {
-        QRCodeWriter writer = new QRCodeWriter();
-        BitMatrix matrix = writer.encode(content, BarcodeFormat.QR_CODE, 200, 200);
-        ByteArrayOutputStream pngOut = new ByteArrayOutputStream();
-        MatrixToImageWriter.writeToStream(matrix, "PNG", pngOut);
-        return "data:image/png;base64," + Base64.getEncoder().encodeToString(pngOut.toByteArray());
-    }
-
-    private String renderCertificateHtml(Map<String, Object> vars) {
-        Context ctx = new Context();
-        ctx.setVariables(vars);
-        return templateEngine.process("certificate-academic", ctx);
-    }
-
-    private byte[] htmlToPdf(String html) throws Exception {
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            PdfRendererBuilder builder = new PdfRendererBuilder();
-            builder.useFastMode();
-            builder.withHtmlContent(html, null);
-            builder.toStream(out);
-            builder.run();
-            return out.toByteArray();
         }
     }
 
@@ -226,8 +187,12 @@ public class CertificateService {
                 cert.getId(),
                 cert.getCourseId(),
                 cert.getCertificateNumber(),
-                cert.getCourseTitle(),
-                cert.getIssuedAt()
+                cert.getLearnerNameSnapshot(),
+                cert.getTeacherNameSnapshot(),
+                cert.getCourseTitleSnapshot(),
+                cert.getCourseLevelSnapshot(),
+                cert.getIssuedAt(),
+                cert.getVerificationHash()
         );
     }
 
@@ -236,9 +201,10 @@ public class CertificateService {
                 cert.getId(),
                 cert.getCourseId(),
                 cert.getCertificateNumber(),
-                cert.getStudentName(),
-                cert.getCourseTitle(),
-                cert.getIssuerName(),
+                cert.getLearnerNameSnapshot(),
+                cert.getTeacherNameSnapshot(),
+                cert.getCourseTitleSnapshot(),
+                cert.getCourseLevelSnapshot(),
                 cert.getIssuedAt(),
                 cert.getVerificationHash(),
                 cert.getPdfUrl()

@@ -11,8 +11,24 @@ import {
   User,
 } from "lucide-react";
 import { AppShell } from "../components/app/AppShell";
-import { downloadCertificate, getCertificate } from "../lib/api/client";
+import { ApiClientError, downloadCertificate, getCertificate } from "../lib/api/client";
 import { RequireAuth, useAuth } from "../lib/auth/auth-context";
+
+function downloadErrorMessage(error: unknown): string {
+  if (error instanceof ApiClientError) {
+    switch (error.status) {
+      case 404:
+        return "Certificate not found.";
+      case 403:
+        return "You do not have access to this certificate.";
+      case 409:
+        return "This certificate is not available for download.";
+      default:
+        return "PDF could not be generated. Please try again.";
+    }
+  }
+  return "PDF could not be generated. Please try again.";
+}
 
 export const Route = createFileRoute("/certificates/$certificateId")({
   component: CertificateDetailRoute,
@@ -49,7 +65,7 @@ function CertificateDetailPage() {
       anchor.remove();
       URL.revokeObjectURL(url);
     },
-    onError: (error: Error) => setDownloadError(error.message),
+    onError: (error: unknown) => setDownloadError(downloadErrorMessage(error)),
     onSuccess: () => setDownloadError(null),
   });
 

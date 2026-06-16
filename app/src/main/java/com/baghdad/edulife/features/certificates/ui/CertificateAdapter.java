@@ -61,8 +61,10 @@ public class CertificateAdapter extends RecyclerView.Adapter<CertificateAdapter.
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         CertificateSummary cert = items.get(position);
 
-        holder.courseTitle.setText(cert.courseTitle != null ? cert.courseTitle : "Course");
+        holder.courseTitle.setText(cert.courseTitle != null ? cert.courseTitle : "");
         holder.certNumber.setText(cert.certificateNumber != null ? cert.certificateNumber : "");
+        holder.courseLevel.setText(cert.courseLevel != null ? cert.courseLevel : "");
+        holder.teacherName.setText(cert.teacherName != null ? cert.teacherName : "");
 
         if (cert.issuedAt != null) {
             try {
@@ -86,6 +88,8 @@ public class CertificateAdapter extends RecyclerView.Adapter<CertificateAdapter.
     static class ViewHolder extends RecyclerView.ViewHolder {
         final TextView courseTitle;
         final TextView certNumber;
+        final TextView courseLevel;
+        final TextView teacherName;
         final TextView issuedDate;
         final LinearLayout downloadButton;
 
@@ -93,6 +97,8 @@ public class CertificateAdapter extends RecyclerView.Adapter<CertificateAdapter.
             super(itemView);
             courseTitle    = itemView.findViewById(R.id.certCourseTitle);
             certNumber     = itemView.findViewById(R.id.certNumber);
+            courseLevel    = itemView.findViewById(R.id.certCourseLevel);
+            teacherName    = itemView.findViewById(R.id.certTeacherName);
             issuedDate     = itemView.findViewById(R.id.certIssuedDate);
             downloadButton = itemView.findViewById(R.id.certDownloadButton);
         }

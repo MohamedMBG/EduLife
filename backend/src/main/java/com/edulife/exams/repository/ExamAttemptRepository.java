@@ -4,6 +4,8 @@ import com.edulife.exams.entity.ExamAttempt;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface ExamAttemptRepository extends JpaRepository<ExamAttempt, UUID> {
     boolean existsByUserIdAndExamIdAndPassedTrue(UUID userId, UUID examId);
@@ -19,6 +21,12 @@ public interface ExamAttemptRepository extends JpaRepository<ExamAttempt, UUID> 
     long countByUserId(UUID userId);
 
     long countByUserIdAndPassedTrue(UUID userId);
+
+    @Query("select coalesce(avg(a.score), 0) from ExamAttempt a where a.userId = :userId")
+    Double averageScoreByUserId(@Param("userId") UUID userId);
+
+    @Query("select coalesce(max(a.score), 0) from ExamAttempt a where a.userId = :userId")
+    Integer maxScoreByUserId(@Param("userId") UUID userId);
 
     // Teacher course analytics: attempts for one course's exam (attempt-based pass rate).
     long countByExamId(UUID examId);
