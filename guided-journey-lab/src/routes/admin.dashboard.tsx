@@ -15,7 +15,7 @@ import {
   ShieldCheck,
   Users,
 } from "lucide-react";
-import { AdminShell } from "../components/app/AdminShell";
+import { AppLayout } from "../components/app/AppLayout";
 import { getAdminMetrics, listAdminTeacherRequests } from "../lib/api/client";
 import type { AdminMetrics, TeacherRequestSummary } from "../lib/api/types";
 import { useAuth } from "../lib/auth/auth-context";
@@ -50,19 +50,18 @@ function AdminDashboardRoute() {
 
   const metrics = metricsQuery.data;
   const insights = metrics ? buildInsights(metrics) : null;
-  const firstName =
-    auth.session?.displayName?.split(" ").filter(Boolean)[0] || "Admin";
+  const firstName = auth.session?.displayName?.split(" ").filter(Boolean)[0] || "Admin";
   const pendingRequests = pendingRequestsQuery.data?.content ?? [];
 
   return (
-    <AdminShell active="dashboard">
+    <AppLayout>
       {metricsQuery.isLoading ? (
         <LoadingCard />
       ) : metricsQuery.isError ? (
         <ErrorCard message={metricsQuery.error.message} onRetry={() => metricsQuery.refetch()} />
       ) : metrics && insights ? (
         <div className="space-y-8">
-          <section className="overflow-hidden rounded-[2rem] border border-[oklch(0.44_0.16_250)] bg-[oklch(0.32_0.14_250)] text-white shadow-elevated">
+          <section className="overflow-hidden rounded-[2rem] border border-primary/20 bg-primary text-white shadow-elevated">
             <div className="grid gap-6 px-6 py-8 lg:grid-cols-[1.3fr_0.9fr] lg:px-8">
               <div>
                 <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs uppercase tracking-[0.16em]">
@@ -90,7 +89,7 @@ function AdminDashboardRoute() {
               title="Learners"
               value={metrics.totalLearners}
               detail={`${insights.learnerShare}% of platform users`}
-              icon={<Users className="h-5 w-5 text-[oklch(0.40_0.19_250)]" />}
+              icon={<Users className="h-5 w-5 text-primary" />}
             />
             <StatCard
               title="Teachers"
@@ -161,7 +160,7 @@ function AdminDashboardRoute() {
               action={
                 <Link
                   to="/admin/teacher-requests"
-                  className="inline-flex items-center gap-2 rounded-full bg-[oklch(0.40_0.19_250)] px-4 py-2 text-xs font-semibold text-white"
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-white"
                 >
                   Review requests
                   <ArrowRight className="h-3.5 w-3.5" />
@@ -232,7 +231,7 @@ function AdminDashboardRoute() {
           </section>
         </div>
       ) : null}
-    </AdminShell>
+    </AppLayout>
   );
 }
 
@@ -412,10 +411,7 @@ function ProgressBar({ label, value, helper }: { label: string; value: number; h
         <p className="text-muted-foreground">{safeValue}%</p>
       </div>
       <div className="mt-2 h-2 rounded-full bg-border">
-        <div
-          className="h-full rounded-full bg-[oklch(0.40_0.19_250)]"
-          style={{ width: `${safeValue}%` }}
-        />
+        <div className="h-full rounded-full bg-primary" style={{ width: `${safeValue}%` }} />
       </div>
       <p className="mt-2 text-xs text-muted-foreground">{helper}</p>
     </div>
@@ -436,7 +432,7 @@ function QueueStat({
       ? "bg-teal-500/10 text-teal-700"
       : tone === "bad"
         ? "bg-destructive/10 text-destructive"
-        : "bg-[oklch(0.92_0.03_250)] text-[oklch(0.40_0.19_250)]";
+        : "bg-accent/55 text-primary";
 
   return (
     <div className={`rounded-2xl px-4 py-3 ${toneClass}`}>
@@ -456,7 +452,7 @@ function PendingRequestRow({ request }: { request: TeacherRequestSummary }) {
             Requested {formatDate(request.requestedAt)}
           </p>
         </div>
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[oklch(0.92_0.03_250)] px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-[oklch(0.40_0.19_250)]">
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent/55 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-primary">
           <Clock3 className="h-3 w-3" />
           Pending
         </span>
@@ -524,7 +520,7 @@ function ErrorCard({ message, onRetry }: { message: string; onRetry: () => void 
       <button
         type="button"
         onClick={onRetry}
-        className="mt-4 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background"
+        className="mt-4 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
       >
         Retry
       </button>

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookOpen, Plus, Users, X } from "lucide-react";
-import { AppShell } from "../components/app/AppShell";
+import { AppLayout } from "../components/app/AppLayout";
 import { createGroup, listMyGroups } from "../lib/api/client";
 import { RequireGroupManager, useAuth } from "../lib/auth/auth-context";
 import type { GroupSummary } from "../lib/api/types";
@@ -32,22 +32,7 @@ function GroupsPage() {
   const groups = groupsQuery.data ?? [];
 
   return (
-    <AppShell
-      active="groups"
-      user={{
-        displayName: auth.session?.displayName || "EduLife group admin",
-        email: auth.session?.email || "",
-      }}
-      onLogout={auth.logout}
-      header={
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-semibold text-foreground">Groups</p>
-          <p className="text-xs text-muted-foreground">
-            Manage cohorts: members and the courses assigned to them.
-          </p>
-        </div>
-      }
-    >
+    <AppLayout>
       <div className="mx-auto max-w-5xl space-y-8">
         <section className="flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -59,7 +44,7 @@ function GroupsPage() {
           <button
             type="button"
             onClick={() => setCreating((open) => !open)}
-            className="inline-flex h-11 items-center gap-2 rounded-full bg-foreground px-5 text-sm font-medium text-background shadow-elevated transition-all hover:opacity-90 active:scale-[0.98]"
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground shadow-elevated transition-all hover:opacity-90 active:scale-[0.98]"
           >
             {creating ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
             {creating ? "Close" : "New group"}
@@ -69,7 +54,10 @@ function GroupsPage() {
         {creating && <CreateGroupCard onDone={() => setCreating(false)} />}
 
         {groupsQuery.isLoading ? (
-          <StateCard title="Loading your groups..." detail="Fetching your cohorts from the backend." />
+          <StateCard
+            title="Loading your groups..."
+            detail="Fetching your cohorts from the backend."
+          />
         ) : groupsQuery.isError ? (
           <StateCard title="Groups unavailable" detail={groupsQuery.error.message} />
         ) : groups.length === 0 ? (
@@ -85,7 +73,7 @@ function GroupsPage() {
           </div>
         )}
       </div>
-    </AppShell>
+    </AppLayout>
   );
 }
 
@@ -147,7 +135,10 @@ function CreateGroupCard({ onDone }: { onDone: () => void }) {
         className="w-full h-11 rounded-xl border border-input bg-surface px-4 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
       />
       {createMutation.isError && (
-        <p role="alert" className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+        <p
+          role="alert"
+          className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+        >
           {createMutation.error.message}
         </p>
       )}

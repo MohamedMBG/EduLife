@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Award, ArrowRight, CalendarDays, FileBadge2 } from "lucide-react";
-import { AppShell } from "../components/app/AppShell";
+import { AppLayout } from "../components/app/AppLayout";
 import { listMyCertificates, listMyEnrollments } from "../lib/api/client";
 import { RequireAuth, useAuth } from "../lib/auth/auth-context";
 
@@ -36,24 +36,12 @@ function CertificatesPage() {
   );
 
   return (
-    <AppShell
-      active="certificates"
-      user={{
-        displayName: auth.session?.displayName ?? "EduLife learner",
-        email: auth.session?.email ?? "",
-      }}
-      onLogout={auth.logout}
-      header={
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-semibold text-foreground">Certificates</p>
-          <p className="text-xs text-muted-foreground">
-            Certificates earned after passing backend-scored course exams.
-          </p>
-        </div>
-      }
-    >
+    <AppLayout>
       {certificatesQuery.isLoading || enrollmentsQuery.isLoading ? (
-        <StateCard title="Loading certificates..." detail="Fetching your verified certificate history." />
+        <StateCard
+          title="Loading certificates..."
+          detail="Fetching your verified certificate history."
+        />
       ) : certificatesQuery.isError ? (
         <StateCard title="Certificates unavailable" detail={certificatesQuery.error.message} />
       ) : (certificatesQuery.data ?? []).length === 0 ? (
@@ -75,7 +63,9 @@ function CertificatesPage() {
                     Verified certificate
                   </p>
                   <h2 className="mt-4 text-xl font-semibold text-foreground">
-                    {certificate.courseTitle || courseTitles.get(certificate.courseId) || "Course completed"}
+                    {certificate.courseTitle ||
+                      courseTitles.get(certificate.courseId) ||
+                      "Course completed"}
                   </h2>
                 </div>
                 <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-soft">
@@ -117,7 +107,7 @@ function CertificatesPage() {
           ))}
         </section>
       )}
-    </AppShell>
+    </AppLayout>
   );
 }
 

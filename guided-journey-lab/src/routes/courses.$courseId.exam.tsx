@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AlertTriangle, ArrowLeft, CheckCircle2, Clock3, ShieldAlert } from "lucide-react";
-import { AppShell } from "../components/app/AppShell";
+import { AppLayout } from "../components/app/AppLayout";
 import { getCourseDetail, getExam, getExamStatus, submitExam } from "../lib/api/client";
 import { ApiClientError } from "../lib/api/client";
 import type { ExamAnswer } from "../lib/api/types";
@@ -39,8 +39,7 @@ function ExamPage() {
     retry: false,
   });
 
-  const canTake =
-    statusQuery.data && !statusQuery.data.passed && !statusQuery.data.inCooldown;
+  const canTake = statusQuery.data && !statusQuery.data.passed && !statusQuery.data.inCooldown;
 
   const examQuery = useQuery({
     queryKey: ["exam", courseId],
@@ -85,8 +84,7 @@ function ExamPage() {
   }, [examQuery.data]);
 
   const allAnswered =
-    sortedQuestions.length > 0 &&
-    sortedQuestions.every((q) => Boolean(answers[q.questionId]));
+    sortedQuestions.length > 0 && sortedQuestions.every((q) => Boolean(answers[q.questionId]));
 
   function handleSelect(questionId: string, choiceId: string) {
     setAnswers((prev) => ({ ...prev, [questionId]: choiceId }));
@@ -101,30 +99,7 @@ function ExamPage() {
   }
 
   return (
-    <AppShell
-      active="courses"
-      user={{
-        displayName: auth.session?.displayName ?? "EduLife learner",
-        email: auth.session?.email ?? "",
-      }}
-      onLogout={auth.logout}
-      header={
-        <div className="flex items-center gap-3">
-          <Link
-            to="/courses/$courseId"
-            params={{ courseId }}
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back to course
-          </Link>
-          <div>
-            <p className="text-sm font-semibold text-foreground">{courseTitle}</p>
-            <p className="text-xs text-muted-foreground">Final exam — backend scored.</p>
-          </div>
-        </div>
-      }
-    >
+    <AppLayout>
       {statusQuery.isLoading ? (
         <StateCard title="Loading exam..." detail="Checking attempt status." />
       ) : statusQuery.isError ? (
@@ -148,11 +123,7 @@ function ExamPage() {
       ) : examQuery.isError ? (
         <StateCard
           title="Could not load exam"
-          detail={
-            examQuery.error instanceof Error
-              ? examQuery.error.message
-              : "Unknown error."
-          }
+          detail={examQuery.error instanceof Error ? examQuery.error.message : "Unknown error."}
         />
       ) : !examQuery.data || sortedQuestions.length === 0 ? (
         <StateCard
@@ -244,14 +215,14 @@ function ExamPage() {
               type="button"
               onClick={handleSubmit}
               disabled={!allAnswered || submitMutation.isPending}
-              className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-xs font-semibold text-background disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-semibold text-primary-foreground disabled:opacity-50"
             >
               {submitMutation.isPending ? "Submitting..." : "Submit exam"}
             </button>
           </div>
         </div>
       )}
-    </AppShell>
+    </AppLayout>
   );
 }
 
@@ -266,7 +237,7 @@ function AlreadyPassedCard({ courseId }: { courseId: string }) {
       <div className="mt-5 flex justify-center gap-3">
         <Link
           to="/certificates"
-          className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-xs font-semibold text-background"
+          className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-semibold text-primary-foreground"
         >
           View certificates
         </Link>

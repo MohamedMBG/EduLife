@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, BookOpen, Download, ExternalLink, FileText, Film, Video } from "lucide-react";
 import type { ReactNode } from "react";
-import { AppShell } from "../components/app/AppShell";
+import { AppLayout } from "../components/app/AppLayout";
 import { getCourseDetail } from "../lib/api/client";
 import type { LessonSummary } from "../lib/api/types";
 import { RequireAuth, useAuth } from "../lib/auth/auth-context";
@@ -42,41 +42,21 @@ function ResourcesPage() {
         sectionOrder: section.displayOrder ?? 0,
       })),
     )
-    .sort((a, b) => a.sectionOrder - b.sectionOrder || (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
+    .sort(
+      (a, b) => a.sectionOrder - b.sectionOrder || (a.displayOrder ?? 0) - (b.displayOrder ?? 0),
+    );
 
   // Course summary endpoint does not ship contentUrl per lesson; grouping by lessonType and
   // linking to the lesson player is the closest fit until a dedicated resources endpoint exists.
   const grouped = groupByKind(flatLessons);
 
   return (
-    <AppShell
-      active="courses"
-      user={{
-        displayName: auth.session?.displayName ?? "EduLife learner",
-        email: auth.session?.email ?? "",
-      }}
-      onLogout={auth.logout}
-      header={
-        <div className="flex items-center gap-3">
-          <Link
-            to="/courses/$courseId"
-            params={{ courseId }}
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back to course
-          </Link>
-          <div>
-            <p className="text-sm font-semibold text-foreground">Study resources</p>
-            <p className="text-xs text-muted-foreground">
-              Videos, PDFs, and reference materials for this course.
-            </p>
-          </div>
-        </div>
-      }
-    >
+    <AppLayout>
       {courseQuery.isLoading ? (
-        <StateCard title="Loading resources..." detail="Fetching course outline from the backend." />
+        <StateCard
+          title="Loading resources..."
+          detail="Fetching course outline from the backend."
+        />
       ) : courseQuery.isError ? (
         <StateCard title="Resources unavailable" detail={courseQuery.error.message} />
       ) : flatLessons.length === 0 ? (
@@ -109,7 +89,7 @@ function ResourcesPage() {
           />
         </div>
       )}
-    </AppShell>
+    </AppLayout>
   );
 }
 
@@ -177,7 +157,7 @@ function ResourceCard({ courseId, lesson }: { courseId: string; lesson: FlatLess
         <Link
           to="/learn/$courseId/$lessonId"
           params={{ courseId, lessonId: lesson.id }}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground"
         >
           {iconForKind(lesson.lessonType)}
           Open lesson

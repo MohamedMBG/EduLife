@@ -51,8 +51,8 @@ export function Journey() {
           </div>
           <div className="lg:col-span-5">
             <SectionKicker>
-              Six steps from first lesson to a verifiable credential. No optional detours,
-              no AI-recommended rabbit holes.
+              Six steps from first lesson to a verifiable credential. No optional detours, no
+              AI-recommended rabbit holes.
             </SectionKicker>
           </div>
         </div>
@@ -101,7 +101,7 @@ export function Journey() {
                         <Icon className="h-7 w-7" strokeWidth={1.4} />
                       </div>
                     </div>
-                    <span className="absolute -top-2 -right-2 grid h-7 w-7 place-items-center rounded-full bg-foreground text-background text-[11px] font-medium font-mono shadow-bezel">
+                    <span className="absolute -top-2 -right-2 grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-foreground text-[11px] font-medium font-mono shadow-bezel">
                       {String(i + 1).padStart(2, "0")}
                     </span>
                   </div>

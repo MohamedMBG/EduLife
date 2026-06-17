@@ -53,13 +53,13 @@ export function AdminShell({ active, children }: AdminShellProps) {
   }
 
   return (
-    <div className="flex min-h-screen bg-[oklch(0.955_0.006_240)]">
+    <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
-      <aside className="hidden w-72 flex-col border-r border-border bg-surface-elevated lg:flex">
+      <aside className="hidden w-72 flex-col border-r border-border/70 bg-surface-elevated/95 backdrop-blur-md lg:flex">
         {/* Brand */}
-        <div className="border-b border-border px-6 py-5">
+        <div className="border-b border-border/70 px-6 py-5">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[oklch(0.40_0.19_250)] text-white">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-bezel">
               <ShieldCheck className="h-4 w-4" />
             </div>
             <div>
@@ -85,8 +85,8 @@ export function AdminShell({ active, children }: AdminShellProps) {
                 className={[
                   "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-[oklch(0.40_0.19_250)] text-white shadow-sm"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                    ? "bg-accent/55 text-primary shadow-bezel ring-1 ring-primary/15"
+                    : "text-muted-foreground hover:bg-accent/35 hover:text-primary",
                 ].join(" ")}
               >
                 {item.icon}
@@ -96,12 +96,12 @@ export function AdminShell({ active, children }: AdminShellProps) {
           })}
         </nav>
 
-        <div className="mx-4 rounded-2xl border border-[oklch(0.78_0.08_250)] bg-[oklch(0.94_0.03_250)] p-4">
-          <div className="flex items-center gap-2 text-[oklch(0.35_0.17_250)]">
+        <div className="mx-4 rounded-2xl border border-primary/15 bg-accent/35 p-4">
+          <div className="flex items-center gap-2 text-primary">
             <ShieldAlert className="h-4 w-4" />
             <p className="text-xs font-bold uppercase tracking-[0.16em]">Admin scope</p>
           </div>
-          <p className="mt-2 text-xs leading-relaxed text-[oklch(0.35_0.08_250)]">
+          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
             Course approval, teacher access, and platform totals are server-authorized by backend
             RBAC.
           </p>
@@ -110,10 +110,8 @@ export function AdminShell({ active, children }: AdminShellProps) {
         {/* Footer */}
         <div className="mt-auto border-t border-border p-4">
           <div className="mb-3 px-1">
-            <p className="text-xs font-medium text-foreground truncate">
-              {auth.session?.email}
-            </p>
-            <p className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-[oklch(0.92_0.03_250)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[oklch(0.40_0.19_250)]">
+            <p className="text-xs font-medium text-foreground truncate">{auth.session?.email}</p>
+            <p className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-accent/55 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
               <ShieldCheck className="h-2.5 w-2.5" />
               Admin
             </p>
@@ -121,7 +119,7 @@ export function AdminShell({ active, children }: AdminShellProps) {
           <button
             type="button"
             onClick={handleLogout}
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-accent/45 hover:text-primary transition-colors"
           >
             <LogOut className="h-4 w-4" />
             Sign out
@@ -130,8 +128,8 @@ export function AdminShell({ active, children }: AdminShellProps) {
       </aside>
 
       {/* Mobile header */}
-      <div className="fixed inset-x-0 top-0 z-30 flex items-center gap-3 border-b border-border bg-surface-elevated px-4 py-3 lg:hidden">
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[oklch(0.40_0.19_250)] text-white">
+      <div className="fixed inset-x-0 top-0 z-30 flex items-center gap-3 border-b border-border/70 bg-surface-elevated/92 px-4 py-3 backdrop-blur-md lg:hidden">
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <ShieldCheck className="h-3.5 w-3.5" />
         </div>
         <p className="text-sm font-semibold text-foreground">Admin console</p>
@@ -143,8 +141,8 @@ export function AdminShell({ active, children }: AdminShellProps) {
               className={[
                 "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
                 item.key === active
-                  ? "bg-[oklch(0.40_0.19_250)] text-white"
-                  : "text-muted-foreground hover:bg-accent",
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-accent/45",
               ].join(" ")}
             >
               {item.icon}

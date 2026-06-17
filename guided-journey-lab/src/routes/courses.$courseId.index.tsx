@@ -1,8 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, BookOpen, CheckCircle2, CirclePlay, Clock3, GraduationCap, Layers3, Lock, FileText, ChevronRight, Video } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  CheckCircle2,
+  CirclePlay,
+  Clock3,
+  GraduationCap,
+  Layers3,
+  Lock,
+  FileText,
+  ChevronRight,
+  Video,
+} from "lucide-react";
 import type { ReactNode } from "react";
-import { AppShell } from "../components/app/AppShell";
+import { AppLayout } from "../components/app/AppLayout";
 import {
   enrollInCourse,
   getCourseDetail,
@@ -55,7 +67,9 @@ function CourseDetailPage() {
     },
   });
 
-  const myEnrollment = (enrollmentsQuery.data ?? []).find((enrollment) => enrollment.courseId === courseId);
+  const myEnrollment = (enrollmentsQuery.data ?? []).find(
+    (enrollment) => enrollment.courseId === courseId,
+  );
   const orderedLessons = (courseQuery.data?.sections ?? [])
     .flatMap((section) =>
       section.lessons.map((lesson) => ({
@@ -64,7 +78,9 @@ function CourseDetailPage() {
         sectionOrder: section.displayOrder ?? 0,
       })),
     )
-    .sort((a, b) => a.sectionOrder - b.sectionOrder || (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
+    .sort(
+      (a, b) => a.sectionOrder - b.sectionOrder || (a.displayOrder ?? 0) - (b.displayOrder ?? 0),
+    );
 
   const completedLessonIds = new Set(
     progressQuery.data?.sections.flatMap((section) =>
@@ -72,36 +88,16 @@ function CourseDetailPage() {
     ) ?? [],
   );
 
-  const nextLesson = orderedLessons.find((lesson) => !completedLessonIds.has(lesson.id)) ?? orderedLessons[0];
+  const nextLesson =
+    orderedLessons.find((lesson) => !completedLessonIds.has(lesson.id)) ?? orderedLessons[0];
 
   return (
-    <AppShell
-      active="courses"
-      user={{
-        displayName: auth.session?.displayName ?? "EduLife learner",
-        email: auth.session?.email ?? "",
-      }}
-      onLogout={auth.logout}
-      header={
-        <div className="flex items-center gap-3">
-          <Link
-            to="/courses"
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back to courses
-          </Link>
-          <div>
-            <p className="text-sm font-semibold text-foreground">Course detail</p>
-            <p className="text-xs text-muted-foreground">
-              Outline, progress, and lesson access for this backend course.
-            </p>
-          </div>
-        </div>
-      }
-    >
+    <AppLayout>
       {courseQuery.isLoading || enrollmentsQuery.isLoading ? (
-        <StateCard title="Loading course..." detail="Fetching the course outline and your access state." />
+        <StateCard
+          title="Loading course..."
+          detail="Fetching the course outline and your access state."
+        />
       ) : courseQuery.isError ? (
         <StateCard title="Course unavailable" detail={courseQuery.error.message} />
       ) : (
@@ -110,7 +106,8 @@ function CourseDetailPage() {
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
               <div className="max-w-3xl">
                 <p className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.16em]">
-                  {(courseQuery.data?.level ?? "").replace("_", " ")} · {(courseQuery.data?.languageCode ?? "").toUpperCase()}
+                  {(courseQuery.data?.level ?? "").replace("_", " ")} ·{" "}
+                  {(courseQuery.data?.languageCode ?? "").toUpperCase()}
                 </p>
                 <h1 className="mt-4 text-display text-4xl">{courseQuery.data?.title}</h1>
                 <p className="mt-3 text-sm leading-relaxed text-primary-foreground/75">
@@ -188,9 +185,12 @@ function CourseDetailPage() {
           <section className="space-y-6">
             {(courseQuery.data?.sections ?? []).map((section) => {
               const sectionLessons = section.lessons || [];
-              const completedSectionLessons = sectionLessons.filter((lesson) => completedLessonIds.has(lesson.id)).length;
+              const completedSectionLessons = sectionLessons.filter((lesson) =>
+                completedLessonIds.has(lesson.id),
+              ).length;
               const totalSectionLessons = sectionLessons.length;
-              const sectionPercent = totalSectionLessons > 0 ? (completedSectionLessons / totalSectionLessons) * 100 : 0;
+              const sectionPercent =
+                totalSectionLessons > 0 ? (completedSectionLessons / totalSectionLessons) * 100 : 0;
 
               return (
                 <article
@@ -210,9 +210,13 @@ function CourseDetailPage() {
                           </span>
                         )}
                       </div>
-                      <h2 className="mt-3 text-xl font-bold text-foreground tracking-tight">{section.title}</h2>
+                      <h2 className="mt-3 text-xl font-bold text-foreground tracking-tight">
+                        {section.title}
+                      </h2>
                       {section.description && (
-                        <p className="mt-2 text-sm leading-relaxed text-muted-foreground max-w-3xl">{section.description}</p>
+                        <p className="mt-2 text-sm leading-relaxed text-muted-foreground max-w-3xl">
+                          {section.description}
+                        </p>
                       )}
                     </div>
 
@@ -237,8 +241,8 @@ function CourseDetailPage() {
                   <div className="relative mt-6 space-y-4">
                     {/* The vertical connector line connecting the icons of the path */}
                     {totalSectionLessons > 1 && (
-                      <div 
-                        className="absolute left-[27px] top-[24px] bottom-[24px] w-[2px] bg-border/70 pointer-events-none" 
+                      <div
+                        className="absolute left-[27px] top-[24px] bottom-[24px] w-[2px] bg-border/70 pointer-events-none"
                         aria-hidden="true"
                       />
                     )}
@@ -246,9 +250,11 @@ function CourseDetailPage() {
                     {sectionLessons.map((lesson) => {
                       const completed = completedLessonIds.has(lesson.id);
                       const accessible = Boolean(myEnrollment) || lesson.preview;
-                      
+
                       // Identify type of lesson to render matching icon
-                      const isVideo = lesson.lessonType?.toUpperCase() === "VIDEO" || lesson.lessonType?.toUpperCase() === "FILM";
+                      const isVideo =
+                        lesson.lessonType?.toUpperCase() === "VIDEO" ||
+                        lesson.lessonType?.toUpperCase() === "FILM";
                       const LessonIcon = isVideo ? Video : FileText;
 
                       return (
@@ -263,7 +269,7 @@ function CourseDetailPage() {
                           }`}
                         >
                           {/* Left icon cell inside the timeline layout */}
-                          <div 
+                          <div
                             className={`relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border transition-colors ${
                               completed
                                 ? "bg-teal-50 text-teal-600 border-teal-200"
@@ -282,7 +288,9 @@ function CourseDetailPage() {
                           {/* Middle information column */}
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
-                              <p className={`font-semibold tracking-tight ${completed ? "text-foreground/90 line-through decoration-teal-600/30" : "text-foreground"}`}>
+                              <p
+                                className={`font-semibold tracking-tight ${completed ? "text-foreground/90 line-through decoration-teal-600/30" : "text-foreground"}`}
+                              >
                                 {lesson.title}
                               </p>
                               {lesson.preview && (
@@ -297,9 +305,10 @@ function CourseDetailPage() {
                               )}
                             </div>
                             <p className="mt-1 text-sm text-muted-foreground leading-relaxed line-clamp-2">
-                              {lesson.summary || "Lesson ready to open from the backend content service."}
+                              {lesson.summary ||
+                                "Lesson ready to open from the backend content service."}
                             </p>
-                            
+
                             {/* Metadata row with duration & type */}
                             <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-medium text-muted-foreground">
                               <span className="uppercase tracking-[0.12em] text-[10px] font-bold text-muted-foreground/80">
@@ -344,19 +353,11 @@ function CourseDetailPage() {
           </section>
         </div>
       )}
-    </AppShell>
+    </AppLayout>
   );
 }
 
-function MetricCard({
-  title,
-  value,
-  icon,
-}: {
-  title: string;
-  value: string;
-  icon: ReactNode;
-}) {
+function MetricCard({ title, value, icon }: { title: string; value: string; icon: ReactNode }) {
   return (
     <div className="rounded-3xl border border-border bg-surface-elevated p-5 shadow-soft">
       <div className="flex items-center justify-between">

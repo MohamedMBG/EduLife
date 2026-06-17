@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Award, CheckCircle2, ShieldAlert } from "lucide-react";
-import { AppShell } from "../components/app/AppShell";
+import { AppLayout } from "../components/app/AppLayout";
 import { RequireAuth, useAuth } from "../lib/auth/auth-context";
 
 interface ExamResultSearch {
@@ -22,8 +22,7 @@ export const Route = createFileRoute("/courses/$courseId/exam/result")({
     certificateNumber:
       typeof search.certificateNumber === "string" ? search.certificateNumber : undefined,
     attemptsUsed: typeof search.attemptsUsed === "number" ? search.attemptsUsed : undefined,
-    cooldownEndsAt:
-      typeof search.cooldownEndsAt === "string" ? search.cooldownEndsAt : undefined,
+    cooldownEndsAt: typeof search.cooldownEndsAt === "string" ? search.cooldownEndsAt : undefined,
   }),
 });
 
@@ -43,30 +42,7 @@ function ExamResultPage() {
   const hasResult = typeof search.score === "number" && typeof search.passed === "boolean";
 
   return (
-    <AppShell
-      active="courses"
-      user={{
-        displayName: auth.session?.displayName ?? "EduLife learner",
-        email: auth.session?.email ?? "",
-      }}
-      onLogout={auth.logout}
-      header={
-        <div className="flex items-center gap-3">
-          <Link
-            to="/courses/$courseId"
-            params={{ courseId }}
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back to course
-          </Link>
-          <div>
-            <p className="text-sm font-semibold text-foreground">Exam result</p>
-            <p className="text-xs text-muted-foreground">Backend-scored outcome.</p>
-          </div>
-        </div>
-      }
-    >
+    <AppLayout>
       {!hasResult ? (
         <div className="rounded-3xl border border-border bg-surface-elevated p-8 text-center shadow-soft">
           <p className="text-sm font-semibold text-foreground">No result to display</p>
@@ -76,7 +52,7 @@ function ExamResultPage() {
           <Link
             to="/courses/$courseId/exam"
             params={{ courseId }}
-            className="mt-5 inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-xs font-semibold text-background"
+            className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-semibold text-primary-foreground"
           >
             Go to exam
           </Link>
@@ -97,7 +73,7 @@ function ExamResultPage() {
           courseId={courseId}
         />
       )}
-    </AppShell>
+    </AppLayout>
   );
 }
 
@@ -128,7 +104,7 @@ function PassCard({
       <div className="mt-6 flex justify-center gap-3">
         <Link
           to="/certificates"
-          className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-xs font-semibold text-background"
+          className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-semibold text-primary-foreground"
         >
           View certificates
         </Link>
@@ -180,7 +156,7 @@ function FailCard({
           <Link
             to="/courses/$courseId/exam"
             params={{ courseId }}
-            className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-xs font-semibold text-background"
+            className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-semibold text-primary-foreground"
           >
             Retry exam
           </Link>

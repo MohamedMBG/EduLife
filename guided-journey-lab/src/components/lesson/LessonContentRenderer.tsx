@@ -30,12 +30,7 @@ export function LessonContentRenderer({ lesson }: Props) {
 
       {media.kind === "video-file" && media.rawUrl ? (
         <div className="overflow-hidden rounded-2xl border border-border bg-black shadow-elevated">
-          <video
-            src={media.rawUrl}
-            controls
-            preload="metadata"
-            className="aspect-video w-full"
-          >
+          <video src={media.rawUrl} controls preload="metadata" className="aspect-video w-full">
             <track kind="captions" />
           </video>
         </div>
@@ -52,7 +47,7 @@ export function LessonContentRenderer({ lesson }: Props) {
               href={media.rawUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background"
+              className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"
             >
               <Download className="h-3.5 w-3.5" />
               Download
@@ -125,7 +120,7 @@ function ExternalLinkCard({
         href={url}
         target="_blank"
         rel="noreferrer"
-        className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background"
+        className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"
       >
         <ExternalLink className="h-3.5 w-3.5" />
         Open

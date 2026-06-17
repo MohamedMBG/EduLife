@@ -1,6 +1,26 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { Award, BarChart3, BookOpen, BrainCircuit, CalendarDays, CheckCircle2, Compass, GraduationCap, Home, LayoutDashboard, LogOut, Menu, Moon, Shield, Sun, Users, X, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Award,
+  BarChart3,
+  BookOpen,
+  BrainCircuit,
+  CalendarDays,
+  CheckCircle2,
+  Compass,
+  GraduationCap,
+  Home,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Moon,
+  Shield,
+  Sun,
+  Users,
+  X,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { useDarkMode } from "@/hooks/use-dark-mode";
 import { useAuth } from "@/lib/auth/auth-context";
 import { motion } from "framer-motion";
@@ -11,7 +31,18 @@ interface ShellUser {
 }
 
 interface AppShellProps {
-  active: "dashboard" | "advisor" | "courses" | "explore" | "certificates" | "level" | "teach" | "groups" | "approvals" | "planner" | "analytics";
+  active:
+    | "dashboard"
+    | "advisor"
+    | "courses"
+    | "explore"
+    | "certificates"
+    | "level"
+    | "teach"
+    | "groups"
+    | "approvals"
+    | "planner"
+    | "analytics";
   user: ShellUser;
   onLogout: () => Promise<void> | void;
   header: ReactNode;
@@ -30,7 +61,18 @@ function getInitials(name: string) {
 interface NavItem {
   key: AppShellProps["active"];
   label: string;
-  to: "/dashboard" | "/advisor" | "/courses" | "/explore" | "/certificates" | "/level" | "/teach" | "/groups" | "/approvals" | "/planner" | "/analytics";
+  to:
+    | "/dashboard"
+    | "/advisor"
+    | "/courses"
+    | "/explore"
+    | "/certificates"
+    | "/level"
+    | "/teach"
+    | "/groups"
+    | "/approvals"
+    | "/planner"
+    | "/analytics";
   icon: typeof Home;
 }
 
@@ -98,18 +140,20 @@ export function AppShell({ active, user, onLogout, header, children }: AppShellP
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-border/60 bg-surface-elevated transition-all duration-300 md:static md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-border/70 bg-surface-elevated/95 backdrop-blur-md transition-all duration-300 md:static md:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } ${isCollapsed ? "md:w-20 w-72" : "w-72"}`}
         style={{ boxShadow: "var(--shadow-luxury)" }}
       >
-        <div className={`flex h-16 items-center border-b border-border/60 px-6 ${isCollapsed ? "md:px-4 md:justify-center" : "gap-3"}`}>
+        <div
+          className={`flex h-16 items-center border-b border-border/70 px-6 ${isCollapsed ? "md:px-4 md:justify-center" : "gap-3"}`}
+        >
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-primary text-primary-foreground shadow-bezel">
             <GraduationCap className="h-4.5 w-4.5" strokeWidth={1.5} />
           </span>
           {!isCollapsed && (
             <div className="transition-opacity duration-200">
-              <p className="text-display text-lg font-bold leading-none text-foreground">EduLife</p>
+              <p className="text-display text-lg leading-none text-foreground">EduLife</p>
               <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground truncate max-w-[140px]">
                 {portal.label}
               </p>
@@ -117,11 +161,15 @@ export function AppShell({ active, user, onLogout, header, children }: AppShellP
           )}
           <button
             type="button"
-            className={`hidden md:grid h-8 w-8 place-items-center rounded-lg border border-border/60 hover:bg-accent text-muted-foreground hover:text-foreground transition-colors cursor-pointer ${isCollapsed ? "mx-auto" : "ml-auto"}`}
+            className={`hidden md:grid h-8 w-8 place-items-center rounded-lg border border-border/70 hover:bg-accent/45 text-muted-foreground hover:text-primary transition-colors cursor-pointer ${isCollapsed ? "mx-auto" : "ml-auto"}`}
             onClick={() => setIsCollapsed(!isCollapsed)}
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            {isCollapsed ? <ChevronRight className="h-4.5 w-4.5" /> : <ChevronLeft className="h-4.5 w-4.5" />}
+            {isCollapsed ? (
+              <ChevronRight className="h-4.5 w-4.5" />
+            ) : (
+              <ChevronLeft className="h-4.5 w-4.5" />
+            )}
           </button>
           <button
             type="button"
@@ -148,14 +196,12 @@ export function AppShell({ active, user, onLogout, header, children }: AppShellP
                   key={key}
                   to={to}
                   title={isCollapsed ? label : undefined}
-                  className={`flex items-center rounded-xl py-2.5 text-sm font-medium transition-all ${
-                    isCollapsed
-                      ? "w-12 h-12 justify-center"
-                      : "w-full px-3 gap-3"
+                  className={`flex items-center rounded-xl py-2.5 text-sm font-medium transition-all duration-300 ${
+                    isCollapsed ? "w-12 h-12 justify-center" : "w-full px-3 gap-3"
                   } ${
                     isActive
-                      ? "bg-primary/10 text-primary shadow-bezel ring-1 ring-primary/15"
-                      : "text-muted-foreground hover:bg-accent/70 hover:text-foreground"
+                      ? "bg-accent/55 text-primary shadow-bezel ring-1 ring-primary/15"
+                      : "text-muted-foreground hover:bg-accent/35 hover:text-primary"
                   }`}
                   onClick={() => setSidebarOpen(false)}
                 >
@@ -167,29 +213,27 @@ export function AppShell({ active, user, onLogout, header, children }: AppShellP
           </div>
         </nav>
 
-        <div className={`border-t border-border/60 ${isCollapsed ? "p-2 py-4" : "p-4"}`}>
-          <div className={`flex items-center ${isCollapsed ? "flex-col gap-4 justify-center" : "gap-3"}`}>
+        <div className={`border-t border-border/70 ${isCollapsed ? "p-2 py-4" : "p-4"}`}>
+          <div
+            className={`flex items-center ${isCollapsed ? "flex-col gap-4 justify-center" : "gap-3"}`}
+          >
             <Link
               to="/profile"
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-primary text-sm font-semibold text-primary-foreground shadow-sm"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-primary text-sm font-semibold text-primary-foreground shadow-bezel"
               aria-label="Open profile"
               onClick={() => setSidebarOpen(false)}
             >
               {userInitials}
             </Link>
             {!isCollapsed && (
-              <Link
-                to="/profile"
-                className="min-w-0 flex-1"
-                onClick={() => setSidebarOpen(false)}
-              >
+              <Link to="/profile" className="min-w-0 flex-1" onClick={() => setSidebarOpen(false)}>
                 <p className="truncate text-sm font-medium text-foreground">{user.displayName}</p>
                 <p className="truncate text-xs text-muted-foreground">{user.email}</p>
               </Link>
             )}
             <button
               type="button"
-              className={`text-muted-foreground transition-colors hover:text-foreground cursor-pointer ${isCollapsed ? "grid h-10 w-10 place-items-center rounded-xl hover:bg-destructive/10 hover:text-destructive" : ""}`}
+              className={`text-muted-foreground transition-colors hover:text-primary cursor-pointer ${isCollapsed ? "grid h-10 w-10 place-items-center rounded-xl hover:bg-destructive/10 hover:text-destructive" : ""}`}
               onClick={() => void onLogout()}
               aria-label="Log out"
             >
@@ -200,11 +244,11 @@ export function AppShell({ active, user, onLogout, header, children }: AppShellP
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 border-b border-border/60 bg-surface-elevated/90 backdrop-blur-md">
+        <header className="sticky top-0 z-20 border-b border-border/70 bg-surface-elevated/86 backdrop-blur-md">
           <div className="flex h-16 items-center gap-4 px-4 sm:px-6">
             <button
               type="button"
-              className="text-muted-foreground transition-colors hover:text-foreground md:hidden"
+              className="text-muted-foreground transition-colors hover:text-primary md:hidden"
               onClick={() => setSidebarOpen(true)}
               aria-label="Open menu"
             >
@@ -214,7 +258,7 @@ export function AppShell({ active, user, onLogout, header, children }: AppShellP
             <button
               type="button"
               onClick={toggleDark}
-              className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="grid h-9 w-9 place-items-center rounded-full border border-border/70 bg-surface text-muted-foreground transition-colors hover:bg-accent/45 hover:text-primary"
               aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
             >
               {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -222,7 +266,9 @@ export function AppShell({ active, user, onLogout, header, children }: AppShellP
           </div>
         </header>
 
-        <main className="flex-1 px-4 py-8 sm:px-6 lg:px-8">{children}</main>
+        <main className="flex-1 px-4 py-7 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-7xl">{children}</div>
+        </main>
       </div>
     </div>
   );

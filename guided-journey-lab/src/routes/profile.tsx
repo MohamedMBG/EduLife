@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, ImagePlus, UserCircle2 } from "lucide-react";
-import { AppShell } from "../components/app/AppShell";
+import { AppLayout } from "../components/app/AppLayout";
 import { ApiClientError, getProfile, updateProfile, uploadAvatar } from "../lib/api/client";
 import { RequireAuth, useAuth } from "../lib/auth/auth-context";
 
@@ -109,22 +109,7 @@ function ProfilePage() {
   }
 
   return (
-    <AppShell
-      active="dashboard"
-      user={{
-        displayName: auth.session?.displayName ?? "EduLife learner",
-        email: auth.session?.email ?? "",
-      }}
-      onLogout={auth.logout}
-      header={
-        <div>
-          <p className="text-sm font-semibold text-foreground">Profile</p>
-          <p className="text-xs text-muted-foreground">
-            Manage your display name, bio, and avatar.
-          </p>
-        </div>
-      }
-    >
+    <AppLayout>
       {profileQuery.isLoading ? (
         <StateCard title="Loading profile..." detail="Fetching your account details." />
       ) : profileQuery.isError ? (
@@ -157,9 +142,7 @@ function ProfilePage() {
                 {profileQuery.data.displayName}
               </p>
               <p className="text-xs text-muted-foreground">{profileQuery.data.email}</p>
-              <p className="mt-3 text-xs text-muted-foreground">
-                PNG, JPG, or WebP — max 5MB.
-              </p>
+              <p className="mt-3 text-xs text-muted-foreground">PNG, JPG, or WebP — max 5MB.</p>
               <div className="mt-3">
                 <input
                   ref={fileInputRef}
@@ -172,7 +155,7 @@ function ProfilePage() {
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={avatarMutation.isPending}
-                  className="inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50"
                 >
                   <ImagePlus className="h-3.5 w-3.5" />
                   {avatarMutation.isPending ? "Uploading..." : "Upload new avatar"}
@@ -244,14 +227,14 @@ function ProfilePage() {
             <button
               type="submit"
               disabled={updateMutation.isPending}
-              className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-xs font-semibold text-background disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-semibold text-primary-foreground disabled:opacity-50"
             >
               {updateMutation.isPending ? "Saving..." : "Save changes"}
             </button>
           </form>
         </div>
       )}
-    </AppShell>
+    </AppLayout>
   );
 }
 

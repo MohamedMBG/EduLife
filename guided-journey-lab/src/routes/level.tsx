@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { ArrowLeft } from "lucide-react";
-import { AppShell } from "../components/app/AppShell";
+import { AppLayout } from "../components/app/AppLayout";
 import {
   getCourseProgress,
   getProfile,
@@ -10,12 +10,7 @@ import {
   listMyEnrollments,
 } from "../lib/api/client";
 import { RequireAuth, useAuth } from "../lib/auth/auth-context";
-import type {
-  Certificate,
-  CourseProgress,
-  EnrolledCourse,
-  Profile,
-} from "../lib/api/types";
+import type { Certificate, CourseProgress, EnrolledCourse, Profile } from "../lib/api/types";
 
 // Level subcomponents
 import { RankCard } from "../components/level/RankCard";
@@ -88,9 +83,7 @@ function computeStreak(daysSet: Set<string>) {
 
 function computeLongestStreak(dates: Date[]) {
   if (dates.length === 0) return 0;
-  const uniq = Array.from(
-    new Set(dates.map((d) => startOfDay(d).getTime())),
-  ).sort((a, b) => a - b);
+  const uniq = Array.from(new Set(dates.map((d) => startOfDay(d).getTime()))).sort((a, b) => a - b);
   let longest = 1;
   let current = 1;
   for (let i = 1; i < uniq.length; i++) {
@@ -118,9 +111,7 @@ function buildWeekWindow() {
 
 function countStreakBonuses(dates: Date[]) {
   if (dates.length === 0) return { three: 0, seven: 0 };
-  const uniq = Array.from(
-    new Set(dates.map((d) => startOfDay(d).getTime())),
-  ).sort((a, b) => a - b);
+  const uniq = Array.from(new Set(dates.map((d) => startOfDay(d).getTime()))).sort((a, b) => a - b);
   let three = 0;
   let seven = 0;
   let runLen = 1;
@@ -240,9 +231,7 @@ function deriveState(
     ).length;
     return {
       day: label,
-      xp:
-        lessonsCount * XP_LESSON_COMPLETE +
-        certCount * XP_PER_CERTIFICATE_BUNDLE,
+      xp: lessonsCount * XP_LESSON_COMPLETE + certCount * XP_PER_CERTIFICATE_BUNDLE,
       date,
     };
   });
@@ -250,19 +239,13 @@ function deriveState(
 
   const todayKey = startOfDay(new Date()).toDateString();
   const xpToday =
-    lessonCompletions.filter(
-      (l) => startOfDay(l.date).toDateString() === todayKey,
-    ).length *
+    lessonCompletions.filter((l) => startOfDay(l.date).toDateString() === todayKey).length *
       XP_LESSON_COMPLETE +
-    certificateEvents.filter(
-      (c) => startOfDay(c.date).toDateString() === todayKey,
-    ).length *
+    certificateEvents.filter((c) => startOfDay(c.date).toDateString() === todayKey).length *
       XP_PER_CERTIFICATE_BUNDLE;
   const questDailyDone = Math.min(
     3,
-    lessonCompletions.filter(
-      (l) => startOfDay(l.date).toDateString() === todayKey,
-    ).length,
+    lessonCompletions.filter((l) => startOfDay(l.date).toDateString() === todayKey).length,
   );
   const questCertEarned = totalCertificates > 0;
 
@@ -387,8 +370,7 @@ function LevelPage() {
     })),
   });
 
-  const progressLoading =
-    progressQueries.length > 0 && progressQueries.some((q) => q.isPending);
+  const progressLoading = progressQueries.length > 0 && progressQueries.some((q) => q.isPending);
 
   const firstError =
     profileQuery.error ??
@@ -427,33 +409,7 @@ function LevelPage() {
   };
 
   return (
-    <AppShell
-      active="level"
-      user={shellUser}
-      onLogout={auth.logout}
-      header={
-        <>
-          <Link
-            to="/dashboard"
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Home
-          </Link>
-          <div className="ml-auto flex items-center gap-3">
-            <div
-              className={`hidden sm:flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold ${
-                state.streak > 0
-                  ? "bg-amber-50 border border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/20 text-amber-500"
-                  : "bg-muted border border-border text-muted-foreground"
-              }`}
-            >
-              🔥 {state.streak} day streak
-            </div>
-          </div>
-        </>
-      }
-    >
+    <AppLayout>
       <div className="mx-auto max-w-5xl px-5 lg:px-8 py-6 space-y-5">
         {firstError ? (
           <div className="rounded-3xl border border-destructive/20 bg-destructive/5 p-6 text-sm text-destructive">
@@ -486,6 +442,6 @@ function LevelPage() {
           </>
         )}
       </div>
-    </AppShell>
+    </AppLayout>
   );
 }

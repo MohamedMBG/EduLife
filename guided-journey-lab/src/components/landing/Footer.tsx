@@ -59,7 +59,7 @@ export function Footer() {
             >
               <span className="relative">
                 hello@edulife.ma
-                <span className="absolute -bottom-0.5 left-0 h-px w-full bg-foreground/30 group-hover:bg-foreground transition-colors duration-500" />
+                <span className="absolute -bottom-0.5 left-0 h-px w-full bg-foreground/30 group-hover:bg-primary transition-colors duration-500" />
               </span>
               <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.75} />
             </a>

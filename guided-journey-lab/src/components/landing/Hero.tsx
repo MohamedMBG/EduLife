@@ -38,9 +38,7 @@ export function Hero() {
             >
               One clear path
               <span className="block">
-                to learn,{" "}
-                <span className="italic font-normal text-primary">pass</span>
-                ,
+                to learn, <span className="italic font-normal text-primary">pass</span>,
               </span>
               <span className="block text-foreground/80">and graduate.</span>
             </motion.h1>
@@ -51,8 +49,8 @@ export function Hero() {
               transition={{ duration: 0.8, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
               className="mt-8 max-w-[52ch] text-lg sm:text-xl leading-relaxed text-muted-foreground"
             >
-              Courses, lessons, progress, graded exams, and verified certificates —
-              in one guided learning experience designed for the way Morocco studies.
+              Courses, lessons, progress, graded exams, and verified certificates — in one guided
+              learning experience designed for the way Morocco studies.
             </motion.p>
 
             <motion.div
@@ -63,7 +61,7 @@ export function Hero() {
             >
               <a
                 href="#cta"
-                className="group relative inline-flex h-12 items-center gap-1.5 rounded-full bg-foreground text-background pl-6 pr-1.5 text-sm font-medium shadow-bezel transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] active:scale-[0.98]"
+                className="group relative inline-flex h-12 items-center gap-1.5 rounded-full bg-primary text-primary-foreground pl-6 pr-1.5 text-sm font-medium shadow-bezel transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] active:scale-[0.98]"
               >
                 <span>Get Early Access</span>
                 <span className="grid h-9 w-9 place-items-center rounded-full bg-background/15 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:bg-background/25 group-hover:translate-x-0.5 group-hover:-translate-y-px">
@@ -76,7 +74,7 @@ export function Hero() {
               >
                 <span className="relative">
                   Explore the journey
-                  <span className="absolute -bottom-0.5 left-0 h-px w-0 bg-foreground transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:w-full" />
+                  <span className="absolute -bottom-0.5 left-0 h-px w-0 bg-primary transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:w-full" />
                 </span>
               </a>
             </motion.div>

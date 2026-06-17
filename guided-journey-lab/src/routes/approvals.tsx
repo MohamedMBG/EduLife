@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookOpen, CheckCircle2, Clock } from "lucide-react";
-import { AppShell } from "../components/app/AppShell";
+import { AppLayout } from "../components/app/AppLayout";
 import { listCmsCourses, publishCmsCourse } from "../lib/api/client";
 import { RequireCourseApprover, useAuth } from "../lib/auth/auth-context";
 import type { CmsCourse } from "../lib/api/types";
@@ -34,25 +34,13 @@ function ApprovalsPage() {
   const published = courses.filter((course) => course.status === "PUBLISHED");
 
   return (
-    <AppShell
-      active="approvals"
-      user={{
-        displayName: auth.session?.displayName || "EduLife group admin",
-        email: auth.session?.email || "",
-      }}
-      onLogout={auth.logout}
-      header={
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-semibold text-foreground">Course Approvals</p>
-          <p className="text-xs text-muted-foreground">
-            Review and publish courses submitted by the teachers in your groups.
-          </p>
-        </div>
-      }
-    >
+    <AppLayout>
       <div className="mx-auto max-w-4xl space-y-8">
         {coursesQuery.isLoading ? (
-          <StateCard title="Loading review queue..." detail="Fetching courses from your teachers." />
+          <StateCard
+            title="Loading review queue..."
+            detail="Fetching courses from your teachers."
+          />
         ) : coursesQuery.isError ? (
           <StateCard title="Approvals unavailable" detail={coursesQuery.error.message} />
         ) : (
@@ -86,7 +74,9 @@ function ApprovalsPage() {
                 </h2>
               </div>
               {published.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No published courses from your teachers yet.</p>
+                <p className="text-sm text-muted-foreground">
+                  No published courses from your teachers yet.
+                </p>
               ) : (
                 <div className="space-y-2">
                   {published.map((course) => (
@@ -109,7 +99,7 @@ function ApprovalsPage() {
           </>
         )}
       </div>
-    </AppShell>
+    </AppLayout>
   );
 }
 
@@ -150,7 +140,10 @@ function ApprovalCard({ course }: { course: CmsCourse }) {
         </button>
       </div>
       {publishMutation.isError && (
-        <p role="alert" className="mt-3 rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+        <p
+          role="alert"
+          className="mt-3 rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+        >
           {publishMutation.error.message}
         </p>
       )}

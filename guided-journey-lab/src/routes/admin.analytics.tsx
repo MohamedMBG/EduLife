@@ -1,7 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Activity, Award, BarChart3, BookOpen, CheckCircle2, GraduationCap, Users } from "lucide-react";
-import { AdminShell } from "../components/app/AdminShell";
+import {
+  Activity,
+  Award,
+  BarChart3,
+  BookOpen,
+  CheckCircle2,
+  GraduationCap,
+  Users,
+} from "lucide-react";
+import { AppLayout } from "../components/app/AppLayout";
 import { getPlatformAnalytics, getPlatformCohortAnalytics } from "../lib/api/client";
 import { useAuth } from "../lib/auth/auth-context";
 import type { Funnel, MonthCount, PlatformAnalytics } from "../lib/api/types";
@@ -23,7 +31,7 @@ function AdminAnalyticsRoute() {
   });
 
   return (
-    <AdminShell active="analytics">
+    <AppLayout>
       {metricsQuery.isLoading || cohortsQuery.isLoading ? (
         <StateCard title="Loading platform analytics..." detail="Fetching admin-only analytics." />
       ) : metricsQuery.isError ? (
@@ -32,7 +40,7 @@ function AdminAnalyticsRoute() {
         <ErrorCard message={cohortsQuery.error.message} onRetry={() => cohortsQuery.refetch()} />
       ) : (
         <div className="space-y-8">
-          <section className="rounded-[2rem] border border-[oklch(0.44_0.16_250)] bg-[oklch(0.32_0.14_250)] px-6 py-8 text-white shadow-elevated">
+          <section className="rounded-[2rem] border border-primary/20 bg-primary px-6 py-8 text-white shadow-elevated">
             <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs uppercase tracking-[0.16em]">
               <BarChart3 className="h-3.5 w-3.5" />
               Platform analytics
@@ -40,58 +48,119 @@ function AdminAnalyticsRoute() {
             <h1 className="mt-4 text-display text-4xl">Learning outcomes dashboard</h1>
             <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/72">
               Global aggregates from `/api/v1/analytics/platform` and cohort funnels from
-              `/api/v1/analytics/platform/cohorts`. Access is protected by admin RBAC on the backend.
+              `/api/v1/analytics/platform/cohorts`. Access is protected by admin RBAC on the
+              backend.
             </p>
           </section>
 
           <PlatformMetricGrid metrics={metricsQuery.data} />
 
           <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-            <Panel title="Learner funnel" detail="Enrollment grains moving through the full learner loop.">
+            <Panel
+              title="Learner funnel"
+              detail="Enrollment grains moving through the full learner loop."
+            >
               <FunnelRows funnel={cohortsQuery.data?.funnel} />
             </Panel>
             <Panel title="Enrollment cohorts" detail="Active enrollments grouped by month.">
-              <MonthRows rows={cohortsQuery.data?.enrollmentCohorts ?? []} empty="No enrollments yet." />
+              <MonthRows
+                rows={cohortsQuery.data?.enrollmentCohorts ?? []}
+                empty="No enrollments yet."
+              />
             </Panel>
           </section>
 
-          <Panel title="Certificate trend" detail="Certificates issued after passed exams, grouped by month.">
-            <MonthRows rows={cohortsQuery.data?.certificateTrend ?? []} empty="No certificates issued yet." />
+          <Panel
+            title="Certificate trend"
+            detail="Certificates issued after passed exams, grouped by month."
+          >
+            <MonthRows
+              rows={cohortsQuery.data?.certificateTrend ?? []}
+              empty="No certificates issued yet."
+            />
           </Panel>
         </div>
       )}
-    </AdminShell>
+    </AppLayout>
   );
 }
 
 function PlatformMetricGrid({ metrics }: { metrics?: PlatformAnalytics }) {
   return (
     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <MetricCard title="Learners" value={metrics?.learners ?? 0} icon={<Users className="h-5 w-5" />} />
-      <MetricCard title="Teachers" value={metrics?.teachers ?? 0} icon={<GraduationCap className="h-5 w-5" />} />
-      <MetricCard title="Published courses" value={metrics?.coursesPublished ?? 0} icon={<BookOpen className="h-5 w-5" />} />
-      <MetricCard title="Active enrollments" value={metrics?.activeEnrollments ?? 0} icon={<Activity className="h-5 w-5" />} />
-      <MetricCard title="Exam attempts" value={metrics?.totalExamAttempts ?? 0} icon={<CheckCircle2 className="h-5 w-5" />} />
-      <MetricCard title="Exams passed" value={metrics?.totalExamsPassed ?? 0} icon={<GraduationCap className="h-5 w-5" />} />
-      <MetricCard title="Certificates" value={metrics?.totalCertificates ?? 0} icon={<Award className="h-5 w-5" />} />
-      <MetricCard title="Admins" value={metrics?.admins ?? 0} icon={<BarChart3 className="h-5 w-5" />} />
+      <MetricCard
+        title="Learners"
+        value={metrics?.learners ?? 0}
+        icon={<Users className="h-5 w-5" />}
+      />
+      <MetricCard
+        title="Teachers"
+        value={metrics?.teachers ?? 0}
+        icon={<GraduationCap className="h-5 w-5" />}
+      />
+      <MetricCard
+        title="Published courses"
+        value={metrics?.coursesPublished ?? 0}
+        icon={<BookOpen className="h-5 w-5" />}
+      />
+      <MetricCard
+        title="Active enrollments"
+        value={metrics?.activeEnrollments ?? 0}
+        icon={<Activity className="h-5 w-5" />}
+      />
+      <MetricCard
+        title="Exam attempts"
+        value={metrics?.totalExamAttempts ?? 0}
+        icon={<CheckCircle2 className="h-5 w-5" />}
+      />
+      <MetricCard
+        title="Exams passed"
+        value={metrics?.totalExamsPassed ?? 0}
+        icon={<GraduationCap className="h-5 w-5" />}
+      />
+      <MetricCard
+        title="Certificates"
+        value={metrics?.totalCertificates ?? 0}
+        icon={<Award className="h-5 w-5" />}
+      />
+      <MetricCard
+        title="Admins"
+        value={metrics?.admins ?? 0}
+        icon={<BarChart3 className="h-5 w-5" />}
+      />
     </section>
   );
 }
 
-function MetricCard({ title, value, icon }: { title: string; value: number; icon: React.ReactNode }) {
+function MetricCard({
+  title,
+  value,
+  icon,
+}: {
+  title: string;
+  value: number;
+  icon: React.ReactNode;
+}) {
   return (
     <div className="rounded-3xl border border-border bg-surface-elevated p-5 shadow-soft">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">{title}</p>
-        <span className="text-[oklch(0.40_0.19_250)]">{icon}</span>
+        <span className="text-primary">{icon}</span>
       </div>
       <p className="mt-3 text-display text-3xl text-foreground">{formatCount(value)}</p>
     </div>
   );
 }
 
-function Panel({ title, detail, children }: { title: string; detail: string; children: React.ReactNode }) {
+function Panel({
+  title,
+  detail,
+  children,
+}: {
+  title: string;
+  detail: string;
+  children: React.ReactNode;
+}) {
   return (
     <section className="rounded-3xl border border-border bg-surface-elevated p-6 shadow-soft">
       <h2 className="text-lg font-semibold text-foreground">{title}</h2>
@@ -121,7 +190,7 @@ function FunnelRows({ funnel }: { funnel?: Funnel }) {
           </div>
           <div className="mt-2 h-2 rounded-full bg-border">
             <div
-              className="h-full rounded-full bg-[oklch(0.40_0.19_250)]"
+              className="h-full rounded-full bg-primary"
               style={{ width: `${barPercent(value, safe.enrolled)}%` }}
             />
           </div>
@@ -133,7 +202,11 @@ function FunnelRows({ funnel }: { funnel?: Funnel }) {
 
 function MonthRows({ rows, empty }: { rows: MonthCount[]; empty: string }) {
   if (rows.length === 0) {
-    return <p className="rounded-2xl border border-border bg-background px-4 py-5 text-sm text-muted-foreground">{empty}</p>;
+    return (
+      <p className="rounded-2xl border border-border bg-background px-4 py-5 text-sm text-muted-foreground">
+        {empty}
+      </p>
+    );
   }
 
   const max = Math.max(...rows.map((row) => row.count), 1);
@@ -147,7 +220,7 @@ function MonthRows({ rows, empty }: { rows: MonthCount[]; empty: string }) {
           </div>
           <div className="mt-2 h-2 rounded-full bg-border">
             <div
-              className="h-full rounded-full bg-[oklch(0.40_0.19_250)]"
+              className="h-full rounded-full bg-primary"
               style={{ width: `${barPercent(row.count, max)}%` }}
             />
           </div>
@@ -174,7 +247,7 @@ function ErrorCard({ message, onRetry }: { message: string; onRetry: () => void 
       <button
         type="button"
         onClick={onRetry}
-        className="mt-4 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background"
+        className="mt-4 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
       >
         Retry
       </button>

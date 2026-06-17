@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { CheckCircle2, XCircle, Clock, ChevronDown } from "lucide-react";
-import { AdminShell } from "../components/app/AdminShell";
+import { AppLayout } from "../components/app/AppLayout";
 import {
   approveTeacherRequest,
   listAdminTeacherRequests,
@@ -59,10 +59,11 @@ function AdminTeacherRequestsRoute() {
   });
 
   const requests = requestsQuery.data?.content ?? [];
-  const isPending = (id: string) => approveMutation.isPending || rejectMutation.isPending || id === rejectTarget;
+  const isPending = (id: string) =>
+    approveMutation.isPending || rejectMutation.isPending || id === rejectTarget;
 
   return (
-    <AdminShell active="teacher-requests">
+    <AppLayout>
       <div className="space-y-6">
         {/* Header */}
         <div>
@@ -85,7 +86,7 @@ function AdminTeacherRequestsRoute() {
               className={[
                 "rounded-full px-4 py-2 text-sm font-medium transition-colors",
                 tab.key === activeStatus
-                  ? "bg-[oklch(0.40_0.19_250)] text-white"
+                  ? "bg-primary text-primary-foreground"
                   : "border border-border bg-surface-elevated text-muted-foreground hover:text-foreground",
               ].join(" ")}
             >
@@ -113,14 +114,16 @@ function AdminTeacherRequestsRoute() {
             <button
               type="button"
               onClick={() => requestsQuery.refetch()}
-              className="mt-4 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background"
+              className="mt-4 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
             >
               Retry
             </button>
           </div>
         ) : requests.length === 0 ? (
           <div className="rounded-3xl border border-border bg-surface-elevated px-6 py-12 text-center shadow-soft">
-            <p className="text-sm font-semibold text-foreground">No {activeStatus.toLowerCase()} requests</p>
+            <p className="text-sm font-semibold text-foreground">
+              No {activeStatus.toLowerCase()} requests
+            </p>
             <p className="mt-1 text-sm text-muted-foreground">
               Nothing to review in this category right now.
             </p>
@@ -151,7 +154,7 @@ function AdminTeacherRequestsRoute() {
           </div>
         )}
       </div>
-    </AdminShell>
+    </AppLayout>
   );
 }
 
@@ -215,7 +218,7 @@ function RequestCard({
                 type="button"
                 onClick={onApprove}
                 disabled={disabled}
-                className="inline-flex items-center gap-2 rounded-full bg-[oklch(0.40_0.19_250)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
               >
                 <CheckCircle2 className="h-4 w-4" />
                 Approve
@@ -287,7 +290,7 @@ function StatusBadge({ status }: { status: TeacherRequestStatus }) {
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-[oklch(0.92_0.03_250)] px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-[oklch(0.40_0.19_250)]">
+    <span className="inline-flex items-center gap-1 rounded-full bg-accent/55 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-primary">
       <Clock className="h-3 w-3" />
       Pending
     </span>

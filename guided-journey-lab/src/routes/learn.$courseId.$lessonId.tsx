@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, BookOpen, CheckCircle2, CirclePlay, Clock3 } from "lucide-react";
-import { AppShell } from "../components/app/AppShell";
+import { AppLayout } from "../components/app/AppLayout";
 import { LessonContentRenderer } from "../components/lesson/LessonContentRenderer";
 import { LessonNotes } from "../components/lesson/LessonNotes";
 import {
@@ -78,34 +78,12 @@ function LessonPage() {
   const courseTitle = courseQuery.data?.title || "Course";
 
   return (
-    <AppShell
-      active="courses"
-      user={{
-        displayName: auth.session?.displayName ?? "EduLife learner",
-        email: auth.session?.email ?? "",
-      }}
-      onLogout={auth.logout}
-      header={
-        <div className="flex items-center gap-3">
-          <Link
-            to="/courses/$courseId"
-            params={{ courseId }}
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back to course
-          </Link>
-          <div>
-            <p className="text-sm font-semibold text-foreground">{courseTitle}</p>
-            <p className="text-xs text-muted-foreground">
-              Lesson content loaded from the backend lesson endpoint.
-            </p>
-          </div>
-        </div>
-      }
-    >
+    <AppLayout>
       {lessonQuery.isLoading || courseQuery.isLoading ? (
-        <StateCard title="Loading lesson..." detail="Fetching lesson content and navigation state." />
+        <StateCard
+          title="Loading lesson..."
+          detail="Fetching lesson content and navigation state."
+        />
       ) : lessonQuery.isError ? (
         <StateCard title="Lesson unavailable" detail={lessonQuery.error.message} />
       ) : !lessonQuery.data ? (
@@ -153,7 +131,8 @@ function LessonPage() {
                   <>
                     <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
                       <span>
-                        {progressQuery.data.completedLessons} / {progressQuery.data.totalLessons} lessons
+                        {progressQuery.data.completedLessons} / {progressQuery.data.totalLessons}{" "}
+                        lessons
                       </span>
                       <span className="font-semibold text-foreground">
                         {Math.round(progressQuery.data.percentComplete)}%
@@ -198,7 +177,7 @@ function LessonPage() {
                     <Link
                       to="/learn/$courseId/$lessonId"
                       params={{ courseId, lessonId: nextLesson.id }}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-foreground px-4 py-2.5 text-xs font-bold text-background shadow-soft hover:bg-foreground/90 transition-all duration-200 hover:scale-[1.01]"
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground shadow-soft hover:bg-foreground/90 transition-all duration-200 hover:scale-[1.01]"
                     >
                       <CirclePlay className="h-4 w-4" />
                       Next lesson
@@ -240,7 +219,7 @@ function LessonPage() {
           </section>
         </div>
       )}
-    </AppShell>
+    </AppLayout>
   );
 }
 

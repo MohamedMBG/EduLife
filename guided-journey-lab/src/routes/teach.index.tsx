@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookOpen, CheckCircle2, FileEdit, Plus, X } from "lucide-react";
-import { AppShell } from "../components/app/AppShell";
+import { AppLayout } from "../components/app/AppLayout";
 import { createCmsCourse, listCmsCourses } from "../lib/api/client";
 import { RequireTeacher, useAuth } from "../lib/auth/auth-context";
 import type { CmsCourse, CourseStatus } from "../lib/api/types";
@@ -40,22 +40,7 @@ function TeachPage() {
   const published = courses.filter((course) => course.status === "PUBLISHED").length;
 
   return (
-    <AppShell
-      active="teach"
-      user={{
-        displayName: auth.session?.displayName || "EduLife teacher",
-        email: auth.session?.email || "",
-      }}
-      onLogout={auth.logout}
-      header={
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-semibold text-foreground">Teaching Studio</p>
-          <p className="text-xs text-muted-foreground">
-            Create courses, organize sections, and add lessons — all through the backend CMS.
-          </p>
-        </div>
-      }
-    >
+    <AppLayout>
       <div className="mx-auto max-w-5xl space-y-8">
         <section className="flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -68,7 +53,7 @@ function TeachPage() {
           <button
             type="button"
             onClick={() => setCreating((open) => !open)}
-            className="inline-flex h-11 items-center gap-2 rounded-full bg-foreground px-5 text-sm font-medium text-background shadow-elevated transition-all hover:opacity-90 active:scale-[0.98]"
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground shadow-elevated transition-all hover:opacity-90 active:scale-[0.98]"
           >
             {creating ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
             {creating ? "Close" : "New course"}
@@ -100,7 +85,7 @@ function TeachPage() {
           </div>
         )}
       </div>
-    </AppShell>
+    </AppLayout>
   );
 }
 
@@ -223,7 +208,10 @@ function CreateCourseCard({ onDone }: { onDone: () => void }) {
       </div>
 
       {createMutation.isError && (
-        <p role="alert" className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+        <p
+          role="alert"
+          className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+        >
           {createMutation.error.message}
         </p>
       )}

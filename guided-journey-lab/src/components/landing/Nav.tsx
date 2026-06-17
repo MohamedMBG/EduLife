@@ -62,7 +62,11 @@ export function Nav() {
               className="hidden sm:grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:text-foreground hover:bg-accent transition-colors duration-300"
               aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
             >
-              {dark ? <Sun className="h-4 w-4" strokeWidth={1.5} /> : <Moon className="h-4 w-4" strokeWidth={1.5} />}
+              {dark ? (
+                <Sun className="h-4 w-4" strokeWidth={1.5} />
+              ) : (
+                <Moon className="h-4 w-4" strokeWidth={1.5} />
+              )}
             </button>
 
             <Link
@@ -74,7 +78,7 @@ export function Nav() {
 
             <a
               href="#cta"
-              className="group relative inline-flex h-10 items-center gap-1 rounded-full bg-foreground text-background pl-4 pr-1 text-[13px] font-medium shadow-bezel transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] active:scale-[0.98]"
+              className="group relative inline-flex h-10 items-center gap-1 rounded-full bg-primary text-primary-foreground pl-4 pr-1 text-[13px] font-medium shadow-bezel transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] active:scale-[0.98]"
             >
               <span>Get Early Access</span>
               <span className="grid h-8 w-8 place-items-center rounded-full bg-background/15 group-hover:bg-background/25 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-0.5 group-hover:-translate-y-px">
@@ -148,7 +152,7 @@ export function Nav() {
                 <a
                   href="#cta"
                   onClick={() => setOpen(false)}
-                  className="mt-2 mb-1 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-foreground text-background text-sm font-medium shadow-bezel"
+                  className="mt-2 mb-1 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary text-primary-foreground text-sm font-medium shadow-bezel"
                 >
                   Get Early Access
                   <ArrowUpRight className="h-4 w-4" strokeWidth={1.75} />

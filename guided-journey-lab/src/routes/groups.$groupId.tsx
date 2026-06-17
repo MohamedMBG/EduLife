@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, BookOpen, Plus, Trash2, UserPlus, Users } from "lucide-react";
-import { AppShell } from "../components/app/AppShell";
+import { AppLayout } from "../components/app/AppLayout";
 import {
   addGroupMember,
   attachGroupCourse,
@@ -39,22 +39,7 @@ function GroupDetailPage() {
   const group = groupQuery.data;
 
   return (
-    <AppShell
-      active="groups"
-      user={{
-        displayName: auth.session?.displayName || "EduLife group admin",
-        email: auth.session?.email || "",
-      }}
-      onLogout={auth.logout}
-      header={
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-semibold text-foreground">{group?.name ?? "Group"}</p>
-          <p className="text-xs text-muted-foreground">
-            Members and assigned courses, scoped to this group only.
-          </p>
-        </div>
-      }
-    >
+    <AppLayout>
       <div className="mx-auto max-w-4xl space-y-8">
         <Link
           to="/groups"
@@ -88,7 +73,7 @@ function GroupDetailPage() {
           </>
         )}
       </div>
-    </AppShell>
+    </AppLayout>
   );
 }
 
@@ -123,9 +108,7 @@ function MembersSection({
         <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
           <Users className="h-4 w-4" />
         </span>
-        <h2 className="text-display text-lg text-foreground">
-          Members ({members.length})
-        </h2>
+        <h2 className="text-display text-lg text-foreground">Members ({members.length})</h2>
       </div>
 
       <form
@@ -154,14 +137,19 @@ function MembersSection({
       </form>
 
       {(addMutation.isError || removeMutation.isError) && (
-        <p role="alert" className="mt-3 rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+        <p
+          role="alert"
+          className="mt-3 rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+        >
           {addMutation.error?.message || removeMutation.error?.message}
         </p>
       )}
 
       <div className="mt-4 space-y-2">
         {members.length === 0 ? (
-          <p className="text-xs text-muted-foreground">No members yet — add learners or teachers by email.</p>
+          <p className="text-xs text-muted-foreground">
+            No members yet — add learners or teachers by email.
+          </p>
         ) : (
           members.map((member) => (
             <div
@@ -273,7 +261,10 @@ function CoursesSection({
       </form>
 
       {(attachMutation.isError || catalogQuery.isError) && (
-        <p role="alert" className="mt-3 rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+        <p
+          role="alert"
+          className="mt-3 rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+        >
           {attachMutation.error?.message || catalogQuery.error?.message}
         </p>
       )}
