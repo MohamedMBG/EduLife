@@ -34,7 +34,7 @@ public class ExamResultFragment extends Fragment {
         Bundle args = getArguments() != null ? getArguments() : new Bundle();
         int score = args.getInt("score", 0);
         // Fallback only; the real threshold always arrives from the exam result via ExamFragment.
-        int passScore = args.getInt("passScore", 70);
+        int passScore = args.getInt("passScore", 80);
         boolean passed = args.getBoolean("passed", false);
         String certificateNumber = args.getString("certificateNumber", "");
         int attemptsUsed = args.getInt("attemptsUsed", 0);

@@ -175,7 +175,7 @@ exams (
   id                  UUID PRIMARY KEY,
   course_id           UUID NOT NULL REFERENCES courses(id),
   title               VARCHAR(200),
-  pass_score          SMALLINT NOT NULL DEFAULT 70,
+  pass_score          SMALLINT NOT NULL DEFAULT 80,
   time_limit_minutes  SMALLINT
 )
 

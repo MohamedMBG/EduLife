@@ -1,6 +1,7 @@
 import { Award, FileText, ShieldCheck } from "lucide-react";
-import { motion } from "framer-motion";
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { TextClipReveal, ScrollReveal } from "./animations";
 
 const CERTIFICATE_STATS = [
   { value: "80%", label: "Min Passing Grade" },
@@ -10,53 +11,83 @@ const CERTIFICATE_STATS = [
 ];
 
 export function PublicCertificatesSection() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "end start"],
+  });
+
+  const certRotate = useTransform(scrollYProgress, [0, 0.5, 1], [6, 0, -3]);
+  const certY = useTransform(scrollYProgress, [0, 0.5, 1], [60, 0, -30]);
+  const badgeY = useTransform(scrollYProgress, [0, 0.5, 1], [40, 0, -50]);
+
   return (
-    <section id="faculty" className="bg-primary px-5 py-20 text-white sm:px-6 lg:px-8 lg:py-32">
+    <section
+      ref={sectionRef}
+      id="faculty"
+      className="bg-primary px-5 py-20 text-white sm:px-6 lg:px-8 lg:py-32"
+    >
       <div className="mx-auto grid max-w-[1280px] gap-12 lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.02fr)] lg:items-center lg:gap-16">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-120px" }}
-          transition={{ duration: 0.74, ease: [0.16, 1, 0.3, 1] }}
-          className="max-w-[540px]"
-        >
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/58">
-            Credentialing
-          </p>
-          <h2 className="mt-5 max-w-[10ch] pb-2 text-[clamp(2.4rem,5vw,4.2rem)] font-light leading-[1.06] tracking-[-0.05em] text-white">
-            Certificates that actually <span className="italic text-white/68">carry weight.</span>
-          </h2>
-          <p className="mt-7 max-w-[38ch] text-base leading-8 text-white/68 sm:text-[1.05rem]">
-            EduLife credentials are tied to graded completion, issuer identity, and a public
-            verification code so institutions and employers can trust the result.
-          </p>
+        <ScrollReveal>
+          <div className="max-w-[540px]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/58">
+              Credentialing
+            </p>
+            <TextClipReveal>
+              <h2 className="mt-5 max-w-[10ch] pb-2 text-[clamp(2.4rem,5vw,4.2rem)] font-light leading-[1.06] tracking-[-0.05em] text-white">
+                Certificates that actually <span className="italic text-white/68">carry weight.</span>
+              </h2>
+            </TextClipReveal>
+            <p className="mt-7 max-w-[38ch] text-base leading-8 text-white/68 sm:text-[1.05rem]">
+              EduLife credentials are tied to graded completion, issuer identity, and a public
+              verification code so institutions and employers can trust the result.
+            </p>
 
-          <div className="mt-10 grid gap-6 sm:grid-cols-2">
-            {CERTIFICATE_STATS.map((stat) => (
-              <div key={stat.label} className="border-t border-white/10 pt-5">
-                <p className="text-[1.7rem] font-semibold tracking-[-0.04em] text-white">
-                  {stat.value}
-                </p>
-                <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/50">
-                  {stat.label}
-                </p>
-              </div>
-            ))}
+            <div className="mt-10 grid gap-6 sm:grid-cols-2">
+              {CERTIFICATE_STATS.map((stat, i) => (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-60px" }}
+                  transition={{
+                    duration: 0.6,
+                    delay: i * 0.08,
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
+                  className="border-t border-white/10 pt-5"
+                >
+                  <p className="text-[1.7rem] font-semibold tracking-[-0.04em] text-white">
+                    {stat.value}
+                  </p>
+                  <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/50">
+                    {stat.label}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
           </div>
-        </motion.div>
+        </ScrollReveal>
 
-        <motion.div
-          initial={{ opacity: 0, y: 30, rotate: 4 }}
-          whileInView={{ opacity: 1, y: 0, rotate: 0 }}
-          viewport={{ once: true, margin: "-120px" }}
-          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-          className="relative"
-        >
-          <div className="absolute inset-0 rounded-full bg-white/6 blur-3xl" aria-hidden />
+        <div className="relative" style={{ perspective: "1200px" }}>
+          <motion.div
+            animate={{
+              scale: [1, 1.08, 1],
+              opacity: [0.4, 0.6, 0.4],
+            }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute inset-0 rounded-full bg-white/6 blur-3xl"
+            aria-hidden
+          />
 
-          {/* This certificate preview stays local to the landing page so the marketing surface
-              does not depend on the real PDF generation flow or backend certificate payloads. */}
-          <div className="relative mx-auto max-w-[640px] rounded-[2rem] bg-[#e9edf3] p-4 shadow-[0_38px_92px_-36px_rgba(0,0,0,0.52)]">
+          <motion.div
+            style={{ rotateZ: certRotate, y: certY }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+            className="relative mx-auto max-w-[640px] rounded-[2rem] bg-[#e9edf3] p-4 shadow-[0_38px_92px_-36px_rgba(0,0,0,0.52)]"
+          >
             <div className="relative overflow-hidden rounded-[1.5rem] bg-white p-8 sm:p-12">
               <div
                 className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(9,20,38,0.05),transparent_52%)]"
@@ -78,7 +109,7 @@ export function PublicCertificatesSection() {
                   This high-distinction award is presented to
                 </p>
                 <p className="mt-5 border-b border-[#dfe3e7] px-8 pb-4 text-[2rem] font-semibold tracking-[-0.05em] text-primary sm:text-[2.7rem]">
-                  Yassine El-Amrani
+                  BAGHDAD Mohamed
                 </p>
                 <p className="mt-7 max-w-[34ch] text-[0.97rem] leading-7 text-[#505f76]">
                   For the rigorous completion of the Advanced Full-Stack Engineering program,
@@ -104,9 +135,16 @@ export function PublicCertificatesSection() {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="absolute right-0 top-6 rounded-[1.5rem] border border-white/12 bg-white p-5 text-primary shadow-[0_22px_56px_-30px_rgba(0,0,0,0.42)] sm:right-[-10px]">
+          <motion.div
+            style={{ y: badgeY }}
+            initial={{ opacity: 0, scale: 0.85 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute right-0 top-6 rounded-[1.5rem] border border-white/12 bg-white p-5 text-primary shadow-[0_22px_56px_-30px_rgba(0,0,0,0.42)] sm:right-[-10px]"
+          >
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#505f76]">
               Final score
             </p>
@@ -114,8 +152,8 @@ export function PublicCertificatesSection() {
             <span className="mt-3 inline-flex rounded-full bg-[#eff4fb] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
               Exceptional
             </span>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       </div>
     </section>
   );

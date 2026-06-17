@@ -560,14 +560,6 @@ Le projet réunit plusieurs rôles et plusieurs surfaces clientes, ce qui compli
 - produire des certificats exploitables, téléchargeables et vérifiables ;
 - éviter de surcharger le MVP avec des fonctions séduisantes mais secondaires.
 
-## Limites actuelles
-
-- certaines décisions projet et certaines données live ne sont pas entièrement alignées, par exemple sur le seuil de réussite d'examen ;
-- les écrans web d'administration fine de tous les utilisateurs, de modération de certificats ou de gestion complète des cours ne sont pas tous présents comme routes dédiées ;
-- la qualité du lint web est encore insuffisante ;
-- la couverture de tests Android reste modeste ;
-- la parité fonctionnelle complète entre web et mobile n'est pas encore atteinte.
-
 ## Perspectives
 
 - consolider la cohérence des règles métier entre documentation, seed data et interfaces ;

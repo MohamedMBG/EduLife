@@ -15,7 +15,7 @@ public record CreateExamRequest(
         @Size(max = 200, message = "title must be 200 characters or fewer")
         String title,
 
-        // passScore is a percentage threshold (0–100). Plan specifies 70 as default.
+        // passScore is a percentage threshold (0–100). Project rule: 80 is the default.
         @NotNull(message = "passScore is required")
         @Min(value = 1, message = "passScore must be at least 1")
         @Max(value = 100, message = "passScore must be at most 100")

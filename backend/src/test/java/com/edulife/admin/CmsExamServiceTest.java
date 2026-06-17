@@ -256,7 +256,7 @@ class CmsExamServiceTest {
     }
 
     private void givenExistingExamEntity() {
-        Exam exam = new Exam(COURSE_ID, "Old Exam", 70, 20);
+        Exam exam = new Exam(COURSE_ID, "Old Exam", 80, 20);
         ReflectionTestUtils.setField(exam, "id", EXAM_ID);
         given(examRepository.findByCourseId(COURSE_ID)).willReturn(Optional.of(exam));
     }
