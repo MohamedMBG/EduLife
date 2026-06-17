@@ -117,6 +117,7 @@ public class SecurityConfig {
                         // Firebase token (img tags, web cache). Filenames are UUID-based, so the
                         // directory is not practically enumerable.
                         .requestMatchers("/uploads/avatars/**").permitAll()
+                        .requestMatchers("/uploads/course-covers/**").permitAll()
                         // Certificate verification is public so employers and institutions can
                         // confirm a certificate without a Firebase account.
                         .requestMatchers("/api/v1/certificates/verify/**").permitAll()

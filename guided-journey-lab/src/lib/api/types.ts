@@ -323,6 +323,12 @@ export interface AvatarUploadResponse {
   avatarUrl: string;
 }
 
+export interface CourseCoverUploadResponse {
+  courseId: string;
+  coverImageUrl: string;
+  message: string;
+}
+
 export type CourseStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 
 export type CmsLessonType = "VIDEO" | "ARTICLE" | "RESOURCE";

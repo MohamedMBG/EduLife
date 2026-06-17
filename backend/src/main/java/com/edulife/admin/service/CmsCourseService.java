@@ -3,8 +3,10 @@ package com.edulife.admin.service;
 import com.edulife.admin.dto.CourseAdminDto;
 import com.edulife.admin.dto.CreateCourseRequest;
 import com.edulife.admin.dto.UpdateCourseRequest;
+import com.edulife.courses.dto.CourseCoverUploadResponse;
 import com.edulife.courses.entity.Course;
 import com.edulife.courses.repository.CourseRepository;
+import com.edulife.courses.storage.LocalCourseCoverStorage;
 import com.edulife.groups.repository.GroupMemberRepository;
 import com.edulife.security.FirebaseAuthentication;
 import com.edulife.users.entity.User;
@@ -20,6 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
@@ -34,15 +37,18 @@ public class CmsCourseService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final GroupMemberRepository groupMemberRepository;
+    private final LocalCourseCoverStorage courseCoverStorage;
 
     public CmsCourseService(
             CourseRepository courseRepository,
             UserRepository userRepository,
-            GroupMemberRepository groupMemberRepository
+            GroupMemberRepository groupMemberRepository,
+            LocalCourseCoverStorage courseCoverStorage
     ) {
         this.courseRepository = courseRepository;
         this.userRepository = userRepository;
         this.groupMemberRepository = groupMemberRepository;
+        this.courseCoverStorage = courseCoverStorage;
     }
 
     @Transactional(readOnly = true)
@@ -135,6 +141,49 @@ public class CmsCourseService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
         course.archive();
         return toDto(course);
+    }
+
+    @Transactional
+    public CourseCoverUploadResponse uploadCoverImage(UUID courseId, MultipartFile file) {
+        User currentUser = resolveCurrentUser();
+        Course course = loadCourseForCoverUpload(courseId, currentUser);
+
+        String oldUrl = course.getImageUrl();
+        String newUrl = courseCoverStorage.store(courseId, file);
+
+        course.updateMetadata(
+                course.getTitle(), course.getShortDescription(), course.getDescription(),
+                course.getLanguageCode(), course.getLevel(), newUrl
+        );
+
+        courseCoverStorage.deleteIfStored(oldUrl);
+
+        return new CourseCoverUploadResponse(courseId, newUrl, "Course cover image updated successfully");
+    }
+
+    private Course loadCourseForCoverUpload(UUID courseId, User currentUser) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
+
+        if (currentUser.getRole() == UserRole.ADMIN) {
+            return course;
+        }
+
+        boolean isOwner = course.getCreatedByUserId() != null
+                && course.getCreatedByUserId().equals(currentUser.getId());
+        if (isOwner) {
+            return course;
+        }
+
+        boolean managesAuthor = currentUser.getRole() == UserRole.GROUP_ADMIN
+                && course.getCreatedByUserId() != null
+                && groupMemberRepository.existsMemberManagedBy(currentUser.getId(), course.getCreatedByUserId());
+        if (managesAuthor) {
+            return course;
+        }
+
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                "You do not have permission to update this course's cover image");
     }
 
     private Course loadCourseForMutation(UUID courseId, User currentUser) {

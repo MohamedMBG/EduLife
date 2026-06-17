@@ -26,9 +26,8 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
 
     private static final RequestMatcher PUBLIC_ENDPOINTS = new OrRequestMatcher(
             new AntPathRequestMatcher("/actuator/health"),
-            // Avatar files are public assets served by URL to img tags and the web cache, so
-            // the Firebase filter must not block them with a malformed-header response.
-            new AntPathRequestMatcher("/uploads/avatars/**")
+            new AntPathRequestMatcher("/uploads/avatars/**"),
+            new AntPathRequestMatcher("/uploads/course-covers/**")
     );
 
     private final FirebaseAuth firebaseAuth;

@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ClipboardList, FileText, Layers3, Plus, Trash2, Video, X } from "lucide-react";
 import { AppLayout } from "../components/app/AppLayout";
+import { CourseCoverImageUploader } from "../components/cms/CourseCoverImageUploader";
 import {
   ApiClientError,
   createCmsLesson,
@@ -110,6 +111,8 @@ function ManageCoursePage() {
                 {addingSection ? "Close" : "Add section"}
               </button>
             </section>
+
+            <CourseCoverImageUploader courseId={courseId} currentImageUrl={course.imageUrl} />
 
             <Link
               to="/teach/$courseId/exam"

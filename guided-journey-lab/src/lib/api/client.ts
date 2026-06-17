@@ -4,6 +4,7 @@ import type {
   ApiErrorPayload,
   AuthSyncResponse,
   AvatarUploadResponse,
+  CourseCoverUploadResponse,
   UserRole,
   Certificate,
   CertificateDetail,
@@ -681,6 +682,23 @@ export function createCmsCourse(
   return makeRequest<CmsCourse>("api/v1/cms/courses", {
     method: "POST",
     body: payload,
+    getAccessToken,
+  });
+}
+
+export function uploadCourseCoverImage(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  courseId: string,
+  file: File,
+) {
+  assertCmsAvailable();
+
+  const body = new FormData();
+  body.append("file", file);
+
+  return makeRequest<CourseCoverUploadResponse>(`api/v1/cms/courses/${courseId}/cover-image`, {
+    method: "POST",
+    body,
     getAccessToken,
   });
 }
