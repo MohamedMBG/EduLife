@@ -4,6 +4,8 @@ export interface CourseRecommendation {
   course: CourseSummary;
   score: number;
   reason: string;
+  matchedSkills?: string[];
+  source?: "groq" | "deterministic-fallback";
 }
 
 export interface AdvisorResult {

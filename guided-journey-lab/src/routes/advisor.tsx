@@ -225,6 +225,8 @@ function AdvisorPage() {
             course: courseMap.get(recommendation.courseId)!,
             reason: recommendation.reason,
             score: recommendation.score,
+            matchedSkills: recommendation.matchedSkills,
+            source: apiResult.source,
           }));
 
         setBriefs((previous) => {
@@ -854,13 +856,29 @@ function AnalysisSection({
             ))}
           </ul>
 
+          {recommendation.matchedSkills && recommendation.matchedSkills.length > 0 && (
+            <div className="mb-6 flex flex-wrap gap-2">
+              {recommendation.matchedSkills.map((skill, i) => (
+                <span
+                  key={i}
+                  className="rounded-full px-3 py-1 text-xs font-medium"
+                  style={{ background: `${MM.primary}14`, color: MM.primary }}
+                >
+                  {skill}
+                </span>
+              ))}
+            </div>
+          )}
+
           <div
             className="flex items-center gap-3 border-t py-4"
             style={{ borderColor: `${MM.outlineVariant}33` }}
           >
             <Sparkles className="h-4 w-4" style={{ color: MM.primary }} strokeWidth={1.5} />
             <p className="text-sm font-medium" style={{ color: MM.primary }}>
-              Prioritizing practical productivity over raw syntax.
+              {recommendation.source === "groq"
+                ? "AI-powered recommendation based on course catalog analysis."
+                : "Matched using keyword analysis from the course catalog."}
             </p>
           </div>
         </div>

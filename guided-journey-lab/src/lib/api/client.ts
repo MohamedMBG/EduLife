@@ -583,7 +583,13 @@ export function submitExam(
 
 export interface AdvisorApiResponse {
   message: string;
-  recommendations: Array<{ courseId: string; reason: string; score: number }>;
+  recommendations: Array<{
+    courseId: string;
+    reason: string;
+    score: number;
+    matchedSkills?: string[];
+  }>;
+  source?: "groq" | "deterministic-fallback";
 }
 
 export function requestAdvisorRecommendation(

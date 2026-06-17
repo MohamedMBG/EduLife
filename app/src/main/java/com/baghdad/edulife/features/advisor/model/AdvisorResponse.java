@@ -5,4 +5,5 @@ import java.util.List;
 public class AdvisorResponse {
     public String message;
     public List<AdvisorRecommendation> recommendations;
+    public String source;
 }
