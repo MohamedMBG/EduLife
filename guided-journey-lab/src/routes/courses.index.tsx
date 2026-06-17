@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookOpen, CheckCircle2, Clock3, PlayCircle, Trash2 } from "lucide-react";
-import { AppShell } from "../components/app/AppShell";
+import { AppLayout } from "../components/app/AppLayout";
 import { getCourseProgress, listMyEnrollments, unenrollFromCourse } from "../lib/api/client";
 import { RequireAuth, useAuth } from "../lib/auth/auth-context";
 
@@ -103,37 +103,24 @@ function CoursesPage() {
   const progressError = progressQueries.find((queryItem) => queryItem.isError)?.error;
 
   return (
-    <AppShell
-      active="courses"
-      user={{
-        displayName: auth.session?.displayName ?? "EduLife learner",
-        email: auth.session?.email ?? "",
-      }}
-      onLogout={auth.logout}
-      header={
-        <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-                  <p className="text-sm font-semibold text-foreground">My enrolled courses</p>
-                  <p className="text-xs text-muted-foreground">
-                    Real enrollments from `/api/v1/enrollments/me` plus per-course progress from
-                    the backend progress endpoint.
-                  </p>
-                </div>
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search enrolled courses..."
-            className="w-full rounded-full border border-border bg-surface px-4 py-2 text-sm outline-none lg:w-72"
-          />
-        </div>
-      }
-    >
+    <AppLayout>
       <section className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard title="Enrolled" value={String(totals.enrolled)} icon={<BookOpen className="h-5 w-5 text-primary" />} />
-          <MetricCard title="In progress" value={String(totals.inProgress)} icon={<PlayCircle className="h-5 w-5 text-amber-500" />} />
-          <MetricCard title="Completed" value={String(totals.completed)} icon={<CheckCircle2 className="h-5 w-5 text-teal-600" />} />
+          <MetricCard
+            title="Enrolled"
+            value={String(totals.enrolled)}
+            icon={<BookOpen className="h-5 w-5 text-primary" />}
+          />
+          <MetricCard
+            title="In progress"
+            value={String(totals.inProgress)}
+            icon={<PlayCircle className="h-5 w-5 text-amber-500" />}
+          />
+          <MetricCard
+            title="Completed"
+            value={String(totals.completed)}
+            icon={<CheckCircle2 className="h-5 w-5 text-teal-600" />}
+          />
           <MetricCard
             title="Lessons done"
             value={`${totals.completedLessons}/${totals.totalLessons || 0}`}
@@ -149,7 +136,7 @@ function CoursesPage() {
               onClick={() => setActiveTab(tab)}
               className={`rounded-full border px-4 py-2 text-xs font-medium capitalize transition-colors ${
                 activeTab === tab
-                  ? "border-foreground bg-foreground text-background"
+                  ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-surface-elevated text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -183,12 +170,15 @@ function CoursesPage() {
                         src={course.imageUrl}
                         alt={course.title}
                         className="h-full w-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                          e.currentTarget.parentElement?.querySelector("[data-fallback]")?.removeAttribute("hidden");
+                        }}
                       />
-                    ) : (
-                      <div className="grid h-full place-items-center bg-gradient-to-br from-primary/10 to-primary-glow/10 text-primary">
-                        <BookOpen className="h-8 w-8" />
-                      </div>
-                    )}
+                    ) : null}
+                    <div className="grid h-full place-items-center bg-gradient-to-br from-primary/10 to-primary-glow/10 text-primary" data-fallback="" hidden={!!course.imageUrl}>
+                      <BookOpen className="h-8 w-8" />
+                    </div>
                   </div>
 
                   <div className="min-w-0 flex-1">
@@ -208,7 +198,8 @@ function CoursesPage() {
                     <div className="mt-4">
                       <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
                         <span>
-                          {course.progress?.completedLessons ?? 0} / {course.progress?.totalLessons ?? 0} lessons
+                          {course.progress?.completedLessons ?? 0} /{" "}
+                          {course.progress?.totalLessons ?? 0} lessons
                         </span>
                         <span className="font-semibold text-foreground">{course.percent}%</span>
                       </div>
@@ -252,19 +243,11 @@ function CoursesPage() {
           </div>
         )}
       </section>
-    </AppShell>
+    </AppLayout>
   );
 }
 
-function MetricCard({
-  title,
-  value,
-  icon,
-}: {
-  title: string;
-  value: string;
-  icon: ReactNode;
-}) {
+function MetricCard({ title, value, icon }: { title: string; value: string; icon: ReactNode }) {
   return (
     <div className="group relative overflow-hidden rounded-2xl hairline bg-surface-elevated p-5 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:shadow-elevated">
       <div className="flex items-center justify-between">
@@ -275,9 +258,7 @@ function MetricCard({
           {icon}
         </span>
       </div>
-      <p className="mt-5 text-display text-3xl lg:text-4xl text-foreground leading-none">
-        {value}
-      </p>
+      <p className="mt-5 text-display text-3xl lg:text-4xl text-foreground leading-none">{value}</p>
     </div>
   );
 }

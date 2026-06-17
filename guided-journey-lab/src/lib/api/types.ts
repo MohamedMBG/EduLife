@@ -326,6 +326,7 @@ export interface AvatarUploadResponse {
 export interface CourseCoverUploadResponse {
   courseId: string;
   coverImageUrl: string;
+  coverImagePublicId: string;
   message: string;
 }
 

@@ -6,6 +6,7 @@ import { useAuth } from "../../lib/auth/auth-context";
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE_BYTES = 5 * 1024 * 1024;
+const FALLBACK_GRADIENT = "linear-gradient(135deg, #1e293b, #091426)";
 
 interface CourseCoverImageUploaderProps {
   courseId: string;
@@ -22,12 +23,14 @@ export function CourseCoverImageUploader({
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [imgBroken, setImgBroken] = useState(false);
 
   const uploadMutation = useMutation({
     mutationFn: (file: File) => uploadCourseCoverImage(auth.getAccessToken, courseId, file),
     onSuccess: () => {
       setPreview(null);
       setError(null);
+      setImgBroken(false);
       queryClient.invalidateQueries({ queryKey: ["cms", "courses"] });
     },
     onError: (err: Error) => {
@@ -68,7 +71,7 @@ export function CourseCoverImageUploader({
     if (file) validateAndUpload(file);
   };
 
-  const displayUrl = preview || currentImageUrl;
+  const displayUrl = imgBroken ? null : (preview || currentImageUrl);
 
   return (
     <div className="space-y-3">
@@ -91,9 +94,10 @@ export function CourseCoverImageUploader({
         {displayUrl ? (
           <div className="relative aspect-video w-full">
             <img
-              src={displayUrl}
+              src={displayUrl!}
               alt="Course cover"
               className="h-full w-full rounded-2xl object-cover"
+              onError={() => setImgBroken(true)}
             />
             {uploadMutation.isPending && (
               <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-background/60 backdrop-blur-sm">

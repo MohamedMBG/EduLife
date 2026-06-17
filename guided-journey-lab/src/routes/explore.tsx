@@ -1,8 +1,8 @@
 import { useDeferredValue, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Compass, Search, Sparkles, Users } from "lucide-react";
-import { AppShell } from "../components/app/AppShell";
+import { Compass, Search, Sparkles } from "lucide-react";
+import { AppLayout } from "../components/app/AppLayout";
 import { enrollInCourse, listCourses, listMyEnrollments } from "../lib/api/client";
 import { RequireAuth, useAuth } from "../lib/auth/auth-context";
 
@@ -12,7 +12,7 @@ export const Route = createFileRoute("/explore")({
 });
 
 const LEVEL_FILTERS = ["ALL", "BEGINNER", "INTERMEDIATE", "ADVANCED"] as const;
-const LANGUAGE_FILTERS = ["ALL", "ar", "fr", "en", "darija"] as const;
+const LANGUAGE_FILTERS = ["ALL", "ar", "fr", "en"] as const;
 
 function formatLanguage(languageCode: string) {
   switch (languageCode.toLowerCase()) {
@@ -25,6 +25,10 @@ function formatLanguage(languageCode: string) {
     default:
       return "English";
   }
+}
+
+function formatLevel(level: string) {
+  return level.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function ExploreRoute() {
@@ -67,184 +71,394 @@ function ExplorePage() {
 
   const enrolledCourseIds = new Set((enrollmentsQuery.data ?? []).map((item) => item.courseId));
   const catalog = (coursesQuery.data?.content ?? []).filter((course) => {
-    if (language === "ALL") {
-      return true;
-    }
-
+    if (language === "ALL") return true;
     return course.languageCode.toLowerCase() === language.toLowerCase();
   });
   const featured = catalog[0] ?? null;
 
+  const isLoading = coursesQuery.isLoading || enrollmentsQuery.isLoading;
+
   return (
-    <AppShell
-      active="explore"
-      user={{
-        displayName: auth.session?.displayName ?? "EduLife learner",
-        email: auth.session?.email ?? "",
-      }}
-      onLogout={auth.logout}
-      header={
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-foreground">Explore published courses</p>
-            <p className="text-xs text-muted-foreground">
-              Real data from `/api/v1/courses`, protected by your Firebase session.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 rounded-full border border-border/80 bg-surface px-4 py-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <input
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search courses..."
-              className="w-full min-w-0 bg-transparent text-sm outline-none sm:w-64"
-            />
-          </div>
-        </div>
-      }
-    >
-      <section className="space-y-6">
+    <AppLayout showSearch searchValue={query} onSearch={setQuery}>
+      <div>
+        {/* Page Header */}
+        <header className="mb-12 sm:mb-16">
+          <h1
+            className="text-4xl sm:text-5xl font-light tracking-tight"
+            style={{
+              color: "#091426",
+              fontFamily: "Montserrat, sans-serif",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Explore Courses
+          </h1>
+          <p
+            className="mt-2 text-lg font-light max-w-2xl leading-relaxed"
+            style={{ color: "#505f76" }}
+          >
+            Discover your path to academic excellence with our curated selection of premium
+            educational content.
+          </p>
+        </header>
+
+        {/* Featured Course Hero */}
         {featured && (
-          <div className="rounded-3xl bg-gradient-to-br from-primary to-primary-glow px-6 py-8 text-primary-foreground shadow-elevated">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs uppercase tracking-[0.16em]">
-              <Sparkles className="h-3.5 w-3.5" />
-              Featured right now
-            </div>
-            <h1 className="mt-4 text-display text-3xl">{featured.title}</h1>
-            <p className="mt-2 max-w-2xl text-sm text-primary-foreground/75">
-              {featured.shortDescription}
-            </p>
-            <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-primary-foreground/80">
-              <span className="rounded-full bg-white/10 px-3 py-1">
-                {featured.level.replace("_", " ")}
-              </span>
-              <span className="rounded-full bg-white/10 px-3 py-1">
-                {formatLanguage(featured.languageCode)}
-              </span>
-            </div>
-          </div>
+          <section className="mb-12 sm:mb-16">
+            <Link
+              to="/courses/$courseId"
+              params={{ courseId: featured.id }}
+              className="group relative block w-full h-[320px] sm:h-[400px] rounded-xl overflow-hidden"
+              style={{ border: "1px solid #c5c6cd" }}
+            >
+              <div
+                className="absolute inset-0 z-10"
+                style={{
+                  background: "linear-gradient(to right, rgba(9,20,38,0.9), rgba(9,20,38,0.2))",
+                }}
+              />
+              {featured.imageUrl ? (
+                <img
+                  src={featured.imageUrl}
+                  alt={featured.title}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                    e.currentTarget.parentElement?.querySelector("[data-fallback]")?.removeAttribute("hidden");
+                  }}
+                />
+              ) : null}
+              <div
+                className="absolute inset-0"
+                style={{ background: "linear-gradient(135deg, #1e293b, #091426)" }}
+                data-fallback=""
+                hidden={!!featured.imageUrl}
+              />
+              <div className="absolute inset-0 z-20 p-8 sm:p-12 flex flex-col justify-center max-w-3xl">
+                <div className="flex items-center gap-2 mb-4">
+                  <span
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest backdrop-blur-md"
+                    style={{
+                      background: "rgba(255,255,255,0.1)",
+                      color: "#ffffff",
+                      border: "1px solid rgba(255,255,255,0.2)",
+                    }}
+                  >
+                    <Sparkles className="h-3 w-3" />
+                    Featured right now
+                  </span>
+                </div>
+                <h2
+                  className="text-2xl sm:text-4xl font-light leading-tight"
+                  style={{
+                    color: "#ffffff",
+                    fontFamily: "Montserrat, sans-serif",
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  {featured.title}
+                </h2>
+                <p
+                  className="mt-2 text-sm sm:text-base font-light max-w-xl"
+                  style={{ color: "rgba(255,255,255,0.8)" }}
+                >
+                  {featured.shortDescription}
+                </p>
+                <div className="mt-5 flex gap-3">
+                  <span
+                    className="px-4 py-2 rounded-xl text-xs font-semibold backdrop-blur-sm"
+                    style={{ background: "rgba(255,255,255,0.1)", color: "#ffffff" }}
+                  >
+                    {formatLevel(featured.level)}
+                  </span>
+                  <span
+                    className="px-4 py-2 rounded-xl text-xs font-semibold backdrop-blur-sm"
+                    style={{ background: "rgba(255,255,255,0.1)", color: "#ffffff" }}
+                  >
+                    {formatLanguage(featured.languageCode)}
+                  </span>
+                </div>
+              </div>
+            </Link>
+          </section>
         )}
 
-        <div className="flex flex-wrap gap-2">
-          {LEVEL_FILTERS.map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setLevel(value)}
-              className={`rounded-full border px-4 py-2 text-xs font-medium transition-colors ${
-                level === value
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-surface-elevated text-muted-foreground hover:text-foreground"
-              }`}
+        {/* Filter System */}
+        <section
+          className="mb-8"
+          style={{ borderBottom: "1px solid #c5c6cd", paddingBottom: "16px" }}
+        >
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:flex-wrap">
+            <span
+              className="text-xs font-semibold uppercase tracking-widest shrink-0"
+              style={{ color: "#091426", opacity: 0.5, letterSpacing: "0.05em" }}
             >
-              {value === "ALL" ? "All levels" : value.replace("_", " ")}
-            </button>
-          ))}
-        </div>
+              Filter by
+            </span>
 
-        <div className="flex flex-wrap gap-2">
-          {LANGUAGE_FILTERS.map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setLanguage(value)}
-              className={`rounded-full border px-4 py-2 text-xs font-medium transition-colors ${
-                language === value
-                  ? "border-foreground bg-foreground text-background"
-                  : "border-border bg-surface-elevated text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {value === "ALL" ? "All languages" : formatLanguage(value)}
-            </button>
-          ))}
-        </div>
+            <div className="flex flex-wrap gap-2">
+              {LEVEL_FILTERS.map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setLevel(value)}
+                  className="px-5 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer"
+                  style={
+                    level === value
+                      ? { background: "#091426", color: "#ffffff" }
+                      : {
+                          background: "transparent",
+                          color: "#505f76",
+                          border: "1px solid #c5c6cd",
+                        }
+                  }
+                  aria-pressed={level === value}
+                >
+                  {value === "ALL" ? "All Levels" : formatLevel(value)}
+                </button>
+              ))}
+            </div>
 
-        {coursesQuery.isLoading || enrollmentsQuery.isLoading ? (
-          <StateCard title="Loading catalog..." detail="Fetching courses and your enrollment state." />
+            <div
+              className="hidden md:block self-stretch"
+              style={{ width: "1px", background: "#c5c6cd", margin: "0 8px" }}
+            />
+
+            <div className="flex flex-wrap gap-2">
+              {LANGUAGE_FILTERS.map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setLanguage(value)}
+                  className="px-5 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer"
+                  style={
+                    language === value
+                      ? { background: "#091426", color: "#ffffff" }
+                      : {
+                          background: "transparent",
+                          color: "#505f76",
+                          border: "1px solid #c5c6cd",
+                        }
+                  }
+                  aria-pressed={language === value}
+                >
+                  {value === "ALL" ? "All Languages" : formatLanguage(value)}
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Course Grid */}
+        {isLoading ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
         ) : coursesQuery.isError ? (
-          <StateCard title="Catalog unavailable" detail={coursesQuery.error.message} />
+          <ErrorState message={coursesQuery.error.message} />
         ) : catalog.length === 0 ? (
-          <StateCard
-            title="No courses found"
-            detail="Try a broader search or remove one of the active filters."
-          />
+          <EmptyState />
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {catalog.map((course) => {
               const enrolled = enrolledCourseIds.has(course.id);
-
               return (
-                <article
+                <CourseCard
                   key={course.id}
-                  className="flex h-full flex-col rounded-3xl border border-border bg-surface-elevated p-5 shadow-soft"
-                >
-                  <div className="aspect-[16/9] overflow-hidden rounded-2xl bg-muted">
-                    {course.imageUrl ? (
-                      <img
-                        src={course.imageUrl}
-                        alt={course.title}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="grid h-full place-items-center bg-gradient-to-br from-primary/10 to-primary-glow/10 text-primary">
-                        <Compass className="h-10 w-10" />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="mt-4 flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-                    <span className="rounded-full bg-primary/8 px-3 py-1 text-primary">
-                      {course.level.replace("_", " ")}
-                    </span>
-                    <span className="rounded-full bg-muted px-3 py-1">
-                      {formatLanguage(course.languageCode)}
-                    </span>
-                  </div>
-
-                  <h2 className="mt-4 text-lg font-semibold text-foreground">{course.title}</h2>
-                  <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
-                    {course.shortDescription}
-                  </p>
-
-                  <div className="mt-5 flex items-center justify-between gap-3">
-                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                      <Users className="h-3.5 w-3.5" />
-                      Published
-                    </span>
-                    {enrolled ? (
-                      <Link
-                        to="/courses"
-                        className="rounded-full border border-primary/20 bg-primary/8 px-4 py-2 text-xs font-semibold text-primary"
-                      >
-                        In my courses
-                      </Link>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => enrollMutation.mutate(course.id)}
-                        disabled={enrollMutation.isPending}
-                        className="rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background disabled:opacity-60"
-                      >
-                        {enrollMutation.isPending ? "Enrolling..." : "Enroll now"}
-                      </button>
-                    )}
-                  </div>
-                </article>
+                  course={course}
+                  enrolled={enrolled}
+                  enrolling={enrollMutation.isPending}
+                  onEnroll={() => enrollMutation.mutate(course.id)}
+                />
               );
             })}
-          </div>
+          </section>
         )}
-      </section>
-    </AppShell>
+      </div>
+    </AppLayout>
   );
 }
 
-function StateCard({ title, detail }: { title: string; detail: string }) {
+/* ─── Course Card ─── */
+function CourseCard({
+  course,
+  enrolled,
+  enrolling,
+  onEnroll,
+}: {
+  course: {
+    id: string;
+    title: string;
+    shortDescription: string;
+    level: string;
+    languageCode: string;
+    imageUrl: string | null;
+  };
+  enrolled: boolean;
+  enrolling: boolean;
+  onEnroll: () => void;
+}) {
   return (
-    <div className="rounded-3xl border border-border bg-surface-elevated px-6 py-10 text-center shadow-soft">
-      <p className="text-sm font-semibold text-foreground">{title}</p>
-      <p className="mt-2 text-sm text-muted-foreground">{detail}</p>
+    <article
+      className="group flex flex-col rounded-xl overflow-hidden transition-all duration-300"
+      style={{
+        background: "#ffffff",
+        border: "1px solid #c5c6cd",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = "#091426";
+        e.currentTarget.style.boxShadow = "0 32px 64px -12px rgba(9,20,38,0.06)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = "#c5c6cd";
+        e.currentTarget.style.boxShadow = "none";
+      }}
+    >
+      <Link to="/courses/$courseId" params={{ courseId: course.id }} className="block">
+        <div className="relative h-48 overflow-hidden">
+          {course.imageUrl ? (
+            <img
+              src={course.imageUrl}
+              alt={course.title}
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+                e.currentTarget.parentElement?.querySelector("[data-fallback]")?.removeAttribute("hidden");
+              }}
+            />
+          ) : null}
+          <div
+            className="w-full h-full flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg, #1e293b, #091426)" }}
+            data-fallback=""
+            hidden={!!course.imageUrl}
+          >
+            <Compass className="h-10 w-10" style={{ color: "#8590a6" }} />
+          </div>
+          <div className="absolute top-4 left-4">
+            <span
+              className="px-3 py-1 rounded-xl text-[10px] font-semibold uppercase backdrop-blur"
+              style={{
+                background: "rgba(255,255,255,0.9)",
+                color: "#091426",
+                border: "1px solid #c5c6cd",
+              }}
+            >
+              {formatLevel(course.level)}
+            </span>
+          </div>
+        </div>
+      </Link>
+
+      <div className="flex flex-col flex-1 p-5">
+        <Link to="/courses/$courseId" params={{ courseId: course.id }} className="block">
+          <h3
+            className="text-xl font-normal leading-snug line-clamp-2"
+            style={{ color: "#091426", fontFamily: "Montserrat, sans-serif" }}
+          >
+            {course.title}
+          </h3>
+          <p className="mt-2 text-sm leading-relaxed line-clamp-3" style={{ color: "#505f76" }}>
+            {course.shortDescription}
+          </p>
+        </Link>
+
+        <div className="mt-auto pt-5 flex items-center justify-between">
+          <div className="flex items-center gap-1.5" style={{ color: "#505f76" }}>
+            <span className="text-[10px] font-semibold uppercase tracking-widest">
+              {enrolled ? "In Progress" : formatLanguage(course.languageCode)}
+            </span>
+          </div>
+
+          {enrolled ? (
+            <Link
+              to="/courses/$courseId"
+              params={{ courseId: course.id }}
+              className="px-5 py-2 rounded-xl text-xs font-semibold transition-all"
+              style={{
+                background: "#d8e3fb",
+                color: "#091426",
+              }}
+            >
+              Continue
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                onEnroll();
+              }}
+              disabled={enrolling}
+              className="px-5 py-2 rounded-xl text-xs font-semibold transition-all disabled:opacity-60 cursor-pointer"
+              style={{
+                background: "#091426",
+                color: "#ffffff",
+              }}
+            >
+              {enrolling ? "Enrolling..." : "Enroll Now"}
+            </button>
+          )}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+/* ─── Skeleton Loading Card ─── */
+function SkeletonCard() {
+  return (
+    <div
+      className="rounded-xl overflow-hidden animate-pulse"
+      style={{ background: "#ffffff", border: "1px solid #c5c6cd" }}
+    >
+      <div className="h-48" style={{ background: "#eaeef2" }} />
+      <div className="p-5 space-y-3">
+        <div className="h-5 rounded" style={{ background: "#eaeef2", width: "75%" }} />
+        <div className="h-4 rounded" style={{ background: "#eaeef2", width: "100%" }} />
+        <div className="h-4 rounded" style={{ background: "#eaeef2", width: "60%" }} />
+        <div className="flex justify-between items-center pt-3">
+          <div className="h-3 rounded" style={{ background: "#eaeef2", width: "25%" }} />
+          <div className="h-8 rounded-xl" style={{ background: "#eaeef2", width: "90px" }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Empty State ─── */
+function EmptyState() {
+  return (
+    <div
+      className="rounded-xl px-6 py-16 text-center"
+      style={{ background: "#ffffff", border: "1px solid #c5c6cd" }}
+    >
+      <Compass className="mx-auto h-10 w-10 mb-4" style={{ color: "#c5c6cd" }} />
+      <p className="text-sm font-semibold" style={{ color: "#091426" }}>
+        No courses found
+      </p>
+      <p className="mt-2 text-sm" style={{ color: "#505f76" }}>
+        Try a broader search or remove one of the active filters.
+      </p>
+    </div>
+  );
+}
+
+/* ─── Error State ─── */
+function ErrorState({ message }: { message: string }) {
+  return (
+    <div
+      className="rounded-xl px-6 py-16 text-center"
+      style={{ background: "#ffffff", border: "1px solid #c5c6cd" }}
+    >
+      <p className="text-sm font-semibold" style={{ color: "#091426" }}>
+        Catalog unavailable
+      </p>
+      <p className="mt-2 text-sm" style={{ color: "#505f76" }}>
+        {message}
+      </p>
     </div>
   );
 }

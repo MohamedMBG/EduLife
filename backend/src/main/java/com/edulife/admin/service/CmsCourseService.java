@@ -6,7 +6,8 @@ import com.edulife.admin.dto.UpdateCourseRequest;
 import com.edulife.courses.dto.CourseCoverUploadResponse;
 import com.edulife.courses.entity.Course;
 import com.edulife.courses.repository.CourseRepository;
-import com.edulife.courses.storage.LocalCourseCoverStorage;
+import com.edulife.courses.storage.CloudinaryStorageService;
+import com.edulife.courses.storage.CloudinaryUploadResult;
 import com.edulife.groups.repository.GroupMemberRepository;
 import com.edulife.security.FirebaseAuthentication;
 import com.edulife.users.entity.User;
@@ -37,18 +38,18 @@ public class CmsCourseService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final GroupMemberRepository groupMemberRepository;
-    private final LocalCourseCoverStorage courseCoverStorage;
+    private final CloudinaryStorageService cloudinaryStorage;
 
     public CmsCourseService(
             CourseRepository courseRepository,
             UserRepository userRepository,
             GroupMemberRepository groupMemberRepository,
-            LocalCourseCoverStorage courseCoverStorage
+            CloudinaryStorageService cloudinaryStorage
     ) {
         this.courseRepository = courseRepository;
         this.userRepository = userRepository;
         this.groupMemberRepository = groupMemberRepository;
-        this.courseCoverStorage = courseCoverStorage;
+        this.cloudinaryStorage = cloudinaryStorage;
     }
 
     @Transactional(readOnly = true)
@@ -148,17 +149,20 @@ public class CmsCourseService {
         User currentUser = resolveCurrentUser();
         Course course = loadCourseForCoverUpload(courseId, currentUser);
 
-        String oldUrl = course.getImageUrl();
-        String newUrl = courseCoverStorage.store(courseId, file);
+        String oldPublicId = course.getCoverImagePublicId();
+        CloudinaryUploadResult result = cloudinaryStorage.store(courseId, file);
 
         course.updateMetadata(
                 course.getTitle(), course.getShortDescription(), course.getDescription(),
-                course.getLanguageCode(), course.getLevel(), newUrl
+                course.getLanguageCode(), course.getLevel(), result.secureUrl()
         );
+        course.setCoverImagePublicId(result.publicId());
 
-        courseCoverStorage.deleteIfStored(oldUrl);
+        cloudinaryStorage.deleteByPublicId(oldPublicId);
 
-        return new CourseCoverUploadResponse(courseId, newUrl, "Course cover image updated successfully");
+        return new CourseCoverUploadResponse(
+                courseId, result.secureUrl(), result.publicId(),
+                "Course cover image updated successfully");
     }
 
     private Course loadCourseForCoverUpload(UUID courseId, User currentUser) {

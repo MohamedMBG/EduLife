@@ -38,6 +38,9 @@ public class Course {
     @Column(name = "image_url", columnDefinition = "TEXT")
     private String imageUrl;
 
+    @Column(name = "cover_image_public_id", columnDefinition = "TEXT")
+    private String coverImagePublicId;
+
     @Column(name = "published_at")
     private Instant publishedAt;
 
@@ -123,6 +126,10 @@ public class Course {
     public String getLevel() { return level; }
     public CourseStatus getStatus() { return status; }
     public String getImageUrl() { return imageUrl; }
+    public String getCoverImagePublicId() { return coverImagePublicId; }
+    public void setCoverImagePublicId(String coverImagePublicId) {
+        this.coverImagePublicId = coverImagePublicId;
+    }
     public Instant getPublishedAt() { return publishedAt; }
     public UUID getCreatedByUserId() { return createdByUserId; }
     public Instant getCreatedAt() { return createdAt; }

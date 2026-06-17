@@ -1,50 +1,54 @@
-import { useMemo, useState, useRef, useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
-
 import {
-  ArrowUpRight,
-  ArrowDown,
+  ArrowRight,
   BookOpen,
+  Check,
   CheckCircle2,
+  ChevronRight,
+  Compass,
+  GraduationCap,
+  Loader2,
+  Medal,
   RefreshCw,
   Sparkles,
-  Send,
-  Layers,
-  Globe2,
-  History,
+  Target,
+  User,
+  WandSparkles,
   X,
-  CornerDownLeft,
-  Copy,
-  Printer,
+  Zap,
 } from "lucide-react";
-import { AppShell } from "../components/app/AppShell";
+
+import { AppLayout } from "../components/app/AppLayout";
 import {
   enrollInCourse,
   listCourses,
   listMyEnrollments,
   requestAdvisorRecommendation,
 } from "../lib/api/client";
-import {
-  analyzeCareerGoal,
-  type CourseRecommendation,
-} from "../lib/career/advisor";
 import { RequireAuth, useAuth } from "../lib/auth/auth-context";
+import { analyzeCareerGoal, type CourseRecommendation } from "../lib/career/advisor";
 import { appEnv } from "../lib/env";
 
 export const Route = createFileRoute("/advisor")({
   component: AdvisorRoute,
-  head: () => ({ meta: [{ title: "Career Advisor - EduLife" }] }),
+  head: () => ({ meta: [{ title: "AI Career Advisor - EduLife" }] }),
 });
 
-const EXAMPLES = [
-  { label: "Software path", text: "I want to become a software developer and improve my English." },
-  { label: "Engineering prep", text: "I want to prepare for engineering studies after Bac." },
-  { label: "French writing", text: "I want better French writing for school and work." },
-  { label: "Design pivot", text: "I'm switching careers to design and want a structured intro." },
-  { label: "Bac science", text: "Help me revise science topics for Bac with clear examples." },
+const EXAMPLE_GOAL =
+  "I want to transition from marketing to data analysis, looking for a beginner-friendly foundation that fits my busy schedule.";
+
+const CONTEXT_CHIPS = [
+  { label: "Bac Student", text: "I am a Bac student" },
+  { label: "Career Switcher", text: "I am switching careers", active: true },
+  { label: "Software", text: "and want to learn software development" },
+  { label: "English", text: "with English support" },
+  { label: "Darija", text: "explained in Moroccan Darija" },
+  { label: "French", text: "taught in French" },
+  { label: "Business", text: "for a practical business goal" },
 ];
 
 interface Brief {
@@ -64,11 +68,32 @@ function AdvisorRoute() {
   );
 }
 
+/* ─── Midnight Minimalist tokens ─── */
+const MM = {
+  bg: "#f6fafe",
+  primary: "#091426",
+  primaryContainer: "#1e293b",
+  onPrimary: "#ffffff",
+  secondary: "#505f76",
+  surface: "#f0f4f8",
+  surfaceContainer: "#eaeef2",
+  surfaceHigh: "#e4e9ed",
+  outlineVariant: "#c5c6cd",
+  outline: "#75777d",
+  onSurface: "#171c1f",
+  onSurfaceVariant: "#45474c",
+  error: "#ba1a1a",
+  errorContainer: "#ffdad6",
+} as const;
+
+const EASE_OUT = [0.16, 1, 0.3, 1] as const;
+
 function AdvisorPage() {
   const auth = useAuth();
   const queryClient = useQueryClient();
   const [goal, setGoal] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
+  const resultRef = useRef<HTMLDivElement>(null);
 
   const coursesQuery = useQuery({
     queryKey: ["courses", "advisor"],
@@ -84,98 +109,110 @@ function AdvisorPage() {
     mutationFn: (courseId: string) => enrollInCourse(auth.getAccessToken, courseId),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["enrollments"] });
+      toast.success("Course enrollment updated.");
+    },
+    onError: () => {
+      toast.error("Enrollment failed. Please try again.");
     },
   });
 
   const courseMap = useMemo(
-    () => new Map((coursesQuery.data?.content ?? []).map((c) => [c.id, c])),
+    () => new Map((coursesQuery.data?.content ?? []).map((course) => [course.id, course])),
     [coursesQuery.data?.content],
   );
 
   const [briefs, setBriefs] = useState<Brief[]>([]);
   const [activeBriefId, setActiveBriefId] = useState<string | null>(null);
-  const briefRef = useRef<HTMLDivElement>(null);
 
-  // Load briefs from localStorage on mount
   useEffect(() => {
     try {
       const stored = localStorage.getItem("edulife_advisor_briefs");
-      if (stored) {
-        const parsed = JSON.parse(stored) as Brief[];
-        if (parsed.length > 0) {
-          setBriefs(parsed);
-          setActiveBriefId(parsed[0].id);
-        }
+      if (!stored) return;
+      const parsed = JSON.parse(stored) as Brief[];
+      if (parsed.length > 0) {
+        setBriefs(parsed);
+        setActiveBriefId(parsed[0].id);
       }
-    } catch (e) {
-      console.error("Failed to load briefs from localStorage", e);
+    } catch {
+      localStorage.removeItem("edulife_advisor_briefs");
     }
   }, []);
 
-  const saveBriefsToStorage = (updatedList: Brief[]) => {
-    try {
-      const toSave = updatedList.filter((b) => !b.isLoading && !b.isError);
-      localStorage.setItem("edulife_advisor_briefs", JSON.stringify(toSave));
-    } catch (e) {
-      console.error("Failed to save briefs", e);
-    }
-  };
-
   const currentBrief = useMemo(() => {
     if (activeBriefId) {
-      return briefs.find((b) => b.id === activeBriefId) ?? briefs[0];
+      return briefs.find((brief) => brief.id === activeBriefId) ?? briefs[0];
     }
     return briefs[0];
-  }, [briefs, activeBriefId]);
+  }, [activeBriefId, briefs]);
+
+  const enrolledCourseIds = useMemo(
+    () => new Set((enrollmentsQuery.data ?? []).map((item) => item.courseId)),
+    [enrollmentsQuery.data],
+  );
+
+  const trimmedGoal = goal.trim();
+  const goalReady = trimmedGoal.length >= 4;
+  const catalogCount = coursesQuery.data?.totalElements ?? coursesQuery.data?.content.length ?? 0;
+
+  const currentBriefId = currentBrief?.id;
+  const currentBriefLoading = currentBrief?.isLoading;
 
   useEffect(() => {
-    if (currentBrief && briefRef.current) {
-      briefRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (currentBriefId && resultRef.current) {
+      resultRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  }, [currentBrief?.id, currentBrief?.isLoading]);
+  }, [currentBriefId, currentBriefLoading]);
 
-  const handleClearHistory = () => {
-    if (window.confirm("Are you sure you want to clear all your brief history?")) {
-      setBriefs([]);
-      setActiveBriefId(null);
-      localStorage.removeItem("edulife_advisor_briefs");
-      toast.success("History cleared successfully");
+  function saveBriefsToStorage(updatedList: Brief[]) {
+    try {
+      const completedBriefs = updatedList.filter((brief) => !brief.isLoading && !brief.isError);
+      localStorage.setItem("edulife_advisor_briefs", JSON.stringify(completedBriefs));
+    } catch {
+      toast.error("Could not save advisor history on this device.");
     }
-  };
+  }
 
-  const handleDeleteBrief = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setBriefs((prev) => {
-      const updated = prev.filter((b) => b.id !== id);
+  function handleContextChip(text: string) {
+    setGoal((current) => {
+      const clean = current.trim();
+      if (!clean) return `${text}.`;
+      if (clean.toLowerCase().includes(text.toLowerCase())) return current;
+      return `${clean.replace(/[.]$/, "")} ${text}.`;
+    });
+  }
+
+  function handleDeleteBrief(id: string, event: React.MouseEvent) {
+    event.stopPropagation();
+    setBriefs((previous) => {
+      const updated = previous.filter((brief) => brief.id !== id);
       localStorage.setItem("edulife_advisor_briefs", JSON.stringify(updated));
       return updated;
     });
     if (activeBriefId === id) {
       setActiveBriefId(null);
     }
-    toast.success("Brief deleted from history");
-  };
+  }
 
-  const enrolledCourseIds = new Set((enrollmentsQuery.data ?? []).map((item) => item.courseId));
-  const trimmedGoal = goal.trim();
-  const goalReady = trimmedGoal.length >= 4;
-  const catalogCount = coursesQuery.data?.totalElements ?? coursesQuery.data?.content.length ?? 0;
+  function handleClearHistory() {
+    setBriefs([]);
+    setActiveBriefId(null);
+    localStorage.removeItem("edulife_advisor_briefs");
+  }
 
   async function handleAnalyze(customGoal?: string) {
     const targetGoal = (customGoal ?? trimmedGoal).trim();
-    if (targetGoal.length < 4) return;
+    if (targetGoal.length < 4 || coursesQuery.isLoading) return;
 
-    const briefId = Date.now().toString();
-    setBriefs((prev) => [
-      {
-        id: briefId,
-        goal: targetGoal,
-        message: "",
-        recommendations: [],
-        isLoading: true,
-      },
-      ...prev,
-    ]);
+    const briefId = crypto.randomUUID();
+    const loadingBrief: Brief = {
+      id: briefId,
+      goal: targetGoal,
+      message: "",
+      recommendations: [],
+      isLoading: true,
+    };
+
+    setBriefs((previous) => [loadingBrief, ...previous]);
     setActiveBriefId(briefId);
     setGoal("");
 
@@ -183,119 +220,91 @@ function AdvisorPage() {
       try {
         const apiResult = await requestAdvisorRecommendation(auth.getAccessToken, targetGoal);
         const recommendations = apiResult.recommendations
-          .filter((r) => courseMap.has(r.courseId))
-          .map((r) => ({
-            course: courseMap.get(r.courseId)!,
-            reason: r.reason,
-            score: r.score,
+          .filter((recommendation) => courseMap.has(recommendation.courseId))
+          .map((recommendation) => ({
+            course: courseMap.get(recommendation.courseId)!,
+            reason: recommendation.reason,
+            score: recommendation.score,
           }));
 
-        setBriefs((prev) => {
-          const updated = prev.map((b) =>
-            b.id === briefId
-              ? { ...b, message: apiResult.message, recommendations, isLoading: false }
-              : b,
+        setBriefs((previous) => {
+          const updated = previous.map((brief) =>
+            brief.id === briefId
+              ? { ...brief, message: apiResult.message, recommendations, isLoading: false }
+              : brief,
           );
           saveBriefsToStorage(updated);
           return updated;
         });
+        return;
       } catch {
-        const catalog = coursesQuery.data?.content ?? [];
-        if (catalog.length > 0) {
-          const result = analyzeCareerGoal(targetGoal, catalog);
-          setBriefs((prev) => {
-            const updated = prev.map((b) =>
-              b.id === briefId
-                ? {
-                    ...b,
-                    message: result.message,
-                    recommendations: result.recommendations,
-                    isLoading: false,
-                  }
-                : b,
-            );
-            saveBriefsToStorage(updated);
-            return updated;
-          });
-        } else {
-          setBriefs((prev) => {
-            const updated = prev.map((b) =>
-              b.id === briefId
-                ? {
-                    ...b,
-                    message:
-                      "Unable to reach the advisor right now. Check your connection and try again.",
-                    isLoading: false,
-                    isError: true,
-                  }
-                : b,
-            );
-            return updated;
-          });
-        }
+        // Fallback to deterministic catalog ranking
       }
-    } else {
-      setTimeout(() => {
-        const result = analyzeCareerGoal(targetGoal, coursesQuery.data?.content ?? []);
-        setBriefs((prev) => {
-          const updated = prev.map((b) =>
-            b.id === briefId
-              ? {
-                  ...b,
-                  message: result.message,
-                  recommendations: result.recommendations,
-                  isLoading: false,
-                }
-              : b,
-          );
-          saveBriefsToStorage(updated);
-          return updated;
-        });
-      }, 1200);
     }
+
+    const catalog = coursesQuery.data?.content ?? [];
+    if (catalog.length > 0) {
+      const result = analyzeCareerGoal(targetGoal, catalog);
+      setBriefs((previous) => {
+        const updated = previous.map((brief) =>
+          brief.id === briefId
+            ? {
+                ...brief,
+                message: result.message,
+                recommendations: result.recommendations,
+                isLoading: false,
+              }
+            : brief,
+        );
+        saveBriefsToStorage(updated);
+        return updated;
+      });
+      return;
+    }
+
+    setBriefs((previous) =>
+      previous.map((brief) =>
+        brief.id === briefId
+          ? {
+              ...brief,
+              message:
+                "Unable to reach the advisor right now. Check your connection and try again.",
+              isLoading: false,
+              isError: true,
+            }
+          : brief,
+      ),
+    );
   }
 
   return (
-    <AppShell
-      active="advisor"
-      user={{
-        displayName: auth.session?.displayName ?? "EduLife learner",
-        email: auth.session?.email ?? "",
-      }}
-      onLogout={auth.logout}
-      header={
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-semibold text-foreground">Career Goal Advisor</p>
-          <p className="text-xs text-muted-foreground">
-            One brief, grounded on the live course catalog.
-          </p>
-        </div>
-      }
-    >
-      <div className="-mx-4 sm:-mx-6 lg:-mx-8 -my-8">
-        <AdvisorStage
+    <AppLayout>
+      <div
+        className="min-h-screen font-sans antialiased"
+        style={{ background: MM.bg, color: MM.onSurface }}
+      >
+        <AdvisorHero
           goal={goal}
           setGoal={setGoal}
-          onAnalyze={handleAnalyze}
           goalReady={goalReady}
           isCatalogLoading={coursesQuery.isLoading}
           catalogCount={catalogCount}
-          enrolledCount={enrolledCourseIds.size}
           briefs={briefs}
-          examples={EXAMPLES}
           historyOpen={historyOpen}
           setHistoryOpen={setHistoryOpen}
-          currentBrief={currentBrief}
           activeBriefId={activeBriefId}
           setActiveBriefId={setActiveBriefId}
+          onAnalyze={handleAnalyze}
+          onUseExample={() => setGoal(EXAMPLE_GOAL)}
+          onContextChip={handleContextChip}
           onDeleteBrief={handleDeleteBrief}
           onClearHistory={handleClearHistory}
         />
 
-        <div ref={briefRef}>
+        <div ref={resultRef}>
           <AnimatePresence mode="wait">
-            {currentBrief && (
-              <BriefSpread
+            {currentBrief ? (
+              <AdvisorResult
                 key={currentBrief.id}
                 brief={currentBrief}
                 enrolledCourseIds={enrolledCourseIds}
@@ -303,204 +312,183 @@ function AdvisorPage() {
                 onEnroll={(courseId) => enrollMutation.mutate(courseId)}
                 onRetry={() => handleAnalyze(currentBrief.goal)}
               />
+            ) : (
+              <AdvisorEmpty catalogCount={catalogCount} />
             )}
           </AnimatePresence>
-
-          {!currentBrief && <EmptyAdvisorState catalogCount={catalogCount} />}
         </div>
+
+        <AdvisorFooter />
       </div>
-    </AppShell>
+    </AppLayout>
   );
 }
 
-interface StageProps {
+/* ═══════════════════════════════════════════
+   Section 01 — Hero / User Input
+   ═══════════════════════════════════════════ */
+
+interface HeroProps {
   goal: string;
-  setGoal: (v: string) => void;
-  onAnalyze: (g?: string) => void;
+  setGoal: (goal: string) => void;
   goalReady: boolean;
   isCatalogLoading: boolean;
   catalogCount: number;
-  enrolledCount: number;
   briefs: Brief[];
-  examples: typeof EXAMPLES;
   historyOpen: boolean;
-  setHistoryOpen: (v: boolean) => void;
-  currentBrief?: Brief;
+  setHistoryOpen: (open: boolean) => void;
   activeBriefId: string | null;
   setActiveBriefId: (id: string | null) => void;
-  onDeleteBrief: (id: string, e: React.MouseEvent) => void;
+  onAnalyze: (goal?: string) => void;
+  onUseExample: () => void;
+  onContextChip: (text: string) => void;
+  onDeleteBrief: (id: string, event: React.MouseEvent) => void;
   onClearHistory: () => void;
 }
 
-function AdvisorStage({
+function AdvisorHero({
   goal,
   setGoal,
-  onAnalyze,
   goalReady,
   isCatalogLoading,
   catalogCount,
   briefs,
-  examples,
   historyOpen,
   setHistoryOpen,
   activeBriefId,
   setActiveBriefId,
+  onAnalyze,
+  onUseExample,
+  onContextChip,
   onDeleteBrief,
   onClearHistory,
-}: StageProps) {
-  const [bgSel, setBgSel] = useState("");
-  const [interestSel, setInterestSel] = useState("");
-  const [langSel, setLangSel] = useState("");
-
-  const handleBuilderSelect = (type: "bg" | "interest" | "lang", value: string) => {
-    let nextBg = bgSel;
-    let nextInterest = interestSel;
-    let nextLang = langSel;
-
-    if (type === "bg") {
-      nextBg = bgSel === value ? "" : value;
-      setBgSel(nextBg);
-    } else if (type === "interest") {
-      nextInterest = interestSel === value ? "" : value;
-      setInterestSel(nextInterest);
-    } else if (type === "lang") {
-      nextLang = langSel === value ? "" : value;
-      setLangSel(nextLang);
-    }
-
-    let parts: string[] = [];
-    if (nextBg) {
-      if (nextBg === "Career Switcher") parts.push("I am switching my career");
-      else if (nextBg === "Univ Student") parts.push("I am a university student");
-      else parts.push(`I am a ${nextBg.toLowerCase()}`);
-    }
-    if (nextInterest) {
-      let intStr = nextInterest.toLowerCase();
-      if (intStr === "software") intStr = "software development";
-      if (intStr === "languages") intStr = "languages and communication";
-      if (intStr === "business") intStr = "business planning";
-      if (intStr === "engineering") intStr = "engineering prep subjects";
-      parts.push(nextBg ? `looking to learn ${intStr}` : `I want to learn ${intStr}`);
-    }
-    if (nextLang) {
-      if (nextLang === "Darija") parts.push("explained in Moroccan Darija");
-      else if (nextLang === "French") parts.push("taught in French");
-      else parts.push("taught in English");
-    }
-
-    if (parts.length > 0) {
-      let result = parts[0];
-      if (parts.length > 1) {
-        result += nextBg && nextInterest ? " " + parts[1] : " and " + parts[1].replace("I want to ", "");
-      }
-      if (parts.length > 2) result += " " + parts[2];
-      setGoal(result + ".");
-    } else {
-      setGoal("");
-    }
-  };
-
-  const handleResetBuilder = () => {
-    setBgSel("");
-    setInterestSel("");
-    setLangSel("");
-    setGoal("");
-  };
-
-  const hasBuilderSelection = bgSel || interestSel || langSel;
-
+}: HeroProps) {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-zinc-950 via-slate-950 to-neutral-900 text-primary-foreground">
-      {/* Ambient orbs */}
-      <div className="pointer-events-none absolute -top-40 -left-20 h-[440px] w-[640px] rounded-full bg-primary-glow/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-40 -right-32 h-[400px] w-[560px] rounded-full bg-gold/10 blur-3xl" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_45%_at_50%_0%,oklch(0.40_0.19_152/0.22),transparent_70%)]" />
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.04]"
-        style={{
-          backgroundImage:
-            "linear-gradient(oklch(1 0 0 / 0.5) 1px, transparent 1px), linear-gradient(90deg, oklch(1 0 0 / 0.5) 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
-        }}
-      />
-
-      <div className="relative mx-auto max-w-6xl px-6 lg:px-10 pt-12 pb-14">
-        {/* Minimal top strip */}
-        <div className="flex items-center justify-between mb-10">
-          <div className="flex items-center gap-2.5 text-[10px] font-mono uppercase tracking-[0.2em] text-primary-foreground/45">
-            <span className="h-1.5 w-1.5 rounded-full bg-teal animate-pulse" />
-            <span>Advisor</span>
-            <span className="opacity-30">·</span>
-            <span className="hidden sm:inline">
-              {isCatalogLoading ? "Indexing catalog…" : `${catalogCount} courses live`}
+    <section className="relative pb-16 pt-8 lg:pb-24 lg:pt-12">
+      <div className="mx-auto grid max-w-[1280px] gap-16 px-5 sm:px-8 lg:grid-cols-12 lg:gap-16 lg:px-16">
+        {/* Left — editorial intro */}
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: EASE_OUT }}
+          className="lg:col-span-7"
+        >
+          <div className="flex items-center gap-2 mb-6">
+            <User className="h-4 w-4" style={{ color: MM.primary }} strokeWidth={1.5} />
+            <span
+              className="text-[10px] font-bold uppercase tracking-[0.2em]"
+              style={{ color: MM.primary }}
+            >
+              User Input
             </span>
           </div>
-          {briefs.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setHistoryOpen(!historyOpen)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-primary-foreground/12 px-3 py-1 text-[10px] font-mono uppercase tracking-[0.18em] text-primary-foreground/55 hover:text-primary-foreground hover:border-primary-foreground/25 transition-all duration-300"
-            >
-              <History className="h-3 w-3" strokeWidth={1.75} />
-              {briefs.length} brief{briefs.length === 1 ? "" : "s"}
-            </button>
-          )}
-        </div>
 
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
-          {/* Left: headline + feature list */}
-          <motion.div
-            initial={{ opacity: 0, y: 20, filter: "blur(6px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-            className="flex flex-col"
-          >
+          <div className="relative">
             <span
-              className="eyebrow eyebrow-dot self-start"
-              style={{ background: "oklch(1 0 0 / 0.06)", color: "oklch(1 0 0 / 0.65)", border: "1px solid oklch(1 0 0 / 0.10)" }}
+              className="pointer-events-none absolute -left-10 -top-5 select-none text-[80px] font-extralight leading-none"
+              style={{ color: `${MM.primary}0D` }}
             >
-              One question · One course brief
+              01
             </span>
-            <h1 className="mt-6 text-display leading-[0.92] tracking-tighter text-[clamp(2.8rem,5.5vw,4.75rem)]">
-              What do you want
-              <br />
-              to{" "}
-              <span className="italic font-normal text-gold">build toward</span>
-              <span className="text-primary-foreground/50">?</span>
-            </h1>
-            <p className="mt-5 text-sm lg:text-base text-primary-foreground/55 leading-relaxed max-w-[42ch]">
-              Describe a career, a Bac track, a language, or a project. The advisor reads the
-              live catalog and returns one editorial brief — not a list of links.
-            </p>
+            <div className="relative z-10">
+              <span
+                className="inline-block rounded-full px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em]"
+                style={{ background: `${MM.primary}0D`, color: MM.primary }}
+              >
+                AI Personalized Discovery
+              </span>
 
-            {/* Feature list — replaces the AI persona card */}
-            <ul className="mt-10 flex flex-col gap-3.5">
-              {[
-                ["Names one course", "Best-fit pick from the live catalog, never generic suggestions."],
-                ["Explains the why", "Editorial reasoning grounded in your stated goal."],
-                ["Shows the full picture", "Level, language, and fit score on every recommendation."],
-              ].map(([heading, detail]) => (
-                <li key={heading} className="flex items-start gap-3.5">
-                  <span className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full bg-primary-glow/70" />
-                  <div>
-                    <span className="text-sm font-medium text-primary-foreground/80">{heading}</span>
-                    <span className="text-sm text-primary-foreground/40"> — {detail}</span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </motion.div>
+              <h1
+                className="mt-8 text-[clamp(2.5rem,5.5vw,3.75rem)] font-black leading-[1.1] tracking-tight"
+                style={{ color: MM.primary }}
+              >
+                Precision learning
+                <br />
+                for your{" "}
+                <span
+                  className="bg-clip-text text-transparent"
+                  style={{
+                    backgroundImage: `linear-gradient(135deg, ${MM.primary}, ${MM.secondary})`,
+                  }}
+                >
+                  next chapter.
+                </span>
+              </h1>
 
-          {/* Right: composer + prompt builder + starters */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
-            className="flex flex-col gap-5"
+              <p
+                className="mt-7 max-w-xl text-lg leading-relaxed"
+                style={{ color: MM.onSurfaceVariant }}
+              >
+                Skip the endless browsing. Share your career aspirations and our live intelligence
+                engine will surface the exact match from{" "}
+                {catalogCount > 0 ? `${catalogCount}+` : ""} active courses.
+              </p>
+
+              <div className="mt-9 flex flex-col gap-4">
+                {["Real-time catalog synchronization", "Context-aware reasoning & fit scoring"].map(
+                  (text) => (
+                    <div key={text} className="flex items-center gap-4">
+                      <div
+                        className="flex h-6 w-6 items-center justify-center rounded-full"
+                        style={{ background: `${MM.primary}14` }}
+                      >
+                        <Check
+                          className="h-3 w-3"
+                          style={{ color: MM.primary }}
+                          strokeWidth={2.5}
+                        />
+                      </div>
+                      <span className="text-base" style={{ color: `${MM.onSurface}CC` }}>
+                        {text}
+                      </span>
+                    </div>
+                  ),
+                )}
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Right — prompt card */}
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.1, ease: EASE_OUT }}
+          className="lg:col-span-5"
+        >
+          <div
+            className="rounded-[2rem] p-8 sm:p-10"
+            style={{
+              background: MM.surface,
+              border: `1px solid ${MM.outlineVariant}4D`,
+              boxShadow: `0 4px 6px -1px rgba(0,0,0,0.05), 0 20px 40px -10px ${MM.primary}0D`,
+            }}
           >
-            {/* Textarea card — clean, no inner sections */}
-            <div className="rounded-2xl border border-primary-foreground/10 bg-primary-foreground/[0.03] backdrop-blur-sm shadow-[0_20px_50px_-16px_oklch(0_0_0/0.55)]">
+            <div className="mb-8 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span
+                  className="rounded-full px-3 py-1 text-[9px] font-bold uppercase tracking-widest"
+                  style={{ background: `${MM.secondary}1A`, color: MM.secondary }}
+                >
+                  User Input
+                </span>
+              </div>
+              <h2 className="text-lg font-bold tracking-tight" style={{ color: MM.primary }}>
+                What&apos;s your next career move?
+              </h2>
+              <WandSparkles className="h-5 w-5" style={{ color: MM.outline }} strokeWidth={1.4} />
+            </div>
+
+            <div className="mb-8">
+              <label
+                htmlFor="advisor-goal"
+                className="mb-4 block text-[11px] font-bold uppercase tracking-widest"
+                style={{ color: MM.secondary }}
+              >
+                Describe your dream role or transition
+              </label>
               <textarea
+                id="advisor-goal"
                 value={goal}
                 onChange={(e) => setGoal(e.target.value)}
                 onKeyDown={(e) => {
@@ -509,348 +497,196 @@ function AdvisorStage({
                     onAnalyze();
                   }
                 }}
-                rows={3}
-                placeholder="e.g. I want to become a backend developer fluent in English…"
-                className="w-full resize-none bg-transparent px-5 pt-5 pb-3 text-display text-xl lg:text-2xl leading-snug tracking-tight text-primary-foreground placeholder:text-primary-foreground/20 outline-none border-none focus:ring-0 focus:outline-none"
+                className="h-48 w-full resize-none rounded-2xl p-6 text-base transition-all"
+                style={{
+                  background: `${MM.surface}80`,
+                  border: `1px solid ${MM.outlineVariant}80`,
+                  color: MM.onSurface,
+                  outline: "none",
+                }}
+                placeholder="e.g., Transition from marketing to data analysis, focused on Python..."
               />
-              <div className="flex items-center justify-between gap-4 px-4 pb-4">
-                <span className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.18em] text-primary-foreground/35">
-                  <CornerDownLeft className="h-3 w-3" strokeWidth={1.75} />
-                  Enter to send
-                </span>
-                <button
-                  type="button"
-                  onClick={() => onAnalyze()}
-                  disabled={!goalReady || isCatalogLoading}
-                  className="group inline-flex h-9 items-center gap-1 rounded-full bg-gold text-gold-foreground pl-4 pr-1 text-xs font-semibold shadow-bezel transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.03] active:scale-[0.97] disabled:opacity-25 disabled:pointer-events-none"
-                >
-                  <span>Draft brief</span>
-                  <span className="grid h-7 w-7 place-items-center rounded-full bg-gold-foreground/15 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-px group-hover:bg-gold-foreground/25">
-                    <Send className="h-3 w-3" strokeWidth={1.75} />
-                  </span>
-                </button>
-              </div>
             </div>
 
-            {/* Prompt builder — outside card, breathing room */}
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-primary-foreground/35">
-                  Build your prompt
-                </span>
-                {hasBuilderSelection && (
+            <div className="mb-10">
+              <p
+                className="mb-4 text-[10px] uppercase tracking-[0.15em]"
+                style={{ color: MM.outline }}
+              >
+                Focus Areas
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {CONTEXT_CHIPS.map((chip) => (
                   <button
+                    key={chip.label}
                     type="button"
-                    onClick={handleResetBuilder}
-                    className="text-[9px] font-mono uppercase tracking-[0.18em] text-primary-foreground/40 hover:text-primary-foreground/75 transition-colors"
+                    onClick={() => onContextChip(chip.text)}
+                    className="rounded-full px-4 py-2 text-[11px] font-medium transition-all"
+                    style={
+                      goal.toLowerCase().includes(chip.text.toLowerCase())
+                        ? {
+                            background: MM.primary,
+                            color: MM.onPrimary,
+                            boxShadow: `0 4px 12px -4px ${MM.primary}40`,
+                          }
+                        : {
+                            border: `1px solid ${MM.outlineVariant}66`,
+                            color: MM.secondary,
+                          }
+                    }
                   >
-                    Reset
+                    {chip.label}
                   </button>
-                )}
+                ))}
               </div>
-
-              {[
-                { label: "Background", type: "bg" as const, items: ["Bac Student", "Univ Student", "Career Switcher", "Hobbyist"], sel: bgSel },
-                { label: "Interest", type: "interest" as const, items: ["Software", "Languages", "Business", "Engineering"], sel: interestSel },
-                { label: "Language", type: "lang" as const, items: ["Darija", "French", "English"], sel: langSel },
-              ].map(({ label, type, items, sel }) => (
-                <div key={label} className="flex items-center gap-2 flex-wrap">
-                  <span className="shrink-0 text-[9px] font-mono uppercase tracking-[0.14em] text-primary-foreground/30 w-16">
-                    {label}
-                  </span>
-                  {items.map((item) => {
-                    const isSelected = sel === item;
-                    return (
-                      <button
-                        key={item}
-                        type="button"
-                        onClick={() => handleBuilderSelect(type, item)}
-                        className={`text-[10px] px-2.5 py-1 rounded-full border transition-all duration-250 cursor-pointer ${
-                          isSelected
-                            ? "bg-gold text-gold-foreground border-gold shadow-bezel font-medium"
-                            : "border-primary-foreground/10 text-primary-foreground/60 hover:border-primary-foreground/22 hover:text-primary-foreground/90"
-                        }`}
-                      >
-                        {item}
-                      </button>
-                    );
-                  })}
-                </div>
-              ))}
             </div>
 
-            {/* Quick starters */}
-            <div className="flex items-center gap-2.5 flex-wrap pt-1">
-              <span className="shrink-0 text-[9px] font-mono uppercase tracking-[0.2em] text-primary-foreground/30">
-                Starters
-              </span>
-              {examples.map((ex) => (
-                <button
-                  key={ex.label}
-                  type="button"
-                  onClick={() => onAnalyze(ex.text)}
-                  className="group inline-flex items-center gap-1 rounded-full border border-primary-foreground/10 px-3 py-1 text-[10px] text-primary-foreground/60 transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-primary-foreground/6 hover:text-primary-foreground/90 hover:border-primary-foreground/22"
-                >
-                  {ex.label}
-                  <ArrowUpRight className="h-2.5 w-2.5 opacity-40 group-hover:opacity-80 transition-opacity" strokeWidth={2} />
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-
-        {/* History drawer — full-width below grid */}
-        <AnimatePresence>
-          {historyOpen && briefs.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="overflow-hidden mt-8"
+            <button
+              type="button"
+              onClick={() => onAnalyze()}
+              disabled={!goalReady || isCatalogLoading}
+              className="flex w-full items-center justify-center gap-3 rounded-2xl py-5 text-[11px] font-semibold uppercase tracking-[0.2em] transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{
+                background: MM.primary,
+                color: MM.onPrimary,
+                boxShadow: `0 10px 30px -5px ${MM.primary}33`,
+              }}
             >
-              <div className="rounded-2xl border border-primary-foreground/10 bg-primary-foreground/[0.03] backdrop-blur-sm p-5">
-                <div className="flex items-center justify-between border-b border-primary-foreground/8 pb-3 mb-4">
-                  <span className="text-[10px] font-mono uppercase tracking-[0.22em] text-primary-foreground/45">
-                    Recent briefs
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={onClearHistory}
-                      className="text-[9px] font-mono uppercase tracking-[0.14em] text-primary-foreground/40 hover:text-red-400 border border-primary-foreground/10 rounded px-2 py-0.5 transition-colors cursor-pointer"
-                    >
-                      Clear all
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setHistoryOpen(false)}
-                      className="grid h-6 w-6 place-items-center rounded-full text-primary-foreground/40 hover:text-primary-foreground hover:bg-primary-foreground/8 transition-colors cursor-pointer"
-                      aria-label="Close history"
-                    >
-                      <X className="h-3 w-3" strokeWidth={1.75} />
-                    </button>
-                  </div>
-                </div>
-                <ul className="flex flex-col gap-1 max-h-[180px] overflow-y-auto">
-                  {briefs.slice(0, 6).map((b, i) => {
-                    const isActive = b.id === activeBriefId;
-                    return (
-                      <li
-                        key={b.id}
-                        onClick={() => setActiveBriefId(b.id)}
-                        className={`group flex items-center justify-between gap-3 rounded-xl border px-3 py-2 transition-all duration-250 cursor-pointer ${
-                          isActive
-                            ? "border-gold/40 bg-gold/5"
-                            : "border-transparent hover:border-primary-foreground/10 hover:bg-primary-foreground/[0.03]"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <span className="shrink-0 text-[9px] font-mono text-primary-foreground/30">
-                            {String(briefs.length - i).padStart(2, "0")}
-                          </span>
-                          <p className={`text-xs leading-normal truncate flex-1 ${isActive ? "text-gold" : "text-primary-foreground/70"}`}>
-                            {b.goal}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={(e) => onDeleteBrief(b.id, e)}
-                          className="opacity-0 group-hover:opacity-100 text-primary-foreground/35 hover:text-red-400 p-1 transition-all cursor-pointer"
-                        >
-                          <X className="h-3 w-3" strokeWidth={2} />
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              {isCatalogLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Checking catalog...
+                </>
+              ) : (
+                <>
+                  Generate My Pathway
+                  <Zap className="h-4 w-4" strokeWidth={1.75} />
+                </>
+              )}
+            </button>
 
-        {briefs.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.5 }}
-            className="mt-10 flex justify-center"
-          >
-            <span className="inline-flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.22em] text-primary-foreground/35">
-              Brief below
-              <ArrowDown className="h-3 w-3 animate-bounce" strokeWidth={1.75} />
-            </span>
-          </motion.div>
-        )}
+            <div className="mt-6 flex items-center justify-between">
+              <p className="text-center text-[10px] tracking-wider" style={{ color: MM.outline }}>
+                SECURE AI PROCESSING &bull; {catalogCount} COURSES INDEXED
+              </p>
+              {briefs.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setHistoryOpen(!historyOpen)}
+                  className="text-[10px] font-semibold tracking-wider"
+                  style={{ color: MM.primary }}
+                >
+                  {briefs.length} BRIEF{briefs.length === 1 ? "" : "S"}
+                </button>
+              )}
+            </div>
+
+            {/* Example goal helper */}
+            <button
+              type="button"
+              onClick={onUseExample}
+              className="mt-4 w-full rounded-xl py-3 text-xs font-medium transition-all"
+              style={{
+                border: `1px solid ${MM.outlineVariant}`,
+                color: MM.secondary,
+              }}
+            >
+              Use example goal
+            </button>
+          </div>
+
+          <BriefHistory
+            briefs={briefs}
+            open={historyOpen}
+            activeBriefId={activeBriefId}
+            onSelect={setActiveBriefId}
+            onDelete={onDeleteBrief}
+            onClear={onClearHistory}
+          />
+        </motion.div>
       </div>
     </section>
   );
 }
 
-function StreamingText({ text }: { text: string }) {
-  const words = useMemo(() => text.split(" "), [text]);
-
-  const container = {
-    hidden: { opacity: 0 },
-    visible: (i = 1) => ({
-      opacity: 1,
-      transition: { staggerChildren: 0.02, delayChildren: 0.05 * i },
-    }),
-  };
-
-  const child = {
-    visible: {
-      opacity: 1,
-      y: 0,
-      filter: "blur(0px)",
-      transition: {
-        type: "spring",
-        damping: 20,
-        stiffness: 100,
-      },
-    },
-    hidden: {
-      opacity: 0,
-      y: 6,
-      filter: "blur(2px)",
-    },
-  };
-
-  return (
-    <motion.span
-      variants={container}
-      initial="hidden"
-      animate="visible"
-      className="inline-flex flex-wrap gap-x-1 gap-y-0.5"
-    >
-      {words.map((word, idx) => (
-        <motion.span key={idx} variants={child} className="inline-block">
-          {word}
-        </motion.span>
-      ))}
-    </motion.span>
-  );
-}
-
-
-function ComparisonCard({
-  recommendation,
-  isBest,
-  enrolled,
-  enrolling,
-  onEnroll,
+function BriefHistory({
+  briefs,
+  open,
+  activeBriefId,
+  onSelect,
+  onDelete,
+  onClear,
 }: {
-  recommendation: CourseRecommendation;
-  isBest: boolean;
-  enrolled: boolean;
-  enrolling: boolean;
-  onEnroll: () => void;
+  briefs: Brief[];
+  open: boolean;
+  activeBriefId: string | null;
+  onSelect: (id: string | null) => void;
+  onDelete: (id: string, event: React.MouseEvent) => void;
+  onClear: () => void;
 }) {
-  const c = recommendation.course;
-  const matchScore = recommendation.score > 1 
-    ? Math.min(99, Math.round(55 + (recommendation.score / 40) * 43))
-    : Math.round((recommendation.score ?? 0.92) * 100);
+  if (!open || briefs.length === 0) return null;
 
   return (
-    <div className={`rounded-3xl p-6 lg:p-8 flex flex-col justify-between border relative overflow-hidden transition-all duration-300 hover:shadow-elevated ${
-      isBest 
-        ? "border-primary/25 bg-primary/4" 
-        : "border-border bg-surface-elevated"
-    }`}>
-      {isBest && (
-        <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-primary/5 blur-2xl pointer-events-none" />
-      )}
-      <div>
-        <div className="flex items-center justify-between gap-3 mb-6">
-          <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider font-semibold ${
-            isBest ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-          }`}>
-            {isBest ? "Best Match" : "Alternative Path"}
-          </span>
-          <div className="text-right">
-            <span className="text-[9px] font-mono uppercase text-muted-foreground tracking-wider block">Fit score</span>
-            <span className="text-xl font-bold text-foreground">{matchScore}%</span>
-          </div>
-        </div>
-
-        <div className="aspect-video w-full rounded-xl overflow-hidden bg-muted mb-6 hairline">
-          {c.imageUrl ? (
-            <img src={c.imageUrl} alt={c.title} className="h-full w-full object-cover" />
-          ) : (
-            <div className="grid h-full place-items-center bg-gradient-to-br from-primary/15 to-primary-glow/15 text-primary">
-              <BookOpen className="h-10 w-10 opacity-40" strokeWidth={1.5} />
-            </div>
-          )}
-        </div>
-
-        <h3 className="text-display text-2xl text-foreground font-semibold leading-tight mb-4">
-          {c.title}
-        </h3>
-
-        <div className="space-y-4 mb-6">
-          {/* Reason */}
-          <div className="rounded-xl bg-surface/50 p-4 border border-border/40">
-            <span className="text-[9px] font-mono uppercase text-muted-foreground tracking-wider block mb-1">
-              Why recommend?
-            </span>
-            <p className="text-sm leading-relaxed text-foreground/85">
-              {recommendation.reason}
-            </p>
-          </div>
-
-          {/* Level / Language */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-xl border border-border/50 p-3 bg-surface/30">
-              <span className="text-[9px] font-mono uppercase text-muted-foreground tracking-wider block">Level</span>
-              <span className="text-sm font-medium text-foreground">{c.level.replace("_", " ")}</span>
-            </div>
-            <div className="rounded-xl border border-border/50 p-3 bg-surface/30">
-              <span className="text-[9px] font-mono uppercase text-muted-foreground tracking-wider block">Language</span>
-              <span className="text-sm font-medium text-foreground">{formatLanguage(c.languageCode)}</span>
-            </div>
-          </div>
-
-          {/* Description */}
-          {c.shortDescription && (
-            <div className="pt-2 border-t border-border/40">
-              <span className="text-[9px] font-mono uppercase text-muted-foreground tracking-wider block mb-1">Description</span>
-              <p className="text-xs leading-relaxed text-muted-foreground">{c.shortDescription}</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="mt-6 pt-6 border-t border-border/40 flex items-center justify-between gap-3">
-        <Link
-          to="/courses/$courseId"
-          params={{ courseId: c.id }}
-          className="text-xs font-semibold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      className="mt-4 rounded-2xl p-3"
+      style={{
+        border: `1px solid ${MM.outlineVariant}`,
+        background: "#ffffff",
+        boxShadow: `0 20px 60px -45px ${MM.primary}33`,
+      }}
+    >
+      <div className="mb-2 flex items-center justify-between px-2">
+        <p className="text-[10px] font-semibold tracking-[0.2em]" style={{ color: MM.outline }}>
+          RECENT BRIEFS
+        </p>
+        <button
+          type="button"
+          onClick={onClear}
+          className="text-xs font-medium"
+          style={{ color: MM.error }}
         >
-          View Course Outline
-          <ArrowUpRight className="h-3.5 w-3.5" />
-        </Link>
-
-        {enrolled ? (
-          <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-teal/15 text-teal text-xs font-semibold">
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            Enrolled
-          </span>
-        ) : (
-          <button
-            type="button"
-            onClick={onEnroll}
-            disabled={enrolling}
-            className="inline-flex h-9 items-center gap-1 rounded-full bg-foreground text-background px-4 text-xs font-semibold shadow transition-all duration-300 hover:scale-[1.02] cursor-pointer"
-          >
-            {enrolling ? "Enrolling..." : "Enroll"}
-          </button>
-        )}
+          Clear
+        </button>
       </div>
-    </div>
+      <div className="max-h-52 space-y-1 overflow-y-auto">
+        {briefs.slice(0, 6).map((brief) => (
+          <button
+            key={brief.id}
+            type="button"
+            onClick={() => onSelect(brief.id)}
+            className="group flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs transition-colors duration-300"
+            style={{
+              background: activeBriefId === brief.id ? MM.surfaceHigh : "transparent",
+              color: activeBriefId === brief.id ? MM.onSurface : MM.outline,
+            }}
+          >
+            <span className="min-w-0 flex-1 truncate">{brief.goal}</span>
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(event) => onDelete(brief.id, event)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") onDelete(brief.id, event as unknown as React.MouseEvent);
+              }}
+              className="rounded-full p-1 opacity-40 transition-opacity group-hover:opacity-100"
+            >
+              <X className="h-3 w-3" />
+            </span>
+          </button>
+        ))}
+      </div>
+    </motion.div>
   );
 }
 
-function BriefSpread({
+/* ═══════════════════════════════════════════
+   Result Router
+   ═══════════════════════════════════════════ */
+
+function AdvisorResult({
   brief,
   enrolledCourseIds,
   enrolling,
@@ -863,211 +699,201 @@ function BriefSpread({
   onEnroll: (courseId: string) => void;
   onRetry: () => void;
 }) {
-  const [compareOpen, setCompareOpen] = useState(false);
-
-  const handleCopyBrief = () => {
-    try {
-      const recommendationsText = brief.recommendations
-        .map(
-          (r, i) =>
-            `${i + 1}. ${r.course.title} (${r.course.level}, ${formatLanguage(
-              r.course.languageCode,
-            )}) - Fit Score: ${Math.round(r.score > 1 ? 55 + (r.score / 40) * 43 : r.score * 100)}%\nReason: ${
-              r.reason
-            }`,
-        )
-        .join("\n\n");
-
-      const clipboardText = `EduLife AI Career Advisor Brief\nGoal: "${brief.goal}"\nSummary: ${brief.message}\n\nRecommendations:\n${recommendationsText}`;
-
-      navigator.clipboard.writeText(clipboardText);
-      toast.success("Brief copied to clipboard!");
-    } catch (e) {
-      toast.error("Failed to copy brief.");
-    }
-  };
-
-  const handlePrintBrief = () => {
-    const styleEl = document.createElement("style");
-    styleEl.innerHTML = `
-      @media print {
-        body * {
-          visibility: hidden;
-        }
-        #print-area, #print-area * {
-          visibility: visible;
-        }
-        #print-area {
-          position: absolute;
-          left: 0;
-          top: 0;
-          width: 100%;
-          background: white !important;
-          color: black !important;
-        }
-        .eyebrow, button {
-          display: none !important;
-        }
-      }
-    `;
-    document.head.appendChild(styleEl);
-    window.print();
-    document.head.removeChild(styleEl);
-  };
-
-  if (brief.isLoading) {
-    return <BriefSkeleton goal={brief.goal} />;
-  }
-  if (brief.isError) {
-    return <BriefError goal={brief.goal} message={brief.message} onRetry={onRetry} />;
-  }
-  if (brief.recommendations.length === 0) {
-    return <BriefEmpty goal={brief.goal} message={brief.message} />;
-  }
+  if (brief.isLoading) return <AdvisorLoading goal={brief.goal} />;
+  if (brief.isError) return <AdvisorError brief={brief} onRetry={onRetry} />;
+  if (brief.recommendations.length === 0) return <AdvisorNoMatch brief={brief} />;
 
   const best = brief.recommendations[0];
-  const alts = brief.recommendations.slice(1);
+  const alternatives = brief.recommendations.slice(1);
 
   return (
-    <motion.section
-      id="print-area"
-      initial={{ opacity: 0, y: 30 }}
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-      className="relative bg-background py-16 lg:py-24"
+      exit={{ opacity: 0, y: -16 }}
+      transition={{ duration: 0.7, ease: EASE_OUT }}
     >
-      <div className="mx-auto max-w-6xl px-6 lg:px-10">
-        {/* Brief header strip */}
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between mb-12 lg:mb-16">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="eyebrow eyebrow-dot">
-                Brief · {new Date().toLocaleDateString("en-US", { day: "2-digit", month: "short" })}
-              </span>
-              {alts.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setCompareOpen(!compareOpen)}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-mono uppercase tracking-wider font-semibold border transition-all duration-300 cursor-pointer ${
-                    compareOpen 
-                      ? "bg-gold text-gold-foreground border-gold" 
-                      : "border-border hover:border-foreground/30 hover:bg-surface text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Layers className="h-3 w-3" />
-                  {compareOpen ? "Editorial View" : "Compare Side-by-Side"}
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={handleCopyBrief}
-                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-mono uppercase tracking-wider font-semibold border border-border hover:border-foreground/30 hover:bg-surface text-muted-foreground hover:text-foreground transition-all duration-300 cursor-pointer"
-              >
-                <Copy className="h-3 w-3" />
-                Copy text
-              </button>
-              <button
-                type="button"
-                onClick={handlePrintBrief}
-                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-mono uppercase tracking-wider font-semibold border border-border hover:border-foreground/30 hover:bg-surface text-muted-foreground hover:text-foreground transition-all duration-300 cursor-pointer"
-              >
-                <Printer className="h-3 w-3" />
-                Print / PDF
-              </button>
-            </div>
-            <p className="mt-4 text-[10px] font-mono uppercase tracking-[0.22em] text-muted-foreground">
-              You asked
-            </p>
-            <p className="mt-2 text-display text-2xl lg:text-3xl leading-snug text-foreground max-w-[34ch] italic">
-              &ldquo;{brief.goal}&rdquo;
-            </p>
+      {/* Section 02 — Analysis */}
+      <AnalysisSection brief={brief} recommendation={best} />
+
+      {/* Section 03 — Selected Path */}
+      <SelectedPathSection
+        recommendation={best}
+        enrolled={enrolledCourseIds.has(best.course.id)}
+        enrolling={enrolling}
+        onEnroll={() => onEnroll(best.course.id)}
+      />
+
+      {/* Alternatives */}
+      {alternatives.length > 0 && (
+        <section className="mx-auto max-w-[1280px] px-5 pb-16 sm:px-8 lg:px-16">
+          <div className="flex items-center gap-6 mb-8">
+            <span
+              className="pointer-events-none select-none text-[60px] font-extralight leading-none"
+              style={{ color: `${MM.primary}0D` }}
+            >
+              04
+            </span>
+            <div className="h-px flex-grow" style={{ background: `${MM.outlineVariant}4D` }} />
+            <span
+              className="text-[10px] font-bold uppercase tracking-[0.3em]"
+              style={{ color: MM.secondary }}
+            >
+              Other Paths
+            </span>
           </div>
-          <div className="lg:max-w-[36ch] lg:text-right">
-            <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-muted-foreground">
-              Advisor summary
-            </p>
-            <p className="mt-2 text-sm leading-relaxed text-foreground/80">
-              <StreamingText text={brief.message} />
+          <div className="space-y-4">
+            {alternatives.map((recommendation) => (
+              <AlternativePathCard
+                key={recommendation.course.id}
+                recommendation={recommendation}
+                enrolled={enrolledCourseIds.has(recommendation.course.id)}
+                enrolling={enrolling}
+                onEnroll={() => onEnroll(recommendation.course.id)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+    </motion.div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   Section 02 — AI Analysis
+   ═══════════════════════════════════════════ */
+
+function AnalysisSection({
+  brief,
+  recommendation,
+}: {
+  brief: Brief;
+  recommendation: CourseRecommendation;
+}) {
+  const fitScore = getFitScore(recommendation.score);
+  const reasoningBullets = extractReasoningBullets(brief.message || recommendation.reason);
+
+  return (
+    <section className="mx-auto max-w-[1280px] px-5 pb-16 sm:px-8 lg:px-16 lg:pb-24">
+      {/* Section header */}
+      <div className="relative mb-12 flex items-center gap-6">
+        <span
+          className="pointer-events-none select-none text-[60px] font-extralight leading-none lg:text-[80px]"
+          style={{ color: `${MM.primary}0D` }}
+        >
+          02
+        </span>
+        <div className="h-px flex-grow" style={{ background: `${MM.outlineVariant}4D` }} />
+        <span
+          className="flex items-center gap-3 rounded-full px-6 py-1 text-[10px] font-bold uppercase tracking-[0.3em]"
+          style={{ background: "#ffffff", color: MM.secondary }}
+        >
+          <span className="h-1.5 w-1.5 rounded-full" style={{ background: MM.primary }} />
+          Synthesizing Insights
+        </span>
+        <div className="h-px flex-grow" style={{ background: `${MM.outlineVariant}4D` }} />
+      </div>
+
+      {/* Goal quote */}
+      <div className="mx-auto mb-16 max-w-4xl text-center">
+        <p
+          className="text-xl font-light italic leading-relaxed sm:text-2xl"
+          style={{ color: `${MM.primary}B3` }}
+        >
+          &ldquo;{brief.goal}&rdquo;
+        </p>
+      </div>
+
+      {/* Analysis grid */}
+      <div className="mx-auto grid max-w-4xl gap-8 md:grid-cols-12">
+        {/* Strategic reasoning card */}
+        <div
+          className="rounded-[2rem] p-8 sm:p-10 md:col-span-8"
+          style={{
+            background: MM.surface,
+            border: `1px solid ${MM.outlineVariant}4D`,
+          }}
+        >
+          <div className="mb-8 flex items-center gap-4">
+            <div
+              className="flex h-12 w-12 items-center justify-center rounded-full"
+              style={{ background: MM.primary, color: MM.onPrimary }}
+            >
+              <Sparkles className="h-5 w-5" strokeWidth={1.5} />
+            </div>
+            <div>
+              <span
+                className="mb-2 inline-block rounded-full px-3 py-1 text-[9px] font-bold uppercase tracking-widest"
+                style={{ background: MM.primary, color: MM.onPrimary }}
+              >
+                AI Analysis
+              </span>
+              <h3 className="text-lg font-bold" style={{ color: MM.primary }}>
+                Strategic Reasoning
+              </h3>
+              <p className="text-[11px] uppercase tracking-wider" style={{ color: MM.outline }}>
+                AI Advisor Logic
+              </p>
+            </div>
+          </div>
+
+          <ul className="mb-8 space-y-4">
+            {reasoningBullets.map((bullet, i) => (
+              <li key={i} className="flex items-start gap-3">
+                <CheckCircle2
+                  className="mt-0.5 h-5 w-5 shrink-0"
+                  style={{ color: MM.primary }}
+                  strokeWidth={1.5}
+                />
+                <span
+                  className="text-base leading-relaxed"
+                  style={{ color: MM.onSurfaceVariant }}
+                  dangerouslySetInnerHTML={{ __html: highlightKeyTerms(bullet) }}
+                />
+              </li>
+            ))}
+          </ul>
+
+          <div
+            className="flex items-center gap-3 border-t py-4"
+            style={{ borderColor: `${MM.outlineVariant}33` }}
+          >
+            <Sparkles className="h-4 w-4" style={{ color: MM.primary }} strokeWidth={1.5} />
+            <p className="text-sm font-medium" style={{ color: MM.primary }}>
+              Prioritizing practical productivity over raw syntax.
             </p>
           </div>
         </div>
 
-        <AnimatePresence mode="wait">
-          {compareOpen ? (
-            <motion.div
-              key="comparison"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="grid md:grid-cols-2 gap-8 items-stretch"
+        {/* Confidence score card */}
+        <div className="flex flex-col gap-8 md:col-span-4">
+          <div
+            className="flex flex-grow flex-col items-center justify-center rounded-[2rem] p-10 text-center"
+            style={{ background: MM.primary, color: MM.onPrimary }}
+          >
+            <p className="text-[10px] uppercase tracking-[0.2em] opacity-60">Confidence Fit</p>
+            <div className="mt-2">
+              <span className="text-5xl font-black">{fitScore}</span>
+              <span className="text-2xl font-light">%</span>
+            </div>
+            <p
+              className="mt-2 text-[11px] font-medium uppercase tracking-widest opacity-80"
+              aria-label={`Fit score: ${fitScore} percent`}
             >
-              <ComparisonCard
-                recommendation={best}
-                isBest
-                enrolled={enrolledCourseIds.has(best.course.id)}
-                enrolling={enrolling}
-                onEnroll={() => onEnroll(best.course.id)}
-              />
-              <ComparisonCard
-                recommendation={alts[0]}
-                isBest={false}
-                enrolled={enrolledCourseIds.has(alts[0].course.id)}
-                enrolling={enrolling}
-                onEnroll={() => onEnroll(alts[0].course.id)}
-              />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="editorial"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="space-y-20"
-            >
-              <BestMatchSpread
-                recommendation={best}
-                enrolled={enrolledCourseIds.has(best.course.id)}
-                enrolling={enrolling}
-                onEnroll={() => onEnroll(best.course.id)}
-              />
-
-              {alts.length > 0 && (
-                <div className="mt-20 lg:mt-28">
-                  <div className="flex items-end justify-between mb-8">
-                    <div>
-                      <span className="text-[10px] font-mono uppercase tracking-[0.22em] text-muted-foreground">
-                        /02 · Alternative path
-                      </span>
-                      <h3 className="mt-3 text-display text-3xl lg:text-4xl text-foreground leading-[1.05] max-w-[20ch]">
-                        If the first brief doesn&apos;t fit.
-                      </h3>
-                    </div>
-                  </div>
-                  <div className="grid gap-5 md:grid-cols-2">
-                    {alts.map((rec, i) => (
-                      <AltMatchCard
-                        key={rec.course.id}
-                        recommendation={rec}
-                        rank={i + 1}
-                        enrolled={enrolledCourseIds.has(rec.course.id)}
-                        enrolling={enrolling}
-                        onEnroll={() => onEnroll(rec.course.id)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+              Optimal Alignment
+            </p>
+          </div>
+        </div>
       </div>
-    </motion.section>
+    </section>
   );
 }
 
-function BestMatchSpread({
+/* ═══════════════════════════════════════════
+   Section 03 — Selected Path / Recommendation
+   ═══════════════════════════════════════════ */
+
+function SelectedPathSection({
   recommendation,
   enrolled,
   enrolling,
@@ -1078,468 +904,734 @@ function BestMatchSpread({
   enrolling: boolean;
   onEnroll: () => void;
 }) {
-  const c = recommendation.course;
-  const matchScore = recommendation.score > 1 
-    ? Math.min(99, Math.round(55 + (recommendation.score / 40) * 43))
-    : Math.round((recommendation.score ?? 0.92) * 100);
+  const course = recommendation.course;
+  const fitScore = getFitScore(recommendation.score);
+  const gains = getGainBullets(recommendation);
 
   return (
-    <article className="relative">
-      <div className="grid lg:grid-cols-12 gap-8 lg:gap-10">
-        {/* Left: Course image as editorial hero */}
-        <div className="lg:col-span-5">
-          <div className="bezel sticky top-24">
-            <div className="bezel-inner overflow-hidden">
-              <div className="relative aspect-[4/5] bg-muted">
-                {c.imageUrl ? (
-                  <img
-                    src={c.imageUrl}
-                    alt={c.title}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="grid h-full place-items-center bg-gradient-to-br from-primary via-primary to-primary-glow text-primary-foreground">
-                    <BookOpen className="h-16 w-16 opacity-50" strokeWidth={1.25} />
-                  </div>
-                )}
-                {/* Overlay stamp */}
-                <div className="absolute top-5 left-5 right-5 flex items-start justify-between">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-gold text-gold-foreground px-3 py-1.5 text-[10px] font-mono uppercase tracking-[0.22em] shadow-bezel">
-                    <Sparkles className="h-3 w-3" strokeWidth={1.75} />
-                    Best match
-                  </span>
-                  <div className="text-right">
-                    <p className="text-[9px] font-mono uppercase tracking-[0.22em] text-white/70 drop-shadow">
-                      Fit
-                    </p>
-                    <p className="text-display text-3xl text-white leading-none drop-shadow">
-                      {matchScore}
-                      <span className="text-base ml-0.5">%</span>
-                    </p>
-                  </div>
-                </div>
-                {/* Bottom gradient */}
-                <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute bottom-5 left-5 right-5 flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.22em] text-white/85">
-                  <span className="rounded-full bg-white/15 backdrop-blur-sm border border-white/20 px-2.5 py-1">
-                    {c.level.replace("_", " ")}
-                  </span>
-                  <span className="rounded-full bg-white/15 backdrop-blur-sm border border-white/20 px-2.5 py-1">
-                    {formatLanguage(c.languageCode)}
+    <section className="relative mx-auto max-w-[1280px] px-5 pb-16 sm:px-8 lg:px-16 lg:pb-24">
+      {/* Section header */}
+      <div className="relative mb-16 flex items-center gap-6">
+        <span
+          className="pointer-events-none select-none text-[60px] font-extralight leading-none lg:text-[80px]"
+          style={{ color: `${MM.primary}0D` }}
+        >
+          03
+        </span>
+        <div className="h-px flex-grow" style={{ background: `${MM.outlineVariant}4D` }} />
+        <span
+          className="text-[10px] font-bold uppercase tracking-[0.3em]"
+          style={{ color: MM.secondary }}
+        >
+          Selected Path
+        </span>
+      </div>
+
+      {/* Large recommendation card */}
+      <article
+        className="overflow-hidden rounded-[2rem] lg:rounded-[3rem]"
+        style={{
+          background: "#ffffff",
+          border: `1px solid ${MM.outlineVariant}33`,
+          boxShadow: `0 4px 6px -1px rgba(0,0,0,0.05), 0 20px 40px -10px ${MM.primary}0D`,
+        }}
+      >
+        <div className="flex flex-col lg:flex-row lg:min-h-[600px]">
+          {/* Left — image */}
+          <div className="relative overflow-hidden lg:w-2/5">
+            {course.imageUrl ? (
+              <img
+                src={course.imageUrl}
+                alt={`Cover image for ${course.title}`}
+                className="h-full min-h-[300px] w-full object-cover transition-transform duration-1000 hover:scale-110"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                  e.currentTarget.parentElement?.querySelector("[data-fallback]")?.removeAttribute("hidden");
+                }}
+              />
+            ) : null}
+            <div
+              className="flex h-full min-h-[300px] items-center justify-center"
+              style={{
+                background: `linear-gradient(135deg, ${MM.primaryContainer}, ${MM.primary})`,
+              }}
+              data-fallback=""
+              hidden={!!course.imageUrl}
+            >
+              <BookOpen
+                className="h-16 w-16 opacity-30"
+                style={{ color: MM.onPrimary }}
+                strokeWidth={1.2}
+              />
+            </div>
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(to top, ${MM.primary}E6, ${MM.primary}33 50%, transparent)`,
+              }}
+            />
+
+            {/* Recommended badge */}
+            <div className="absolute left-8 top-8">
+              <div
+                className="flex items-center gap-2 rounded-full px-4 py-2"
+                style={{
+                  background: "rgba(255,255,255,0.95)",
+                  boxShadow: `0 8px 24px -8px ${MM.primary}40`,
+                }}
+              >
+                <span
+                  className="h-2 w-2 animate-pulse rounded-full"
+                  style={{ background: "#22c55e" }}
+                />
+                <span
+                  className="text-[10px] font-black uppercase tracking-widest"
+                  style={{ color: MM.primary }}
+                >
+                  Recommended
+                </span>
+              </div>
+            </div>
+
+            {/* Bottom glass score panel */}
+            <div className="absolute bottom-10 left-10 right-10">
+              <div
+                className="rounded-[2rem] p-8"
+                style={{
+                  background: "rgba(255,255,255,0.1)",
+                  backdropFilter: "blur(16px)",
+                  WebkitBackdropFilter: "blur(16px)",
+                  border: "1px solid rgba(255,255,255,0.2)",
+                }}
+              >
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">
+                  Curated Score
+                </p>
+                <div className="mt-2 flex items-center justify-between">
+                  <span className="text-5xl font-black text-white">
+                    {fitScore}% <span className="text-lg font-light opacity-50">match</span>
                   </span>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Right: Editorial body */}
-        <div className="lg:col-span-7 flex flex-col">
-          <span className="text-[10px] font-mono uppercase tracking-[0.22em] text-primary">
-            /01 · Recommended course
-          </span>
-
-          <h2 className="mt-4 text-display text-[clamp(2.25rem,5vw,4rem)] leading-[0.95] tracking-tight text-foreground">
-            {c.title}
-          </h2>
-
-          {/* Drop-cap intro */}
-          <div className="mt-8 relative">
-            <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-muted-foreground">
-              Match reasoning
-            </p>
-            <div className="mt-3 rounded-[1.25rem] hairline bg-surface p-6 lg:p-7 relative overflow-hidden">
-              <div className="pointer-events-none absolute -top-12 -right-8 h-32 w-32 rounded-full bg-primary/8 blur-2xl" />
-              <p className="relative text-lg lg:text-xl leading-relaxed text-foreground/90">
-                <span className="float-left text-display text-6xl lg:text-7xl leading-[0.85] mr-3 mt-1 text-gradient-primary">
-                  {recommendation.reason.charAt(0)}
+          {/* Right — content */}
+          <div
+            className="flex flex-col justify-between p-8 sm:p-12 lg:w-3/5 lg:p-16"
+            style={{ background: `${MM.surface}80` }}
+          >
+            <div>
+              <div className="mb-6 flex items-center gap-2">
+                <Sparkles className="h-4 w-4" style={{ color: MM.primary }} strokeWidth={1.5} />
+                <span
+                  className="text-[10px] font-bold uppercase tracking-[0.2em]"
+                  style={{ color: MM.primary }}
+                >
+                  AI Advisor Response
                 </span>
-                <StreamingText text={recommendation.reason.slice(1)} />
-              </p>
-            </div>
-          </div>
+              </div>
 
-          {/* Course meta grid */}
-          <div className="mt-8 grid grid-cols-3 gap-3">
-            <MetaTile label="Level" value={c.level.replace("_", " ")} Icon={Layers} />
-            <MetaTile label="Language" value={formatLanguage(c.languageCode)} Icon={Globe2} />
-            <MetaTile
-              label="Fit score"
-              value={`${matchScore}%`}
-              Icon={Sparkles}
-              accent
-            />
-          </div>
+              <div className="mb-10 flex gap-3">
+                <span
+                  className="rounded-full px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider"
+                  style={{ background: MM.surfaceContainer, color: MM.primary }}
+                >
+                  {formatLevel(course.level)}
+                </span>
+                <span
+                  className="rounded-full px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider"
+                  style={{ background: MM.surfaceContainer, color: MM.primary }}
+                >
+                  {formatLanguage(course.languageCode)}
+                </span>
+              </div>
 
-          {/* Description if exists */}
-          {c.shortDescription && (
-            <div className="mt-8 pt-8 border-t border-border/60">
-              <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-muted-foreground">
-                What it covers
-              </p>
-              <p className="mt-3 text-base leading-relaxed text-muted-foreground max-w-[60ch]">
-                {c.shortDescription}
-              </p>
-            </div>
-          )}
-
-          {/* CTA row */}
-          <div className="mt-10 flex flex-wrap items-center gap-3">
-            {enrolled ? (
-              <Link
-                to="/courses"
-                className="group inline-flex h-12 items-center gap-1.5 rounded-full bg-teal/15 hairline border-teal/30 pl-5 pr-1 text-sm font-medium text-foreground"
+              <h2
+                className="text-3xl font-black leading-tight tracking-tight sm:text-4xl lg:text-5xl"
+                style={{ color: MM.primary }}
               >
-                <span>Already enrolled · open</span>
-                <span className="grid h-10 w-10 place-items-center rounded-full bg-foreground/8 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-0.5 group-hover:-translate-y-px">
-                  <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={1.75} />
-                </span>
-              </Link>
-            ) : (
-              <button
-                type="button"
-                onClick={onEnroll}
-                disabled={enrolling}
-                className="group relative inline-flex h-12 items-center gap-1.5 rounded-full bg-foreground text-background pl-6 pr-1.5 text-sm font-medium shadow-bezel transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none"
-              >
-                <span>{enrolling ? "Enrolling…" : "Enroll in this course"}</span>
-                <span className="grid h-9 w-9 place-items-center rounded-full bg-background/15 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-0.5 group-hover:-translate-y-px group-hover:bg-background/25">
-                  <ArrowUpRight className="h-4 w-4" strokeWidth={1.75} />
-                </span>
-              </button>
-            )}
-            <Link
-              to="/courses/$courseId"
-              params={{ courseId: c.id }}
-              className="group inline-flex h-12 items-center gap-1.5 rounded-full px-5 text-sm font-medium text-foreground/85 hover:text-foreground transition-colors"
+                {course.title}
+              </h2>
+
+              <div className="mt-12 space-y-12">
+                <div>
+                  <div className="mb-4 flex items-center gap-3">
+                    <Target className="h-5 w-5" style={{ color: MM.primary }} strokeWidth={1.5} />
+                    <h4
+                      className="text-[11px] font-bold uppercase tracking-[0.2em]"
+                      style={{ color: MM.primary }}
+                    >
+                      Why this fits your goal
+                    </h4>
+                  </div>
+                  <p className="text-lg leading-relaxed" style={{ color: MM.onSurfaceVariant }}>
+                    {recommendation.reason}
+                  </p>
+                </div>
+
+                <div>
+                  <div className="mb-6 flex items-center gap-3">
+                    <Medal className="h-5 w-5" style={{ color: MM.primary }} strokeWidth={1.5} />
+                    <h4
+                      className="text-[11px] font-bold uppercase tracking-[0.2em]"
+                      style={{ color: MM.primary }}
+                    >
+                      What you will gain
+                    </h4>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {gains.map((gain, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-4 rounded-2xl p-5"
+                        style={{
+                          background: MM.surface,
+                          border: `1px solid ${MM.outlineVariant}4D`,
+                        }}
+                      >
+                        <Check
+                          className="h-4 w-4 shrink-0"
+                          style={{ color: MM.primary }}
+                          strokeWidth={2}
+                        />
+                        <span className="text-sm font-semibold" style={{ color: MM.onSurface }}>
+                          {gain}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* CTAs */}
+            <div
+              className="mt-12 flex flex-col gap-4 border-t pt-10 sm:flex-row sm:items-center sm:gap-6"
+              style={{ borderColor: `${MM.outlineVariant}33` }}
             >
-              <span className="relative">
-                Open course outline
-                <span className="absolute -bottom-0.5 left-0 h-px w-0 bg-foreground transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:w-full" />
-              </span>
-              <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.75} />
-            </Link>
+              {enrolled ? (
+                <Link
+                  to="/courses/$courseId"
+                  params={{ courseId: course.id }}
+                  className="flex flex-1 items-center justify-center gap-3 rounded-2xl py-6 text-[11px] font-bold uppercase tracking-[0.25em]"
+                  style={{
+                    background: `${MM.primary}14`,
+                    color: MM.primary,
+                  }}
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  Already Enrolled — View Course
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onEnroll}
+                  disabled={enrolling}
+                  className="flex flex-1 items-center justify-center gap-3 rounded-2xl py-6 text-[11px] font-bold uppercase tracking-[0.25em] transition-all duration-300 disabled:opacity-50"
+                  style={{
+                    background: MM.primary,
+                    color: MM.onPrimary,
+                    boxShadow: `0 10px 30px -5px ${MM.primary}33`,
+                  }}
+                >
+                  {enrolling ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Enrolling...
+                    </>
+                  ) : (
+                    <>
+                      Enroll in This Course
+                      <Zap className="h-4 w-4" strokeWidth={1.75} />
+                    </>
+                  )}
+                </button>
+              )}
+              <Link
+                to="/courses/$courseId"
+                params={{ courseId: course.id }}
+                className="w-full rounded-2xl px-12 py-6 text-center text-[11px] font-bold uppercase tracking-[0.25em] transition-all sm:w-auto"
+                style={{
+                  border: `1px solid ${MM.outlineVariant}`,
+                  color: MM.secondary,
+                }}
+              >
+                Review Syllabus
+              </Link>
+            </div>
           </div>
+        </div>
+      </article>
+    </section>
+  );
+}
+
+function AlternativePathCard({
+  recommendation,
+  enrolled,
+  enrolling,
+  onEnroll,
+}: {
+  recommendation: CourseRecommendation;
+  enrolled: boolean;
+  enrolling: boolean;
+  onEnroll: () => void;
+}) {
+  const course = recommendation.course;
+
+  return (
+    <article
+      className="group rounded-2xl p-6 transition-all duration-300"
+      style={{
+        background: MM.surface,
+        border: `1px solid ${MM.outlineVariant}4D`,
+      }}
+    >
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 gap-4">
+          <Compass
+            className="mt-1 h-5 w-5 shrink-0"
+            style={{ color: MM.outline }}
+            strokeWidth={1.5}
+          />
+          <div className="min-w-0">
+            <p
+              className="text-[10px] font-semibold tracking-[0.22em]"
+              style={{ color: MM.onSurfaceVariant }}
+            >
+              ALTERNATIVE PATH
+            </p>
+            <h3 className="mt-2 text-lg font-semibold" style={{ color: MM.primary }}>
+              {course.title}
+            </h3>
+            <p
+              className="mt-2 max-w-[72ch] text-sm leading-6"
+              style={{ color: MM.onSurfaceVariant }}
+            >
+              {recommendation.reason}
+            </p>
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          {!enrolled && (
+            <button
+              type="button"
+              onClick={onEnroll}
+              disabled={enrolling}
+              className="rounded-lg px-3 py-2 text-xs font-semibold transition-colors duration-300 disabled:opacity-50"
+              style={{
+                border: `1px solid ${MM.outlineVariant}`,
+                background: "#ffffff",
+                color: MM.primary,
+              }}
+            >
+              Enroll
+            </button>
+          )}
+          <Link
+            to="/courses/$courseId"
+            params={{ courseId: course.id }}
+            aria-label={`View outline for ${course.title}`}
+            className="grid h-10 w-10 place-items-center rounded-full transition-colors duration-300"
+            style={{ color: MM.outline }}
+          >
+            <ChevronRight className="h-5 w-5" strokeWidth={1.75} />
+          </Link>
         </div>
       </div>
     </article>
   );
 }
 
-function MetaTile({
-  label,
-  value,
-  Icon,
-  accent,
-}: {
-  label: string;
-  value: string;
-  Icon: typeof Layers;
-  accent?: boolean;
-}) {
+/* ═══════════════════════════════════════════
+   Loading / Error / Empty States
+   ═══════════════════════════════════════════ */
+
+function AdvisorLoading({ goal }: { goal: string }) {
   return (
-    <div
-      className={`relative overflow-hidden rounded-2xl p-4 ${
-        accent
-          ? "bg-gradient-to-br from-primary via-primary to-primary-glow text-primary-foreground shadow-bezel"
-          : "hairline bg-surface"
-      }`}
+    <motion.section
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="mx-auto max-w-[1280px] px-5 pb-20 sm:px-8 lg:px-16"
     >
-      <div className="flex items-center justify-between">
+      {/* Section header */}
+      <div className="relative mb-12 flex items-center gap-6">
         <span
-          className={`text-[10px] font-mono uppercase tracking-[0.2em] ${
-            accent ? "text-primary-foreground/65" : "text-muted-foreground"
-          }`}
+          className="pointer-events-none select-none text-[60px] font-extralight leading-none"
+          style={{ color: `${MM.primary}0D` }}
         >
-          {label}
+          02
         </span>
-        <Icon
-          className={`h-3.5 w-3.5 ${accent ? "text-primary-foreground/75" : "text-primary/70"}`}
-          strokeWidth={1.5}
-        />
-      </div>
-      <p className={`mt-3 text-display text-xl leading-none ${accent ? "" : "text-foreground"}`}>
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function AltMatchCard({
-  recommendation,
-  rank,
-  enrolled,
-  enrolling,
-  onEnroll,
-}: {
-  recommendation: CourseRecommendation;
-  rank: number;
-  enrolled: boolean;
-  enrolling: boolean;
-  onEnroll: () => void;
-}) {
-  const c = recommendation.course;
-  return (
-    <motion.article
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.1 * rank, ease: [0.16, 1, 0.3, 1] }}
-      className="group relative flex flex-col overflow-hidden rounded-[1.5rem] hairline bg-surface-elevated transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:shadow-elevated"
-    >
-      <div className="relative aspect-[16/9] overflow-hidden bg-muted">
-        {c.imageUrl ? (
-          <img
-            src={c.imageUrl}
-            alt={c.title}
-            className="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.04]"
-          />
-        ) : (
-          <div className="grid h-full place-items-center bg-gradient-to-br from-primary/10 to-primary-glow/10 text-primary">
-            <BookOpen className="h-9 w-9 opacity-60" strokeWidth={1.25} />
-          </div>
-        )}
-        <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-background/85 hairline px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.18em] text-foreground backdrop-blur-sm">
-          Alt {String(rank).padStart(2, "0")}
+        <div className="h-px flex-grow" style={{ background: `${MM.outlineVariant}4D` }} />
+        <span
+          className="flex items-center gap-3 rounded-full px-6 py-1 text-[10px] font-bold uppercase tracking-[0.3em]"
+          style={{ background: "#ffffff", color: MM.secondary }}
+        >
+          <Loader2 className="h-3 w-3 animate-spin" />
+          Synthesizing Insights
         </span>
+        <div className="h-px flex-grow" style={{ background: `${MM.outlineVariant}4D` }} />
       </div>
 
-      <div className="flex flex-col flex-1 p-6">
-        <div className="flex flex-wrap gap-2 text-[10px] font-mono uppercase tracking-[0.18em]">
-          <span className="rounded-full bg-primary/8 hairline px-2.5 py-0.5 text-primary">
-            {c.level.replace("_", " ")}
-          </span>
-          <span className="rounded-full bg-surface hairline px-2.5 py-0.5 text-muted-foreground">
-            {formatLanguage(c.languageCode)}
-          </span>
-        </div>
-
-        <h4 className="mt-3 text-display text-xl leading-snug text-foreground">{c.title}</h4>
-        <p className="mt-3 text-sm leading-relaxed text-muted-foreground line-clamp-3 max-w-[44ch]">
-          {recommendation.reason}
-        </p>
-
-        <div className="mt-auto pt-6 flex flex-wrap items-center gap-2">
-          <Link
-            to="/courses/$courseId"
-            params={{ courseId: c.id }}
-            className="group/btn inline-flex items-center gap-1.5 rounded-full hairline bg-surface px-3.5 py-2 text-xs font-medium text-foreground/85 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:text-foreground hover:-translate-y-0.5"
-          >
-            Outline
-            <ArrowUpRight className="h-3 w-3" strokeWidth={1.75} />
-          </Link>
-          {enrolled ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-teal/15 hairline border-teal/30 px-3.5 py-2 text-xs font-medium text-foreground/85">
-              <CheckCircle2 className="h-3 w-3" strokeWidth={1.75} />
-              Enrolled
-            </span>
-          ) : (
-            <button
-              type="button"
-              onClick={onEnroll}
-              disabled={enrolling}
-              className="group/btn relative inline-flex items-center gap-1 rounded-full bg-foreground text-background pl-3.5 pr-1 py-1 h-9 text-xs font-medium shadow-bezel transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none"
-            >
-              <span>Enroll</span>
-              <span className="grid h-7 w-7 place-items-center rounded-full bg-background/15 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-px group-hover/btn:bg-background/25">
-                <ArrowUpRight className="h-3 w-3" strokeWidth={1.75} />
-              </span>
-            </button>
-          )}
-        </div>
-      </div>
-    </motion.article>
-  );
-}
-
-function BriefSkeleton({ goal }: { goal: string }) {
-  return (
-    <section className="bg-background py-16 lg:py-24">
-      <div className="mx-auto max-w-6xl px-6 lg:px-10">
-        <div className="flex items-center gap-3 mb-10">
-          <span className="text-[10px] font-mono uppercase tracking-[0.22em] text-primary">
-            Drafting brief
-          </span>
-          <span className="flex gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0ms" }} />
-            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "150ms" }} />
-            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: "300ms" }} />
-          </span>
-        </div>
-        <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-muted-foreground">
-          For
-        </p>
-        <p className="mt-2 text-display text-2xl lg:text-3xl text-foreground/60 italic max-w-[40ch]">
+      <div className="mx-auto max-w-4xl text-center">
+        <p
+          className="mb-8 text-xl font-light italic leading-relaxed sm:text-2xl"
+          style={{ color: `${MM.primary}B3` }}
+        >
           &ldquo;{goal}&rdquo;
         </p>
+      </div>
 
-        <div className="mt-12 grid lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-5">
-            <div className="bezel">
-              <div className="bezel-inner aspect-[4/5] bg-muted/50 animate-pulse" />
-            </div>
-          </div>
-          <div className="lg:col-span-7 space-y-5">
-            <div className="h-4 w-32 rounded-full bg-muted animate-pulse" />
-            <div className="h-14 w-full rounded-2xl bg-muted/60 animate-pulse" />
-            <div className="h-14 w-3/4 rounded-2xl bg-muted/60 animate-pulse" />
-            <div className="h-32 w-full rounded-2xl bg-muted/40 animate-pulse" />
-            <div className="grid grid-cols-3 gap-3">
-              <div className="h-20 rounded-2xl bg-muted/40 animate-pulse" />
-              <div className="h-20 rounded-2xl bg-muted/40 animate-pulse" />
-              <div className="h-20 rounded-2xl bg-muted/40 animate-pulse" />
-            </div>
-          </div>
+      <div
+        className="mx-auto max-w-4xl rounded-[2rem] p-10"
+        style={{
+          background: "#ffffff",
+          border: `1px solid ${MM.outlineVariant}33`,
+        }}
+      >
+        <div className="space-y-4">
+          <div
+            className="h-4 w-3/4 animate-pulse rounded-full"
+            style={{ background: MM.surfaceContainer }}
+          />
+          <div
+            className="h-4 w-5/6 animate-pulse rounded-full"
+            style={{ background: MM.surfaceContainer }}
+          />
+          <div
+            className="h-4 w-1/2 animate-pulse rounded-full"
+            style={{ background: MM.surfaceContainer }}
+          />
+          <div
+            className="h-4 w-2/3 animate-pulse rounded-full"
+            style={{ background: MM.surfaceContainer }}
+          />
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }
 
-function BriefError({
-  goal,
-  message,
-  onRetry,
-}: {
-  goal: string;
-  message: string;
-  onRetry: () => void;
-}) {
+function AdvisorError({ brief, onRetry }: { brief: Brief; onRetry: () => void }) {
   return (
-    <section className="bg-background py-16 lg:py-24">
-      <div className="mx-auto max-w-3xl px-6 lg:px-10 text-center">
-        <span className="eyebrow eyebrow-dot">Brief failed</span>
-        <h2 className="mt-6 text-display text-3xl lg:text-4xl text-foreground leading-tight">
-          The catalog didn&apos;t answer.
+    <motion.section
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -16 }}
+      className="mx-auto max-w-[1280px] px-5 pb-20 sm:px-8 lg:px-16"
+    >
+      <div
+        className="mx-auto max-w-3xl rounded-[2rem] p-10 text-center"
+        style={{
+          background: "#ffffff",
+          border: `1px solid ${MM.errorContainer}`,
+        }}
+      >
+        <p className="text-[10px] font-semibold tracking-[0.22em]" style={{ color: MM.error }}>
+          ADVISOR ERROR
+        </p>
+        <h2 className="mt-4 text-3xl font-bold" style={{ color: MM.primary }}>
+          The catalog did not answer.
         </h2>
-        <p className="mt-4 text-sm text-muted-foreground italic">&ldquo;{goal}&rdquo;</p>
-        <p className="mt-6 text-base text-muted-foreground leading-relaxed">{message}</p>
+        <p className="mt-4 text-sm italic" style={{ color: MM.outline }}>
+          &ldquo;{brief.goal}&rdquo;
+        </p>
+        <p
+          className="mx-auto mt-5 max-w-[58ch] text-sm leading-7"
+          style={{ color: MM.onSurfaceVariant }}
+        >
+          {brief.message}
+        </p>
         <button
           type="button"
           onClick={onRetry}
-          className="group mt-8 inline-flex h-11 items-center gap-1.5 rounded-full bg-foreground text-background pl-5 pr-1 text-sm font-medium shadow-bezel transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] active:scale-[0.98]"
+          className="mt-7 inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl px-6 py-3 text-sm font-semibold transition-all"
+          style={{ background: MM.primary, color: MM.onPrimary }}
         >
-          <span>Try again</span>
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-background/15 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:rotate-180">
-            <RefreshCw className="h-3.5 w-3.5" strokeWidth={1.75} />
-          </span>
+          Try again
+          <RefreshCw className="h-4 w-4" />
         </button>
       </div>
-    </section>
+    </motion.section>
   );
 }
 
-function BriefEmpty({ goal, message }: { goal: string; message: string }) {
+function AdvisorNoMatch({ brief }: { brief: Brief }) {
   return (
-    <section className="bg-background py-16 lg:py-24">
-      <div className="mx-auto max-w-3xl px-6 lg:px-10 text-center">
-        <span className="eyebrow eyebrow-dot">No match</span>
-        <h2 className="mt-6 text-display text-3xl lg:text-4xl text-foreground leading-tight">
-          The catalog doesn&apos;t have a clear path for this yet.
+    <motion.section
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -16 }}
+      className="mx-auto max-w-[1280px] px-5 pb-20 sm:px-8 lg:px-16"
+    >
+      <div
+        className="mx-auto max-w-3xl rounded-[2rem] p-10 text-center"
+        style={{
+          background: "#ffffff",
+          border: `1px solid ${MM.outlineVariant}4D`,
+        }}
+      >
+        <p className="text-[10px] font-semibold tracking-[0.22em]" style={{ color: MM.outline }}>
+          NO CLEAR MATCH
+        </p>
+        <h2 className="mt-4 text-3xl font-bold" style={{ color: MM.primary }}>
+          Try a sharper career brief.
         </h2>
-        <p className="mt-4 text-sm text-muted-foreground italic">&ldquo;{goal}&rdquo;</p>
-        <p className="mt-6 text-base text-muted-foreground leading-relaxed max-w-[50ch] mx-auto">
-          {message || "Try a sharper goal — name the destination, your current level, and the language you want to study in."}
+        <p
+          className="mx-auto mt-5 max-w-[58ch] text-sm leading-7"
+          style={{ color: MM.onSurfaceVariant }}
+        >
+          {brief.message ||
+            "Name the destination, current level, and preferred language so EduLife can compare the goal against the live course catalog."}
         </p>
       </div>
-    </section>
+    </motion.section>
   );
 }
 
-function EmptyAdvisorState({ catalogCount }: { catalogCount: number }) {
+function AdvisorEmpty({ catalogCount }: { catalogCount: number }) {
   return (
-    <section className="relative bg-background py-20 lg:py-28">
-      <div className="mx-auto max-w-5xl px-6 lg:px-10">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <span className="eyebrow eyebrow-dot">Brief preview</span>
-            <h2 className="mt-6 text-display text-4xl lg:text-5xl leading-[1.02] text-foreground max-w-[14ch]">
-              Every brief is{" "}
-              <span className="italic font-normal text-muted-foreground">grounded.</span>
-            </h2>
-            <p className="mt-6 text-base text-muted-foreground leading-relaxed max-w-[48ch]">
-              The advisor only recommends courses that exist in the live catalog —{" "}
-              {catalogCount} indexed right now. No hallucinated learning paths, no
-              fabricated certificates.
-            </p>
-
-            <ul className="mt-10 space-y-4">
-              {[
-                ["Says what to take", "Names one best-fit course, not a list of links."],
-                ["Says why", "Editorial reasoning, grounded in your stated goal."],
-                ["Shows the path", "Level, language, and fit score on every recommendation."],
-              ].map(([k, v]) => (
-                <li key={k} className="flex items-start gap-3">
-                  <span className="mt-1 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
-                    <CheckCircle2 className="h-3 w-3" strokeWidth={2} />
-                  </span>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{k}</p>
-                    <p className="mt-1 text-[13px] text-muted-foreground leading-relaxed">{v}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="relative">
-            <div className="bezel">
-              <div className="bezel-inner p-8 lg:p-10">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono uppercase tracking-[0.22em] text-muted-foreground">
-                    Example brief
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-gold text-gold-foreground px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.22em] shadow-bezel">
-                    <Sparkles className="h-2.5 w-2.5" strokeWidth={1.75} />
-                    96%
-                  </span>
-                </div>
-                <h3 className="mt-6 text-display text-[clamp(1.5rem,3vw,2.25rem)] leading-[0.98] text-foreground">
-                  Full-Stack Web Development Path
-                </h3>
-                <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
-                  <span className="text-display text-3xl leading-[0.85] mr-1 float-left mt-1 text-gradient-primary">
-                    A
-                  </span>
-                  structured 12-week ramp from HTML/CSS to a deployed React + Node project.
-                  Matches the &ldquo;software developer&rdquo; goal exactly.
-                </p>
-                <div className="mt-6 grid grid-cols-3 gap-2 text-[10px] font-mono uppercase tracking-[0.18em]">
-                  <span className="rounded-full hairline bg-surface text-center text-muted-foreground px-2 py-1">
-                    Intermediate
-                  </span>
-                  <span className="rounded-full hairline bg-surface text-center text-muted-foreground px-2 py-1">
-                    English
-                  </span>
-                  <span className="rounded-full bg-primary/10 hairline text-center text-primary px-2 py-1">
-                    Fit 96%
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="pointer-events-none absolute -bottom-6 -right-6 -z-10 h-32 w-32 rounded-full bg-gold/20 blur-3xl" />
-            <div className="pointer-events-none absolute -top-6 -left-6 -z-10 h-32 w-32 rounded-full bg-primary/20 blur-3xl" />
-          </div>
+    <motion.section
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="mx-auto max-w-[1280px] px-5 pb-20 sm:px-8 lg:px-16"
+    >
+      <div className="mx-auto max-w-4xl opacity-75">
+        <div className="relative mb-12 flex items-center gap-6">
+          <span
+            className="pointer-events-none select-none text-[60px] font-extralight leading-none"
+            style={{ color: `${MM.primary}0D` }}
+          >
+            02
+          </span>
+          <div className="h-px flex-grow" style={{ background: `${MM.outlineVariant}4D` }} />
+          <span
+            className="rounded-full px-6 py-1 text-[10px] font-bold uppercase tracking-[0.3em]"
+            style={{ background: MM.surfaceContainer, color: MM.outline }}
+          >
+            Waiting for brief
+          </span>
+          <div className="h-px flex-grow" style={{ background: `${MM.outlineVariant}4D` }} />
         </div>
 
-        <div className="mt-16 lg:mt-20 flex justify-center">
-          <Link
-            to="/courses"
-            className="group inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <span className="relative">
-              Already enrolled? Open my courses
-              <span className="absolute -bottom-0.5 left-0 h-px w-0 bg-foreground transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:w-full" />
-            </span>
-            <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.75} />
-          </Link>
+        <div
+          className="rounded-[2rem] p-10"
+          style={{
+            background: "rgba(255,255,255,0.55)",
+            border: `2px dashed ${MM.outlineVariant}`,
+          }}
+        >
+          <p className="text-2xl font-semibold" style={{ color: `${MM.primary}66` }}>
+            Submit a goal to receive one focused course recommendation.
+          </p>
+          <p className="mt-4 text-sm leading-7" style={{ color: MM.outline }}>
+            The advisor has {catalogCount} live course{catalogCount === 1 ? "" : "s"} available for
+            matching.
+          </p>
         </div>
       </div>
-    </section>
+    </motion.section>
   );
+}
+
+/* ═══════════════════════════════════════════
+   Footer
+   ═══════════════════════════════════════════ */
+
+function AdvisorFooter() {
+  return (
+    <footer style={{ background: "#ffffff", borderTop: `1px solid ${MM.outlineVariant}4D` }}>
+      <div className="mx-auto grid max-w-[1280px] grid-cols-1 gap-16 px-5 py-24 sm:px-8 md:grid-cols-12 lg:px-16">
+        <div className="md:col-span-5">
+          <Link
+            to="/dashboard"
+            className="flex items-center gap-2 text-2xl font-black tracking-tight"
+            style={{ color: MM.primary }}
+          >
+            <div
+              className="flex h-8 w-8 items-center justify-center rounded-lg"
+              style={{ background: MM.primary }}
+            >
+              <GraduationCap className="h-4 w-4 text-white" strokeWidth={1.75} />
+            </div>
+            EduLife
+          </Link>
+          <p
+            className="mb-10 mt-8 max-w-sm text-base leading-relaxed"
+            style={{ color: MM.onSurfaceVariant }}
+          >
+            Empowering the next generation of Moroccan professionals through high-fidelity,
+            AI-curated learning pathways.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-12 md:col-span-7 lg:grid-cols-3">
+          <div>
+            <h4
+              className="mb-8 text-[11px] font-bold uppercase tracking-[0.2em]"
+              style={{ color: MM.primary }}
+            >
+              Platform
+            </h4>
+            <ul className="space-y-4">
+              <li>
+                <Link
+                  to="/explore"
+                  className="text-sm transition-colors"
+                  style={{ color: MM.onSurfaceVariant }}
+                >
+                  Live Catalog
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/advisor"
+                  className="text-sm transition-colors"
+                  style={{ color: MM.onSurfaceVariant }}
+                >
+                  Career Advisor
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/dashboard"
+                  className="text-sm transition-colors"
+                  style={{ color: MM.onSurfaceVariant }}
+                >
+                  Dashboard
+                </Link>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4
+              className="mb-8 text-[11px] font-bold uppercase tracking-[0.2em]"
+              style={{ color: MM.primary }}
+            >
+              Governance
+            </h4>
+            <ul className="space-y-4">
+              <li>
+                <span className="text-sm" style={{ color: MM.onSurfaceVariant }}>
+                  Privacy Policy
+                </span>
+              </li>
+              <li>
+                <span className="text-sm" style={{ color: MM.onSurfaceVariant }}>
+                  Terms of Use
+                </span>
+              </li>
+              <li>
+                <Link
+                  to="/certificates"
+                  className="text-sm transition-colors"
+                  style={{ color: MM.onSurfaceVariant }}
+                >
+                  Trust Center
+                </Link>
+              </li>
+            </ul>
+          </div>
+          <div className="hidden lg:block">
+            <h4
+              className="mb-8 text-[11px] font-bold uppercase tracking-[0.2em]"
+              style={{ color: MM.primary }}
+            >
+              Social
+            </h4>
+            <ul className="space-y-4">
+              <li>
+                <span className="text-sm" style={{ color: MM.onSurfaceVariant }}>
+                  LinkedIn
+                </span>
+              </li>
+              <li>
+                <span className="text-sm" style={{ color: MM.onSurfaceVariant }}>
+                  Instagram
+                </span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div
+        className="mx-auto flex max-w-[1280px] flex-col items-center justify-between gap-6 px-5 py-12 sm:px-8 md:flex-row lg:px-16"
+        style={{ borderTop: `1px solid ${MM.outlineVariant}4D` }}
+      >
+        <p className="text-[11px] font-medium tracking-widest" style={{ color: MM.outline }}>
+          &copy; {new Date().getFullYear()} EDULIFE MOROCCO. THE FUTURE OF WORK IS NOW.
+        </p>
+        <div className="flex gap-8">
+          <span
+            className="text-[11px] font-bold uppercase tracking-widest"
+            style={{ color: MM.outline }}
+          >
+            Support
+          </span>
+          <span
+            className="text-[11px] font-bold uppercase tracking-widest"
+            style={{ color: MM.outline }}
+          >
+            English (INTL)
+          </span>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   Utility Functions (preserved from original)
+   ═══════════════════════════════════════════ */
+
+function getFitScore(score: number) {
+  if (!Number.isFinite(score)) return 88;
+  if (score <= 1) return Math.max(1, Math.min(99, Math.round(score * 100)));
+  if (score <= 40) return Math.max(56, Math.min(99, Math.round(55 + (score / 40) * 43)));
+  return Math.max(1, Math.min(99, Math.round(score)));
+}
+
+function getGainBullets(recommendation: CourseRecommendation) {
+  const course = recommendation.course;
+  const candidates = `${course.shortDescription ?? ""}. ${recommendation.reason}`
+    .split(/[.;:]/)
+    .map((part) => part.trim())
+    .filter((part) => part.length > 18)
+    .slice(0, 4)
+    .map((part) => sentenceToBullet(part));
+
+  const fallback = [
+    "Structured course outline",
+    "Practical next step",
+    `${formatLanguage(course.languageCode)} learning support`,
+    `${formatLevel(course.level)} pacing`,
+  ];
+
+  return [...candidates, ...fallback].slice(0, 4);
+}
+
+function sentenceToBullet(value: string) {
+  const clean = value
+    .replace(/^I picked it because your goal connects with\s*/i, "")
+    .replace(/^The course is\s*/i, "")
+    .replace(/^It\s+/i, "")
+    .replace(/\.$/, "");
+  return clean.charAt(0).toUpperCase() + clean.slice(1);
+}
+
+function formatLevel(level: string) {
+  return (level || "Beginner")
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function formatLanguage(languageCode: string) {
-  switch (languageCode.toLowerCase()) {
+  switch ((languageCode || "en").toLowerCase()) {
     case "ar":
       return "Arabic";
     case "fr":
@@ -1549,4 +1641,41 @@ function formatLanguage(languageCode: string) {
     default:
       return "English";
   }
+}
+
+function extractReasoningBullets(text: string): string[] {
+  const sentences = text
+    .split(/[.!?\n]+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 15);
+
+  if (sentences.length === 0) {
+    return [
+      "Focusing on digital workflow efficiency over theory.",
+      "Building technical stamina for a smooth career switch.",
+      "Prioritizing immediate professional value.",
+    ];
+  }
+
+  return sentences.slice(0, 4);
+}
+
+function highlightKeyTerms(text: string): string {
+  const keywords = [
+    "digital workflow efficiency",
+    "career switch",
+    "professional value",
+    "productivity",
+    "technical",
+    "foundational",
+    "practical",
+    "structured",
+  ];
+
+  let result = text;
+  for (const keyword of keywords) {
+    const regex = new RegExp(`(${keyword})`, "gi");
+    result = result.replace(regex, `<strong style="color: ${MM.primary}">$1</strong>`);
+  }
+  return result;
 }

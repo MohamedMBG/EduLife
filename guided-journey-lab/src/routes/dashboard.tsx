@@ -1,37 +1,34 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  ArrowUpRight,
-  Award,
+  ArrowRight,
   BookOpen,
   BrainCircuit,
   CalendarDays,
   CheckCircle2,
+  Clock3,
   Compass,
-  GraduationCap,
-  Layers3,
-  ShieldCheck,
+  MoreHorizontal,
   Sparkles,
-  Target,
-  UserCircle2,
-  Users,
+  type LucideIcon,
 } from "lucide-react";
-import { AppShell } from "../components/app/AppShell";
+import { AppLayout } from "../components/app/AppLayout";
 import {
-  getAdminMetrics,
   enrollInCourse,
   getCourseProgress,
   getProfile,
+  getStudentAnalyticsSummary,
   listCourses,
   listMyEnrollments,
 } from "../lib/api/client";
 import { RequireAuth, useAuth } from "../lib/auth/auth-context";
+import type { CourseProgress, EnrolledCourse, StudentAnalyticsSummary } from "../lib/api/types";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardRoute,
-  head: () => ({ meta: [{ title: "Dashboard - EduLife" }] }),
+  head: () => ({ meta: [{ title: "My Learning - EduLife" }] }),
 });
 
 function DashboardRoute() {
@@ -49,26 +46,28 @@ function DashboardPage() {
   const isAdmin = auth.session?.role === "ADMIN";
   const isTeacher = auth.session?.role === "TEACHER";
   const isGroupAdmin = auth.session?.role === "GROUP_ADMIN";
-  // Only learners actually live on /dashboard; every other role is redirected to its own
-  // portal below, so we never run the learner queries or render the learner UI for them.
+  // Non-learner roles keep their dedicated workspaces, so this route never mixes admin,
+  // teacher, or group-admin data into the learner dashboard.
   const isLearner = !isAdmin && !isTeacher && !isGroupAdmin;
 
-  // Load study planner progress from localStorage
   const isClient = typeof window !== "undefined";
   const [plannerProgress, setPlannerProgress] = useState({ completed: 0, target: 10 });
 
   useEffect(() => {
-    if (isClient) {
-      const compVal = localStorage.getItem("edulife_planner_completed_hours");
-      const targetVal = localStorage.getItem("edulife_planner_target_hours");
-      const completed = compVal ? parseFloat(compVal) : 0;
-      const target = targetVal ? parseInt(targetVal, 10) : 10;
-      setPlannerProgress({ completed, target });
-    }
+    if (!isClient) return;
+
+    // The planner is currently stored locally; the dashboard reads it without changing
+    // the backend contract while still keeping the daily-goal card tied to real user action.
+    const completedValue = localStorage.getItem("edulife_planner_completed_hours");
+    const targetValue = localStorage.getItem("edulife_planner_target_hours");
+    const completed = completedValue ? parseFloat(completedValue) : 0;
+    const target = targetValue ? parseInt(targetValue, 10) : 10;
+    setPlannerProgress({
+      completed: Number.isFinite(completed) ? completed : 0,
+      target: Number.isFinite(target) && target > 0 ? target : 10,
+    });
   }, [isClient]);
 
-  // Each role has its own home: admins the admin console, teachers the Teaching Studio,
-  // group admins their groups dashboard.
   useEffect(() => {
     if (isAdmin) {
       navigate({ to: "/admin/dashboard" });
@@ -78,27 +77,11 @@ function DashboardPage() {
       navigate({ to: "/groups" });
     }
   }, [isAdmin, isGroupAdmin, isTeacher, navigate]);
-  const dashboardTitle = isAdmin
-    ? "Platform dashboard"
-    : isTeacher
-      ? "Teacher dashboard"
-      : "Learner dashboard";
-  const dashboardDetail = isAdmin
-    ? "Admin metrics and learner activity come from the Spring Boot backend."
-    : "Profile, enrollments, and discovery all come from the Spring Boot backend.";
 
   const profileQuery = useQuery({
     queryKey: ["profile"],
     queryFn: () => getProfile(auth.getAccessToken),
     enabled: isLearner,
-  });
-
-  const adminMetricsQuery = useQuery({
-    queryKey: ["admin", "metrics"],
-    queryFn: () => getAdminMetrics(auth.getAccessToken),
-    // Admins have their own AdminShell at /admin/dashboard and are redirected there, so this
-    // dashboard never needs the metrics call. Kept disabled to avoid a wasted request.
-    enabled: false,
   });
 
   const enrollmentsQuery = useQuery({
@@ -113,8 +96,14 @@ function DashboardPage() {
     enabled: isLearner,
   });
 
+  const analyticsQuery = useQuery({
+    queryKey: ["analytics", "student", "summary", "dashboard"],
+    queryFn: () => getStudentAnalyticsSummary(auth.getAccessToken),
+    enabled: isLearner,
+  });
+
   const progressQueries = useQueries({
-    queries: (enrollmentsQuery.data ?? []).slice(0, 3).map((enrollment) => ({
+    queries: (enrollmentsQuery.data ?? []).slice(0, 4).map((enrollment) => ({
       queryKey: ["progress", enrollment.courseId],
       queryFn: () => getCourseProgress(auth.getAccessToken, enrollment.courseId),
       enabled: enrollmentsQuery.isSuccess,
@@ -127,529 +116,612 @@ function DashboardPage() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["enrollments"] }),
         queryClient.invalidateQueries({ queryKey: ["profile"] }),
+        queryClient.invalidateQueries({ queryKey: ["analytics", "student"] }),
       ]);
     },
   });
 
   const profile = profileQuery.data;
-  const enrollments = enrollmentsQuery.data ?? [];
+  const enrollments = useMemo(() => enrollmentsQuery.data ?? [], [enrollmentsQuery.data]);
+  const progressByCourseId = useMemo(
+    () =>
+      new Map(
+        enrollments
+          .slice(0, 4)
+          .map((enrollment, index) => [enrollment.courseId, progressQueries[index]?.data]),
+      ),
+    [enrollments, progressQueries],
+  );
+  const activePaths = enrollments
+    .slice(0, 3)
+    .map((enrollment) => buildActivePath(enrollment, progressByCourseId.get(enrollment.courseId)));
+  const activePath = activePaths[0];
   const enrolledCourseIds = new Set(enrollments.map((enrollment) => enrollment.courseId));
   const suggestedCourses = (exploreQuery.data?.content ?? []).filter(
     (course) => !enrolledCourseIds.has(course.id),
   );
-  const activeCourse = enrollments[0];
-  const activeProgress = progressQueries[0]?.data;
   const firstName =
     profile?.displayName?.split(" ").filter(Boolean)[0] ||
     auth.session?.displayName.split(" ").filter(Boolean)[0] ||
     "learner";
-  const adminMetrics = adminMetricsQuery.data;
+  const metrics = buildMetrics({
+    profile,
+    analytics: analyticsQuery.data,
+    enrollments,
+    activePaths,
+    plannerProgress,
+  });
+  const dailyGoal = buildDailyGoal(plannerProgress);
+  const careerGoal = inferCareerGoal(activePath?.title, suggestedCourses[0]?.title);
 
-  // Non-learners are being redirected to their own portal — show a clean hand-off screen instead
-  // of flashing the learner dashboard (and skip every learner query above).
   if (!isLearner) {
     return <RedirectingScreen />;
   }
 
+  const loadingDashboard = profileQuery.isLoading || enrollmentsQuery.isLoading;
+  const dashboardError =
+    profileQuery.isError || enrollmentsQuery.isError
+      ? profileQuery.error?.message || enrollmentsQuery.error?.message
+      : null;
+
   return (
-    <AppShell
-      active="dashboard"
-      user={{
-        displayName: profile?.displayName || auth.session?.displayName || "EduLife learner",
-        email: profile?.email || auth.session?.email || "",
-      }}
-      onLogout={auth.logout}
-      header={
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-semibold text-foreground">{dashboardTitle}</p>
-          <p className="text-xs text-muted-foreground">{dashboardDetail}</p>
-        </div>
-      }
-    >
-      {profileQuery.isLoading ||
-      enrollmentsQuery.isLoading ||
-      (isAdmin && adminMetricsQuery.isLoading) ? (
-        <StateCard
-          title="Loading dashboard..."
-          detail="Syncing your learner profile and courses."
-        />
-      ) : profileQuery.isError ? (
-        <StateCard title="Dashboard unavailable" detail={profileQuery.error.message} />
-      ) : enrollmentsQuery.isError ? (
-        <StateCard title="Enrollments unavailable" detail={enrollmentsQuery.error.message} />
-      ) : isAdmin && adminMetricsQuery.isError ? (
-        <StateCard title="Admin metrics unavailable" detail={adminMetricsQuery.error.message} />
-      ) : (
-        <div className="space-y-8">
-          <section className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary via-primary to-primary-glow px-7 py-9 lg:px-10 lg:py-11 text-primary-foreground shadow-luxury">
-            <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-gold/25 blur-3xl" />
-            <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-teal/20 blur-3xl" />
-            <div className="relative">
-              <p className="inline-flex items-center gap-2 rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-medium">
-                {isAdmin ? (
-                  <ShieldCheck className="h-3 w-3" strokeWidth={1.75} />
-                ) : (
-                  <GraduationCap className="h-3 w-3" strokeWidth={1.75} />
-                )}
-                {isAdmin ? "Authenticated admin" : "Authenticated learner"}
-              </p>
-              <h1 className="mt-5 text-display text-[clamp(2rem,3.5vw,3rem)] leading-[1.02]">
-                Welcome back,{" "}
-                <span className="italic font-normal text-gold">{firstName}</span>.
-              </h1>
-              <p className="mt-3 max-w-2xl text-sm text-primary-foreground/80 leading-relaxed">
-                {isAdmin
-                  ? "Your admin session is backed by Firebase auth and authorized by backend RBAC before metrics load."
-                  : "Your session is backed by Firebase auth — the same identity bridge powers the Android app and web."}
-              </p>
-            </div>
-          </section>
+    <AppLayout>
+      <div>
+        {loadingDashboard ? (
+          <DashboardSkeleton />
+        ) : dashboardError ? (
+          <StatePanel
+            title="Dashboard unavailable"
+            detail={dashboardError}
+            actionLabel="Retry"
+            onAction={() => {
+              void profileQuery.refetch();
+              void enrollmentsQuery.refetch();
+            }}
+          />
+        ) : (
+          <>
+            <DashboardHero
+              firstName={firstName}
+              activePath={activePath}
+              careerGoal={careerGoal}
+              completedLessons={metrics.completedLessons}
+            />
 
-          {isAdmin ? (
-            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <MetricCard
-                title="Learners"
-                value={String(adminMetrics?.totalLearners ?? 0)}
-                icon={<Users className="h-5 w-5 text-primary" />}
-              />
-              <MetricCard
-                title="Teachers"
-                value={String(adminMetrics?.totalTeachers ?? 0)}
-                icon={<ShieldCheck className="h-5 w-5 text-teal-600" />}
-              />
-              <MetricCard
-                title="Published courses"
-                value={String(adminMetrics?.totalCoursesPublished ?? 0)}
-                icon={<Layers3 className="h-5 w-5 text-primary" />}
-              />
-              <MetricCard
-                title="Certificates"
-                value={String(adminMetrics?.totalCertificates ?? 0)}
-                icon={<GraduationCap className="h-5 w-5 text-amber-500" />}
-              />
-            </section>
-          ) : (
-            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <MetricCard
-                title="Display name"
-                value={profile?.displayName || "Not set"}
-                icon={<UserCircle2 className="h-5 w-5 text-primary" />}
-              />
-              <MetricCard
-                title="Enrolled courses"
-                value={String(profile?.enrolledCourses ?? 0)}
-                icon={<BookOpen className="h-5 w-5 text-primary" />}
-              />
-              <MetricCard
-                title="Completed lessons"
-                value={String(profile?.completedLessons ?? 0)}
-                icon={<CheckCircle2 className="h-5 w-5 text-teal-600" />}
-              />
-              <MetricCard
-                title="Certificates"
-                value={String(profile?.certificates ?? 0)}
-                icon={<GraduationCap className="h-5 w-5 text-amber-500" />}
-              />
-            </section>
-          )}
+            <section className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+              <div className="space-y-16">
+                <section className="grid gap-5 md:grid-cols-3">
+                  {metrics.cards.map((card) => (
+                    <DashboardMetricCard key={card.label} {...card} />
+                  ))}
+                </section>
 
-          {!isAdmin && (
-            <div className="grid gap-5 md:grid-cols-2">
-              <QuickActionCard
-                eyebrow="/01 · Advisor"
-                Icon={BrainCircuit}
-                title="Not sure what to take?"
-                detail="Tell the Career Advisor your goal. It scans the live catalog and explains the single best course path."
-                ctaLabel="Open advisor"
-                to="/advisor"
-                accent="primary"
-              />
-              <QuickActionCard
-                eyebrow="/02 · Study planner"
-                Icon={CalendarDays}
-                title="Weekly study planner"
-                detail={
-                  plannerProgress.completed > 0
-                    ? `${plannerProgress.completed.toFixed(1)} of ${plannerProgress.target} hours done this week — keep the streak alive.`
-                    : "Set a weekly hours target and track your study cadence."
-                }
-                ctaLabel="Open planner"
-                to="/planner"
-                accent="gold"
-                progress={
-                  plannerProgress.completed > 0
-                    ? {
-                        current: plannerProgress.completed,
-                        target: plannerProgress.target,
-                      }
-                    : undefined
-                }
-              />
-            </div>
-          )}
-
-          <section className="grid gap-5 xl:grid-cols-[1.4fr_0.8fr]">
-            <div className="relative overflow-hidden rounded-[1.75rem] hairline bg-surface-elevated p-7 lg:p-8">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
-                    /03 · Continue learning
-                  </span>
-                  <h2 className="mt-3 text-display text-2xl text-foreground leading-tight">
-                    Pick up where you left off
-                  </h2>
-                </div>
-                {activeCourse ? (
-                  <Link
-                    to="/courses/$courseId"
-                    params={{ courseId: activeCourse.courseId }}
-                    className="group inline-flex h-10 items-center gap-1 rounded-full bg-foreground text-background pl-4 pr-1 text-xs font-medium shadow-bezel transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    <span>Open course</span>
-                    <span className="grid h-8 w-8 place-items-center rounded-full bg-background/15 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-0.5 group-hover:-translate-y-px group-hover:bg-background/25">
-                      <ArrowUpRight className="h-3 w-3" strokeWidth={1.75} />
-                    </span>
-                  </Link>
-                ) : (
-                  <Link
-                    to="/explore"
-                    className="group inline-flex h-10 items-center gap-1 rounded-full bg-foreground text-background pl-4 pr-1 text-xs font-medium shadow-bezel transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    <span>Browse catalog</span>
-                    <span className="grid h-8 w-8 place-items-center rounded-full bg-background/15 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-0.5 group-hover:-translate-y-px group-hover:bg-background/25">
-                      <ArrowUpRight className="h-3 w-3" strokeWidth={1.75} />
-                    </span>
-                  </Link>
-                )}
-              </div>
-
-              {activeCourse && activeProgress ? (
-                <div className="mt-7 grid lg:grid-cols-[1fr_180px] gap-7 items-end">
-                  <div>
-                    <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-primary">
-                      Currently studying
-                    </p>
-                    <h3 className="mt-2 text-display text-2xl text-foreground leading-tight max-w-[28ch]">
-                      {activeCourse.title}
-                    </h3>
-                    <p className="mt-3 text-sm text-muted-foreground leading-relaxed max-w-[55ch]">
-                      {activeCourse.shortDescription}
-                    </p>
-                    <div className="mt-6 flex items-center gap-3 text-xs text-muted-foreground">
-                      <span className="inline-flex items-center gap-1.5">
-                        <span className="h-1.5 w-1.5 rounded-full bg-teal" />
-                        {activeProgress.completedLessons} / {activeProgress.totalLessons} lessons
-                      </span>
-                      <span className="h-3 w-px bg-border" />
-                      <span className="inline-flex items-center gap-1.5">
-                        <Target className="h-3 w-3" strokeWidth={1.75} />
-                        Pass at 80% on exam
-                      </span>
+                <section>
+                  <div className="mb-5 flex items-end justify-between gap-4">
+                    <div>
+                      <h2 className="text-2xl font-extrabold tracking-0 text-[#091426] sm:text-3xl">
+                        Active Paths
+                      </h2>
                     </div>
+                    <Link
+                      to="/courses"
+                      className="group inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-[#091426] transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:text-[#505f76]"
+                    >
+                      View all
+                      <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-1" />
+                    </Link>
                   </div>
 
-                  {/* Ring progress */}
-                  <ProgressRing percent={Math.round(activeProgress.percentComplete)} />
-                </div>
-              ) : (
-                <div className="mt-7 rounded-2xl hairline bg-surface px-6 py-8 text-center">
-                  <span className="grid h-12 w-12 mx-auto place-items-center rounded-2xl bg-primary/8 text-primary">
-                    <Compass className="h-5 w-5" strokeWidth={1.5} />
-                  </span>
-                  <p className="mt-4 text-sm font-medium text-foreground">
-                    No active enrollment yet
-                  </p>
-                  <p className="mt-1.5 text-xs text-muted-foreground max-w-[40ch] mx-auto leading-relaxed">
-                    Browse the catalog and enroll in a course to kick off the learner flow.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="relative overflow-hidden rounded-[1.75rem] hairline bg-surface-elevated p-7 lg:p-8">
-              <div className="flex items-start justify-between">
-                <div>
-                  <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
-                    /04 · Profile
-                  </span>
-                  <h2 className="mt-3 text-display text-xl text-foreground leading-tight">
-                    Your learner snapshot
-                  </h2>
-                </div>
-                <Link
-                  to="/profile"
-                  className="grid h-9 w-9 place-items-center rounded-full hairline bg-surface text-muted-foreground transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:text-foreground"
-                  aria-label="Open profile"
-                >
-                  <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.75} />
-                </Link>
+                  {activePaths.length === 0 ? (
+                    <EmptyLearningState />
+                  ) : (
+                    <div className="space-y-6">
+                      {activePaths.map((path, index) => (
+                        <ActivePathCard key={path.enrollmentId} path={path} priority={index} />
+                      ))}
+                    </div>
+                  )}
+                </section>
               </div>
 
-              <dl className="mt-6 space-y-5">
-                <SnapshotRow label="Email" value={profile?.email ?? "—"} mono />
-                <SnapshotRow
-                  label="Bio"
-                  value={profile?.bio || "No bio added yet."}
-                  muted={!profile?.bio}
+              <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+                <CareerPathWidget
+                  careerGoal={careerGoal}
+                  activePathTitle={activePath?.title}
+                  percent={activePath?.percent ?? 0}
                 />
-                <SnapshotRow label="Role" value={auth.session?.role ?? "—"} pill />
-              </dl>
-            </div>
-          </section>
+                <DailyGoalWidget goal={dailyGoal} />
+              </aside>
+            </section>
 
-          <section className="space-y-5">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
-                  /05 · Discover
-                </span>
-                <h2 className="mt-3 text-display text-2xl text-foreground leading-tight">
-                  Pulled from the live catalog
-                </h2>
-                <p className="mt-1.5 text-sm text-muted-foreground max-w-[55ch]">
-                  Same published-course endpoint that powers Explore — never seeded or
-                  mocked.
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Link
-                  to="/certificates"
-                  className="inline-flex items-center gap-1.5 rounded-full hairline bg-surface-elevated px-4 py-2 text-xs font-medium text-foreground/85 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:text-foreground hover:shadow-soft"
-                >
-                  <Award className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  Certificates
-                </Link>
-                <Link
-                  to="/explore"
-                  className="group inline-flex h-9 items-center gap-1 rounded-full bg-foreground text-background pl-3.5 pr-1 text-xs font-medium shadow-bezel transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  <span>Browse all</span>
-                  <span className="grid h-7 w-7 place-items-center rounded-full bg-background/15 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-0.5 group-hover:-translate-y-px group-hover:bg-background/25">
-                    <ArrowUpRight className="h-3 w-3" strokeWidth={1.75} />
-                  </span>
-                </Link>
-              </div>
-            </div>
-
-            {exploreQuery.isLoading ? (
-              <StateCard title="Loading suggestions…" detail="Fetching published courses." />
-            ) : exploreQuery.isError ? (
-              <StateCard title="Suggestions unavailable" detail={exploreQuery.error.message} />
-            ) : suggestedCourses.length === 0 ? (
-              <StateCard
-                title="No suggestions yet"
-                detail="You are already enrolled in the available seed courses."
+            <section className="mt-16">
+              <DiscoverStrip
+                isLoading={exploreQuery.isLoading}
+                error={exploreQuery.isError ? exploreQuery.error.message : null}
+                suggestions={suggestedCourses.slice(0, 3)}
+                isEnrolling={enrollMutation.isPending}
+                onEnroll={(courseId) => enrollMutation.mutate(courseId)}
               />
-            ) : (
-              <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                {suggestedCourses.slice(0, 3).map((course, i) => (
-                  <article
-                    key={course.id}
-                    className="group relative flex flex-col overflow-hidden rounded-[1.5rem] hairline bg-surface-elevated transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:shadow-elevated"
-                  >
-                    <div className="relative aspect-[16/10] overflow-hidden bg-muted">
-                      {course.imageUrl ? (
-                        <img
-                          src={course.imageUrl}
-                          alt={course.title}
-                          className="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.04]"
-                        />
-                      ) : (
-                        <div className="grid h-full place-items-center bg-gradient-to-br from-primary/10 to-primary-glow/10 text-primary">
-                          <Compass className="h-9 w-9 opacity-60" strokeWidth={1.25} />
-                        </div>
-                      )}
-                      <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-background/85 hairline px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.18em] text-foreground backdrop-blur-sm">
-                        <Sparkles className="h-2.5 w-2.5 text-primary" strokeWidth={2} />
-                        Pick {i + 1}
-                      </span>
-                    </div>
-                    <div className="flex flex-col flex-1 p-5">
-                      <h3 className="text-display text-lg leading-snug text-foreground">
-                        {course.title}
-                      </h3>
-                      <p className="mt-2 text-sm text-muted-foreground leading-relaxed line-clamp-3">
-                        {course.shortDescription}
-                      </p>
-                      <div className="mt-auto pt-5 flex flex-wrap items-center gap-2">
-                        <Link
-                          to="/courses/$courseId"
-                          params={{ courseId: course.id }}
-                          className="inline-flex items-center gap-1.5 rounded-full hairline bg-surface px-3.5 py-2 text-xs font-medium text-foreground/85 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:text-foreground hover:-translate-y-0.5"
-                        >
-                          Outline
-                          <ArrowUpRight className="h-3 w-3" strokeWidth={1.75} />
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => enrollMutation.mutate(course.id)}
-                          disabled={enrollMutation.isPending}
-                          className="group/btn relative inline-flex items-center gap-1 rounded-full bg-foreground text-background pl-3.5 pr-1 py-1 h-9 text-xs font-medium shadow-bezel transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none"
-                        >
-                          <span>Enroll</span>
-                          <span className="grid h-7 w-7 place-items-center rounded-full bg-background/15 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-px group-hover/btn:bg-background/25">
-                            <ArrowUpRight className="h-3 w-3" strokeWidth={1.75} />
-                          </span>
-                        </button>
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
-          </section>
-        </div>
-      )}
-    </AppShell>
-  );
-}
-
-function MetricCard({ title, value, icon }: { title: string; value: string; icon: ReactNode }) {
-  return (
-    <div className="group relative overflow-hidden rounded-2xl hairline bg-surface-elevated p-5 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:shadow-elevated">
-      <div className="flex items-center justify-between">
-        <p className="text-[10px] uppercase tracking-[0.2em] font-mono text-muted-foreground">
-          {title}
-        </p>
-        <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/8 group-hover:bg-primary/12 transition-colors duration-500">
-          {icon}
-        </span>
-      </div>
-      <p className="mt-5 text-display text-3xl lg:text-4xl text-foreground leading-none">
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function QuickActionCard({
-  eyebrow,
-  Icon,
-  title,
-  detail,
-  ctaLabel,
-  to,
-  accent,
-  progress,
-}: {
-  eyebrow: string;
-  Icon: typeof BrainCircuit;
-  title: string;
-  detail: string;
-  ctaLabel: string;
-  to: "/advisor" | "/planner";
-  accent: "primary" | "gold";
-  progress?: { current: number; target: number };
-}) {
-  const pct = progress
-    ? Math.min(100, Math.round((progress.current / progress.target) * 100))
-    : 0;
-  return (
-    <section className="group relative flex flex-col justify-between overflow-hidden rounded-[1.75rem] hairline bg-surface-elevated p-6 lg:p-7 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:shadow-elevated">
-      <div
-        className={`pointer-events-none absolute -top-20 -right-12 h-44 w-44 rounded-full blur-3xl opacity-50 ${
-          accent === "gold" ? "bg-gold/25" : "bg-primary/15"
-        }`}
-      />
-      <div className="relative flex items-start justify-between gap-4">
-        <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
-          {eyebrow}
-        </span>
-        <div className="bezel">
-          <span
-            className={`bezel-inner grid h-11 w-11 place-items-center ${
-              accent === "gold"
-                ? "bg-gradient-gold text-gold-foreground"
-                : "bg-gradient-primary text-primary-foreground"
-            }`}
-          >
-            <Icon className="h-4.5 w-4.5" strokeWidth={1.5} />
-          </span>
-        </div>
-      </div>
-
-      <div className="relative mt-6">
-        <h3 className="text-display text-xl leading-snug text-foreground">{title}</h3>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground max-w-[42ch]">
-          {detail}
-        </p>
-
-        {progress && (
-          <div className="mt-5">
-            <div className="mb-1.5 flex items-center justify-between text-[11px] font-mono uppercase tracking-[0.16em] text-muted-foreground">
-              <span>
-                {progress.current.toFixed(1)} / {progress.target} h
-              </span>
-              <span className="text-foreground font-semibold">{pct}%</span>
-            </div>
-            <div className="h-1.5 rounded-full bg-border overflow-hidden">
-              <div
-                className={`h-full rounded-full ${
-                  accent === "gold" ? "bg-gradient-gold" : "bg-gradient-primary"
-                }`}
-                style={{ width: `${pct}%` }}
-              />
-            </div>
-          </div>
+            </section>
+          </>
         )}
       </div>
+    </AppLayout>
+  );
+}
 
-      <div className="relative mt-6 flex justify-end">
-        <Link
-          to={to}
-          className="group/btn inline-flex h-10 items-center gap-1 rounded-full bg-foreground text-background pl-4 pr-1 text-xs font-medium shadow-bezel transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] active:scale-[0.98]"
-        >
-          <span>{ctaLabel}</span>
-          <span className="grid h-8 w-8 place-items-center rounded-full bg-background/15 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-px group-hover/btn:bg-background/25">
-            <ArrowUpRight className="h-3 w-3" strokeWidth={1.75} />
+interface ActivePath {
+  enrollmentId: string;
+  courseId: string;
+  title: string;
+  shortDescription: string;
+  level: string;
+  languageCode: string;
+  imageUrl: string | null;
+  percent: number;
+  completedLessons: number;
+  totalLessons: number;
+  nextLessonId: string | null;
+  nextLessonTitle: string;
+  nextSectionTitle: string | null;
+  minutesCompleted: number;
+}
+
+function buildActivePath(enrollment: EnrolledCourse, progress?: CourseProgress): ActivePath {
+  const lessons =
+    progress?.sections.flatMap((section) =>
+      section.lessons.map((lesson) => ({ ...lesson, sectionTitle: section.title })),
+    ) ?? [];
+  const nextLesson = lessons.find((lesson) => !lesson.completed);
+  const completedMinutes = lessons
+    .filter((lesson) => lesson.completed)
+    .reduce((sum, lesson) => sum + (lesson.durationMinutes ?? 0), 0);
+
+  return {
+    enrollmentId: enrollment.enrollmentId,
+    courseId: enrollment.courseId,
+    title: enrollment.title,
+    shortDescription: enrollment.shortDescription,
+    level: enrollment.level || "Guided",
+    languageCode: enrollment.languageCode,
+    imageUrl: enrollment.imageUrl,
+    percent: Math.round(progress?.percentComplete ?? 0),
+    completedLessons: progress?.completedLessons ?? 0,
+    totalLessons: progress?.totalLessons ?? 0,
+    nextLessonId: nextLesson?.lessonId ?? null,
+    nextLessonTitle:
+      nextLesson?.title ||
+      (progress && progress.percentComplete >= 100 ? "Final exam" : "Course overview"),
+    nextSectionTitle: nextLesson?.sectionTitle ?? null,
+    minutesCompleted: completedMinutes,
+  };
+}
+
+function buildMetrics({
+  profile,
+  analytics,
+  enrollments,
+  activePaths,
+  plannerProgress,
+}: {
+  profile:
+    | { enrolledCourses?: number; completedLessons?: number; certificates?: number }
+    | undefined;
+  analytics: StudentAnalyticsSummary | undefined;
+  enrollments: EnrolledCourse[];
+  activePaths: ActivePath[];
+  plannerProgress: { completed: number; target: number };
+}) {
+  const enrolledCourses = Math.max(
+    analytics?.activeEnrollments ?? 0,
+    profile?.enrolledCourses ?? 0,
+    enrollments.length,
+  );
+  const completedLessons = Math.max(
+    analytics?.lessonsCompleted ?? 0,
+    profile?.completedLessons ?? 0,
+    activePaths.reduce((sum, path) => sum + path.completedLessons, 0),
+  );
+  const certificates = Math.max(analytics?.certificatesEarned ?? 0, profile?.certificates ?? 0);
+  const completedMinutes = activePaths.reduce((sum, path) => sum + path.minutesCompleted, 0);
+  const hours = Math.max(plannerProgress.completed, completedMinutes / 60);
+  // No gamification score endpoint exists yet, so this progress score is derived from
+  // server analytics/profile counts instead of inventing a separate mock data source.
+  const skillScore =
+    completedLessons * 20 +
+    (analytics?.examsPassed ?? certificates) * 120 +
+    certificates * 200 +
+    enrolledCourses * 15;
+
+  return {
+    completedLessons,
+    cards: [
+      {
+        label: "Courses",
+        value: String(enrolledCourses),
+        status: activePaths.length > 0 ? `${activePaths.length} active now` : "Ready to enroll",
+        Icon: BookOpen,
+        tone: "blue" as const,
+      },
+      {
+        label: "Hours",
+        value: hours > 0 ? formatHours(hours) : "0",
+        status: hours > 0 ? "tracked study" : `${plannerProgress.target}h weekly target`,
+        Icon: Clock3,
+        tone: "amber" as const,
+      },
+      {
+        label: "Progress Score",
+        value: String(skillScore),
+        status:
+          certificates > 0
+            ? `${certificates} certificate${certificates === 1 ? "" : "s"}`
+            : "building evidence",
+        Icon: BrainCircuit,
+        tone: "violet" as const,
+      },
+    ],
+  };
+}
+
+function buildDailyGoal(plannerProgress: { completed: number; target: number }) {
+  const percent = Math.min(
+    100,
+    Math.round((plannerProgress.completed / plannerProgress.target) * 100),
+  );
+  const remainingHours = Math.max(0, plannerProgress.target - plannerProgress.completed);
+  const remainingMinutes = Math.round(remainingHours * 60);
+  return {
+    percent,
+    remaining:
+      remainingMinutes >= 60
+        ? `${(remainingMinutes / 60).toFixed(remainingMinutes % 60 === 0 ? 0 : 1)} hrs to go`
+        : `${remainingMinutes} mins to go`,
+    completedDays: Math.min(7, Math.max(0, Math.ceil((percent / 100) * 7))),
+  };
+}
+
+function inferCareerGoal(activeTitle?: string, suggestionTitle?: string) {
+  const source = `${activeTitle ?? ""} ${suggestionTitle ?? ""}`.toLowerCase();
+
+  if (source.includes("data") || source.includes("network") || source.includes("ai")) {
+    return "Senior Data Lead";
+  }
+  if (source.includes("design") || source.includes("ui")) {
+    return "Product Design Lead";
+  }
+  if (source.includes("web") || source.includes("java") || source.includes("spring")) {
+    return "Full Stack Engineer";
+  }
+  return "your next certificate";
+}
+
+function DashboardHero({
+  firstName,
+  activePath,
+  careerGoal,
+  completedLessons,
+}: {
+  firstName: string;
+  activePath?: ActivePath;
+  careerGoal: string;
+  completedLessons: number;
+}) {
+  const focusTitle = activePath?.nextLessonTitle ?? "Choose your next path";
+  const focusSubtitle = activePath?.nextSectionTitle ?? activePath?.title ?? "Course discovery";
+  const momentumCopy =
+    completedLessons > 0
+      ? `You have completed ${completedLessons} lessons. Continue your path to ${careerGoal}.`
+      : "Your learner workspace is ready. Choose a course and start the guided flow.";
+
+  return (
+    <section className="relative overflow-hidden rounded-[8px] border border-[#dfe3e7] bg-[radial-gradient(circle_at_0%_0%,#ffffff_0%,#f0f4f8_48%,#eaeef2_100%)] px-6 py-10 shadow-[0_22px_70px_-56px_rgba(9,20,38,0.45)] sm:px-10 lg:px-12 lg:py-12">
+      <div className="pointer-events-none absolute inset-0 opacity-[0.035] grain" />
+      <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1fr)_310px] lg:items-center">
+        <div>
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#091426] shadow-[inset_0_0_0_1px_rgba(197,198,205,0.5)]">
+            <span className="h-2 w-2 rounded-full bg-[#22c55e]" />
+            Top learner momentum
           </span>
-        </Link>
+          <h1 className="mt-7 max-w-[14ch] text-[clamp(2.5rem,6vw,4rem)] font-light leading-[1.05] tracking-0 text-[#091426]">
+            Welcome back, {firstName}.
+          </h1>
+          <p className="mt-5 max-w-2xl text-base font-light leading-8 text-[#505f76] sm:text-lg">
+            {momentumCopy}
+          </p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <HeroResumeButton activePath={activePath} />
+            <Link
+              to="/planner"
+              className="inline-flex h-12 items-center justify-center rounded-[4px] border border-[#dfe3e7] bg-white/50 px-8 text-[12px] font-bold uppercase tracking-[0.16em] text-[#091426] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5 hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#091426]"
+            >
+              View Schedule
+            </Link>
+          </div>
+        </div>
+
+        <div className="hidden justify-center lg:flex">
+          <div className="rotate-3 rounded-[16px] border border-white/70 bg-white/72 p-1.5 shadow-[0_36px_90px_-48px_rgba(9,20,38,0.42)]">
+            <div className="grid h-64 w-64 place-items-center rounded-[12px] bg-white/76 px-8 text-center shadow-[inset_0_1px_1px_rgba(255,255,255,0.9)]">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#505f76]">
+                  Today's Focus
+                </p>
+                <p className="mt-3 text-2xl font-extrabold leading-tight text-[#091426]">
+                  {focusTitle}
+                </p>
+                <p className="mt-2 text-xs font-medium text-[#505f76]">{focusSubtitle}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function HeroResumeButton({ activePath }: { activePath?: ActivePath }) {
+  const className =
+    "inline-flex h-12 items-center justify-center rounded-[4px] bg-[#091426] px-8 text-[12px] font-bold uppercase tracking-[0.16em] text-white shadow-[0_18px_44px_-28px_rgba(9,20,38,0.72)] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5 hover:bg-[#1e293b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#091426]";
+
+  if (!activePath) {
+    return (
+      <Link to="/explore" className={className}>
+        Browse Catalog
+      </Link>
+    );
+  }
+
+  if (activePath.nextLessonId) {
+    return (
+      <Link
+        to="/learn/$courseId/$lessonId"
+        params={{ courseId: activePath.courseId, lessonId: activePath.nextLessonId }}
+        className={className}
+      >
+        Resume Session
+      </Link>
+    );
+  }
+
+  return (
+    <Link to="/courses/$courseId" params={{ courseId: activePath.courseId }} className={className}>
+      Resume Session
+    </Link>
+  );
+}
+
+function DashboardMetricCard({
+  label,
+  value,
+  status,
+  Icon,
+  tone,
+}: {
+  label: string;
+  value: string;
+  status: string;
+  Icon: LucideIcon;
+  tone: "blue" | "amber" | "violet";
+}) {
+  const toneClass = {
+    blue: "bg-[#edf4ff] text-[#2563eb]",
+    amber: "bg-[#fff7ed] text-[#f97316]",
+    violet: "bg-[#f6edff] text-[#7c3aed]",
+  }[tone];
+
+  return (
+    <article className="group rounded-[8px] border border-[#dfe3e7] bg-white p-6 shadow-[0_18px_50px_-42px_rgba(9,20,38,0.38)] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5 hover:border-[#c5c6cd]">
+      <div className="flex items-start justify-between">
+        <span className={`grid h-12 w-12 place-items-center rounded-[4px] ${toneClass}`}>
+          <Icon className="h-5 w-5" strokeWidth={1.8} />
+        </span>
+        <Sparkline />
+      </div>
+      <p className="mt-5 text-[12px] font-semibold uppercase tracking-[0.18em] text-[#091426]">
+        {label}
+      </p>
+      <div className="mt-2 flex flex-wrap items-baseline gap-2">
+        <span className="font-mono text-3xl tracking-0 text-[#171c1f]">{value}</span>
+        <span className="text-[12px] font-semibold text-[#505f76]">{status}</span>
+      </div>
+    </article>
+  );
+}
+
+function ActivePathCard({ path, priority }: { path: ActivePath; priority: number }) {
+  return (
+    <article className="group grid overflow-hidden rounded-[8px] border border-[#dfe3e7] bg-white shadow-[0_20px_58px_-48px_rgba(9,20,38,0.46)] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5 hover:border-[#c5c6cd] md:grid-cols-[190px_minmax(0,1fr)_184px]">
+      <div className="relative h-52 overflow-hidden bg-[#091426] md:h-full">
+        {path.imageUrl ? (
+          <img
+            src={path.imageUrl}
+            alt={path.title}
+            className="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-105"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+              e.currentTarget.parentElement?.querySelector("[data-fallback]")?.removeAttribute("hidden");
+            }}
+          />
+        ) : null}
+        <div className="grid h-full place-items-center bg-[radial-gradient(circle_at_30%_20%,#1e293b,#091426)] text-white" data-fallback="" hidden={!!path.imageUrl}>
+          <BookOpen className="h-12 w-12 opacity-75" strokeWidth={1.4} />
+        </div>
+        <div className="absolute inset-0 bg-[#091426]/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      </div>
+
+      <div className="flex min-w-0 flex-col justify-center p-6">
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="rounded-full bg-[#f0f4f8] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#091426]">
+            {path.level.replaceAll("_", " ")}
+          </span>
+          <span className="text-xs font-medium text-[#8590a6]">
+            {formatLanguage(path.languageCode)} learning path
+          </span>
+        </div>
+        <h3 className="mt-4 max-w-[23ch] text-2xl font-extrabold leading-tight text-[#091426]">
+          {path.title}
+        </h3>
+        <div className="mt-5">
+          <div className="h-1.5 overflow-hidden rounded-full bg-[#dfe3e7]">
+            <div
+              className="h-full rounded-full bg-[#091426] transition-[width] duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]"
+              style={{ width: `${path.percent}%` }}
+            />
+          </div>
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <span className="font-medium text-[#505f76]">{path.percent}% complete</span>
+            <span className="font-bold uppercase tracking-0 text-[#091426]">
+              Next: {path.nextLessonTitle}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-center border-t border-[#dfe3e7] bg-[#f6fafe]/70 p-6 md:border-l md:border-t-0">
+        <PathResumeButton path={path} filled={priority === 0} />
+      </div>
+    </article>
+  );
+}
+
+function PathResumeButton({ path, filled }: { path: ActivePath; filled: boolean }) {
+  const className = `inline-flex h-12 w-full items-center justify-center rounded-[4px] px-8 text-[12px] font-bold uppercase tracking-[0.16em] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#091426] ${
+    filled
+      ? "bg-[#091426] text-white shadow-[0_18px_44px_-30px_rgba(9,20,38,0.72)] hover:bg-[#1e293b]"
+      : "border border-[#091426] bg-white text-[#091426] hover:bg-[#f0f4f8]"
+  }`;
+
+  if (path.nextLessonId) {
+    return (
+      <Link
+        to="/learn/$courseId/$lessonId"
+        params={{ courseId: path.courseId, lessonId: path.nextLessonId }}
+        className={className}
+      >
+        Resume
+      </Link>
+    );
+  }
+
+  return (
+    <Link to="/courses/$courseId" params={{ courseId: path.courseId }} className={className}>
+      Resume
+    </Link>
+  );
+}
+
+function CareerPathWidget({
+  careerGoal,
+  activePathTitle,
+  percent,
+}: {
+  careerGoal: string;
+  activePathTitle?: string;
+  percent: number;
+}) {
+  const aheadText =
+    percent > 0
+      ? `Your velocity in ${activePathTitle ?? "your active course"} is shaping a focused path toward this outcome.`
+      : "Enroll in a course to turn advisor recommendations into a tracked career path.";
+
+  return (
+    <section className="relative overflow-hidden rounded-[8px] bg-[#091426] p-8 text-white shadow-[0_28px_68px_-40px_rgba(9,20,38,0.72)]">
+      <div className="absolute right-0 top-0 h-16 w-16 rounded-bl-[14px] bg-white/6" />
+      <span className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em]">
+        AI Career Path
+      </span>
+      <h3 className="mt-5 text-2xl font-extrabold leading-tight">On track for {careerGoal}</h3>
+      <p className="mt-5 text-sm font-light leading-7 text-white/72">{aheadText}</p>
+      <div className="mt-7 space-y-4 border-t border-white/12 pt-6">
+        <ChecklistRow done label="Prerequisites Met" />
+        <ChecklistRow label="Portfolio Review Pending" />
+      </div>
+      <Link
+        to="/advisor"
+        className="group mt-8 inline-flex items-center gap-3 text-[12px] font-bold uppercase tracking-[0.16em] text-white transition-colors hover:text-white/75"
+      >
+        Full Trajectory
+        <ArrowRight className="h-4 w-4 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-1" />
+      </Link>
+    </section>
+  );
+}
+
+function DailyGoalWidget({
+  goal,
+}: {
+  goal: { percent: number; remaining: string; completedDays: number };
+}) {
+  const days = ["M", "T", "W", "T", "F", "S", "S"];
+
+  return (
+    <section className="rounded-[8px] border border-[#dfe3e7] bg-white p-8 shadow-[0_18px_50px_-42px_rgba(9,20,38,0.35)]">
+      <div className="flex items-center justify-between">
+        <h3 className="text-[12px] font-bold uppercase tracking-[0.18em] text-[#091426]">
+          Daily Goal
+        </h3>
+        <MoreHorizontal className="h-5 w-5 text-[#8590a6]" strokeWidth={1.8} />
+      </div>
+      <div className="mt-8 flex justify-center">
+        <ProgressRing percent={goal.percent} />
+      </div>
+      <div className="mt-7 text-center">
+        <p className="text-xl font-extrabold text-[#091426]">{goal.remaining}</p>
+        <p className="mt-3 text-xs leading-6 text-[#505f76]">Keep your study cadence visible.</p>
+      </div>
+      <div className="mt-8 flex justify-between gap-2">
+        {days.map((day, index) => (
+          <span
+            key={`${day}-${index}`}
+            className={`grid h-8 w-8 place-items-center rounded-[10px] text-[10px] font-bold ${
+              index < goal.completedDays ? "bg-[#091426] text-white" : "bg-[#e4e9ed] text-[#505f76]"
+            }`}
+          >
+            {day}
+          </span>
+        ))}
       </div>
     </section>
   );
 }
 
 function ProgressRing({ percent }: { percent: number }) {
-  const radius = 62;
-  const stroke = 10;
-  const norm = radius - stroke / 2;
-  const circumference = 2 * Math.PI * norm;
+  const radius = 76;
+  const stroke = 6;
+  const normalizedRadius = radius - stroke / 2;
+  const circumference = 2 * Math.PI * normalizedRadius;
   const offset = circumference - (percent / 100) * circumference;
+
   return (
-    <div className="relative grid place-items-center mx-auto lg:mx-0">
-      <svg width={radius * 2} height={radius * 2} className="-rotate-90">
+    <div className="relative h-40 w-40" role="img" aria-label={`${percent}% complete`}>
+      <svg className="h-full w-full -rotate-90">
         <circle
-          cx={radius}
-          cy={radius}
-          r={norm}
-          fill="none"
-          stroke="var(--color-border)"
+          cx="80"
+          cy="80"
+          r={normalizedRadius}
+          fill="transparent"
+          stroke="#dfe3e7"
           strokeWidth={stroke}
         />
         <circle
-          cx={radius}
-          cy={radius}
-          r={norm}
-          fill="none"
-          stroke="url(#ring-grad)"
-          strokeWidth={stroke}
-          strokeLinecap="round"
+          cx="80"
+          cy="80"
+          r={normalizedRadius}
+          fill="transparent"
+          stroke="#091426"
           strokeDasharray={circumference}
           strokeDashoffset={offset}
-          style={{ transition: "stroke-dashoffset 0.9s cubic-bezier(0.16,1,0.3,1)" }}
+          strokeLinecap="round"
+          strokeWidth={stroke}
+          style={{ transition: "stroke-dashoffset 700ms cubic-bezier(0.32,0.72,0,1)" }}
         />
-        <defs>
-          <linearGradient id="ring-grad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="oklch(0.28 0.20 158)" />
-            <stop offset="100%" stopColor="oklch(0.60 0.24 148)" />
-          </linearGradient>
-        </defs>
       </svg>
       <div className="absolute inset-0 grid place-items-center text-center">
         <div>
-          <p className="text-display text-3xl text-foreground leading-none">{percent}%</p>
-          <p className="mt-1 text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
-            complete
+          <p className="font-mono text-3xl font-black text-[#091426]">{percent}%</p>
+          <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#505f76]">
+            Complete
           </p>
         </div>
       </div>
@@ -657,64 +729,228 @@ function ProgressRing({ percent }: { percent: number }) {
   );
 }
 
-function SnapshotRow({
-  label,
-  value,
-  mono,
-  muted,
-  pill,
+function DiscoverStrip({
+  isLoading,
+  error,
+  suggestions,
+  isEnrolling,
+  onEnroll,
 }: {
-  label: string;
-  value: string;
-  mono?: boolean;
-  muted?: boolean;
-  pill?: boolean;
+  isLoading: boolean;
+  error: string | null;
+  suggestions: Array<{
+    id: string;
+    title: string;
+    shortDescription: string;
+    imageUrl: string | null;
+  }>;
+  isEnrolling: boolean;
+  onEnroll: (courseId: string) => void;
+}) {
+  if (isLoading) {
+    return <StatePanel title="Loading catalog suggestions" detail="Fetching published courses." />;
+  }
+
+  if (error) {
+    return <StatePanel title="Catalog unavailable" detail={error} />;
+  }
+
+  if (suggestions.length === 0) {
+    return (
+      <StatePanel
+        title="No new recommendations"
+        detail="You are already enrolled in the available published courses."
+      />
+    );
+  }
+
+  return (
+    <section className="border-t border-[#dfe3e7] pt-10">
+      <div className="mb-5 flex items-end justify-between gap-4">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#505f76]">
+            Live Catalog
+          </p>
+          <h2 className="mt-2 text-2xl font-extrabold text-[#091426]">Recommended next moves</h2>
+        </div>
+        <Link
+          to="/explore"
+          className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#091426] hover:text-[#505f76]"
+        >
+          Catalog
+        </Link>
+      </div>
+      <div className="grid gap-5 md:grid-cols-3">
+        {suggestions.map((course) => (
+          <article
+            key={course.id}
+            className="overflow-hidden rounded-[8px] border border-[#dfe3e7] bg-white transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5 hover:shadow-[0_18px_50px_-42px_rgba(9,20,38,0.38)]"
+          >
+            <div className="h-36 bg-[#091426]">
+              {course.imageUrl ? (
+                <img
+                  src={course.imageUrl}
+                  alt={course.title}
+                  className="h-full w-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                    e.currentTarget.parentElement?.querySelector("[data-fallback]")?.removeAttribute("hidden");
+                  }}
+                />
+              ) : null}
+              <div className="grid h-full place-items-center text-white/80" data-fallback="" hidden={!!course.imageUrl}>
+                <Compass className="h-9 w-9" strokeWidth={1.5} />
+              </div>
+            </div>
+            <div className="p-5">
+              <h3 className="text-lg font-extrabold leading-tight text-[#091426]">
+                {course.title}
+              </h3>
+              <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#505f76]">
+                {course.shortDescription}
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <Link
+                  to="/courses/$courseId"
+                  params={{ courseId: course.id }}
+                  className="rounded-[4px] border border-[#dfe3e7] px-3 py-2 text-xs font-bold text-[#091426] hover:bg-[#f0f4f8]"
+                >
+                  Outline
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => onEnroll(course.id)}
+                  disabled={isEnrolling}
+                  className="rounded-[4px] bg-[#091426] px-3 py-2 text-xs font-bold text-white disabled:opacity-60"
+                >
+                  Enroll
+                </button>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function EmptyLearningState() {
+  return (
+    <div className="rounded-[8px] border border-[#dfe3e7] bg-white px-6 py-10 text-center shadow-[0_18px_50px_-42px_rgba(9,20,38,0.35)]">
+      <span className="mx-auto grid h-12 w-12 place-items-center rounded-[8px] bg-[#f0f4f8] text-[#091426]">
+        <Compass className="h-5 w-5" strokeWidth={1.7} />
+      </span>
+      <h3 className="mt-4 text-lg font-extrabold text-[#091426]">No active enrollment yet</h3>
+      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#505f76]">
+        Browse the catalog and enroll in a course to start the learner flow.
+      </p>
+      <Link
+        to="/explore"
+        className="mt-5 inline-flex h-11 items-center justify-center rounded-[4px] bg-[#091426] px-6 text-[12px] font-bold uppercase tracking-[0.16em] text-white"
+      >
+        Browse Catalog
+      </Link>
+    </div>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-8">
+      <div className="h-[344px] animate-pulse rounded-[8px] border border-[#dfe3e7] bg-[#eaeef2]" />
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="space-y-6">
+          <div className="grid gap-5 md:grid-cols-3">
+            {[0, 1, 2].map((item) => (
+              <div key={item} className="h-40 animate-pulse rounded-[8px] bg-white" />
+            ))}
+          </div>
+          {[0, 1].map((item) => (
+            <div key={item} className="h-44 animate-pulse rounded-[8px] bg-white" />
+          ))}
+        </div>
+        <div className="space-y-6">
+          <div className="h-80 animate-pulse rounded-[8px] bg-[#091426]/90" />
+          <div className="h-96 animate-pulse rounded-[8px] bg-white" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatePanel({
+  title,
+  detail,
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  detail: string;
+  actionLabel?: string;
+  onAction?: () => void;
 }) {
   return (
-    <div>
-      <dt className="text-[10px] font-mono uppercase tracking-[0.18em] text-muted-foreground">
-        {label}
-      </dt>
-      <dd className="mt-1.5">
-        {pill ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/8 hairline px-3 py-1 text-[11px] font-mono uppercase tracking-[0.16em] text-primary">
-            <span className="h-1 w-1 rounded-full bg-primary" />
-            {value}
-          </span>
-        ) : (
-          <span
-            className={`block text-sm leading-relaxed ${
-              muted ? "text-muted-foreground" : "text-foreground"
-            } ${mono ? "font-mono text-[13px]" : ""}`}
-          >
-            {value}
-          </span>
-        )}
-      </dd>
+    <div className="rounded-[8px] border border-[#dfe3e7] bg-white px-6 py-12 text-center shadow-[0_18px_50px_-42px_rgba(9,20,38,0.35)]">
+      <p className="text-sm font-extrabold text-[#091426]">{title}</p>
+      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#505f76]">{detail}</p>
+      {actionLabel && onAction ? (
+        <button
+          type="button"
+          onClick={onAction}
+          className="mt-5 rounded-[4px] bg-[#091426] px-5 py-2.5 text-xs font-bold uppercase tracking-[0.16em] text-white"
+        >
+          {actionLabel}
+        </button>
+      ) : null}
     </div>
+  );
+}
+
+function ChecklistRow({ done, label }: { done?: boolean; label: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      {done ? (
+        <CheckCircle2 className="h-4.5 w-4.5 text-[#34d399]" strokeWidth={1.8} />
+      ) : (
+        <span className="h-4 w-4 rounded-full border border-white/40" />
+      )}
+      <span className={`text-sm font-semibold ${done ? "text-white" : "text-white/62"}`}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function Sparkline() {
+  return (
+    <span className="relative h-6 w-16 overflow-hidden rounded-full bg-[#f6fafe]">
+      <span className="absolute left-0 top-1/2 h-px w-full bg-[#091426]/16" />
+      <span className="absolute left-2 top-[11px] h-px w-12 rotate-[-2deg] bg-[#091426]/24" />
+    </span>
   );
 }
 
 function RedirectingScreen() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="rounded-3xl border border-border bg-surface-elevated px-6 py-5 text-center shadow-elevated">
-        <p className="text-sm font-medium text-foreground">Taking you to your workspace…</p>
-        <p className="mt-2 text-xs text-muted-foreground">
-          Each role opens its own portal — teaching, groups, or the admin console.
+    <div className="flex min-h-screen items-center justify-center bg-[#f6fafe] px-4">
+      <div className="rounded-[8px] border border-[#dfe3e7] bg-white px-6 py-5 text-center shadow-[0_18px_50px_-42px_rgba(9,20,38,0.35)]">
+        <p className="text-sm font-semibold text-[#091426]">Taking you to your workspace...</p>
+        <p className="mt-2 text-xs text-[#505f76]">
+          Each role opens its own portal: teaching, groups, or the admin console.
         </p>
       </div>
     </div>
   );
 }
 
-function StateCard({ title, detail }: { title: string; detail: string }) {
-  return (
-    <div className="rounded-2xl hairline bg-surface-elevated px-6 py-10 text-center">
-      <p className="text-sm font-semibold text-foreground">{title}</p>
-      <p className="mt-2 text-sm text-muted-foreground leading-relaxed max-w-md mx-auto">
-        {detail}
-      </p>
-    </div>
-  );
+function formatHours(hours: number) {
+  return hours % 1 === 0 ? String(hours) : hours.toFixed(1);
+}
+
+function formatLanguage(languageCode: string) {
+  const normalized = languageCode.toLowerCase();
+  if (normalized === "en") return "English";
+  if (normalized === "fr") return "French";
+  if (normalized === "ar" || normalized === "darija") return "Darija";
+  return languageCode.toUpperCase();
 }
