@@ -3,6 +3,7 @@ package com.edulife.auth;
 import com.edulife.auth.config.StaffRoleProperties;
 import com.edulife.auth.dto.AuthSyncResponse;
 import com.edulife.auth.service.AuthSyncService;
+import com.edulife.profiles.repository.ProfileRepository;
 import com.edulife.security.FirebaseAuthentication;
 import com.edulife.users.entity.User;
 import com.edulife.users.model.UserRole;
@@ -28,8 +29,9 @@ class AuthSyncServiceTest {
     private static final UUID USER_ID = UUID.fromString("bbbbbbbb-2222-2222-2222-bbbbbbbbbbbb");
 
     private final UserRepository userRepository = mock(UserRepository.class);
+    private final ProfileRepository profileRepository = mock(ProfileRepository.class);
     private final StaffRoleProperties staffRoleProperties = mock(StaffRoleProperties.class);
-    private final AuthSyncService service = new AuthSyncService(userRepository, staffRoleProperties);
+    private final AuthSyncService service = new AuthSyncService(userRepository, profileRepository, staffRoleProperties);
 
     @AfterEach
     void clearSecurityContext() {

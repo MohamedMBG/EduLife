@@ -17,6 +17,8 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
     // never has to filter unsafe catalog data in memory after fetching it.
     Page<Course> findAllByStatus(CourseStatus status, Pageable pageable);
 
+    List<Course> findAllByStatus(CourseStatus status);
+
     // Level filtering stays in the repository query so pagination counts remain correct.
     Page<Course> findAllByStatusAndLevel(CourseStatus status, String level, Pageable pageable);
 

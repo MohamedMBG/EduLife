@@ -49,10 +49,10 @@ edulife:
     storage-dir: ${EDULIFE_CERTIFICATES_STORAGE_DIR:storage/certificates}
     public-base-url: ${EDULIFE_CERTIFICATES_PUBLIC_BASE_URL:http://localhost:8080/api/v1/certificates}
   advisor:
-    provider: ${EDULIFE_ADVISOR_PROVIDER:stub}
-    model: ${EDULIFE_ADVISOR_MODEL:none}
-    groq-api-key: ${GROQ_API_KEY:}
-    max-tokens: ${ADVISOR_MAX_TOKENS:600}
+    provider: ${EDULIFE_ADVISOR_PROVIDER:groq}
+    model: ${EDULIFE_ADVISOR_MODEL:llama-3.3-70b-versatile}
+    groq-api-key: ${GROQ_API_KEY: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}
+    max-tokens: ${ADVISOR_MAX_TOKENS:1024}
     rate-limit-per-hour: ${ADVISOR_RATE_LIMIT_PER_HOUR:10}
   staff:
     # Server-trusted staff role assignment by verified Firebase email. Re-asserted on every

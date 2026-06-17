@@ -13,11 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -36,7 +33,7 @@ class CourseContextBuilderTest {
 
     @Test
     void emptyWhenNoPublishedCourses() {
-        given(courseRepository.countByStatus(CourseStatus.PUBLISHED)).willReturn(0L);
+        given(courseRepository.findAllByStatus(CourseStatus.PUBLISHED)).willReturn(List.of());
 
         List<CourseContextDto> result = builder.build("learn java");
 
@@ -45,21 +42,19 @@ class CourseContextBuilderTest {
 
     @Test
     void queriesOnlyPublishedStatus() {
-        given(courseRepository.countByStatus(CourseStatus.PUBLISHED)).willReturn(1L);
-        given(courseRepository.findAllByStatus(eq(CourseStatus.PUBLISHED), any()))
-                .willReturn(new PageImpl<>(List.of(publishedCourse("Java Basics", "Intro", "BEGINNER"))));
+        given(courseRepository.findAllByStatus(CourseStatus.PUBLISHED))
+                .willReturn(List.of(publishedCourse("Java Basics", "Intro", "BEGINNER")));
 
         builder.build("java");
 
-        verify(courseRepository).findAllByStatus(eq(CourseStatus.PUBLISHED), any());
+        verify(courseRepository).findAllByStatus(CourseStatus.PUBLISHED);
     }
 
     @Test
     void projectsFieldsCorrectly() {
         Course course = publishedCourse("Python ML", "Machine learning with Python", "ADVANCED");
-        given(courseRepository.countByStatus(CourseStatus.PUBLISHED)).willReturn(1L);
-        given(courseRepository.findAllByStatus(eq(CourseStatus.PUBLISHED), any()))
-                .willReturn(new PageImpl<>(List.of(course)));
+        given(courseRepository.findAllByStatus(CourseStatus.PUBLISHED))
+                .willReturn(List.of(course));
 
         List<CourseContextDto> result = builder.build("python");
 
@@ -74,68 +69,16 @@ class CourseContextBuilderTest {
     }
 
     @Test
-    void returnsUpToCapWhenUnderLimit() {
-        List<Course> courses = new ArrayList<>();
-        for (int i = 0; i < 30; i++) {
-            courses.add(publishedCourse("Course " + i, "Description " + i, "BEGINNER"));
-        }
-        given(courseRepository.countByStatus(CourseStatus.PUBLISHED)).willReturn(30L);
-        given(courseRepository.findAllByStatus(eq(CourseStatus.PUBLISHED), any()))
-                .willReturn(new PageImpl<>(courses));
-
-        List<CourseContextDto> result = builder.build("learn");
-
-        assertThat(result).hasSize(30);
-    }
-
-    @Test
-    void capsAtFiftyWhenOverLimit() {
+    void returnsAllPublishedCourses() {
         List<Course> courses = new ArrayList<>();
         for (int i = 0; i < 100; i++) {
             courses.add(publishedCourse("Course " + i, "Description " + i, "BEGINNER"));
         }
-        given(courseRepository.countByStatus(CourseStatus.PUBLISHED)).willReturn(100L);
-        given(courseRepository.findAllByStatus(eq(CourseStatus.PUBLISHED), any()))
-                .willReturn(new PageImpl<>(courses));
+        given(courseRepository.findAllByStatus(CourseStatus.PUBLISHED)).willReturn(courses);
 
         List<CourseContextDto> result = builder.build("learn");
 
-        assertThat(result).hasSize(CourseContextBuilder.CATALOG_CAP);
-    }
-
-    @Test
-    void keywordFilteringRanksMatchingCoursesFirst() {
-        List<Course> courses = new ArrayList<>();
-        for (int i = 0; i < 80; i++) {
-            courses.add(publishedCourse("Generic Course " + i, "A course about general topics", "BEGINNER"));
-        }
-        for (int i = 0; i < 20; i++) {
-            courses.add(publishedCourse("Python Course " + i, "Learn Python programming", "INTERMEDIATE"));
-        }
-        given(courseRepository.countByStatus(CourseStatus.PUBLISHED)).willReturn(100L);
-        given(courseRepository.findAllByStatus(eq(CourseStatus.PUBLISHED), any()))
-                .willReturn(new PageImpl<>(courses));
-
-        List<CourseContextDto> result = builder.build("python programming");
-
-        assertThat(result).hasSize(CourseContextBuilder.CATALOG_CAP);
-        long pythonCount = result.stream().filter(c -> c.title().contains("Python")).count();
-        assertThat(pythonCount).isEqualTo(20);
-    }
-
-    @Test
-    void keywordFilteringFallsBackToNaturalOrderWhenNoMatch() {
-        List<Course> courses = new ArrayList<>();
-        for (int i = 0; i < 100; i++) {
-            courses.add(publishedCourse("Course " + i, "Description " + i, "BEGINNER"));
-        }
-        given(courseRepository.countByStatus(CourseStatus.PUBLISHED)).willReturn(100L);
-        given(courseRepository.findAllByStatus(eq(CourseStatus.PUBLISHED), any()))
-                .willReturn(new PageImpl<>(courses));
-
-        List<CourseContextDto> result = builder.build("xyzzy");
-
-        assertThat(result).hasSize(CourseContextBuilder.CATALOG_CAP);
+        assertThat(result).hasSize(100);
     }
 
     private Course publishedCourse(String title, String description, String level) {
