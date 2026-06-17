@@ -12,5 +12,9 @@ export default defineConfig({
   cloudflare: false,
   tanstackStart: {
     server: { entry: "server" },
+    // SPA mode: prerender a hydratable shell to dist/client/index.html so the
+    // app boots on a static host (Vercel) without an SSR server. TanStack
+    // Start is SSR-first; serving an empty-body HTML breaks hydrateRoot.
+    spa: { enabled: true },
   },
 });
