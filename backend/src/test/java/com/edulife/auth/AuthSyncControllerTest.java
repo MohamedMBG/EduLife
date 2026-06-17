@@ -16,6 +16,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -47,18 +48,36 @@ class AuthSyncControllerTest {
     @Autowired
     private GroupRepository groupRepository;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     @MockBean
     private FirebaseAuth firebaseAuth;
 
+    private static final String SEED_UID = "seed-instructor-edulife";
+
     @BeforeEach
     void cleanDatabase() {
-        // Auth sync tests assert user creation from a clean table. Group rows reference users,
-        // so test cleanup must remove group-owned data before deleting user identities.
         groupJoinRequestRepository.deleteAll();
         groupCourseRepository.deleteAll();
         groupMemberRepository.deleteAll();
         groupRepository.deleteAll();
-        userRepository.deleteAll();
+        // Non-CASCADE FKs referencing users — clean before deleting test users.
+        jdbcTemplate.execute("DELETE FROM enrollments WHERE user_id IN "
+                + "(SELECT id FROM users WHERE firebase_uid IS DISTINCT FROM '" + SEED_UID + "')");
+        jdbcTemplate.execute("DELETE FROM teacher_requests WHERE user_id IN "
+                + "(SELECT id FROM users WHERE firebase_uid IS DISTINCT FROM '" + SEED_UID + "')");
+        jdbcTemplate.execute("DELETE FROM advisor_log WHERE user_id IN "
+                + "(SELECT id FROM users WHERE firebase_uid IS DISTINCT FROM '" + SEED_UID + "')");
+        // Delete only test-created users. The Flyway V24 seed instructor is referenced
+        // by courses.created_by_user_id and must survive.
+        jdbcTemplate.execute("DELETE FROM users WHERE firebase_uid IS DISTINCT FROM '" + SEED_UID + "'");
+    }
+
+    private long testUserCount() {
+        return userRepository.findAll().stream()
+                .filter(u -> !SEED_UID.equals(u.getFirebaseUid()))
+                .count();
     }
 
     @Test
@@ -104,7 +123,7 @@ class AuthSyncControllerTest {
                 .getContentAsString();
 
         assert firstResponse.equals(secondResponse);
-        assert userRepository.findAll().size() == 1;
+        assert testUserCount() == 1;
     }
 
     @Test
@@ -235,7 +254,7 @@ class AuthSyncControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.role").value("GROUP_ADMIN"));
 
-        assert userRepository.findAll().size() == 1;
+        assert testUserCount() == 1;
     }
 
     @Test
