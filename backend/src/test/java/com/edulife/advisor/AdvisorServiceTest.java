@@ -11,6 +11,8 @@ import com.edulife.advisor.entity.AdvisorLog;
 import com.edulife.advisor.repository.AdvisorLogRepository;
 import com.edulife.advisor.service.AdvisorService;
 import com.edulife.advisor.service.CourseContextBuilder;
+import com.edulife.advisor.service.DeterministicRanker;
+import com.edulife.advisor.service.IntentExtractor;
 import com.edulife.security.FirebaseAuthentication;
 import com.edulife.users.entity.User;
 import com.edulife.users.repository.UserRepository;
@@ -25,7 +27,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -57,10 +58,14 @@ class AdvisorServiceTest {
     void setUp() {
         AdvisorProperties props = new AdvisorProperties();
         props.setProvider("groq");
-        props.setModel("llama-3.1-8b-instant");
+        props.setModel("llama-3.3-70b-versatile");
+
+        IntentExtractor intentExtractor = new IntentExtractor();
+        DeterministicRanker deterministicRanker = new DeterministicRanker();
 
         service = new AdvisorService(
                 userRepository, advisorLogRepository, courseContextBuilder,
+                intentExtractor, deterministicRanker,
                 llmClient, props, new ObjectMapper()
         );
 
@@ -73,16 +78,14 @@ class AdvisorServiceTest {
         SecurityContextHolder.clearContext();
     }
 
-    // ── Recommendations ──────────────────────────────────────────────────────
-
     @Test
     void validLlmResultReturnsRecommendations() {
         List<CourseContextDto> catalog = catalogWith(COURSE_A, COURSE_B);
         given(courseContextBuilder.build(anyString())).willReturn(catalog);
         given(llmClient.recommend(anyString(), anyList())).willReturn(
                 new AdvisorLlmResult("Here are your picks", List.of(
-                        new AdvisorLlmResult.Pick(COURSE_A.toString(), "Great for beginners"),
-                        new AdvisorLlmResult.Pick(COURSE_B.toString(), "Covers the fundamentals")
+                        new AdvisorLlmResult.Pick(COURSE_A.toString(), "Great for beginners", 0.9, List.of("Java")),
+                        new AdvisorLlmResult.Pick(COURSE_B.toString(), "Covers the fundamentals", 0.7, List.of("OOP"))
                 ))
         );
 
@@ -92,6 +95,7 @@ class AdvisorServiceTest {
         assertThat(response.recommendations()).hasSize(2);
         assertThat(response.recommendations().get(0).courseId()).isEqualTo(COURSE_A);
         assertThat(response.recommendations().get(1).courseId()).isEqualTo(COURSE_B);
+        assertThat(response.source()).isEqualTo("groq");
     }
 
     @Test
@@ -100,8 +104,8 @@ class AdvisorServiceTest {
         given(courseContextBuilder.build(anyString())).willReturn(catalog);
         given(llmClient.recommend(anyString(), anyList())).willReturn(
                 new AdvisorLlmResult("Result", List.of(
-                        new AdvisorLlmResult.Pick(COURSE_A.toString(), "Valid"),
-                        new AdvisorLlmResult.Pick(FAKE_ID.toString(), "Invented")
+                        new AdvisorLlmResult.Pick(COURSE_A.toString(), "Valid", 0.9, List.of()),
+                        new AdvisorLlmResult.Pick(FAKE_ID.toString(), "Invented", 0.5, List.of())
                 ))
         );
 
@@ -118,9 +122,9 @@ class AdvisorServiceTest {
         given(courseContextBuilder.build(anyString())).willReturn(catalog);
         given(llmClient.recommend(anyString(), anyList())).willReturn(
                 new AdvisorLlmResult("Many picks", List.of(
-                        new AdvisorLlmResult.Pick(COURSE_A.toString(), "First"),
-                        new AdvisorLlmResult.Pick(COURSE_B.toString(), "Second"),
-                        new AdvisorLlmResult.Pick(courseC.toString(), "Third")
+                        new AdvisorLlmResult.Pick(COURSE_A.toString(), "First", 0.9, List.of()),
+                        new AdvisorLlmResult.Pick(COURSE_B.toString(), "Second", 0.8, List.of()),
+                        new AdvisorLlmResult.Pick(courseC.toString(), "Third", 0.6, List.of())
                 ))
         );
 
@@ -130,7 +134,7 @@ class AdvisorServiceTest {
     }
 
     @Test
-    void invalidJsonFromLlmTriggersFallback() {
+    void invalidJsonFromLlmTriggersDeterministicFallback() {
         List<CourseContextDto> catalog = catalogWith(COURSE_A);
         given(courseContextBuilder.build(anyString())).willReturn(catalog);
         given(llmClient.recommend(anyString(), anyList()))
@@ -138,12 +142,12 @@ class AdvisorServiceTest {
 
         AdvisorResponse response = service.recommend(new AdvisorRequest("goal"));
 
-        assertThat(response.recommendations()).isEmpty();
-        assertThat(response.message()).isNotBlank();
+        assertThat(response.recommendations()).isNotEmpty();
+        assertThat(response.source()).isEqualTo("deterministic-fallback");
     }
 
     @Test
-    void llmExceptionTriggersFallback() {
+    void llmExceptionTriggersDeterministicFallback() {
         List<CourseContextDto> catalog = catalogWith(COURSE_A);
         given(courseContextBuilder.build(anyString())).willReturn(catalog);
         given(llmClient.recommend(anyString(), anyList()))
@@ -151,8 +155,8 @@ class AdvisorServiceTest {
 
         AdvisorResponse response = service.recommend(new AdvisorRequest("goal"));
 
-        assertThat(response.recommendations()).isEmpty();
-        assertThat(response.message()).isNotBlank();
+        assertThat(response.recommendations()).isNotEmpty();
+        assertThat(response.source()).isEqualTo("deterministic-fallback");
     }
 
     @Test
@@ -171,16 +175,14 @@ class AdvisorServiceTest {
         given(courseContextBuilder.build(anyString())).willReturn(catalog);
         given(llmClient.recommend(anyString(), anyList())).willReturn(
                 new AdvisorLlmResult("Result", List.of(
-                        new AdvisorLlmResult.Pick("not-a-valid-uuid", "some reason")
+                        new AdvisorLlmResult.Pick("not-a-valid-uuid", "some reason", 0.5, List.of())
                 ))
         );
 
         AdvisorResponse response = service.recommend(new AdvisorRequest("goal"));
 
-        assertThat(response.recommendations()).isEmpty();
+        assertThat(response.source()).isEqualTo("deterministic-fallback");
     }
-
-    // ── Audit logging ─────────────────────────────────────────────────────────
 
     @Test
     void eachRequestIsLogged() {
@@ -195,34 +197,46 @@ class AdvisorServiceTest {
         assertThat(log.getUserId()).isEqualTo(USER_ID);
         assertThat(log.getGoal()).isEqualTo("I want to learn Python");
         assertThat(log.getProvider()).isEqualTo("groq");
-        assertThat(log.getModel()).isEqualTo("llama-3.1-8b-instant");
+        assertThat(log.getModel()).isEqualTo("llama-3.3-70b-versatile");
         assertThat(log.getLatencyMs()).isGreaterThanOrEqualTo(0);
         assertThat(log.getResponseJson()).isNotBlank();
     }
 
-    // ── Score field ───────────────────────────────────────────────────────────
-
     @Test
-    void recommendationScoreDefaultsToZero() {
+    void recommendationScoreReflectsLlmConfidence() {
         List<CourseContextDto> catalog = catalogWith(COURSE_A);
         given(courseContextBuilder.build(anyString())).willReturn(catalog);
         given(llmClient.recommend(anyString(), anyList())).willReturn(
                 new AdvisorLlmResult("ok", List.of(
-                        new AdvisorLlmResult.Pick(COURSE_A.toString(), "good fit")
+                        new AdvisorLlmResult.Pick(COURSE_A.toString(), "good fit", 0.92, List.of("Android"))
                 ))
         );
 
         AdvisorResponse response = service.recommend(new AdvisorRequest("goal"));
 
         AdvisorRecommendationDto rec = response.recommendations().get(0);
-        assertThat(rec.score()).isEqualTo(0.0);
+        assertThat(rec.score()).isEqualTo(0.92);
+        assertThat(rec.matchedSkills()).contains("Android");
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    @Test
+    void responseIncludesSourceField() {
+        List<CourseContextDto> catalog = catalogWith(COURSE_A);
+        given(courseContextBuilder.build(anyString())).willReturn(catalog);
+        given(llmClient.recommend(anyString(), anyList())).willReturn(
+                new AdvisorLlmResult("ok", List.of(
+                        new AdvisorLlmResult.Pick(COURSE_A.toString(), "match", 0.85, List.of())
+                ))
+        );
+
+        AdvisorResponse response = service.recommend(new AdvisorRequest("goal"));
+        assertThat(response.source()).isEqualTo("groq");
+    }
 
     private List<CourseContextDto> catalogWith(UUID... ids) {
         return java.util.Arrays.stream(ids)
-                .map(id -> new CourseContextDto(id, "Course " + id, "Desc", "BEGINNER", "en", List.of()))
+                .map(id -> new CourseContextDto(id, "Course " + id, "Desc", "Full description",
+                        "BEGINNER", "en", List.of(), List.of()))
                 .toList();
     }
 

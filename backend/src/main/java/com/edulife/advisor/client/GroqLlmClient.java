@@ -5,6 +5,7 @@ import com.edulife.advisor.dto.AdvisorLlmResult;
 import com.edulife.advisor.dto.CourseContextDto;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.MediaType;
@@ -12,42 +13,39 @@ import org.springframework.web.client.RestClient;
 
 public class GroqLlmClient implements LlmClient {
 
-    private static final String GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-
-    // Locked system prompt — never altered at runtime
     private static final String SYSTEM_PROMPT = """
-            You are EduLife course advisor.
+            You are the EduLife course advisor. Your job is to pick the single best course
+            from the SHORTLIST below for the learner's stated goal.
 
-            You only answer about course recommendations from the provided EduLife course catalog.
+            CRITICAL RULES — read carefully:
+            1. You MUST choose exactly one courseId from the SHORTLIST. Never invent a courseId.
+            2. PRIORITIZE DIRECT DOMAIN MATCH over general academic relevance.
+               - If the learner asks about "Android apps" or "mobile apps", pick an Android/mobile
+                 development course, NOT a math or science course.
+               - If the learner asks about "web development", pick a web/frontend/backend course.
+               - If the learner asks about "Bac math", pick a math/bac course.
+               - A course is relevant ONLY if its topic directly addresses the learner's goal.
+            3. Do NOT pick a course just because it is "generally useful" or "foundational".
+               A math course is NOT relevant to someone who wants to build Android apps,
+               even if math is generally useful in programming.
+            4. If no course in the shortlist is a good match, return empty picks.
+            5. Only answer about course recommendations. Refuse anything else.
 
-            You must refuse anything unrelated, including:
-            - general chat
-            - code help
-            - personal advice
-            - politics
-            - medical questions
-            - legal questions
-            - anything outside EduLife course guidance
-
-            Output strict JSON only:
-
+            OUTPUT FORMAT — strict JSON only, no markdown fences:
             {
-              "message": "<short reason in user language>",
+              "message": "<1-2 sentence explanation in the learner's language>",
               "picks": [
                 {
-                  "courseId": "<id from catalog>",
-                  "reason": "<one line>"
+                  "courseId": "<exact id from shortlist>",
+                  "reason": "<why this course matches the goal>",
+                  "confidence": <0.0 to 1.0>,
+                  "matchedSkills": ["skill1", "skill2"]
                 }
               ]
             }
 
-            Rules:
-            - Max 2 picks.
-            - Never invent courseIds.
-            - Only use courseIds from the provided catalog.
-            - If no good match exists, return empty picks.
-            - Do not recommend unpublished courses.
-            - Do not answer questions outside EduLife course recommendations.
+            Max 2 picks. First pick = best match. Second pick = alternative only if close.
+            confidence: 0.9+ = exact domain match, 0.7-0.9 = related, below 0.5 = weak match.
             """;
 
     private final RestClient restClient;
@@ -55,7 +53,9 @@ public class GroqLlmClient implements LlmClient {
     private final AdvisorProperties properties;
 
     public GroqLlmClient(RestClient.Builder builder, ObjectMapper objectMapper, AdvisorProperties properties) {
-        this.restClient = builder.build();
+        this.restClient = builder
+                .defaultHeader("Authorization", "Bearer " + properties.getGroqApiKey())
+                .build();
         this.objectMapper = objectMapper;
         this.properties = properties;
     }
@@ -63,7 +63,8 @@ public class GroqLlmClient implements LlmClient {
     @Override
     public AdvisorLlmResult recommend(String goal, List<CourseContextDto> catalog) {
         String catalogJson = serializeCatalog(catalog);
-        String userMessage = "USER GOAL:\n" + goal + "\n\nCATALOG:\n" + catalogJson;
+        String userMessage = "LEARNER GOAL:\n" + goal
+                + "\n\nSHORTLIST (choose ONLY from these courseIds):\n" + catalogJson;
 
         Map<String, Object> requestBody = Map.of(
                 "model", properties.getModel(),
@@ -72,12 +73,12 @@ public class GroqLlmClient implements LlmClient {
                         Map.of("role", "user", "content", userMessage)
                 ),
                 "max_tokens", properties.getMaxTokens(),
-                "temperature", 0.3
+                "temperature", 0.2,
+                "response_format", Map.of("type", "json_object")
         );
 
         String raw = restClient.post()
-                .uri(GROQ_URL)
-                .header("Authorization", "Bearer " + properties.getGroqApiKey())
+                .uri(properties.getGroqBaseUrl() + "/chat/completions")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(requestBody)
                 .retrieve()

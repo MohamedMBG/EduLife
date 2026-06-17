@@ -9,5 +9,14 @@ public record AdvisorLlmResult(
         List<Pick> picks
 ) {
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record Pick(String courseId, String reason) {}
+    public record Pick(
+            String courseId,
+            String reason,
+            Double confidence,
+            List<String> matchedSkills
+    ) {
+        public Pick(String courseId, String reason) {
+            this(courseId, reason, null, null);
+        }
+    }
 }

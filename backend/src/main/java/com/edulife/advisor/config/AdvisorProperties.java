@@ -6,10 +6,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class AdvisorProperties {
 
     private String provider = "stub";
-    private String model = "none";
+    private String model = "llama-3.3-70b-versatile";
     private String groqApiKey = "";
-    private int maxTokens = 600;
-    // TODO: enforce via Bucket4j filter on /api/v1/advisor/recommend
+    private String groqBaseUrl = "https://api.groq.com/openai/v1";
+    private int maxTokens = 1024;
     private int rateLimitPerHour = 10;
 
     public String getProvider() { return provider; }
@@ -20,6 +20,9 @@ public class AdvisorProperties {
 
     public String getGroqApiKey() { return groqApiKey; }
     public void setGroqApiKey(String groqApiKey) { this.groqApiKey = groqApiKey; }
+
+    public String getGroqBaseUrl() { return groqBaseUrl; }
+    public void setGroqBaseUrl(String groqBaseUrl) { this.groqBaseUrl = groqBaseUrl; }
 
     public int getMaxTokens() { return maxTokens; }
     public void setMaxTokens(int maxTokens) { this.maxTokens = maxTokens; }

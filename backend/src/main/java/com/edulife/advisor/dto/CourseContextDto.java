@@ -7,7 +7,9 @@ public record CourseContextDto(
         UUID id,
         String title,
         String shortDescription,
+        String description,
         String level,
         String languageCode,
-        List<String> tags
+        List<String> tags,
+        List<String> lessonTitles
 ) {}
