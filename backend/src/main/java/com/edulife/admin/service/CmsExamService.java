@@ -131,6 +131,74 @@ public class CmsExamService {
                 exam.getPassScore(), exam.getTimeLimitMinutes(), questionDtos);
     }
 
+    @Transactional
+    public ExamAdminDto updateExam(UUID courseId, CreateExamRequest request) {
+        User currentUser = resolveCurrentUser();
+        loadCourseForMutation(courseId, currentUser);
+
+        Exam exam = examRepository.findByCourseId(courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No exam found for this course"));
+
+        for (CreateExamRequest.QuestionRequest qr : request.questions()) {
+            long correctCount = qr.choices().stream().filter(CreateExamRequest.ChoiceRequest::correct).count();
+            if (correctCount != 1) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Question '" + qr.questionText() + "' must have exactly one correct choice");
+            }
+        }
+
+        List<ExamQuestion> oldQuestions = questionRepository.findAllByExamIdOrderByOrderIndexAsc(exam.getId());
+        List<UUID> oldQuestionIds = oldQuestions.stream().map(ExamQuestion::getId).toList();
+        if (!oldQuestionIds.isEmpty()) {
+            choiceRepository.deleteAllByQuestionIdIn(oldQuestionIds);
+        }
+        questionRepository.deleteAllByExamId(exam.getId());
+
+        exam.setTitle(request.title());
+        exam.setPassScore(request.passScore());
+        exam.setTimeLimitMinutes(request.timeLimitMinutes());
+        examRepository.save(exam);
+
+        List<ExamAdminDto.QuestionDto> questionDtos = new ArrayList<>();
+
+        for (CreateExamRequest.QuestionRequest qr : request.questions()) {
+            ExamQuestion question = questionRepository.save(
+                    new ExamQuestion(exam.getId(), qr.questionText(), qr.orderIndex())
+            );
+
+            List<ExamAdminDto.ChoiceDto> choiceDtos = new ArrayList<>();
+            for (CreateExamRequest.ChoiceRequest cr : qr.choices()) {
+                ExamChoice choice = choiceRepository.save(
+                        new ExamChoice(question.getId(), cr.choiceText(), cr.correct())
+                );
+                choiceDtos.add(new ExamAdminDto.ChoiceDto(choice.getId(), choice.getChoiceText(), choice.isCorrect()));
+            }
+
+            questionDtos.add(new ExamAdminDto.QuestionDto(
+                    question.getId(), question.getQuestionText(), question.getOrderIndex(), choiceDtos));
+        }
+
+        return new ExamAdminDto(exam.getId(), exam.getCourseId(), exam.getTitle(),
+                exam.getPassScore(), exam.getTimeLimitMinutes(), questionDtos);
+    }
+
+    @Transactional
+    public void deleteExam(UUID courseId) {
+        User currentUser = resolveCurrentUser();
+        loadCourseForMutation(courseId, currentUser);
+
+        Exam exam = examRepository.findByCourseId(courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No exam found for this course"));
+
+        List<ExamQuestion> questions = questionRepository.findAllByExamIdOrderByOrderIndexAsc(exam.getId());
+        List<UUID> questionIds = questions.stream().map(ExamQuestion::getId).toList();
+        if (!questionIds.isEmpty()) {
+            choiceRepository.deleteAllByQuestionIdIn(questionIds);
+        }
+        questionRepository.deleteAllByExamId(exam.getId());
+        examRepository.delete(exam);
+    }
+
     private void loadCourseForRead(UUID courseId, User currentUser) {
         courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));

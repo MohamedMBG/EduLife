@@ -1,5 +1,6 @@
 package com.baghdad.edulife.features.exams.ui;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -41,12 +42,17 @@ public class CmsExamBuilderFragment extends Fragment {
     private TextView existingExamPassScore;
     private TextView existingExamTimeLimit;
     private LinearLayout existingExamQuestionsContainer;
+    private View existingExamActions;
+    private TextView examEditButton;
+    private TextView examDeleteButton;
     private View builderSection;
     private RecyclerView questionsRecycler;
     private EditText titleInput;
     private EditText passScoreInput;
     private EditText timeLimitInput;
+    private View bottomActions;
     private TextView saveButton;
+    private TextView cancelButton;
 
     public CmsExamBuilderFragment() {
         super(R.layout.fragment_cms_exam_builder);
@@ -60,7 +66,6 @@ public class CmsExamBuilderFragment extends Fragment {
 
         Bundle args = getArguments();
         courseId = args != null ? args.getString("courseId", "") : "";
-        String courseTitle = args != null ? args.getString("courseTitle", "") : "";
 
         bindViews(view);
         setupAdapter();
@@ -85,14 +90,32 @@ public class CmsExamBuilderFragment extends Fragment {
         existingExamPassScore = view.findViewById(R.id.existingExamPassScore);
         existingExamTimeLimit = view.findViewById(R.id.existingExamTimeLimit);
         existingExamQuestionsContainer = view.findViewById(R.id.existingExamQuestionsContainer);
+        existingExamActions = view.findViewById(R.id.existingExamActions);
+        examEditButton = view.findViewById(R.id.examEditButton);
+        examDeleteButton = view.findViewById(R.id.examDeleteButton);
         builderSection = view.findViewById(R.id.builderSection);
         questionsRecycler = view.findViewById(R.id.examQuestionsRecycler);
         titleInput = view.findViewById(R.id.examTitleInput);
         passScoreInput = view.findViewById(R.id.examPassScoreInput);
         timeLimitInput = view.findViewById(R.id.examTimeLimitInput);
+        bottomActions = view.findViewById(R.id.examBottomActions);
         saveButton = view.findViewById(R.id.examSaveButton);
+        cancelButton = view.findViewById(R.id.examCancelButton);
 
-        saveButton.setOnClickListener(v -> viewModel.saveExam(courseId));
+        saveButton.setOnClickListener(v -> {
+            Boolean editing = viewModel.getIsEditMode().getValue();
+            if (editing != null && editing) {
+                viewModel.saveChanges(courseId);
+            } else {
+                viewModel.saveExam(courseId);
+            }
+        });
+
+        cancelButton.setOnClickListener(v -> viewModel.cancelEditMode());
+
+        examEditButton.setOnClickListener(v -> viewModel.enterEditMode());
+
+        examDeleteButton.setOnClickListener(v -> showDeleteConfirmation());
 
         view.findViewById(R.id.examAddQuestionButton).setOnClickListener(v -> {
             viewModel.addQuestion();
@@ -165,7 +188,7 @@ public class CmsExamBuilderFragment extends Fragment {
                 stateText.setText(R.string.teacher_loading);
                 retryButton.setVisibility(View.GONE);
                 scrollView.setVisibility(View.GONE);
-                saveButton.setVisibility(View.GONE);
+                bottomActions.setVisibility(View.GONE);
             }
         });
 
@@ -176,7 +199,7 @@ public class CmsExamBuilderFragment extends Fragment {
                 stateText.setText(error);
                 retryButton.setVisibility(viewModel.isAccessDenied() ? View.GONE : View.VISIBLE);
                 scrollView.setVisibility(View.GONE);
-                saveButton.setVisibility(View.GONE);
+                bottomActions.setVisibility(View.GONE);
             }
         });
 
@@ -188,19 +211,62 @@ public class CmsExamBuilderFragment extends Fragment {
 
         viewModel.getShowBuilder().observe(getViewLifecycleOwner(), show -> {
             if (show != null && show) {
+                Boolean editing = viewModel.getIsEditMode().getValue();
+                boolean isEdit = editing != null && editing;
+
                 stateCard.setVisibility(View.GONE);
                 scrollView.setVisibility(View.VISIBLE);
                 existingExamSection.setVisibility(View.GONE);
                 builderSection.setVisibility(View.VISIBLE);
-                saveButton.setVisibility(View.VISIBLE);
+                bottomActions.setVisibility(View.VISIBLE);
+
+                if (isEdit) {
+                    cancelButton.setVisibility(View.VISIBLE);
+                    saveButton.setText(R.string.cms_exam_save_changes);
+                    populateBuilderFromDrafts();
+                } else {
+                    cancelButton.setVisibility(View.GONE);
+                    saveButton.setText(R.string.cms_exam_save);
+                }
+            }
+        });
+
+        viewModel.getIsEditMode().observe(getViewLifecycleOwner(), editing -> {
+            if (editing != null && !editing) {
+                CmsExamResponse exam = viewModel.getExistingExam().getValue();
+                if (exam != null) {
+                    showExistingExam(exam);
+                }
             }
         });
 
         viewModel.getSaving().observe(getViewLifecycleOwner(), saving -> {
             if (saving != null) {
                 saveButton.setEnabled(!saving);
-                saveButton.setText(saving ? R.string.cms_exam_saving : R.string.cms_exam_save);
+                Boolean editing = viewModel.getIsEditMode().getValue();
+                boolean isEdit = editing != null && editing;
+                saveButton.setText(saving
+                        ? R.string.cms_exam_saving
+                        : (isEdit ? R.string.cms_exam_save_changes : R.string.cms_exam_save));
                 saveButton.setAlpha(saving ? 0.6f : 1.0f);
+            }
+        });
+
+        viewModel.getDeleting().observe(getViewLifecycleOwner(), deleting -> {
+            if (deleting != null) {
+                examDeleteButton.setEnabled(!deleting);
+                examDeleteButton.setText(deleting
+                        ? R.string.cms_exam_deleting
+                        : R.string.cms_exam_delete);
+                examDeleteButton.setAlpha(deleting ? 0.6f : 1.0f);
+            }
+        });
+
+        viewModel.getExamDeleted().observe(getViewLifecycleOwner(), deleted -> {
+            if (deleted != null && deleted) {
+                if (isAdded()) {
+                    Navigation.findNavController(requireView()).navigateUp();
+                }
             }
         });
 
@@ -217,7 +283,8 @@ public class CmsExamBuilderFragment extends Fragment {
         scrollView.setVisibility(View.VISIBLE);
         existingExamSection.setVisibility(View.VISIBLE);
         builderSection.setVisibility(View.GONE);
-        saveButton.setVisibility(View.GONE);
+        bottomActions.setVisibility(View.GONE);
+        existingExamActions.setVisibility(View.VISIBLE);
 
         existingExamTitle.setText(exam.title);
         existingExamPassScore.setText(
@@ -237,6 +304,24 @@ public class CmsExamBuilderFragment extends Fragment {
                 addExistingQuestionView(q, i + 1);
             }
         }
+    }
+
+    private void populateBuilderFromDrafts() {
+        titleInput.setText(viewModel.getExamTitle());
+        passScoreInput.setText(String.valueOf(viewModel.getPassScore()));
+        Integer tl = viewModel.getTimeLimitMinutes();
+        timeLimitInput.setText(tl != null ? String.valueOf(tl) : "");
+        adapter.notifyDataSetChanged();
+    }
+
+    private void showDeleteConfirmation() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.cms_exam_delete_title)
+                .setMessage(R.string.cms_exam_delete_message)
+                .setPositiveButton(R.string.cms_exam_delete, (dialog, which) ->
+                        viewModel.deleteExam(courseId))
+                .setNegativeButton(R.string.cms_exam_cancel, null)
+                .show();
     }
 
     private void addExistingQuestionView(CmsExamQuestion question, int number) {

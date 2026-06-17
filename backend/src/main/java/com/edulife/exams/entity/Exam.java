@@ -44,4 +44,8 @@ public class Exam {
     public String getTitle() { return title; }
     public int getPassScore() { return passScore; }
     public Integer getTimeLimitMinutes() { return timeLimitMinutes; }
+
+    public void setTitle(String title) { this.title = title; }
+    public void setPassScore(int passScore) { this.passScore = passScore; }
+    public void setTimeLimitMinutes(Integer timeLimitMinutes) { this.timeLimitMinutes = timeLimitMinutes; }
 }

@@ -307,6 +307,15 @@ public interface ApiService {
             @Body CmsExamRequest request
     );
 
+    @PUT("cms/courses/{courseId}/exam")
+    Call<CmsExamResponse> updateCmsCourseExam(
+            @Path("courseId") String courseId,
+            @Body CmsExamRequest request
+    );
+
+    @DELETE("cms/courses/{courseId}/exam")
+    Call<Void> deleteCmsCourseExam(@Path("courseId") String courseId);
+
     // ── Group management — GROUP_ADMIN / TEACHER / ADMIN (ownership enforced server-side) ─
 
     /** Groups owned by the caller (ADMIN sees all), with member/course counts. */

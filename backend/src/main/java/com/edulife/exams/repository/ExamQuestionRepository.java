@@ -7,4 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ExamQuestionRepository extends JpaRepository<ExamQuestion, UUID> {
     List<ExamQuestion> findAllByExamIdOrderByOrderIndexAsc(UUID examId);
+    void deleteAllByExamId(UUID examId);
 }

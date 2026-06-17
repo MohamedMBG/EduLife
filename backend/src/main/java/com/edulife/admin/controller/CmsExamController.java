@@ -8,9 +8,11 @@ import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -48,5 +50,19 @@ public class CmsExamController {
     ) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(cmsExamService.createExam(courseId, request));
+    }
+
+    @PutMapping
+    public ExamAdminDto updateExam(
+            @PathVariable UUID courseId,
+            @Valid @RequestBody CreateExamRequest request
+    ) {
+        return cmsExamService.updateExam(courseId, request);
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void> deleteExam(@PathVariable UUID courseId) {
+        cmsExamService.deleteExam(courseId);
+        return ResponseEntity.noContent().build();
     }
 }

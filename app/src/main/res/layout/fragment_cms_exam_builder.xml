@@ -179,6 +179,44 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:orientation="vertical" />
+
+                <!-- Edit / Delete buttons -->
+                <LinearLayout
+                    android:id="@+id/existingExamActions"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:orientation="horizontal"
+                    android:gravity="center">
+
+                    <TextView
+                        android:id="@+id/examEditButton"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/bg_cms_exam_save_button"
+                        android:gravity="center"
+                        android:paddingVertical="13dp"
+                        android:text="@string/cms_exam_edit"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/examDeleteButton"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_teacher_add_section_button"
+                        android:gravity="center"
+                        android:paddingVertical="13dp"
+                        android:text="@string/cms_exam_delete"
+                        android:textColor="#D32F2F"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
             </LinearLayout>
 
             <!-- ═══ BUILDER FORM ═══ -->
@@ -304,20 +342,43 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Save button (only in create mode) -->
-    <TextView
-        android:id="@+id/examSaveButton"
+    <!-- Bottom action buttons -->
+    <LinearLayout
+        android:id="@+id/examBottomActions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginBottom="16dp"
-        android:background="@drawable/bg_cms_exam_save_button"
-        android:gravity="center"
-        android:paddingVertical="14dp"
-        android:text="@string/cms_exam_save"
-        android:textColor="@color/white"
-        android:textSize="15sp"
-        android:textStyle="bold"
-        android:visibility="gone" />
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="16dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/examCancelButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_teacher_add_section_button"
+            android:gravity="center"
+            android:paddingVertical="14dp"
+            android:text="@string/cms_exam_cancel"
+            android:textColor="@color/teacher_accent"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/examSaveButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/bg_cms_exam_save_button"
+            android:gravity="center"
+            android:paddingVertical="14dp"
+            android:text="@string/cms_exam_save"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+    </LinearLayout>
 
 </LinearLayout>

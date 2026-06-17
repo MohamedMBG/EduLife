@@ -412,6 +412,14 @@
     <string name="cms_exam_time_limit_label">Time limit: %1$d min</string>
     <string name="cms_exam_no_time_limit">No time limit</string>
     <string name="cms_exam_access_denied">You don\'t have permission to access this exam.</string>
+    <string name="cms_exam_edit">Edit Exam</string>
+    <string name="cms_exam_delete">Delete Exam</string>
+    <string name="cms_exam_save_changes">Save Changes</string>
+    <string name="cms_exam_cancel">Cancel</string>
+    <string name="cms_exam_deleting">Deleting…</string>
+    <string name="cms_exam_delete_title">Delete this final exam?</string>
+    <string name="cms_exam_delete_message">This action removes all questions and choices for this course exam.</string>
+    <string name="cms_exam_existing_editable_message">This course has a final exam. You can edit or delete it below.</string>
 
     <!-- ── Group admin portal ─────────────────────────────────────────── -->
     <string name="group_admin_portal_subtitle">GROUP ADMIN PORTAL</string>
