@@ -1,0 +1,281 @@
+[
+  {
+    "role": "Public",
+    "screen": "Page d'accueil",
+    "route": "/",
+    "file": "2026-06-17-live-project-inspection-assets/public/landing.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Public",
+    "screen": "Connexion",
+    "route": "/login",
+    "file": "2026-06-17-live-project-inspection-assets/public/login.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Public",
+    "screen": "Inscription",
+    "route": "/register",
+    "file": "2026-06-17-live-project-inspection-assets/public/register.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Public",
+    "screen": "Mot de passe oublie",
+    "route": "/forgot-password",
+    "file": "2026-06-17-live-project-inspection-assets/public/forgot-password.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Public",
+    "screen": "Verification publique de certificat",
+    "route": "/certificates/verify/100ea86fc7a525cc04d8a0da3ea7bdcbb345ee63d31524b45d5c46a032f56a25",
+    "file": "2026-06-17-live-project-inspection-assets/public/certificate-verify.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Etudiant",
+    "screen": "Tableau de bord etudiant",
+    "route": "/dashboard",
+    "file": "2026-06-17-live-project-inspection-assets/student/dashboard.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Etudiant",
+    "screen": "Catalogue de cours",
+    "route": "/explore",
+    "file": "2026-06-17-live-project-inspection-assets/student/explore.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Etudiant",
+    "screen": "Detail d'un cours",
+    "route": "/courses/11111111-1111-1111-1111-111111111111",
+    "file": "2026-06-17-live-project-inspection-assets/student/course-detail.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Etudiant",
+    "screen": "Lecture d'une lecon",
+    "route": "/learn/11111111-1111-1111-1111-111111111111/11111111-aaaa-0000-0000-111111111111",
+    "file": "2026-06-17-live-project-inspection-assets/student/lesson.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Etudiant",
+    "screen": "Analytics etudiant",
+    "route": "/analytics",
+    "file": "2026-06-17-live-project-inspection-assets/student/analytics.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Etudiant",
+    "screen": "Career Advisor",
+    "route": "/advisor",
+    "file": "2026-06-17-live-project-inspection-assets/student/advisor.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Etudiant",
+    "screen": "Study Planner",
+    "route": "/planner",
+    "file": "2026-06-17-live-project-inspection-assets/student/planner.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Etudiant",
+    "screen": "Gamification",
+    "route": "/level",
+    "file": "2026-06-17-live-project-inspection-assets/student/level.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Etudiant",
+    "screen": "Liste des certificats",
+    "route": "/certificates",
+    "file": "2026-06-17-live-project-inspection-assets/student/certificates.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Etudiant",
+    "screen": "Detail d'un certificat",
+    "route": "/certificates/2baceee0-61d7-4ac8-8669-5dab60cc9274",
+    "file": "2026-06-17-live-project-inspection-assets/student/certificate-detail.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Etudiant",
+    "screen": "Profil etudiant",
+    "route": "/profile",
+    "file": "2026-06-17-live-project-inspection-assets/student/profile.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Etudiant",
+    "screen": "Examen MCQ en direct",
+    "route": "/courses/55555555-5555-5555-5555-555555555555/exam",
+    "file": "2026-06-17-live-project-inspection-assets/student_exam/exam.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Enseignant",
+    "screen": "Portail enseignant",
+    "route": "/teach",
+    "file": "2026-06-17-live-project-inspection-assets/teacher/dashboard.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Enseignant",
+    "screen": "Gestion d'un cours enseignant",
+    "route": "/teach/556ff814-51a3-488b-93ce-b86692e819eb",
+    "file": "2026-06-17-live-project-inspection-assets/teacher/course-management.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Enseignant",
+    "screen": "Gestionnaire d'examen enseignant",
+    "route": "/teach/556ff814-51a3-488b-93ce-b86692e819eb/exam",
+    "file": "2026-06-17-live-project-inspection-assets/teacher/exam-builder.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Enseignant",
+    "screen": "Suivi des cohortes enseignant",
+    "route": "/analytics",
+    "file": "2026-06-17-live-project-inspection-assets/teacher/analytics.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Enseignant",
+    "screen": "Profil enseignant",
+    "route": "/profile",
+    "file": "2026-06-17-live-project-inspection-assets/teacher/profile.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Group Admin",
+    "screen": "Portail group admin",
+    "route": "/groups",
+    "file": "2026-06-17-live-project-inspection-assets/group_admin/dashboard.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Group Admin",
+    "screen": "Detail d'un groupe",
+    "route": "/groups/e4902052-b02f-4993-9282-49870eabab0c",
+    "file": "2026-06-17-live-project-inspection-assets/group_admin/group-detail.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Group Admin",
+    "screen": "Approbation des cours",
+    "route": "/approvals",
+    "file": "2026-06-17-live-project-inspection-assets/group_admin/approvals.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Group Admin",
+    "screen": "Analytics group admin",
+    "route": "/analytics",
+    "file": "2026-06-17-live-project-inspection-assets/group_admin/analytics.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Group Admin",
+    "screen": "Profil group admin",
+    "route": "/profile",
+    "file": "2026-06-17-live-project-inspection-assets/group_admin/profile.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Administrateur",
+    "screen": "Dashboard administrateur",
+    "route": "/admin/dashboard",
+    "file": "2026-06-17-live-project-inspection-assets/admin/dashboard.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Administrateur",
+    "screen": "Demandes enseignants",
+    "route": "/admin/teacher-requests",
+    "file": "2026-06-17-live-project-inspection-assets/admin/teacher-requests.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Administrateur",
+    "screen": "Analytics administrateur",
+    "route": "/admin/analytics",
+    "file": "2026-06-17-live-project-inspection-assets/admin/analytics.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  },
+  {
+    "role": "Administrateur",
+    "screen": "Profil administrateur",
+    "route": "/profile",
+    "file": "2026-06-17-live-project-inspection-assets/admin/profile.png",
+    "status": "captured",
+    "loadedSuccessfully": true,
+    "note": ""
+  }
+]

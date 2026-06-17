@@ -1,0 +1,103 @@
+@startuml EduLifeUseCases
+
+left to right direction
+
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName "Sans Serif"
+skinparam defaultFontSize 14
+
+skinparam rectangle {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 18
+    FontStyle bold
+}
+
+skinparam usecase {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 13
+}
+
+skinparam actor {
+    BorderColor Black
+    FontSize 13
+}
+
+title uc EduLifeUseCases [TopLevelUseCases]
+
+actor "Student\n(Learner)" as Student
+actor "Teacher" as Teacher
+
+rectangle "EduLife Platform" {
+    (Register & Login) as UC1
+    (Verify Email) as UC2
+    (Manage Profile) as UC3
+    (Browse Courses) as UC4
+    (Enroll in Course) as UC5
+    (Access Lessons) as UC6
+    (Track Progress) as UC7
+    (Take Exam) as UC8
+    (View Results) as UC9
+    (Receive Certificate) as UC10
+    (View Gamification Stats) as UC11
+    (Create Course) as UC12
+    (Structure Sections & Lessons) as UC13
+    (Create Exam) as UC14
+    (Upload Cover Image) as UC15
+    (Manage Group Teachers) as UC16
+    (View Group Courses) as UC17
+    (Track Group Enrollments) as UC18
+    (View Group Performance) as UC19
+    (Manage All Users) as UC20
+    (Verify Teachers) as UC21
+    (Approve / Reject Courses) as UC22
+    (Manage Groups) as UC23
+    (Monitor Enrollments) as UC24
+    (Manage Certificates) as UC25
+    (View Analytics) as UC26
+    (Handle Teacher Requests) as UC27
+}
+
+actor "Group\nAdmin" as GroupAdmin
+actor "Platform\nAdmin" as Admin
+actor "Firebase" as Firebase
+
+Student -- UC1
+Student -- UC2
+Student -- UC3
+Student -- UC4
+Student -- UC5
+Student -- UC6
+Student -- UC7
+Student -- UC8
+Student -- UC9
+Student -- UC10
+Student -- UC11
+
+Teacher -- UC1
+Teacher -- UC3
+Teacher -- UC12
+Teacher -- UC13
+Teacher -- UC14
+Teacher -- UC15
+
+UC1 -- GroupAdmin
+UC16 -- GroupAdmin
+UC17 -- GroupAdmin
+UC18 -- GroupAdmin
+UC19 -- GroupAdmin
+
+UC20 -- Admin
+UC21 -- Admin
+UC22 -- Admin
+UC23 -- Admin
+UC24 -- Admin
+UC25 -- Admin
+UC26 -- Admin
+UC27 -- Admin
+
+UC1 -- Firebase
+
+@enduml

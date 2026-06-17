@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rapport Final - EduLife</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap");
+
+      :root {
+        --bg: #f6fafe;
+        --ink: #091426;
+        --muted: #5a6b83;
+        --line: #ccd7e6;
+        --card: #ffffff;
+        --accent: #0f1d34;
+        --accent-soft: #eaf1fb;
+        --good: #0f7b56;
+        --warn: #8a5a00;
+        --bad: #a83535;
+        --shadow: 0 16px 40px rgba(9, 20, 38, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, #f6fafe 0%, #edf3fb 100%);
+        color: var(--ink);
+        font-family: "Montserrat", Arial, sans-serif;
+        line-height: 1.7;
+      }
+
+      .page {
+        width: min(1180px, calc(100vw - 48px));
+        margin: 0 auto;
+        padding: 40px 0 72px;
+      }
+
+      .cover {
+        background: radial-gradient(circle at top right, #dde9f7 0%, #ffffff 42%, #ffffff 100%);
+        border: 1px solid var(--line);
+        border-radius: 32px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .cover-head {
+        background: var(--accent);
+        color: #fff;
+        padding: 18px 28px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .cover-body {
+        display: grid;
+        gap: 24px;
+        grid-template-columns: 1.4fr 0.9fr;
+        padding: 48px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 8px 14px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0 0 12px;
+        line-height: 1.15;
+      }
+
+      h1 {
+        font-size: clamp(40px, 7vw, 72px);
+        font-weight: 800;
+        letter-spacing: -0.04em;
+      }
+
+      h2 {
+        font-size: 28px;
+        margin-top: 0;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+      }
+
+      h3 {
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      p {
+        margin: 0 0 14px;
+        color: var(--muted);
+      }
+
+      strong {
+        color: var(--ink);
+      }
+
+      .meta-card,
+      .section,
+      .stat,
+      .gallery-item,
+      .callout,
+      .table-card,
+      .diagram-card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+      }
+
+      .meta-grid,
+      .stat-grid,
+      .highlights,
+      .gallery,
+      .dual-grid {
+        display: grid;
+        gap: 20px;
+      }
+
+      .meta-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .meta-card {
+        padding: 20px;
+      }
+
+      .meta-card .label {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+      }
+
+      .meta-card .value {
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      nav {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        backdrop-filter: blur(14px);
+        background: rgba(246, 250, 254, 0.88);
+        border-bottom: 1px solid rgba(204, 215, 230, 0.8);
+      }
+
+      nav .inner {
+        width: min(1180px, calc(100vw - 48px));
+        margin: 0 auto;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 18px;
+        padding: 14px 0;
+      }
+
+      nav a {
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      main {
+        display: grid;
+        gap: 24px;
+        margin-top: 26px;
+      }
+
+      .section {
+        padding: 30px;
+      }
+
+      .lead {
+        font-size: 18px;
+      }
+
+      .stat-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .stat {
+        padding: 22px;
+      }
+
+      .stat .k {
+        font-size: 12px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 700;
+      }
+
+      .stat .v {
+        margin-top: 8px;
+        font-size: 36px;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+      }
+
+      .highlights {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .callout {
+        padding: 22px;
+      }
+
+      .callout.good {
+        border-color: rgba(15, 123, 86, 0.3);
+      }
+
+      .callout.warn {
+        border-color: rgba(138, 90, 0, 0.28);
+      }
+
+      .callout.bad {
+        border-color: rgba(168, 53, 53, 0.28);
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        background: var(--accent-soft);
+        color: var(--accent);
+        margin-bottom: 12px;
+      }
+
+      .dual-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .diagram-card {
+        padding: 20px;
+      }
+
+      .mermaid {
+        overflow-x: auto;
+      }
+
+      .gallery {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .gallery-item {
+        padding: 16px;
+      }
+
+      .gallery-item img {
+        width: 100%;
+        display: block;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+      }
+
+      .caption {
+        margin-top: 12px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .table-card {
+        padding: 0;
+        overflow: hidden;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+        font-size: 14px;
+      }
+
+      th {
+        background: #f9fbfe;
+        color: var(--ink);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--muted);
+      }
+
+      li + li {
+        margin-top: 8px;
+      }
+
+      .small {
+        font-size: 13px;
+      }
+
+      .footer-note {
+        text-align: center;
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 12px;
+      }
+
+      @media print {
+        nav {
+          position: static;
+          background: transparent;
+          border-bottom: 0;
+        }
+
+        .page {
+          width: auto;
+          padding: 0;
+        }
+
+        .section,
+        .cover,
+        .meta-card,
+        .stat,
+        .gallery-item,
+        .callout,
+        .table-card,
+        .diagram-card {
+          box-shadow: none;
+        }
+      }
+
+      @media (max-width: 960px) {
+        .cover-body,
+        .meta-grid,
+        .stat-grid,
+        .highlights,
+        .gallery,
+        .dual-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .page,
+        nav .inner {
+          width: min(100vw - 28px, 1180px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <div class="inner">
+        <a href="#resume">Résumé</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#backend">Backend</a>
+        <a href="#mobile">Mobile</a>
+        <a href="#web">Web</a>
+        <a href="#features">Fonctionnalités</a>
+        <a href="#screens">Captures</a>
+        <a href="#validation">Validation</a>
+        <a href="#annexes">Annexes</a>
+      </div>
+    </nav>
+
+    <div class="page">
+      <section class="cover">
+        <div class="cover-head">Rapport final académique</div>
+        <div class="cover-body">
+          <div>
+            <div class="eyebrow">Projet EduLife</div>
+            <h1>Une plateforme d'apprentissage structurée, multi-rôle et vérifiable.</h1>
+            <p class="lead">
+              Rapport d'inspection complet fondé sur le dépôt, les modules backend, les clients web
+              et Android, les migrations, les tests et des captures live générées depuis
+              <strong>localhost:8080</strong> le <strong>17 juin 2026</strong>.
+            </p>
+            <p>
+              <strong>Réalisé par :</strong> BAGHDAD Mohamed et BAAKKA Monssef<br />
+              <strong>Type :</strong> Plateforme éducative marocaine web/mobile
+            </p>
+          </div>
+          <div class="meta-grid">
+            <article class="meta-card">
+              <div class="label">Backend</div>
+              <div class="value">Spring Boot 3.5.14, Java 21, PostgreSQL, Flyway</div>
+            </article>
+            <article class="meta-card">
+              <div class="label">Web</div>
+              <div class="value">React 19, TanStack Start, Tailwind CSS v4, Firebase</div>
+            </article>
+            <article class="meta-card">
+              <div class="label">Mobile</div>
+              <div class="value">Android Java/XML, MVVM, Retrofit, LiveData</div>
+            </article>
+            <article class="meta-card">
+              <div class="label">Preuve live</div>
+              <div class="value">31 captures générées automatiquement depuis localhost:8080</div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <main>
+        <section class="section" id="resume">
+          <div class="pill">Résumé</div>
+          <h2>Ce que montre l'inspection</h2>
+          <p>
+            EduLife répond à un problème clair : l'apprentissage numérique est souvent dispersé,
+            peu guidé et rarement validé par une évaluation sérieuse. Le projet met donc au centre
+            un parcours simple : découvrir un cours, s'inscrire, étudier, passer un examen final,
+            puis obtenir un certificat vérifiable.
+          </p>
+          <p>
+            Le dépôt inspecté révèle un backend modulaire crédible, une application web réellement
+            branchée sur un backend vivant et une application Android alignée avec les choix
+            d'architecture annoncés. Le projet n'est pas fini, mais il dispose déjà d'une base
+            robuste et cohérente.
+          </p>
+        </section>
+
+        <section class="section">
+          <div class="pill">Constats clés</div>
+          <div class="stat-grid">
+            <article class="stat">
+              <div class="k">Modules backend</div>
+              <div class="v">19</div>
+            </article>
+            <article class="stat">
+              <div class="k">Migrations Flyway</div>
+              <div class="v">24</div>
+            </article>
+            <article class="stat">
+              <div class="k">Routes web</div>
+              <div class="v">36</div>
+            </article>
+            <article class="stat">
+              <div class="k">Captures live</div>
+              <div class="v">31</div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="pill">Problématique</div>
+          <h2>Pourquoi EduLife existe</h2>
+          <div class="highlights">
+            <article class="callout good">
+              <h3>Un besoin réel</h3>
+              <p>
+                L'apprenant navigue souvent entre vidéos, PDFs et groupes de discussion sans ordre
+                stable, sans suivi fiable et sans validation finale crédible.
+              </p>
+            </article>
+            <article class="callout good">
+              <h3>Une réponse concrète</h3>
+              <p>
+                EduLife transforme cet ensemble dispersé en un parcours cohérent avec rôles,
+                progression, évaluation, certificats et tableaux de bord dédiés.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="architecture">
+          <div class="pill">Architecture globale</div>
+          <h2>Une architecture simple, mais bien hiérarchisée</h2>
+          <div class="dual-grid">
+            <article class="diagram-card">
+              <h3>Chaîne fonctionnelle centrale</h3>
+              <div class="mermaid">
+                flowchart LR
+                A[Catalogue] --> B[Inscription]
+                B --> C[Leçons]
+                C --> D[Examen final]
+                D --> E[Certificat]
+              </div>
+            </article>
+            <article class="diagram-card">
+              <h3>Vue système</h3>
+              <div class="mermaid">
+                flowchart LR
+                W[Client Web] --> API[Backend Spring Boot]
+                M[Client Android] --> API
+                W --> FB[Firebase Auth]
+                M --> FB
+                FB --> API
+                API --> DB[(PostgreSQL)]
+                API --> FS[Uploads et PDF]
+              </div>
+            </article>
+          </div>
+          <p class="small">
+            Le projet tire parti de Firebase pour l'identité, mais conserve la logique métier et la
+            sécurité fine dans le backend. C'est une séparation saine pour un MVP.
+          </p>
+        </section>
+
+        <section class="section" id="backend">
+          <div class="pill">Architecture backend</div>
+          <h2>Un monolithe modulaire adapté au MVP</h2>
+          <p>
+            Le backend Spring Boot organise la logique par domaines : authentification, profils,
+            cours, inscriptions, progression, examens, certificats, groupes, analytics,
+            gamification et administration. Ce choix évite la complexité inutile de microservices
+            tout en gardant des frontières techniques propres.
+          </p>
+          <div class="table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Aspect</th>
+                  <th>Constat</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Stack</td>
+                  <td>Spring Web, Security, JPA, Validation, PostgreSQL, Flyway, Firebase Admin, Bucket4j</td>
+                </tr>
+                <tr>
+                  <td>Modules</td>
+                  <td>
+                    `account`, `admin`, `advisor`, `analytics`, `auth`, `certificates`, `courses`,
+                    `enrollments`, `exams`, `groups`, `profiles`, `progress`, `roles`,
+                    `teacherrequests`, `users`...
+                  </td>
+                </tr>
+                <tr>
+                  <td>Sécurité</td>
+                  <td>Validation des tokens Firebase, RBAC, filtres de sécurité, ownership checks</td>
+                </tr>
+                <tr>
+                  <td>Certificats</td>
+                  <td>PDF backend, hash de vérification publique, génération après réussite à l'examen</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="highlights" style="margin-top: 20px">
+            <article class="callout good">
+              <h3>Point fort</h3>
+              <p>
+                Les réponses correctes d'examen restent côté serveur, ce qui évite une logique
+                client manipulable.
+              </p>
+            </article>
+            <article class="callout warn">
+              <h3>Point à surveiller</h3>
+              <p>
+                La gouvernance du projet verrouille un seuil de réussite à 80%, mais une capture
+                live de l'examen Digital Skills affiche 70%. Cette divergence doit être harmonisée.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="mobile">
+          <div class="pill">Architecture mobile</div>
+          <h2>Une implémentation Android pragmatique</h2>
+          <p>
+            L'application Android suit un MVVM clair : fragments pour l'interface, ViewModel pour
+            l'état, repositories pour l'accès aux données et Retrofit/OkHttp pour la couche réseau.
+            Le tout reste lisible et cohérent avec un MVP mobile-first.
+          </p>
+          <ul>
+            <li>Java + XML, sans Clean Architecture artificiellement lourde.</li>
+            <li>Firebase Auth côté client avec synchronisation backend.</li>
+            <li>Gestion du token via interceptor et authenticator dédiés.</li>
+            <li>Découpage feature-first : auth, courses, exams, certificates, analytics, teacher, admin, groupadmin.</li>
+          </ul>
+        </section>
+
+        <section class="section" id="web">
+          <div class="pill">Architecture web</div>
+          <h2>Une web app réellement connectée au backend</h2>
+          <p>
+            La surface web repose sur React 19, TanStack Start et un client API typé. Les rôles ne
+            sont pas gérés seulement par l'affichage : des guards côté interface complètent le
+            contrôle serveur et séparent les portails étudiant, enseignant, groupe et admin.
+          </p>
+          <div class="dual-grid">
+            <article class="callout good">
+              <h3>Expérience étudiant</h3>
+              <p>
+                Dashboard, catalogue, cours, leçons, examens, certificats, planner, analytics,
+                gamification et advisor sont visibles en live.
+              </p>
+            </article>
+            <article class="callout good">
+              <h3>Expérience staff</h3>
+              <p>
+                Teaching Studio, analytics enseignant, groupes, approbations, dashboard admin et
+                teacher requests sont opérationnels.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="features">
+          <div class="pill">Fonctionnalités réalisées</div>
+          <h2>Ce qui est réellement implémenté aujourd'hui</h2>
+          <div class="table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Bloc</th>
+                  <th>État</th>
+                  <th>Commentaire</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Authentification</td>
+                  <td>Implémenté</td>
+                  <td>Firebase + synchronisation backend + rôles</td>
+                </tr>
+                <tr>
+                  <td>Catalogue et progression</td>
+                  <td>Implémenté</td>
+                  <td>Parcours étudiant cohérent entre dashboard, cours et leçons</td>
+                </tr>
+                <tr>
+                  <td>Examens et certificats</td>
+                  <td>Implémenté</td>
+                  <td>MCQ corrigé serveur, certificat PDF et vérification publique</td>
+                </tr>
+                <tr>
+                  <td>Teacher CMS</td>
+                  <td>Implémenté partiellement</td>
+                  <td>Édition de cours, sections, leçons et examen, mais pas un CMS web exhaustif</td>
+                </tr>
+                <tr>
+                  <td>Analytics, planner, gamification, advisor</td>
+                  <td>Implémenté</td>
+                  <td>Valeur ajoutée déjà visible, avec une profondeur variable selon les rôles</td>
+                </tr>
+                <tr>
+                  <td>Admin et group admin</td>
+                  <td>Implémenté partiellement</td>
+                  <td>Portails présents, mais certains écrans de gestion fine restent absents</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="screens">
+          <div class="pill">Captures d'écran live</div>
+          <h2>Preuves visuelles prises depuis localhost:8080</h2>
+          <div class="gallery">
+            <article class="gallery-item">
+              <img src="./2026-06-17-live-project-inspection-assets/public/landing.png" alt="Landing EduLife" />
+              <div class="caption">Figure 1 - Page d'accueil publique.</div>
+            </article>
+            <article class="gallery-item">
+              <img src="./2026-06-17-live-project-inspection-assets/student/dashboard.png" alt="Dashboard étudiant" />
+              <div class="caption">Figure 2 - Dashboard étudiant live.</div>
+            </article>
+            <article class="gallery-item">
+              <img src="./2026-06-17-live-project-inspection-assets/student/course-detail.png" alt="Détail cours" />
+              <div class="caption">Figure 3 - Détail de cours inscrit.</div>
+            </article>
+            <article class="gallery-item">
+              <img src="./2026-06-17-live-project-inspection-assets/student_exam/exam.png" alt="Examen final" />
+              <div class="caption">Figure 4 - Examen final MCQ en direct.</div>
+            </article>
+            <article class="gallery-item">
+              <img src="./2026-06-17-live-project-inspection-assets/student/certificates.png" alt="Certificats" />
+              <div class="caption">Figure 5 - Liste des certificats de l'étudiant.</div>
+            </article>
+            <article class="gallery-item">
+              <img src="./2026-06-17-live-project-inspection-assets/student/advisor.png" alt="Advisor" />
+              <div class="caption">Figure 6 - Module Career Advisor.</div>
+            </article>
+            <article class="gallery-item">
+              <img src="./2026-06-17-live-project-inspection-assets/teacher/course-management.png" alt="Gestion enseignant" />
+              <div class="caption">Figure 7 - Gestion d'un cours par l'enseignant.</div>
+            </article>
+            <article class="gallery-item">
+              <img src="./2026-06-17-live-project-inspection-assets/teacher/analytics.png" alt="Analytics enseignant" />
+              <div class="caption">Figure 8 - Analytics enseignant.</div>
+            </article>
+            <article class="gallery-item">
+              <img src="./2026-06-17-live-project-inspection-assets/group_admin/dashboard.png" alt="Groupes" />
+              <div class="caption">Figure 9 - Portail group admin.</div>
+            </article>
+            <article class="gallery-item">
+              <img src="./2026-06-17-live-project-inspection-assets/group_admin/approvals.png" alt="Approbations" />
+              <div class="caption">Figure 10 - Approbations dans le périmètre groupe.</div>
+            </article>
+            <article class="gallery-item">
+              <img src="./2026-06-17-live-project-inspection-assets/admin/dashboard.png" alt="Dashboard admin" />
+              <div class="caption">Figure 11 - Dashboard admin global.</div>
+            </article>
+            <article class="gallery-item">
+              <img src="./2026-06-17-live-project-inspection-assets/admin/teacher-requests.png" alt="Teacher requests" />
+              <div class="caption">Figure 12 - File des demandes enseignant.</div>
+            </article>
+          </div>
+          <p class="footer-note">
+            L'inventaire complet des 31 images figure dans
+            <strong>2026-06-17-live-screenshot-inventory.md</strong>.
+          </p>
+        </section>
+
+        <section class="section" id="validation">
+          <div class="pill">Tests et validation</div>
+          <h2>Résultats observés pendant l'inspection</h2>
+          <div class="table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Commande</th>
+                  <th>Résultat</th>
+                  <th>Détail</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>node docs/2026-06-17-live-screenshot-capture.mjs</code></td>
+                  <td style="color: var(--good); font-weight: 700">OK</td>
+                  <td>31 captures live générées depuis localhost:8080</td>
+                </tr>
+                <tr>
+                  <td><code>cd backend && .\mvnw.cmd test</code></td>
+                  <td style="color: var(--bad); font-weight: 700">KO partiel</td>
+                  <td>39 suites, 238 tests, 10 erreurs concentrées dans AuthSyncControllerTest</td>
+                </tr>
+                <tr>
+                  <td><code>cd guided-journey-lab && npm run build</code></td>
+                  <td style="color: var(--good); font-weight: 700">OK</td>
+                  <td>Build client + SSR réussi</td>
+                </tr>
+                <tr>
+                  <td><code>cd guided-journey-lab && npm run lint</code></td>
+                  <td style="color: var(--bad); font-weight: 700">KO</td>
+                  <td>6311 erreurs majoritairement liées à Prettier et aux fins de ligne</td>
+                </tr>
+                <tr>
+                  <td><code>.\gradlew.bat :app:assembleDebug</code></td>
+                  <td style="color: var(--good); font-weight: 700">OK</td>
+                  <td>Build Android debug réussi</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="highlights" style="margin-top: 20px">
+            <article class="callout bad">
+              <h3>Échec backend ciblé</h3>
+              <p>
+                La suite `AuthSyncControllerTest` échoue lors du nettoyage de la base de test avec
+                une violation de clé étrangère entre `users` et `courses`.
+              </p>
+            </article>
+            <article class="callout warn">
+              <h3>Dette de qualité web</h3>
+              <p>
+                Le lint ne reflète pas une panne fonctionnelle du produit, mais il indique une dette
+                importante de formatage et de standardisation des fichiers.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="annexes">
+          <div class="pill">Annexes</div>
+          <h2>Écrans non capturés comme pages dédiées</h2>
+          <div class="table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Écran demandé</th>
+                  <th>Statut</th>
+                  <th>Raison</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Création de cours enseignant dédiée</td>
+                  <td>Non capturée séparément</td>
+                  <td>Le web expose surtout une page de gestion/édition via `/teach/$courseId`.</td>
+                </tr>
+                <tr>
+                  <td>Monitoring étudiant enseignant dédié</td>
+                  <td>Non capturé séparément</td>
+                  <td>La supervision passe par les analytics, sans route roster dédiée observée.</td>
+                </tr>
+                <tr>
+                  <td>Gestion utilisateurs admin dédiée</td>
+                  <td>Non capturée</td>
+                  <td>Aucune route web dédiée n'a été repérée pendant l'inspection.</td>
+                </tr>
+                <tr>
+                  <td>Modération certificats admin</td>
+                  <td>Non capturée</td>
+                  <td>Aucune page dédiée identifiée côté web.</td>
+                </tr>
+                <tr>
+                  <td>Pages séparées pour la gestion fine groupe</td>
+                  <td>Non capturées séparément</td>
+                  <td>Le détail groupe et les approbations agrègent l'essentiel des actions visibles.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="footer-note">
+            Version Markdown : <strong>2026-06-17-rapport-final-edulife.md</strong><br />
+            Inventaire live : <strong>2026-06-17-live-screenshot-inventory.md</strong>
+          </p>
+        </section>
+      </main>
+    </div>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "neutral",
+        securityLevel: "loose",
+      });
+    </script>
+  </body>
+</html>

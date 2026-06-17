@@ -6,7 +6,7 @@
  * 3. Patches LaTeX to restore techbox calls with logos
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'fs';
 import https from 'https';
 import path from 'path';
 
@@ -54,8 +54,7 @@ async function mmdToPng(name) {
   const output = path.join(DIAGRAMS_DIR, `${name}.png`);
 
   if (!existsSync(input))  { console.warn(`  skip ${name}.mmd — not found`); return; }
-  if (existsSync(output))  { console.log(`  ok   ${name}.png already exists`); return; }
-
+  // We want to force overwrite for changed mmd files so we always compile them
   console.log(`  gen  ${name} …`);
   const src = readFileSync(input, 'utf8');
   const res = await post('https://kroki.io/mermaid/png', Buffer.from(src, 'utf8'));
@@ -71,7 +70,9 @@ async function mmdToPng(name) {
 
 async function generateMermaidPNGs() {
   console.log('\n[MERMAID DIAGRAMS via Kroki.io]');
-  for (const name of ['web-architecture','unified-platform-architecture','data-synchronization','web-tech-stack']) {
+  const files = readdirSync(DIAGRAMS_DIR).filter(f => f.endsWith('.mmd'));
+  for (const file of files) {
+    const name = path.basename(file, '.mmd');
     await mmdToPng(name);
   }
 }
