@@ -244,17 +244,22 @@ export interface Certificate {
   id: string;
   courseId: string;
   certificateNumber: string;
+  learnerName: string;
+  teacherName: string;
   courseTitle: string;
+  courseLevel: string;
   issuedAt: string;
+  verificationHash: string;
 }
 
 export interface CertificateDetail {
   id: string;
   courseId: string;
   certificateNumber: string;
-  studentName: string;
+  learnerName: string;
+  teacherName: string;
   courseTitle: string;
-  issuerName: string;
+  courseLevel: string;
   issuedAt: string;
   verificationHash: string;
   pdfUrl: string | null;
@@ -421,11 +426,13 @@ export interface GroupDetail {
 }
 
 export interface CertificateVerification {
-  studentName: string;
+  learnerName: string;
+  teacherName: string;
   courseTitle: string;
-  issuerName: string;
+  courseLevel: string;
   issuedAt: string;
   certificateNumber: string;
+  verificationHash: string;
   valid: boolean;
 }
 

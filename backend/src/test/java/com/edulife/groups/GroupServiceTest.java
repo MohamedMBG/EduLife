@@ -111,6 +111,6 @@ class GroupServiceTest {
 
     private static void authenticate(String firebaseUid) {
         SecurityContextHolder.getContext().setAuthentication(
-                new FirebaseAuthentication(firebaseUid, "groupadmin@edulife.test"));
+                new FirebaseAuthentication(firebaseUid, "groupadmin@edulife.test", null));
     }
 }

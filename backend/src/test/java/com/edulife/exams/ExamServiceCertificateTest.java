@@ -75,7 +75,7 @@ class ExamServiceCertificateTest {
                 gamificationService
         );
         SecurityContextHolder.getContext().setAuthentication(
-                new FirebaseAuthentication("firebase-uid", "learner@edulife.test")
+                new FirebaseAuthentication("firebase-uid", "learner@edulife.test", null)
         );
     }
 

@@ -88,12 +88,13 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
 
             String firebaseUid = decodedToken.getUid();
             String email = decodedToken.getEmail();
+            String displayName = decodedToken.getName();
 
             // Role resolution must come from the trusted users table, not from the Firebase token.
             // Unsynced users get no role authorities so role-gated endpoints return 403 until /auth/sync runs.
             FirebaseAuthentication authentication = userRepository.findByFirebaseUid(firebaseUid)
-                    .map(user -> new FirebaseAuthentication(firebaseUid, email, authoritiesFor(user)))
-                    .orElseGet(() -> new FirebaseAuthentication(firebaseUid, email));
+                    .map(user -> new FirebaseAuthentication(firebaseUid, email, displayName, authoritiesFor(user)))
+                    .orElseGet(() -> new FirebaseAuthentication(firebaseUid, email, displayName));
 
             // Only trusted Firebase claims are copied into the security context. Client-supplied
             // user IDs or roles are never accepted here.

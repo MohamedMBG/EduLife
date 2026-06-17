@@ -44,7 +44,7 @@ class AccountServiceTest {
         service = new AccountService(userRepository, profileRepository, firebaseAuth);
 
         SecurityContextHolder.getContext().setAuthentication(
-                new FirebaseAuthentication(FIREBASE_UID, "student@edulife.test"));
+                new FirebaseAuthentication(FIREBASE_UID, "student@edulife.test", null));
     }
 
     @AfterEach

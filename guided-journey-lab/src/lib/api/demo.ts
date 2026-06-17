@@ -269,8 +269,12 @@ function createInitialStore(): DemoStore {
         id: "certificate-french-ui",
         courseId: "course-french-ui",
         certificateNumber: "EDU-DEMO-2026-0001",
+        learnerName: "Demo User",
+        teacherName: "EduLife Demo",
         courseTitle: "French UI Vocabulary",
+        courseLevel: "Beginner",
         issuedAt: "2026-05-22T15:30:00Z",
+        verificationHash: "demo-certificate-french-ui",
         source: "seeded",
       },
     ],
@@ -401,12 +405,17 @@ function ensureCompletionCertificate(store: DemoStore, courseId: string) {
 
   // Demo mode does not include the exam engine, so it issues a synthetic certificate only after
   // every lesson is completed to keep the certificate screen explorable without a backend.
+  const session = requireSession(store);
   const newCertificate: DemoCertificateRecord = {
     id: `certificate-${courseId}`,
     courseId,
     certificateNumber: `EDU-DEMO-${new Date().getFullYear()}-${String(store.certificates.length + 1).padStart(4, "0")}`,
+    learnerName: session.displayName,
+    teacherName: "EduLife Demo",
     courseTitle: course.title,
+    courseLevel: "All Levels",
     issuedAt: new Date().toISOString(),
+    verificationHash: `demo-certificate-${courseId}`,
     source: "demo",
   };
 
@@ -428,11 +437,20 @@ export async function demoLogin(email: string, _password: string) {
   const normalizedEmail = email.trim().toLowerCase() || "demo@edulife.app";
   const displayName = normalizedEmail.split("@")[0].replace(/[._-]+/g, " ").trim();
 
+  let role = "STUDENT";
+  if (normalizedEmail === "admin@edulife.test") {
+    role = "ADMIN";
+  } else if (normalizedEmail === "teacher@edulife.test") {
+    role = "TEACHER";
+  } else if (normalizedEmail === "groupadmin@edulife.test") {
+    role = "GROUP_ADMIN";
+  }
+
   const store = updateStore((current) => ({
     ...current,
     session: {
       userId: "demo-user-001",
-      role: "STUDENT",
+      role,
       email: normalizedEmail,
       displayName:
         displayName
@@ -766,9 +784,10 @@ export async function demoGetCertificate(certificateId: string): Promise<Certifi
     id: record.id,
     courseId: record.courseId,
     certificateNumber: record.certificateNumber,
-    studentName: session.displayName,
+    learnerName: session.displayName,
+    teacherName: "EduLife Demo",
     courseTitle: record.courseTitle,
-    issuerName: "EduLife Demo",
+    courseLevel: "All Levels",
     issuedAt: record.issuedAt,
     verificationHash: `demo-${record.id}`,
     pdfUrl: null,
@@ -777,11 +796,13 @@ export async function demoGetCertificate(certificateId: string): Promise<Certifi
 
 export function demoVerifyCertificate(hash: string): Promise<CertificateVerification> {
   return Promise.resolve({
-    studentName: "Demo Learner",
+    learnerName: "Demo Learner",
+    teacherName: "EduLife Platform",
     courseTitle: "French UI Vocabulary",
-    issuerName: "EduLife Platform",
+    courseLevel: "All Levels",
     issuedAt: "2026-05-22T15:30:00Z",
     certificateNumber: `EL-DEMO-${hash.slice(0, 8).toUpperCase()}`,
+    verificationHash: hash,
     valid: true,
   });
 }

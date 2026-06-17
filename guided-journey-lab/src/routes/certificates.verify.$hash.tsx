@@ -116,7 +116,7 @@ function ResultCard({
   data,
   hash,
 }: {
-  data: { studentName: string; courseTitle: string; issuerName: string; issuedAt: string; certificateNumber: string; valid: boolean };
+  data: { learnerName: string; teacherName: string; courseTitle: string; issuedAt: string; certificateNumber: string; valid: boolean };
   hash: string;
 }) {
   return (
@@ -156,7 +156,7 @@ function ResultCard({
                 data.valid ? "text-gold-foreground/85" : "text-muted-foreground"
               }`}
             >
-              Awarded to {data.studentName}
+              Awarded to {data.learnerName}
             </p>
           </div>
           <div
@@ -172,7 +172,7 @@ function ResultCard({
           <VerifyField
             icon={<User className="h-3.5 w-3.5" />}
             label="Issued by"
-            value={data.issuerName}
+            value={data.teacherName}
             gold={data.valid}
           />
           <VerifyField

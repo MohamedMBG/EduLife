@@ -63,7 +63,7 @@ class AnalyticsServiceTest {
     @BeforeEach
     void setUpSecurityContext() {
         SecurityContextHolder.getContext()
-                .setAuthentication(new FirebaseAuthentication(FIREBASE_UID, "user@test.com"));
+                .setAuthentication(new FirebaseAuthentication(FIREBASE_UID, "user@test.com", null));
     }
 
     @AfterEach

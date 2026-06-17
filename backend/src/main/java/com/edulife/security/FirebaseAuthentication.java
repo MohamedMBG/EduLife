@@ -9,21 +9,22 @@ public class FirebaseAuthentication extends AbstractAuthenticationToken {
 
     private final String firebaseUid;
     private final String email;
+    private final String displayName;
 
-    public FirebaseAuthentication(String firebaseUid, String email) {
-        // Authorities default to empty for paths that do not need role gating; the token filter
-        // promotes this to a role-aware authentication once the user is resolved from the DB.
-        this(firebaseUid, email, List.of());
+    public FirebaseAuthentication(String firebaseUid, String email, String displayName) {
+        this(firebaseUid, email, displayName, List.of());
     }
 
     public FirebaseAuthentication(
             String firebaseUid,
             String email,
+            String displayName,
             Collection<? extends GrantedAuthority> authorities
     ) {
         super(authorities);
         this.firebaseUid = firebaseUid;
         this.email = email;
+        this.displayName = displayName;
         setAuthenticated(true);
     }
 
@@ -43,5 +44,9 @@ public class FirebaseAuthentication extends AbstractAuthenticationToken {
 
     public String getEmail() {
         return email;
+    }
+
+    public String getDisplayName() {
+        return displayName;
     }
 }

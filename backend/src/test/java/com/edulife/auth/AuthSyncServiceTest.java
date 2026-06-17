@@ -58,6 +58,6 @@ class AuthSyncServiceTest {
     }
 
     private static void authenticate(String firebaseUid, String email) {
-        SecurityContextHolder.getContext().setAuthentication(new FirebaseAuthentication(firebaseUid, email));
+        SecurityContextHolder.getContext().setAuthentication(new FirebaseAuthentication(firebaseUid, email, null));
     }
 }

@@ -10,7 +10,7 @@ import {
   ShieldCheck,
   User,
 } from "lucide-react";
-import { AppShell } from "../components/app/AppShell";
+import { AppLayout } from "../components/app/AppLayout";
 import { ApiClientError, downloadCertificate, getCertificate } from "../lib/api/client";
 import { RequireAuth, useAuth } from "../lib/auth/auth-context";
 
@@ -70,31 +70,12 @@ function CertificateDetailPage() {
   });
 
   return (
-    <AppShell
-      active="certificates"
-      user={{
-        displayName: auth.session?.displayName ?? "EduLife learner",
-        email: auth.session?.email ?? "",
-      }}
-      onLogout={auth.logout}
-      header={
-        <div className="flex items-center gap-3">
-          <Link
-            to="/certificates"
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            All certificates
-          </Link>
-          <div>
-            <p className="text-sm font-semibold text-foreground">Certificate detail</p>
-            <p className="text-xs text-muted-foreground">Verified, backend-issued credential.</p>
-          </div>
-        </div>
-      }
-    >
+    <AppLayout>
       {certificateQuery.isLoading ? (
-        <StateCard title="Loading certificate..." detail="Fetching verified credential from backend." />
+        <StateCard
+          title="Loading certificate..."
+          detail="Fetching verified credential from backend."
+        />
       ) : certificateQuery.isError ? (
         <StateCard title="Certificate unavailable" detail={certificateQuery.error.message} />
       ) : !certificateQuery.data ? (
@@ -112,7 +93,7 @@ function CertificateDetailPage() {
                   {certificateQuery.data.courseTitle}
                 </h1>
                 <p className="mt-2 text-sm text-gold-foreground/85">
-                  Awarded to {certificateQuery.data.studentName}
+                  Awarded to {certificateQuery.data.learnerName}
                 </p>
               </div>
               <div className="grid h-16 w-16 place-items-center rounded-2xl bg-gold-foreground/10 text-gold-foreground">
@@ -134,7 +115,7 @@ function CertificateDetailPage() {
               <DetailField
                 icon={<User className="h-3.5 w-3.5" />}
                 label="Issued by"
-                value={certificateQuery.data.issuerName}
+                value={certificateQuery.data.teacherName}
               />
               <DetailField
                 icon={<ShieldCheck className="h-3.5 w-3.5" />}
@@ -159,7 +140,7 @@ function CertificateDetailPage() {
               type="button"
               onClick={() => downloadMutation.mutate()}
               disabled={downloadMutation.isPending}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-xs font-semibold text-background disabled:opacity-60"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-semibold text-primary-foreground disabled:opacity-60"
             >
               <Download className="h-3.5 w-3.5" />
               {downloadMutation.isPending ? "Preparing..." : "Download PDF"}
@@ -167,7 +148,7 @@ function CertificateDetailPage() {
           </div>
         </section>
       )}
-    </AppShell>
+    </AppLayout>
   );
 }
 
@@ -190,7 +171,8 @@ function DetailField({
       </dt>
       <dd
         className={
-          "mt-2 break-all text-sm font-medium text-gold-foreground" + (mono ? " font-mono text-xs" : "")
+          "mt-2 break-all text-sm font-medium text-gold-foreground" +
+          (mono ? " font-mono text-xs" : "")
         }
       >
         {value}

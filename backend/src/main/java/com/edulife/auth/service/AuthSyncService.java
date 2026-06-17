@@ -3,6 +3,8 @@ package com.edulife.auth.service;
 import com.edulife.auth.config.StaffRoleProperties;
 import com.edulife.auth.dto.AuthSyncRequest;
 import com.edulife.auth.dto.AuthSyncResponse;
+import com.edulife.profiles.entity.Profile;
+import com.edulife.profiles.repository.ProfileRepository;
 import com.edulife.security.FirebaseAuthentication;
 import com.edulife.users.entity.User;
 import com.edulife.users.model.UserRole;
@@ -18,10 +20,15 @@ import org.springframework.stereotype.Service;
 public class AuthSyncService {
 
     private final UserRepository userRepository;
+    private final ProfileRepository profileRepository;
     private final StaffRoleProperties staffRoleProperties;
 
-    public AuthSyncService(UserRepository userRepository, StaffRoleProperties staffRoleProperties) {
+    public AuthSyncService(
+            UserRepository userRepository,
+            ProfileRepository profileRepository,
+            StaffRoleProperties staffRoleProperties) {
         this.userRepository = userRepository;
+        this.profileRepository = profileRepository;
         this.staffRoleProperties = staffRoleProperties;
     }
 
@@ -35,6 +42,7 @@ public class AuthSyncService {
 
         String firebaseUid = firebaseAuth.getFirebaseUid();
         String email = firebaseAuth.getEmail();
+        String displayName = firebaseAuth.getDisplayName();
 
         if (firebaseUid == null || firebaseUid.isBlank()) {
             throw new IllegalStateException("Firebase UID is missing from authentication context.");
@@ -47,6 +55,8 @@ public class AuthSyncService {
         User user = userRepository.findByFirebaseUid(firebaseUid)
                 .orElseGet(() -> createUserIfAbsent(firebaseUid, email, request));
 
+        ensureProfileDisplayName(user.getId(), displayName);
+
         // Seeded staff accounts are identified by their verified Firebase email and promoted to
         // the configured role here. This self-heals rows that were created as LEARNER and is
         // independent of Flyway migration ordering, so staff always reach their correct portal.
@@ -55,6 +65,18 @@ public class AuthSyncService {
         user = reconcileStaffRole(user, email);
 
         return new AuthSyncResponse(user.getId(), user.getRole());
+    }
+
+    private void ensureProfileDisplayName(UUID userId, String displayName) {
+        if (displayName == null || displayName.isBlank()) {
+            return;
+        }
+        Profile profile = profileRepository.findByUserId(userId)
+                .orElseGet(() -> profileRepository.save(new Profile(userId)));
+        if (profile.getDisplayName() == null || profile.getDisplayName().isBlank()) {
+            profile.update(displayName, profile.getBio());
+            profileRepository.save(profile);
+        }
     }
 
     private User reconcileStaffRole(User user, String email) {

@@ -65,7 +65,7 @@ class ProgressServiceTest {
     @BeforeEach
     void setUpSecurityContext() {
         SecurityContextHolder.getContext()
-                .setAuthentication(new FirebaseAuthentication("firebase-uid-123", "student@test.com"));
+                .setAuthentication(new FirebaseAuthentication("firebase-uid-123", "student@test.com", null));
         mockUser = mock(User.class);
         given(mockUser.getId()).willReturn(USER_ID);
         given(userRepository.findByFirebaseUid("firebase-uid-123")).willReturn(Optional.of(mockUser));
