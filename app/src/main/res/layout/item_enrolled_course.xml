@@ -8,6 +8,15 @@
     android:background="@drawable/bg_course_card"
     android:orientation="vertical">
 
+    <!-- Course cover image -->
+    <ImageView
+        android:id="@+id/enrolledCourseImage"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/enrolled_course_image_height"
+        android:scaleType="centerCrop"
+        android:src="@drawable/bg_course_hero_beginner"
+        android:contentDescription="@string/course_cover_content_desc" />
+
     <!-- Course info row -->
     <LinearLayout
         android:layout_width="match_parent"

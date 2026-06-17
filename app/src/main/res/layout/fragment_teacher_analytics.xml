@@ -14,9 +14,20 @@
         android:background="@color/teacher_surface"
         android:orientation="vertical"
         android:paddingHorizontal="24dp"
-        android:paddingTop="28dp"
+        android:paddingTop="20dp"
         android:paddingBottom="24dp"
         android:elevation="2dp">
+
+        <TextView
+            android:id="@+id/teacherAnalyticsBackButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/group_detail_back"
+            android:textColor="@color/teacher_accent"
+            android:textSize="15sp"
+            android:paddingEnd="12dp"
+            android:paddingVertical="8dp"
+            android:contentDescription="@string/teacher_back_cd" />
 
         <TextView
             android:layout_width="wrap_content"

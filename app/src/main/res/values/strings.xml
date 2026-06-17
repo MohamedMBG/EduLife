@@ -152,10 +152,10 @@
     <string name="lesson_player_about_label">About this lesson</string>
     <string name="lesson_player_notes_title">Lesson Notes</string>
     <string name="lesson_player_notes_placeholder">Notes and key takeaways will appear here once the lesson content is loaded.</string>
-    <string name="lesson_player_mark_complete">Mark as Done</string>
-    <string name="lesson_player_completed">✓ Completed</string>
-    <string name="lesson_player_prev">← Previous</string>
-    <string name="lesson_player_next">Next →</string>
+    <string name="lesson_player_mark_complete">Mark Lesson Complete</string>
+    <string name="lesson_player_completed">✓ Lesson Completed</string>
+    <string name="lesson_player_prev">Previous Lesson</string>
+    <string name="lesson_player_next">Next Lesson</string>
     <string name="lesson_player_order">Lesson %1$d</string>
     <string name="lesson_player_duration_minutes">%1$d min</string>
     <string name="lesson_player_section_from">From: %1$s</string>
@@ -167,6 +167,20 @@
     <string name="lesson_viewer_close">Close lesson viewer</string>
     <string name="lesson_viewer_no_content">This lesson has no playable content yet.</string>
     <string name="lesson_viewer_load_error">Could not load the lesson content. Check your connection.</string>
+    <string name="lesson_player_content_label">Lesson Content</string>
+    <string name="lesson_player_open_article">Open Article</string>
+    <string name="lesson_player_open_resource">Open Resource</string>
+    <string name="lesson_player_view_pdf">View PDF</string>
+    <string name="lesson_player_view_full_content">View Full Content</string>
+    <string name="lesson_player_content_unavailable">This lesson content is not available yet.</string>
+    <string name="lesson_player_cannot_open_link">Could not open link. No browser found.</string>
+    <string name="lesson_player_no_link">No link available for this lesson.</string>
+    <string name="lesson_player_article_label">External Article</string>
+    <string name="lesson_player_pdf_label">PDF Document</string>
+    <string name="lesson_player_resource_label">Learning Resource</string>
+
+    <!-- Course cover images -->
+    <string name="course_cover_content_desc">Course cover image</string>
 
     <!-- Profile -->
     <string name="profile_eyebrow">Learning Profile</string>

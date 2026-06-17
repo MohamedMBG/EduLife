@@ -13,6 +13,8 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import androidx.navigation.Navigation;
+
 import com.baghdad.edulife.R;
 import com.baghdad.edulife.features.analytics.model.AnalyticsInsight;
 import com.baghdad.edulife.features.analytics.model.StudyAnalytics;
@@ -78,6 +80,9 @@ public class StudentAnalyticsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         viewModel = new ViewModelProvider(this).get(StudyAnalyticsViewModel.class);
+
+        view.findViewById(R.id.studentAnalyticsBackButton).setOnClickListener(v ->
+                Navigation.findNavController(view).navigateUp());
 
         stateCard = view.findViewById(R.id.studentStateCard);
         loadingIndicator = view.findViewById(R.id.studentLoadingIndicator);

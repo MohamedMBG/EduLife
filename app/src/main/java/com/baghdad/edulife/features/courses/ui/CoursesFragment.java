@@ -5,8 +5,11 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.bumptech.glide.Glide;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -323,6 +326,27 @@ public class CoursesFragment extends Fragment {
             holder.progress.setText(resolveProgressLabel(holder, course));
             holder.continueBtn.setOnClickListener(v -> openAction.onOpen(course));
             holder.unenrollBtn.setOnClickListener(v -> unenrollAction.onUnenroll(course));
+
+            int fallback = heroForLevel(course.level);
+            if (course.imageUrl != null && !course.imageUrl.isBlank()) {
+                Glide.with(holder.itemView)
+                        .load(course.imageUrl)
+                        .placeholder(fallback)
+                        .error(fallback)
+                        .centerCrop()
+                        .into(holder.courseImage);
+            } else {
+                holder.courseImage.setImageResource(fallback);
+            }
+        }
+
+        private static int heroForLevel(String level) {
+            if (level == null) return R.drawable.bg_course_hero_beginner;
+            switch (level.toUpperCase(java.util.Locale.ROOT)) {
+                case "INTERMEDIATE": return R.drawable.bg_course_hero_intermediate;
+                case "ADVANCED": return R.drawable.bg_course_hero_advanced;
+                default: return R.drawable.bg_course_hero_beginner;
+            }
         }
 
         @Override
@@ -331,11 +355,13 @@ public class CoursesFragment extends Fragment {
         }
 
         static class VH extends RecyclerView.ViewHolder {
+            final ImageView courseImage;
             final TextView title, desc, language, level, progress, unenrollBtn;
             final Button continueBtn;
 
             VH(@NonNull View itemView) {
                 super(itemView);
+                courseImage = itemView.findViewById(R.id.enrolledCourseImage);
                 title = itemView.findViewById(R.id.enrolledCourseTitle);
                 desc = itemView.findViewById(R.id.enrolledCourseDesc);
                 language = itemView.findViewById(R.id.enrolledCourseLanguage);

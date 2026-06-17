@@ -13,13 +13,13 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <!-- Video / Media area -->
+    <!-- ═══ Video header (VIDEO type only) ═══ -->
     <FrameLayout
+        android:id="@+id/playerVideoHeader"
         android:layout_width="match_parent"
         android:layout_height="260dp"
         android:background="@drawable/bg_lesson_player_gradient">
 
-        <!-- Placeholder thumbnail / play area -->
         <LinearLayout
             android:id="@+id/playerThumbnailArea"
             android:layout_width="match_parent"
@@ -39,7 +39,7 @@
                     android:layout_height="32dp"
                     android:src="@drawable/ic_play_arrow"
                     app:tint="@color/brand_primary"
-                    android:contentDescription="@null" />
+                    android:contentDescription="Play video" />
             </LinearLayout>
 
             <TextView
@@ -51,7 +51,6 @@
                 android:textSize="13sp" />
         </LinearLayout>
 
-        <!-- Duration chip -->
         <LinearLayout
             android:id="@+id/lessonDurationChip"
             android:layout_width="wrap_content"
@@ -72,7 +71,7 @@
                 android:layout_marginEnd="5dp"
                 android:src="@drawable/ic_timer"
                 app:tint="@color/white"
-                android:contentDescription="@null" />
+                android:contentDescription="Duration" />
 
             <TextView
                 android:id="@+id/lessonDurationText"
@@ -83,7 +82,6 @@
                 android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- Back button over video -->
         <ImageButton
             android:id="@+id/lessonBackButton"
             android:layout_width="40dp"
@@ -96,7 +94,27 @@
             app:tint="@color/white" />
     </FrameLayout>
 
-    <!-- Lesson type + order strip -->
+    <!-- ═══ Compact header (non-VIDEO types) ═══ -->
+    <LinearLayout
+        android:id="@+id/compactTopBar"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:gravity="center_vertical"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:visibility="gone">
+
+        <ImageButton
+            android:id="@+id/lessonBackButtonCompact"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Back"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/brand_text_primary" />
+    </LinearLayout>
+
+    <!-- ═══ Type badge + order strip ═══ -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -146,7 +164,7 @@
             android:visibility="gone" />
     </LinearLayout>
 
-    <!-- Scrollable content -->
+    <!-- ═══ Scrollable content ═══ -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -180,27 +198,214 @@
                 android:textColor="@color/brand_text_secondary"
                 android:textSize="13sp" />
 
-            <!-- About this lesson — generous top margin replaces divider -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="36dp"
-                android:text="@string/lesson_player_about_label"
-                android:textColor="@color/brand_text_primary"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+            <!-- Content loading indicator -->
+            <ProgressBar
+                android:id="@+id/lessonContentLoading"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="32dp"
+                android:indeterminateTint="@color/brand_primary"
+                android:visibility="gone" />
 
-            <TextView
-                android:id="@+id/lessonSummary"
+            <!-- ═══ TEXT content area (shown before About for TEXT type) ═══ -->
+            <LinearLayout
+                android:id="@+id/lessonTextContentArea"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:lineSpacingMultiplier="1.6"
-                android:textColor="@color/brand_text_body"
-                android:textSize="14sp" />
+                android:layout_marginTop="24dp"
+                android:orientation="vertical"
+                android:visibility="gone">
 
-            <!-- Notes card -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/lesson_player_content_label"
+                    android:textColor="@color/brand_text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_lesson_content_card"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:id="@+id/lessonTextContent"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:lineSpacingMultiplier="1.6"
+                        android:textColor="@color/brand_text_body"
+                        android:textSize="15sp"
+                        android:textIsSelectable="true" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ═══ Article / Link card ═══ -->
             <LinearLayout
+                android:id="@+id/lessonArticleCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/bg_lesson_link_card"
+                android:orientation="vertical"
+                android:padding="20dp"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_marginEnd="10dp"
+                        android:src="@drawable/ic_book_open"
+                        app:tint="@color/brand_primary"
+                        android:contentDescription="@string/lesson_player_article_label" />
+
+                    <TextView
+                        android:id="@+id/lessonArticleLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/lesson_player_article_label"
+                        android:textColor="@color/brand_text_primary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/lessonArticleUrl"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:ellipsize="end"
+                    android:maxLines="2"
+                    android:textColor="@color/brand_text_secondary"
+                    android:textSize="13sp" />
+
+                <Button
+                    android:id="@+id/lessonOpenArticleButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/bg_lesson_nav_button_filled"
+                    android:text="@string/lesson_player_open_article"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- ═══ Resource / PDF card ═══ -->
+            <LinearLayout
+                android:id="@+id/lessonResourceCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/bg_lesson_link_card"
+                android:orientation="vertical"
+                android:padding="20dp"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_marginEnd="10dp"
+                        android:src="@drawable/ic_description"
+                        app:tint="@color/brand_primary"
+                        android:contentDescription="@string/lesson_player_resource_label" />
+
+                    <TextView
+                        android:id="@+id/lessonResourceLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/brand_text_primary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/lessonOpenResourceButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/bg_lesson_nav_button_filled"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- ═══ Fallback card (unknown or missing content) ═══ -->
+            <LinearLayout
+                android:id="@+id/lessonFallbackCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/bg_lesson_content_card"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="32dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_description"
+                    app:tint="@color/brand_text_muted"
+                    android:contentDescription="@string/lesson_player_content_unavailable" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/lesson_player_content_unavailable"
+                    android:textAlignment="center"
+                    android:textColor="@color/brand_text_secondary"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <!-- ═══ About this lesson ═══ -->
+            <LinearLayout
+                android:id="@+id/lessonAboutSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/lesson_player_about_label"
+                    android:textColor="@color/brand_text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/lessonSummary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:lineSpacingMultiplier="1.6"
+                    android:textColor="@color/brand_text_body"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <!-- ═══ Notes card ═══ -->
+            <LinearLayout
+                android:id="@+id/lessonNotesCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
@@ -220,7 +425,7 @@
                         android:layout_marginEnd="8dp"
                         android:src="@drawable/ic_notes"
                         app:tint="@color/brand_primary"
-                        android:contentDescription="@null" />
+                        android:contentDescription="Notes" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -243,7 +448,7 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- Mark as Done -->
+    <!-- ═══ Mark as Done ═══ -->
     <Button
         android:id="@+id/lessonMarkCompleteButton"
         android:layout_width="match_parent"
@@ -258,7 +463,7 @@
         android:textSize="15sp"
         android:textStyle="bold" />
 
-    <!-- Bottom nav: prev / next lesson -->
+    <!-- ═══ Bottom nav: prev / next ═══ -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -299,8 +504,7 @@
 
 </LinearLayout>
 
-    <!-- In-app viewer overlay. Hidden by default; revealed when the user taps the play CTA so
-         PDF / video / article content opens inside the app instead of handing off to Chrome. -->
+    <!-- ═══ In-app viewer overlay (VIDEO play / PDF viewer) ═══ -->
     <LinearLayout
         android:id="@+id/lessonViewerContainer"
         android:layout_width="match_parent"

@@ -10,6 +10,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import androidx.navigation.Navigation;
+
 import com.baghdad.edulife.R;
 import com.baghdad.edulife.features.analytics.model.AnalyticsFormat;
 import com.baghdad.edulife.features.analytics.model.PlatformAnalytics;
@@ -55,6 +57,9 @@ public class PlatformAnalyticsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         viewModel = new ViewModelProvider(this).get(PlatformAnalyticsViewModel.class);
+
+        view.findViewById(R.id.platformAnalyticsBackButton).setOnClickListener(v ->
+                Navigation.findNavController(view).navigateUp());
 
         stateCard = view.findViewById(R.id.platformStateCard);
         loadingIndicator = view.findViewById(R.id.platformLoading);

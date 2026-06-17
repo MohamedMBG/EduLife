@@ -23,7 +23,12 @@
     <dimen name="study_card_radius">20dp</dimen>
     <dimen name="study_card_radius_large">24dp</dimen>
     <dimen name="study_chart_height">180dp</dimen>
-    <dimen name="study_ring_size">120dp</dimen>
+    <dimen name="study_ring_size">100dp</dimen>
     <dimen name="study_ring_thickness">10dp</dimen>
     <dimen name="study_icon_badge">40dp</dimen>
+
+    <!-- Course cover images -->
+    <dimen name="detail_hero_image_height">200dp</dimen>
+    <dimen name="cms_course_image_height">140dp</dimen>
+    <dimen name="enrolled_course_image_height">120dp</dimen>
 </resources>

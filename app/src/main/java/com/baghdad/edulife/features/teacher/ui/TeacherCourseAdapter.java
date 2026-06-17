@@ -4,7 +4,10 @@ import android.content.res.ColorStateList;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.DiffUtil;
@@ -41,12 +44,14 @@ public class TeacherCourseAdapter extends ListAdapter<CmsCourse, TeacherCourseAd
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
+        private final ImageView courseImage;
         private final TextView courseTitle;
         private final TextView courseDesc;
         private final TextView statusChip;
 
         ViewHolder(@NonNull View view) {
             super(view);
+            courseImage = view.findViewById(R.id.cmsCourseImage);
             courseTitle = view.findViewById(R.id.cmsCourseTitle);
             courseDesc = view.findViewById(R.id.cmsCourseDesc);
             statusChip = view.findViewById(R.id.cmsCourseStatusChip);
@@ -58,6 +63,18 @@ public class TeacherCourseAdapter extends ListAdapter<CmsCourse, TeacherCourseAd
             String status = item.status != null ? item.status : "DRAFT";
             statusChip.setText(resolveStatusLabel(status, itemView));
             applyStatusStyle(status);
+
+            int fallback = R.drawable.bg_course_hero_beginner;
+            if (item.imageUrl != null && !item.imageUrl.isBlank()) {
+                Glide.with(itemView)
+                        .load(item.imageUrl)
+                        .placeholder(fallback)
+                        .error(fallback)
+                        .centerCrop()
+                        .into(courseImage);
+            } else {
+                courseImage.setImageResource(fallback);
+            }
 
             itemView.setOnClickListener(v -> listener.onCourseClick(item));
         }

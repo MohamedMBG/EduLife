@@ -3,7 +3,10 @@ package com.baghdad.edulife.features.groupadmin.ui;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -46,12 +49,14 @@ public class ApprovalCourseAdapter extends ListAdapter<CmsCourse, ApprovalCourse
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
+        private final ImageView courseImage;
         private final TextView title;
         private final TextView author;
         private final TextView approveButton;
 
         ViewHolder(@NonNull View view) {
             super(view);
+            courseImage = view.findViewById(R.id.approvalCourseImage);
             title = view.findViewById(R.id.approvalTitle);
             author = view.findViewById(R.id.approvalAuthor);
             approveButton = view.findViewById(R.id.approvalButton);
@@ -61,6 +66,18 @@ public class ApprovalCourseAdapter extends ListAdapter<CmsCourse, ApprovalCourse
             title.setText(item.title != null ? item.title : "Untitled");
             String byEmail = item.createdByEmail != null ? item.createdByEmail : "unknown teacher";
             author.setText(author.getContext().getString(R.string.approvals_authored_by, byEmail));
+
+            int fallback = R.drawable.bg_course_hero_beginner;
+            if (item.imageUrl != null && !item.imageUrl.isBlank()) {
+                Glide.with(itemView)
+                        .load(item.imageUrl)
+                        .placeholder(fallback)
+                        .error(fallback)
+                        .centerCrop()
+                        .into(courseImage);
+            } else {
+                courseImage.setImageResource(fallback);
+            }
 
             if (listener != null) {
                 approveButton.setVisibility(View.VISIBLE);

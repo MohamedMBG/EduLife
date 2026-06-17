@@ -20,6 +20,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
+import com.bumptech.glide.Glide;
 import com.baghdad.edulife.R;
 import com.baghdad.edulife.features.courses.model.CourseDetail;
 import com.baghdad.edulife.features.courses.model.CourseDetailUiState;
@@ -141,14 +142,36 @@ public class CourseDetailFragment extends Fragment {
         statusText.setText(message);
     }
 
+    private int heroForLevel(String level) {
+        if (level == null) return R.drawable.bg_course_hero_beginner;
+        switch (level.toUpperCase(Locale.ROOT)) {
+            case "INTERMEDIATE": return R.drawable.bg_course_hero_intermediate;
+            case "ADVANCED": return R.drawable.bg_course_hero_advanced;
+            default: return R.drawable.bg_course_hero_beginner;
+        }
+    }
+
     private void bindCourseDetail(@NonNull CourseDetail courseDetail) {
         View view = requireView();
+        ImageView heroImage = view.findViewById(R.id.courseDetailHeroImage);
         TextView titleText = view.findViewById(R.id.courseTitleText);
         TextView shortDescriptionText = view.findViewById(R.id.courseShortDescriptionText);
         TextView levelText = view.findViewById(R.id.courseLevelText);
         TextView languageText = view.findViewById(R.id.courseLanguageText);
         TextView sectionCountText = view.findViewById(R.id.courseSectionCountText);
         TextView descriptionText = view.findViewById(R.id.courseDescriptionText);
+
+        int fallback = heroForLevel(courseDetail.level);
+        if (courseDetail.imageUrl != null && !courseDetail.imageUrl.isBlank()) {
+            Glide.with(this)
+                    .load(courseDetail.imageUrl)
+                    .placeholder(fallback)
+                    .error(fallback)
+                    .centerCrop()
+                    .into(heroImage);
+        } else {
+            heroImage.setImageResource(fallback);
+        }
 
         titleText.setText(courseDetail.title);
         shortDescriptionText.setText(courseDetail.shortDescription);

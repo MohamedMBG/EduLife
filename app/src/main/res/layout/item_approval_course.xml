@@ -10,6 +10,15 @@
     android:paddingHorizontal="18dp"
     android:paddingVertical="16dp">
 
+    <ImageView
+        android:id="@+id/approvalCourseImage"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/cms_course_image_height"
+        android:layout_marginBottom="12dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/bg_course_hero_beginner"
+        android:contentDescription="@string/course_cover_content_desc" />
+
     <TextView
         android:id="@+id/approvalTitle"
         android:layout_width="match_parent"

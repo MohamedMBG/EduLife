@@ -1,6 +1,13 @@
 package com.baghdad.edulife.features.courses.ui;
 
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.text.Html;
+import android.text.Spanned;
+import android.text.method.LinkMovementMethod;
 import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
@@ -9,6 +16,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -48,11 +56,27 @@ public class LessonPlayerFragment extends Fragment {
     private TextView viewerTitle;
     private Button markCompleteButton;
 
+    private FrameLayout playerVideoHeader;
+    private LinearLayout compactTopBar;
+    private ProgressBar lessonContentLoading;
+    private LinearLayout lessonTextContentArea;
+    private TextView lessonTextContent;
+    private LinearLayout lessonArticleCard;
+    private TextView lessonArticleUrl;
+    private Button lessonOpenArticleButton;
+    private LinearLayout lessonResourceCard;
+    private TextView lessonResourceLabel;
+    private Button lessonOpenResourceButton;
+    private LinearLayout lessonFallbackCard;
+    private LinearLayout lessonAboutSection;
+
     private String courseId = "";
     private String lessonId = "";
+    private String lessonType = "";
     private boolean isPreview;
     private boolean viewerOpened;
     private boolean xpAwarded;
+    private boolean contentBound;
 
     private LessonPlayerViewModel viewModel;
     private OnBackPressedCallback viewerBackCallback;
@@ -67,14 +91,12 @@ public class LessonPlayerFragment extends Fragment {
 
         viewModel = new ViewModelProvider(this).get(LessonPlayerViewModel.class);
 
-        // Nav graph always supplies the lesson bundle; requireArguments turns a wiring bug into
-        // an ISE rather than the ten silent blank-fallback paths below.
         Bundle args           = requireArguments();
         courseId              = args.getString("courseId", "");
         lessonId              = args.getString("lessonId", "");
         String lessonTitle    = args.getString("lessonTitle", "");
         String lessonSummary  = args.getString("lessonSummary", "");
-        String lessonType     = args.getString("lessonType", "");
+        lessonType            = args.getString("lessonType", "");
         int    durationMin    = args.getInt("durationMinutes", 0);
         isPreview             = args.getBoolean("isPreview", false);
         String sectionTitle   = args.getString("sectionTitle", "");
@@ -93,9 +115,42 @@ public class LessonPlayerFragment extends Fragment {
         view.findViewById(R.id.lessonPreviewBadge)
                 .setVisibility(isPreview ? View.VISIBLE : View.GONE);
 
+        // Content-type views
+        playerVideoHeader    = view.findViewById(R.id.playerVideoHeader);
+        compactTopBar        = view.findViewById(R.id.compactTopBar);
+        lessonContentLoading = view.findViewById(R.id.lessonContentLoading);
+        lessonTextContentArea = view.findViewById(R.id.lessonTextContentArea);
+        lessonTextContent    = view.findViewById(R.id.lessonTextContent);
+        lessonArticleCard    = view.findViewById(R.id.lessonArticleCard);
+        lessonArticleUrl     = view.findViewById(R.id.lessonArticleUrl);
+        lessonOpenArticleButton  = view.findViewById(R.id.lessonOpenArticleButton);
+        lessonResourceCard   = view.findViewById(R.id.lessonResourceCard);
+        lessonResourceLabel  = view.findViewById(R.id.lessonResourceLabel);
+        lessonOpenResourceButton = view.findViewById(R.id.lessonOpenResourceButton);
+        lessonFallbackCard   = view.findViewById(R.id.lessonFallbackCard);
+        lessonAboutSection   = view.findViewById(R.id.lessonAboutSection);
+
+        if (lessonSummary == null || lessonSummary.isBlank()) {
+            lessonAboutSection.setVisibility(View.GONE);
+        }
+
+        // Set header based on lesson type
+        boolean isVideoType = "VIDEO".equalsIgnoreCase(lessonType);
+        if (isVideoType) {
+            playerVideoHeader.setVisibility(View.VISIBLE);
+            compactTopBar.setVisibility(View.GONE);
+        } else {
+            playerVideoHeader.setVisibility(View.GONE);
+            compactTopBar.setVisibility(View.VISIBLE);
+        }
+
+        // Back buttons
         view.findViewById(R.id.lessonBackButton).setOnClickListener(v ->
                 Navigation.findNavController(view).popBackStack());
+        view.findViewById(R.id.lessonBackButtonCompact).setOnClickListener(v ->
+                Navigation.findNavController(view).popBackStack());
 
+        // In-app viewer setup
         viewerContainer = view.findViewById(R.id.lessonViewerContainer);
         viewerWebView   = view.findViewById(R.id.lessonViewerWebView);
         viewerProgress  = view.findViewById(R.id.lessonViewerProgress);
@@ -116,7 +171,6 @@ public class LessonPlayerFragment extends Fragment {
 
         markCompleteButton = view.findViewById(R.id.lessonMarkCompleteButton);
 
-        // Hide "Mark as Done" for preview lessons — no enrollment = no progress tracking.
         if (isPreview || courseId.isBlank() || lessonId.isBlank()) {
             markCompleteButton.setVisibility(View.GONE);
         } else {
@@ -129,12 +183,27 @@ public class LessonPlayerFragment extends Fragment {
 
         observeViewModel();
         installViewerBackHandler();
+
+        // Eagerly load lesson detail for all types so content renders without extra tap
+        if (!courseId.isBlank() && !lessonId.isBlank()) {
+            lessonContentLoading.setVisibility(View.VISIBLE);
+            viewModel.loadLessonDetail(courseId, lessonId);
+        }
     }
 
     private void observeViewModel() {
         viewModel.detail.observe(getViewLifecycleOwner(), detail -> {
             if (detail == null) return;
+            lessonContentLoading.setVisibility(View.GONE);
             if (viewerOpened) loadDetailInWebView(detail);
+            if (!contentBound) {
+                contentBound = true;
+                bindLessonContent(detail);
+            }
+            if (detail.completed && markCompleteButton != null) {
+                markCompleteButton.setEnabled(false);
+                markCompleteButton.setText(R.string.lesson_player_completed);
+            }
         });
 
         viewModel.detailLoading.observe(getViewLifecycleOwner(), loading -> {
@@ -144,8 +213,12 @@ public class LessonPlayerFragment extends Fragment {
 
         viewModel.detailError.observe(getViewLifecycleOwner(), msg -> {
             if (msg == null || msg.isBlank()) return;
+            lessonContentLoading.setVisibility(View.GONE);
             Toast.makeText(requireContext(),
                     R.string.lesson_viewer_load_error, Toast.LENGTH_SHORT).show();
+            if (!"VIDEO".equalsIgnoreCase(lessonType)) {
+                lessonFallbackCard.setVisibility(View.VISIBLE);
+            }
         });
 
         viewModel.completed.observe(getViewLifecycleOwner(), completed -> {
@@ -156,9 +229,6 @@ public class LessonPlayerFragment extends Fragment {
             }
             if (!isPreview && !courseId.isBlank() && !lessonId.isBlank() && !xpAwarded) {
                 xpAwarded = true;
-                // Backend awards lesson XP inside ProgressService.markLessonComplete
-                // (and the course-completion XP if this lesson finished the course).
-                // The client only refetches authoritative state.
                 new GamificationRepository().loadMyState(new GamificationRepository.StateCallback() {
                     @Override public void onSuccess(GamificationUiState ignored) {}
                     @Override public void onError(String ignored) {}
@@ -168,7 +238,6 @@ public class LessonPlayerFragment extends Fragment {
 
         viewModel.completionError.observe(getViewLifecycleOwner(), reason -> {
             if (reason == null) return;
-            // Roll back the optimistic disabled / completed label so the learner can retry.
             if (markCompleteButton != null) {
                 markCompleteButton.setEnabled(true);
                 markCompleteButton.setText(R.string.lesson_player_mark_complete);
@@ -189,17 +258,137 @@ public class LessonPlayerFragment extends Fragment {
         });
     }
 
+    // ─── Content-type rendering ───────────────────────────────────────────────
+
+    private void bindLessonContent(LessonDetail detail) {
+        lessonTextContentArea.setVisibility(View.GONE);
+        lessonArticleCard.setVisibility(View.GONE);
+        lessonResourceCard.setVisibility(View.GONE);
+        lessonFallbackCard.setVisibility(View.GONE);
+
+        String type = detail.lessonType != null ? detail.lessonType.toUpperCase(Locale.ROOT) : "";
+        String url  = detail.contentUrl  != null ? detail.contentUrl.trim()  : "";
+        String body = detail.contentBody != null ? detail.contentBody.trim() : "";
+
+        boolean isVideo = "VIDEO".equals(type);
+        playerVideoHeader.setVisibility(isVideo ? View.VISIBLE : View.GONE);
+        compactTopBar.setVisibility(isVideo ? View.GONE : View.VISIBLE);
+
+        switch (type) {
+            case "VIDEO":
+                if (!body.isEmpty()) {
+                    lessonTextContentArea.setVisibility(View.VISIBLE);
+                    renderTextContent(body);
+                }
+                break;
+
+            case "TEXT":
+                if (!body.isEmpty()) {
+                    lessonTextContentArea.setVisibility(View.VISIBLE);
+                    renderTextContent(body);
+                } else if (!url.isEmpty()) {
+                    showArticleCard(url, R.string.lesson_player_view_full_content);
+                } else {
+                    lessonFallbackCard.setVisibility(View.VISIBLE);
+                }
+                break;
+
+            case "ARTICLE":
+            case "LINK":
+                if (!url.isEmpty()) {
+                    showArticleCard(url, R.string.lesson_player_open_article);
+                } else if (!body.isEmpty()) {
+                    lessonTextContentArea.setVisibility(View.VISIBLE);
+                    renderTextContent(body);
+                } else {
+                    lessonFallbackCard.setVisibility(View.VISIBLE);
+                }
+                break;
+
+            case "PDF":
+                lessonResourceCard.setVisibility(View.VISIBLE);
+                lessonResourceLabel.setText(R.string.lesson_player_pdf_label);
+                lessonOpenResourceButton.setText(R.string.lesson_player_view_pdf);
+                if (!url.isEmpty()) {
+                    lessonOpenResourceButton.setOnClickListener(v -> openInAppViewer());
+                } else {
+                    lessonOpenResourceButton.setEnabled(false);
+                    lessonOpenResourceButton.setAlpha(0.4f);
+                }
+                break;
+
+            case "RESOURCE":
+                lessonResourceCard.setVisibility(View.VISIBLE);
+                lessonResourceLabel.setText(R.string.lesson_player_resource_label);
+                lessonOpenResourceButton.setText(R.string.lesson_player_open_resource);
+                if (!url.isEmpty()) {
+                    lessonOpenResourceButton.setOnClickListener(v -> openExternalUrl(url));
+                } else {
+                    lessonOpenResourceButton.setEnabled(false);
+                    lessonOpenResourceButton.setAlpha(0.4f);
+                }
+                break;
+
+            default:
+                if (!url.isEmpty()) {
+                    showArticleCard(url, R.string.lesson_player_open_resource);
+                } else if (!body.isEmpty()) {
+                    lessonTextContentArea.setVisibility(View.VISIBLE);
+                    renderTextContent(body);
+                } else {
+                    lessonFallbackCard.setVisibility(View.VISIBLE);
+                }
+                break;
+        }
+    }
+
+    private void showArticleCard(String url, int buttonTextRes) {
+        lessonArticleCard.setVisibility(View.VISIBLE);
+        lessonArticleUrl.setText(url);
+        lessonOpenArticleButton.setText(buttonTextRes);
+        lessonOpenArticleButton.setOnClickListener(v -> openExternalUrl(url));
+    }
+
+    @SuppressWarnings("deprecation")
+    private void renderTextContent(String contentBody) {
+        String html = contentBody.replace("\n", "<br/>");
+        Spanned rendered;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            rendered = Html.fromHtml(html, Html.FROM_HTML_MODE_COMPACT);
+        } else {
+            rendered = Html.fromHtml(html);
+        }
+        lessonTextContent.setText(rendered);
+        lessonTextContent.setMovementMethod(LinkMovementMethod.getInstance());
+    }
+
+    private void openExternalUrl(String url) {
+        if (url == null || url.isBlank()) {
+            Toast.makeText(requireContext(), R.string.lesson_player_no_link, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String normalized = url.trim();
+        if (!normalized.startsWith("http://") && !normalized.startsWith("https://")) {
+            normalized = "https://" + normalized;
+        }
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(normalized)));
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(requireContext(), R.string.lesson_player_cannot_open_link, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // ─── In-app WebView viewer ────────────────────────────────────────────────
+
     @SuppressWarnings("deprecation")
     private void configureWebView() {
         WebSettings settings = viewerWebView.getSettings();
-        // JS is required for Google Docs PDF preview and most embedded video players.
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setLoadWithOverviewMode(true);
         settings.setUseWideViewPort(true);
         settings.setBuiltInZoomControls(true);
         settings.setDisplayZoomControls(false);
-        // File access stays off so the WebView cannot read app-private files via a malicious URL.
         settings.setAllowFileAccess(false);
         settings.setAllowContentAccess(false);
         settings.setMediaPlaybackRequiresUserGesture(true);
@@ -207,7 +396,6 @@ public class LessonPlayerFragment extends Fragment {
         viewerWebView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                // Keep all navigation inside the in-app viewer; only http(s) targets are honoured.
                 String scheme = request.getUrl().getScheme();
                 return scheme == null || !(scheme.equals("http") || scheme.equals("https"));
             }
@@ -277,8 +465,6 @@ public class LessonPlayerFragment extends Fragment {
             return;
         }
 
-        // Fallback: render plain text / markdown content as HTML inside the WebView so it never
-        // leaks to the system browser.
         String html = "<html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/>"
                 + "<style>body{font-family:sans-serif;padding:16px;line-height:1.6;color:#222}</style>"
                 + "</head><body>" + body.replace("\n", "<br/>") + "</body></html>";
@@ -290,8 +476,6 @@ public class LessonPlayerFragment extends Fragment {
         String url  = contentUrl.toLowerCase(Locale.ROOT);
         boolean looksLikePdf = type.equals("PDF") || url.endsWith(".pdf");
         if (looksLikePdf) {
-            // Google Docs viewer embeds the PDF inside the WebView so we keep the user in-app
-            // instead of handing off to a system PDF reader.
             try {
                 String encoded = URLEncoder.encode(contentUrl, StandardCharsets.UTF_8.name());
                 return "https://docs.google.com/gview?embedded=true&url=" + encoded;
@@ -306,21 +490,18 @@ public class LessonPlayerFragment extends Fragment {
         if (!viewerOpened) return;
         viewerOpened = false;
 
-        // Stop any background playback before hiding the viewer so audio cannot keep playing
-        // while the learner is on the summary screen.
         if (viewerWebView != null) viewerWebView.loadUrl("about:blank");
         viewerContainer.setVisibility(View.GONE);
         if (viewerBackCallback != null) {
             viewerBackCallback.setEnabled(false);
         }
 
-        // Closing the viewer counts as engaging with the content for non-preview enrolled
-        // lessons. The ViewModel guards against double-marking via its own in-flight flag, so
-        // the manual "Mark as Done" button still works without a duplicate request.
         if (!isPreview && !courseId.isBlank() && !lessonId.isBlank()) {
             viewModel.markComplete(courseId, lessonId);
         }
     }
+
+    // ─── Lifecycle ────────────────────────────────────────────────────────────
 
     @Override
     public void onPause() {
@@ -344,6 +525,8 @@ public class LessonPlayerFragment extends Fragment {
         }
         super.onDestroyView();
     }
+
+    // ─── Next lesson navigation ───────────────────────────────────────────────
 
     private void setupNextLessonButton(View root) {
         Button nextBtn = root.findViewById(R.id.lessonNextButton);

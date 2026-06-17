@@ -27,6 +27,16 @@
             android:paddingTop="28dp"
             android:paddingBottom="4dp">
 
+            <ImageButton
+                android:id="@+id/studentAnalyticsBackButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/bg_enroll_icon_button"
+                android:contentDescription="@string/course_detail_back"
+                android:src="@drawable/ic_arrow_back"
+                app:tint="@color/brand_text_primary" />
+
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
