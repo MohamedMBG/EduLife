@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowUpRight, CheckCircle2, Languages } from "lucide-react";
+import { ArrowUpRight, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth/auth-context";
 import { MagneticButton, Parallax } from "./animations";
@@ -215,89 +215,21 @@ export function PublicHeroSection() {
           >
             <motion.div
               animate={{
-                scale: [1, 1.05, 1],
-                opacity: [0.5, 0.7, 0.5],
+                scale: [1, 1.06, 1],
+                opacity: [0.45, 0.7, 0.45],
               }}
-              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute inset-x-8 top-8 h-56 rounded-full bg-[#d8e3fb]/70 blur-3xl"
+              transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute -inset-x-2 top-6 h-80 rounded-full bg-[radial-gradient(circle_at_50%_40%,_rgba(46,164,128,0.35),_rgba(216,227,251,0.55)_45%,_transparent_72%)] blur-3xl"
               aria-hidden
             />
 
-            <div className="relative ml-auto w-[340px] rounded-[3.2rem] border border-[#c5c6cd] bg-[#08111f] p-3 shadow-[0_38px_88px_-34px_rgba(9,20,38,0.5)]">
-              <div className="relative overflow-hidden rounded-[2.6rem] border border-white/10 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.13),_transparent_48%),linear-gradient(180deg,#121d31_0%,#080d17_100%)] px-6 pb-8 pt-10">
-                <div
-                  className="absolute left-1/2 top-4 h-1.5 w-[4.5rem] -translate-x-1/2 rounded-full bg-white/16"
-                  aria-hidden
-                />
-
-                <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-[10px] uppercase tracking-[0.18em] text-white/55">
-                        Final exam
-                      </p>
-                      <p className="mt-2 text-lg font-semibold tracking-[-0.04em] text-white">
-                        Credential review
-                      </p>
-                    </div>
-                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10">
-                      <Languages className="h-5 w-5 text-white/85" />
-                    </span>
-                  </div>
-
-                  <div className="mt-8 rounded-[1.8rem] border border-white/10 bg-[#0d1526] p-5">
-                    <div className="aspect-[3/4] rounded-[1.4rem] border border-white/8 bg-[linear-gradient(160deg,rgba(255,255,255,0.08),rgba(255,255,255,0.01)),linear-gradient(180deg,#0b1220_0%,#05070e_100%)] p-5">
-                      <div className="flex h-full flex-col justify-between">
-                        <div className="space-y-2">
-                          <div className="h-2.5 w-[4.5rem] rounded-full bg-white/18" />
-                          <div className="h-2.5 w-24 rounded-full bg-white/10" />
-                        </div>
-
-                        <div className="space-y-4">
-                          <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full border border-white/10 bg-white/4">
-                            <motion.div
-                              animate={{ scale: [1, 1.08, 1] }}
-                              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                              className="flex h-14 w-14 items-center justify-center rounded-full border border-white/12 bg-white/8"
-                            >
-                              <CheckCircle2 className="h-7 w-7 text-white/75" />
-                            </motion.div>
-                          </div>
-                          <div className="space-y-2 text-center">
-                            <p className="text-[10px] uppercase tracking-[0.18em] text-white/50">
-                              Verified assessment
-                            </p>
-                            <p className="text-sm leading-6 text-white/72">
-                              Scored on the server. Issued with a public verification trail.
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="grid gap-2">
-                          <div className="h-2 rounded-full bg-white/10">
-                            <motion.div
-                              initial={{ width: "0%" }}
-                              animate={{ width: "82%" }}
-                              transition={{ duration: 1.8, delay: 1.2, ease: [0.16, 1, 0.3, 1] }}
-                              className="h-2 rounded-full bg-white/70"
-                            />
-                          </div>
-                          <div className="flex justify-between text-[10px] uppercase tracking-[0.18em] text-white/45">
-                            <span>Progress</span>
-                            <span>82%</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div
-                  className="absolute bottom-10 right-[-22px] h-28 w-2 rounded-full bg-white/18"
-                  aria-hidden
-                />
-              </div>
-            </div>
+            <motion.img
+              src="/hero-credential.png"
+              alt="EduLife learning progress on mobile"
+              animate={{ y: [0, -14, 0] }}
+              transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+              className="relative ml-auto w-[400px] [filter:drop-shadow(0_48px_56px_rgba(9,20,38,0.34))]"
+            />
 
             <motion.div
               initial={{ opacity: 0, x: -30, y: 20 }}
