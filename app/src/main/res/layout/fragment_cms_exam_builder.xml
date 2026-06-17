@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/teacher_background">
+
+    <!-- Top bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/teacher_surface"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="16dp"
+        android:gravity="center_vertical"
+        android:elevation="2dp">
+
+        <TextView
+            android:id="@+id/examBuilderBackButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/teacher_back_cd"
+            android:textColor="@color/teacher_accent"
+            android:textSize="15sp"
+            android:paddingEnd="12dp"
+            android:paddingVertical="8dp"
+            android:contentDescription="@string/teacher_back_cd" />
+
+        <TextView
+            android:id="@+id/examBuilderTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/cms_exam_builder_title"
+            android:textColor="@color/teacher_text_primary"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:ellipsize="end"
+            android:maxLines="1" />
+    </LinearLayout>
+
+    <!-- State card (loading / error / access denied) -->
+    <LinearLayout
+        android:id="@+id/examBuilderStateCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="24dp"
+        android:background="@drawable/bg_teacher_course_card"
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp"
+        android:paddingVertical="28dp"
+        android:gravity="center"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/examBuilderLoadingIndicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:indicatorColor="@color/teacher_accent"
+            app:trackColor="@color/teacher_border"
+            android:indeterminate="true"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <TextView
+            android:id="@+id/examBuilderStateText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:textColor="@color/teacher_text_secondary"
+            android:textSize="14sp"
+            android:gravity="center"
+            tools:text="@string/teacher_loading" />
+
+        <TextView
+            android:id="@+id/examBuilderRetryButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_teacher_add_section_button"
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="9dp"
+            android:text="@string/teacher_retry"
+            android:textColor="@color/teacher_accent"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- Content scroll view -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/examBuilderScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:visibility="gone"
+        android:clipToPadding="false"
+        android:paddingBottom="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- ═══ EXISTING EXAM VIEW ═══ -->
+            <LinearLayout
+                android:id="@+id/existingExamSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="20dp"
+                android:visibility="gone">
+
+                <!-- Info message -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/cms_exam_existing_message"
+                    android:textColor="@color/teacher_text_secondary"
+                    android:textSize="13sp"
+                    android:lineSpacingExtra="4dp" />
+
+                <!-- Exam details card -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/bg_teacher_course_card"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="20dp"
+                    android:paddingVertical="20dp">
+
+                    <TextView
+                        android:id="@+id/existingExamTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/teacher_text_primary"
+                        android:textSize="17sp"
+                        android:textStyle="bold"
+                        tools:text="Final Exam" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/existingExamPassScore"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:textColor="@color/teacher_text_secondary"
+                            android:textSize="13sp"
+                            tools:text="Pass score: 80%" />
+
+                        <TextView
+                            android:id="@+id/existingExamTimeLimit"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:textColor="@color/teacher_text_secondary"
+                            android:textSize="13sp"
+                            tools:text="Time limit: 30 min" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Questions container (populated programmatically) -->
+                <LinearLayout
+                    android:id="@+id/existingExamQuestionsContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:orientation="vertical" />
+            </LinearLayout>
+
+            <!-- ═══ BUILDER FORM ═══ -->
+            <LinearLayout
+                android:id="@+id/builderSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="20dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/cms_exam_builder_subtitle"
+                    android:textColor="@color/teacher_text_secondary"
+                    android:textSize="13sp"
+                    android:lineSpacingExtra="4dp" />
+
+                <!-- Exam settings card -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:background="@drawable/bg_teacher_course_card"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="20dp"
+                    android:paddingVertical="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/cms_exam_settings_label"
+                        android:textColor="@color/teacher_text_secondary"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.10" />
+
+                    <EditText
+                        android:id="@+id/examTitleInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="@string/cms_exam_title_hint"
+                        android:text="Final Exam"
+                        android:inputType="text"
+                        android:textSize="15sp"
+                        android:textColor="@color/teacher_text_primary"
+                        android:textColorHint="@color/teacher_text_secondary"
+                        android:backgroundTint="@color/teacher_border" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal">
+
+                        <EditText
+                            android:id="@+id/examPassScoreInput"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="8dp"
+                            android:hint="@string/cms_exam_pass_score_hint"
+                            android:text="80"
+                            android:inputType="number"
+                            android:textSize="15sp"
+                            android:textColor="@color/teacher_text_primary"
+                            android:textColorHint="@color/teacher_text_secondary"
+                            android:backgroundTint="@color/teacher_border" />
+
+                        <EditText
+                            android:id="@+id/examTimeLimitInput"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:hint="@string/cms_exam_time_limit_hint"
+                            android:text="30"
+                            android:inputType="number"
+                            android:textSize="15sp"
+                            android:textColor="@color/teacher_text_primary"
+                            android:textColorHint="@color/teacher_text_secondary"
+                            android:backgroundTint="@color/teacher_border" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Questions header -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:text="@string/cms_exam_questions_label"
+                    android:textColor="@color/teacher_text_secondary"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.10" />
+
+                <!-- Questions list -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/examQuestionsRecycler"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:nestedScrollingEnabled="false"
+                    android:clipToPadding="false" />
+
+                <!-- Add question button -->
+                <TextView
+                    android:id="@+id/examAddQuestionButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_teacher_add_section_button"
+                    android:gravity="center"
+                    android:paddingVertical="14dp"
+                    android:text="@string/cms_exam_add_question"
+                    android:textColor="@color/teacher_accent"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Save button (only in create mode) -->
+    <TextView
+        android:id="@+id/examSaveButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_cms_exam_save_button"
+        android:gravity="center"
+        android:paddingVertical="14dp"
+        android:text="@string/cms_exam_save"
+        android:textColor="@color/white"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+</LinearLayout>

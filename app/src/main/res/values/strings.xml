@@ -389,6 +389,30 @@
     <string name="teacher_loading">Loading…</string>
     <string name="teacher_retry">Retry</string>
 
+    <!-- ── CMS Exam Builder ──────────────────────────────────────────── -->
+    <string name="cms_exam_builder_title">Final Exam Builder</string>
+    <string name="cms_exam_builder_subtitle">Create one MCQ exam for this course. Learners will receive it after completing the course requirements.</string>
+    <string name="cms_exam_settings_label">EXAM SETTINGS</string>
+    <string name="cms_exam_title_hint">Exam title</string>
+    <string name="cms_exam_pass_score_hint">Pass score (%)</string>
+    <string name="cms_exam_time_limit_hint">Time limit (min)</string>
+    <string name="cms_exam_questions_label">QUESTIONS</string>
+    <string name="cms_exam_question_hint">Enter question text</string>
+    <string name="cms_exam_choices_label">CHOICES</string>
+    <string name="cms_exam_choice_hint">Choice text</string>
+    <string name="cms_exam_add_question">+ Add Question</string>
+    <string name="cms_exam_add_choice">+ Add Choice</string>
+    <string name="cms_exam_remove">Remove</string>
+    <string name="cms_exam_save">Save Exam</string>
+    <string name="cms_exam_saving">Saving…</string>
+    <string name="cms_exam_final_exam">Final Exam</string>
+    <string name="cms_exam_question_number">Question %1$d</string>
+    <string name="cms_exam_existing_message">This course already has a final exam. One exam per course is currently supported.</string>
+    <string name="cms_exam_pass_score_label">Pass score: %1$d%%</string>
+    <string name="cms_exam_time_limit_label">Time limit: %1$d min</string>
+    <string name="cms_exam_no_time_limit">No time limit</string>
+    <string name="cms_exam_access_denied">You don\'t have permission to access this exam.</string>
+
     <!-- ── Group admin portal ─────────────────────────────────────────── -->
     <string name="group_admin_portal_subtitle">GROUP ADMIN PORTAL</string>
     <string name="group_admin_title">My Cohorts</string>

@@ -330,6 +330,23 @@
             android:name="courseTitle"
             app:argType="string"
             android:defaultValue="" />
+        <action
+            android:id="@+id/action_cmsCourseDetailFragment_to_cmsExamBuilderFragment"
+            app:destination="@id/cmsExamBuilderFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/cmsExamBuilderFragment"
+        android:name="com.baghdad.edulife.features.exams.ui.CmsExamBuilderFragment"
+        android:label="Final Exam Builder">
+        <argument
+            android:name="courseId"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="courseTitle"
+            app:argType="string"
+            android:defaultValue="" />
     </fragment>
 
     <!-- ── Group admin area ─────────────────────────────────────────── -->

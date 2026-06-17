@@ -121,7 +121,8 @@
         android:id="@+id/cmsAddSectionButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="16dp"
         android:background="@drawable/bg_teacher_add_section_button"
         android:gravity="center"
         android:paddingVertical="14dp"
@@ -129,5 +130,22 @@
         android:textColor="@color/teacher_accent"
         android:textSize="14sp"
         android:textStyle="bold" />
+
+    <!-- Final Exam button -->
+    <TextView
+        android:id="@+id/cmsExamButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_cms_exam_save_button"
+        android:gravity="center"
+        android:paddingVertical="14dp"
+        android:text="@string/cms_exam_final_exam"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
 
 </LinearLayout>

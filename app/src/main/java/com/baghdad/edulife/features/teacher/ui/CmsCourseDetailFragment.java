@@ -40,6 +40,7 @@ public class CmsCourseDetailFragment extends Fragment {
     private TextView retryButton;
     private RecyclerView sectionsRecycler;
     private View addSectionButton;
+    private View examButton;
     private TextView toolbarTitle;
 
     public CmsCourseDetailFragment() {
@@ -81,8 +82,17 @@ public class CmsCourseDetailFragment extends Fragment {
         sectionsRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
         sectionsRecycler.setAdapter(sectionAdapter);
 
+        examButton = view.findViewById(R.id.cmsExamButton);
+
         retryButton.setOnClickListener(v -> viewModel.loadSections(courseId));
         addSectionButton.setOnClickListener(v -> showAddSectionDialog());
+        examButton.setOnClickListener(v -> {
+            Bundle navArgs = new Bundle();
+            navArgs.putString("courseId", courseId);
+            navArgs.putString("courseTitle", courseTitle);
+            Navigation.findNavController(view).navigate(
+                    R.id.action_cmsCourseDetailFragment_to_cmsExamBuilderFragment, navArgs);
+        });
 
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::render);
 
@@ -121,6 +131,7 @@ public class CmsCourseDetailFragment extends Fragment {
         stateCard.setVisibility(View.GONE);
         sectionsRecycler.setVisibility(View.VISIBLE);
         addSectionButton.setVisibility(View.VISIBLE);
+        examButton.setVisibility(View.VISIBLE);
 
         List<CmsSection> sections = state.sections != null ? state.sections : Collections.emptyList();
         sectionAdapter.submitList(sections);

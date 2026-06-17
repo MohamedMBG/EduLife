@@ -9,6 +9,8 @@ import com.baghdad.edulife.features.analytics.model.PlatformCohortAnalytics;
 import com.baghdad.edulife.features.analytics.model.StudentAnalyticsSummary;
 import com.baghdad.edulife.features.analytics.model.StudentProgressTrend;
 import com.baghdad.edulife.features.analytics.model.TeacherAnalytics;
+import com.baghdad.edulife.features.exams.model.CmsExamRequest;
+import com.baghdad.edulife.features.exams.model.CmsExamResponse;
 import com.baghdad.edulife.features.teacher.model.CmsCourse;
 import com.baghdad.edulife.features.teacher.model.CmsLesson;
 import com.baghdad.edulife.features.teacher.model.CmsSection;
@@ -295,6 +297,15 @@ public interface ApiService {
      */
     @PUT("cms/courses/{id}/publish")
     Call<CmsCourse> publishCmsCourse(@Path("id") String id);
+
+    @GET("cms/courses/{courseId}/exam")
+    Call<CmsExamResponse> getCmsCourseExam(@Path("courseId") String courseId);
+
+    @POST("cms/courses/{courseId}/exam")
+    Call<CmsExamResponse> createCmsCourseExam(
+            @Path("courseId") String courseId,
+            @Body CmsExamRequest request
+    );
 
     // ── Group management — GROUP_ADMIN / TEACHER / ADMIN (ownership enforced server-side) ─
 
