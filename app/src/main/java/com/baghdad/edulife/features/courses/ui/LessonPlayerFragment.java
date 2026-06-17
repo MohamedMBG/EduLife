@@ -39,13 +39,12 @@ import com.baghdad.edulife.features.gamification.model.GamificationUiState;
 import com.baghdad.edulife.features.courses.model.CourseDetail;
 import com.baghdad.edulife.features.courses.model.CourseDetailUiState;
 import com.baghdad.edulife.features.courses.model.CourseSection;
+import com.baghdad.edulife.features.courses.model.LessonContentTypeResolver;
 import com.baghdad.edulife.features.courses.model.LessonDetail;
 import com.baghdad.edulife.features.courses.model.LessonSummary;
 import com.baghdad.edulife.features.courses.viewmodel.CourseDetailViewModel;
 import com.baghdad.edulife.features.courses.viewmodel.LessonPlayerViewModel;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 public class LessonPlayerFragment extends Fragment {
@@ -270,46 +269,33 @@ public class LessonPlayerFragment extends Fragment {
         String url  = detail.contentUrl  != null ? detail.contentUrl.trim()  : "";
         String body = detail.contentBody != null ? detail.contentBody.trim() : "";
 
-        boolean isVideo = "VIDEO".equals(type);
-        playerVideoHeader.setVisibility(isVideo ? View.VISIBLE : View.GONE);
-        compactTopBar.setVisibility(isVideo ? View.GONE : View.VISIBLE);
+        // The which-surface-to-show decision is pure and unit-tested in
+        // LessonContentTypeResolver; this method only maps the result onto views.
+        LessonContentTypeResolver.Result result =
+                LessonContentTypeResolver.resolve(type, url, body);
 
-        switch (type) {
-            case "VIDEO":
-                if (!body.isEmpty()) {
-                    lessonTextContentArea.setVisibility(View.VISIBLE);
-                    renderTextContent(body);
-                }
+        playerVideoHeader.setVisibility(result.videoHeader ? View.VISIBLE : View.GONE);
+        compactTopBar.setVisibility(result.videoHeader ? View.GONE : View.VISIBLE);
+
+        switch (result.display) {
+            case VIDEO_ONLY:
                 break;
 
-            case "TEXT":
-                if (!body.isEmpty()) {
-                    lessonTextContentArea.setVisibility(View.VISIBLE);
-                    renderTextContent(body);
-                } else if (!url.isEmpty()) {
-                    showArticleCard(url, R.string.lesson_player_view_full_content);
-                } else {
-                    lessonFallbackCard.setVisibility(View.VISIBLE);
-                }
+            case VIDEO_WITH_TEXT:
+            case TEXT:
+                lessonTextContentArea.setVisibility(View.VISIBLE);
+                renderTextContent(body);
                 break;
 
-            case "ARTICLE":
-            case "LINK":
-                if (!url.isEmpty()) {
-                    showArticleCard(url, R.string.lesson_player_open_article);
-                } else if (!body.isEmpty()) {
-                    lessonTextContentArea.setVisibility(View.VISIBLE);
-                    renderTextContent(body);
-                } else {
-                    lessonFallbackCard.setVisibility(View.VISIBLE);
-                }
+            case ARTICLE:
+                showArticleCard(url, articleButtonLabel(type));
                 break;
 
-            case "PDF":
+            case PDF:
                 lessonResourceCard.setVisibility(View.VISIBLE);
                 lessonResourceLabel.setText(R.string.lesson_player_pdf_label);
                 lessonOpenResourceButton.setText(R.string.lesson_player_view_pdf);
-                if (!url.isEmpty()) {
+                if (result.actionEnabled) {
                     lessonOpenResourceButton.setOnClickListener(v -> openInAppViewer());
                 } else {
                     lessonOpenResourceButton.setEnabled(false);
@@ -317,11 +303,11 @@ public class LessonPlayerFragment extends Fragment {
                 }
                 break;
 
-            case "RESOURCE":
+            case RESOURCE:
                 lessonResourceCard.setVisibility(View.VISIBLE);
                 lessonResourceLabel.setText(R.string.lesson_player_resource_label);
                 lessonOpenResourceButton.setText(R.string.lesson_player_open_resource);
-                if (!url.isEmpty()) {
+                if (result.actionEnabled) {
                     lessonOpenResourceButton.setOnClickListener(v -> openExternalUrl(url));
                 } else {
                     lessonOpenResourceButton.setEnabled(false);
@@ -329,17 +315,26 @@ public class LessonPlayerFragment extends Fragment {
                 }
                 break;
 
+            case FALLBACK:
             default:
-                if (!url.isEmpty()) {
-                    showArticleCard(url, R.string.lesson_player_open_resource);
-                } else if (!body.isEmpty()) {
-                    lessonTextContentArea.setVisibility(View.VISIBLE);
-                    renderTextContent(body);
-                } else {
-                    lessonFallbackCard.setVisibility(View.VISIBLE);
-                }
+                lessonFallbackCard.setVisibility(View.VISIBLE);
                 break;
         }
+    }
+
+    /**
+     * Picks the article card's button label so it matches the original per-type wording:
+     * TEXT lessons say "view full content", ARTICLE/LINK say "open article", and any other
+     * URL-bearing type (the default branch) says "open resource".
+     */
+    private int articleButtonLabel(String type) {
+        if ("TEXT".equals(type)) {
+            return R.string.lesson_player_view_full_content;
+        }
+        if ("ARTICLE".equals(type) || "LINK".equals(type)) {
+            return R.string.lesson_player_open_article;
+        }
+        return R.string.lesson_player_open_resource;
     }
 
     private void showArticleCard(String url, int buttonTextRes) {
@@ -461,7 +456,7 @@ public class LessonPlayerFragment extends Fragment {
         }
 
         if (!url.isEmpty()) {
-            viewerWebView.loadUrl(resolveViewerUrl(detail.lessonType, url));
+            viewerWebView.loadUrl(LessonContentTypeResolver.resolveViewerUrl(detail.lessonType, url));
             return;
         }
 
@@ -469,21 +464,6 @@ public class LessonPlayerFragment extends Fragment {
                 + "<style>body{font-family:sans-serif;padding:16px;line-height:1.6;color:#222}</style>"
                 + "</head><body>" + body.replace("\n", "<br/>") + "</body></html>";
         viewerWebView.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null);
-    }
-
-    private static String resolveViewerUrl(String lessonType, String contentUrl) {
-        String type = lessonType == null ? "" : lessonType.toUpperCase(Locale.ROOT);
-        String url  = contentUrl.toLowerCase(Locale.ROOT);
-        boolean looksLikePdf = type.equals("PDF") || url.endsWith(".pdf");
-        if (looksLikePdf) {
-            try {
-                String encoded = URLEncoder.encode(contentUrl, StandardCharsets.UTF_8.name());
-                return "https://docs.google.com/gview?embedded=true&url=" + encoded;
-            } catch (java.io.UnsupportedEncodingException e) {
-                return contentUrl;
-            }
-        }
-        return contentUrl;
     }
 
     private void closeInAppViewer() {

@@ -52,6 +52,16 @@ public class SessionStorage {
         appContext.deleteSharedPreferences(LEGACY_PREFS_NAME);
     }
 
+    /**
+     * Test-only seam: injects a pre-built {@link SharedPreferences} so the persistence
+     * semantics (save/read/clear, session completeness) can be exercised on the host JVM
+     * without the Android Keystore / EncryptedSharedPreferences stack. Production code always
+     * uses the {@link #SessionStorage(Context)} constructor; this one does not change behavior.
+     */
+    SessionStorage(SharedPreferences prefs) {
+        this.prefs = prefs;
+    }
+
     private static SharedPreferences openEncryptedPrefs(Context appContext) {
         try {
             MasterKey masterKey = new MasterKey.Builder(appContext)

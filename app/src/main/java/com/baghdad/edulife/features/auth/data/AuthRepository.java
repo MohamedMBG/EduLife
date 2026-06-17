@@ -9,6 +9,7 @@ import com.baghdad.edulife.core.network.ApiService;
 import com.baghdad.edulife.core.storage.SessionStorage;
 import com.baghdad.edulife.features.auth.model.AuthSyncRequest;
 import com.baghdad.edulife.features.auth.model.AuthResult;
+import com.baghdad.edulife.features.auth.model.AuthSyncDecision;
 import com.baghdad.edulife.features.auth.model.AuthSyncResponse;
 import com.baghdad.edulife.features.auth.model.RegisterRequest;
 import com.google.firebase.auth.FirebaseAuth;
@@ -193,33 +194,20 @@ public class AuthRepository {
 
                 mainHandler.removeCallbacks(timeoutRunnable);
 
-                if (response.isSuccessful() && response.body() != null) {
-                    AuthSyncResponse body = response.body();
+                // Fail-closed: the session is only persisted when sync returns a complete
+                // identity. The decision logic lives in AuthSyncDecision so it can be unit-tested.
+                AuthSyncDecision decision = AuthSyncDecision.fromSyncResponse(
+                        response.isSuccessful(), response.code(), response.body());
 
-                    // Validate that the backend returned both required fields
-                    if (body.userId == null || body.userId.isBlank()
-                            || body.role == null || body.role.isBlank()) {
-                        callback.onResult(new AuthResult(
-                                false,
-                                "Backend sync returned incomplete data.",
-                                false
-                        ));
-                        return;
-                    }
-
+                if (decision.authenticated) {
                     // Persist userId and role; this is the only place where session is written
-                    sessionStorage.saveSession(body.userId, body.role);
+                    sessionStorage.saveSession(decision.userId, decision.role);
                     // The backend only honors intendedRole on first sync, so the pending copy is
                     // no longer needed after any successful sync response.
                     sessionStorage.clearPendingRegistrationRole();
                     callback.onResult(new AuthResult(true, "Sync successful.", false));
-
                 } else {
-                    callback.onResult(new AuthResult(
-                            false,
-                            "Backend sync failed. Status: " + response.code(),
-                            false
-                    ));
+                    callback.onResult(new AuthResult(false, decision.message, false));
                 }
             }
 

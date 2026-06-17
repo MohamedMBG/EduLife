@@ -9,6 +9,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.baghdad.edulife.features.auth.data.AuthRepository;
 import com.baghdad.edulife.features.auth.model.AuthResult;
+import com.baghdad.edulife.features.auth.model.AuthSyncDecision;
 import com.baghdad.edulife.features.auth.model.AuthUiState;
 import com.baghdad.edulife.features.auth.model.RegisterRequest;
 
@@ -52,10 +53,17 @@ public class AuthViewModel extends AndroidViewModel {
 
         authRepository.login(email, password, result -> {
             if (result.success) {
-                // Sync before posting success so SessionStorage has the role written
-                // by the time LoginFragment reads it for navigation.
-                authRepository.syncWithBackend(syncResult ->
-                        authState.postValue(AuthUiState.success("Login successful.")));
+                // Fail-closed: a successful Firebase sign-in is not enough. Only post an
+                // authenticated success once backend sync also succeeds (writing the internal
+                // userId + role to SessionStorage). On any sync failure, surface an error so the
+                // UI does not navigate forward with a missing/stale identity.
+                authRepository.syncWithBackend(syncResult -> {
+                    if (AuthSyncDecision.isAuthenticated(syncResult)) {
+                        authState.postValue(AuthUiState.success("Login successful."));
+                    } else {
+                        authState.postValue(AuthUiState.error(safeMessage(syncResult)));
+                    }
+                });
             } else if (result.emailVerificationRequired) {
                 authState.postValue(AuthUiState.verificationRequired(result.message));
             } else {
