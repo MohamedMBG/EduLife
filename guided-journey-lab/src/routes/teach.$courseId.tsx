@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, FileText, Layers3, Plus, Trash2, Video, X } from "lucide-react";
-import { AppShell } from "../components/app/AppShell";
+import { ArrowLeft, ClipboardList, FileText, Layers3, Plus, Trash2, Video, X } from "lucide-react";
+import { AppLayout } from "../components/app/AppLayout";
 import {
+  ApiClientError,
   createCmsLesson,
   createCmsSection,
   deleteCmsLesson,
   deleteCmsSection,
+  getCmsExam,
   listCmsCourses,
   listCmsLessons,
   listCmsSections,
@@ -54,25 +56,20 @@ function ManageCoursePage() {
     })),
   });
 
-  return (
-    <AppShell
-      active="teach"
-      user={{
-        displayName: auth.session?.displayName || "EduLife teacher",
-        email: auth.session?.email || "",
-      }}
-      onLogout={auth.logout}
-      header={
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-semibold text-foreground">
-            {course ? course.title : "Manage course"}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Sections and lessons sync straight to the backend CMS.
-          </p>
-        </div>
+  const examQuery = useQuery({
+    queryKey: ["cms", "exam", courseId],
+    queryFn: () => getCmsExam(auth.getAccessToken, courseId),
+    retry: (failureCount, error) => {
+      if (error instanceof ApiClientError && (error.status === 404 || error.status === 403)) {
+        return false;
       }
-    >
+      return failureCount < 2;
+    },
+  });
+  const hasExam = !!examQuery.data;
+
+  return (
+    <AppLayout>
       <div className="mx-auto max-w-4xl space-y-8">
         <Link
           to="/teach"
@@ -107,12 +104,21 @@ function ManageCoursePage() {
               <button
                 type="button"
                 onClick={() => setAddingSection((open) => !open)}
-                className="inline-flex h-11 items-center gap-2 rounded-full bg-foreground px-5 text-sm font-medium text-background shadow-elevated transition-all hover:opacity-90 active:scale-[0.98]"
+                className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground shadow-elevated transition-all hover:opacity-90 active:scale-[0.98]"
               >
                 {addingSection ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                 {addingSection ? "Close" : "Add section"}
               </button>
             </section>
+
+            <Link
+              to="/teach/$courseId/exam"
+              params={{ courseId }}
+              className="inline-flex h-11 items-center gap-2 rounded-full border border-border px-5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:border-primary/40"
+            >
+              <ClipboardList className="h-4 w-4 text-primary" />
+              {hasExam ? "Manage final exam" : "Create final exam"}
+            </Link>
 
             {addingSection && (
               <CreateSectionCard
@@ -143,7 +149,7 @@ function ManageCoursePage() {
           </>
         )}
       </div>
-    </AppShell>
+    </AppLayout>
   );
 }
 
@@ -214,7 +220,10 @@ function SectionCard({
       </div>
 
       {(deleteSectionMutation.isError || deleteLessonMutation.isError) && (
-        <p role="alert" className="mt-3 rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+        <p
+          role="alert"
+          className="mt-3 rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+        >
           {deleteSectionMutation.error?.message || deleteLessonMutation.error?.message}
         </p>
       )}
@@ -330,7 +339,10 @@ function CreateSectionCard({
         className="w-full h-11 rounded-xl border border-input bg-surface px-4 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
       />
       {createMutation.isError && (
-        <p role="alert" className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+        <p
+          role="alert"
+          className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+        >
           {createMutation.error.message}
         </p>
       )}
@@ -441,7 +453,10 @@ function CreateLessonCard({
         />
       )}
       {createMutation.isError && (
-        <p role="alert" className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+        <p
+          role="alert"
+          className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+        >
           {createMutation.error.message}
         </p>
       )}

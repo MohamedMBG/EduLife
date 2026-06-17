@@ -9,10 +9,12 @@ import type {
   CertificateDetail,
   CertificateVerification,
   CmsCourse,
+  CmsExamAdmin,
   CmsLesson,
   CmsSection,
   CourseDetail,
   CreateCmsCourseRequest,
+  CreateCmsExamRequest,
   CreateCmsLessonRequest,
   CreateCmsSectionRequest,
   CourseProgress,
@@ -255,9 +257,7 @@ export function getStudentProgressTrend(
   });
 }
 
-export function getTeacherAnalytics(
-  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
-) {
+export function getTeacherAnalytics(getAccessToken: NonNullable<RequestOptions["getAccessToken"]>) {
   if (appEnv.demoMode) {
     return Promise.resolve<TeacherAnalytics>({ totalCourses: 0, courses: [] });
   }
@@ -844,6 +844,31 @@ export function deleteCmsLesson(
 
   return makeRequest<void>(`api/v1/cms/sections/${sectionId}/lessons/${lessonId}`, {
     method: "DELETE",
+    getAccessToken,
+  });
+}
+
+export function getCmsExam(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  courseId: string,
+) {
+  assertCmsAvailable();
+
+  return makeRequest<CmsExamAdmin>(`api/v1/cms/courses/${courseId}/exam`, {
+    getAccessToken,
+  });
+}
+
+export function createCmsExam(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+  courseId: string,
+  payload: CreateCmsExamRequest,
+) {
+  assertCmsAvailable();
+
+  return makeRequest<CmsExamAdmin>(`api/v1/cms/courses/${courseId}/exam`, {
+    method: "POST",
+    body: payload,
     getAccessToken,
   });
 }

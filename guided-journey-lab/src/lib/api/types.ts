@@ -428,3 +428,45 @@ export interface CertificateVerification {
   certificateNumber: string;
   valid: boolean;
 }
+
+// ── CMS Exam types (teacher/admin only — includes correct-answer flags) ──────
+
+export interface CmsExamChoiceRequest {
+  choiceText: string;
+  correct: boolean;
+}
+
+export interface CmsExamQuestionRequest {
+  questionText: string;
+  orderIndex: number;
+  choices: CmsExamChoiceRequest[];
+}
+
+export interface CreateCmsExamRequest {
+  title: string;
+  passScore: number;
+  timeLimitMinutes?: number;
+  questions: CmsExamQuestionRequest[];
+}
+
+export interface CmsExamChoice {
+  id: string;
+  choiceText: string;
+  correct: boolean;
+}
+
+export interface CmsExamQuestion {
+  id: string;
+  questionText: string;
+  orderIndex: number;
+  choices: CmsExamChoice[];
+}
+
+export interface CmsExamAdmin {
+  id: string;
+  courseId: string;
+  title: string;
+  passScore: number;
+  timeLimitMinutes: number | null;
+  questions: CmsExamQuestion[];
+}
