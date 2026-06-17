@@ -1,15 +1,8 @@
-import { Smartphone } from "lucide-react";
-import { toast } from "sonner";
+import { Download, Smartphone } from "lucide-react";
 import { motion } from "framer-motion";
 import { TextClipReveal, ScrollReveal, Parallax, MagneticButton } from "./animations";
 
 export function PublicMobileLearningSection() {
-  function handleAndroidPilotClick() {
-    toast.success("Android pilot access is coming soon.", {
-      description: "The Play Store release will follow after the public web pilot.",
-    });
-  }
-
   return (
     <section className="px-5 py-20 sm:px-6 lg:px-8 lg:py-28">
       <div className="mx-auto grid max-w-[1280px] gap-12 lg:grid-cols-[minmax(0,0.78fr)_minmax(0,1fr)] lg:items-center lg:gap-16">
@@ -29,21 +22,21 @@ export function PublicMobileLearningSection() {
             </p>
 
             <MagneticButton strength={0.3} className="mt-10 inline-block">
-              <button
-                type="button"
-                onClick={handleAndroidPilotClick}
+              <a
+                href="/EduLife-prerelease.apk"
+                download="EduLife-prerelease.apk"
                 className="inline-flex items-center gap-4 rounded-full bg-primary px-5 py-3 text-left text-white shadow-[0_24px_52px_-30px_rgba(9,20,38,0.52)] transition-transform duration-300 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
               >
                 <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10">
-                  <Smartphone className="h-4.5 w-4.5" />
+                  <Download className="h-4.5 w-4.5" />
                 </span>
                 <span>
                   <span className="block text-[10px] font-semibold uppercase tracking-[0.16em] text-white/58">
                     Android app
                   </span>
-                  <span className="block text-base font-semibold tracking-[-0.03em]">Google Play</span>
+                  <span className="block text-base font-semibold tracking-[-0.03em]">Download apk EduLife</span>
                 </span>
-              </button>
+              </a>
             </MagneticButton>
           </div>
         </ScrollReveal>
