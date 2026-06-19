@@ -66,8 +66,15 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private final ApiErrorWriter apiErrorWriter;
 
-    public RateLimitFilter(ApiErrorWriter apiErrorWriter) {
+    // Number of trusted reverse proxies in front of the app (e.g. the platform load balancer).
+    // X-Forwarded-For is appended left-to-right, so the real client IP is the entry this many
+    // hops from the right. Entries further left are client-supplied and must never be trusted
+    // for rate-limit keying, or an attacker could mint a fresh bucket per spoofed value.
+    private final int trustedProxyCount;
+
+    public RateLimitFilter(ApiErrorWriter apiErrorWriter, int trustedProxyCount) {
         this.apiErrorWriter = apiErrorWriter;
+        this.trustedProxyCount = Math.max(trustedProxyCount, 0);
     }
 
     @Override
@@ -133,15 +140,27 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Resolves the client IP from X-Forwarded-For (set by the platform proxy) and falls back
-     * to the raw remote address for direct connections. Only the first forwarded hop is used
-     * since intermediate proxies can append untrusted values to the chain.
+     * Resolves the client IP from X-Forwarded-For, trusting only the hop appended by our own
+     * proxy tier. The header is a comma-separated chain "client, proxy1, ..., proxyN" where every
+     * entry left of the trusted proxies is supplied by the caller and can be forged. Picking the
+     * leftmost value (the previous behaviour) let an attacker rotate that value to spawn an unbounded
+     * number of distinct rate-limit buckets and defeat the per-IP cert-verify cap. Instead the entry
+     * {@code trustedProxyCount} hops from the right is used, and we fall back to the socket remote
+     * address for direct connections or when the chain is shorter than expected.
      */
-    private static String resolveClientIp(HttpServletRequest request) {
+    private String resolveClientIp(HttpServletRequest request) {
         String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            int comma = forwarded.indexOf(',');
-            return (comma > 0 ? forwarded.substring(0, comma) : forwarded).trim();
+        if (trustedProxyCount > 0 && forwarded != null && !forwarded.isBlank()) {
+            String[] hops = forwarded.split(",");
+            int index = hops.length - trustedProxyCount;
+            // If the chain is shorter than the trusted-proxy depth the header was likely forged or
+            // truncated, so fall through to the socket address rather than trust a spoofable entry.
+            if (index >= 0 && index < hops.length) {
+                String candidate = hops[index].trim();
+                if (!candidate.isEmpty()) {
+                    return candidate;
+                }
+            }
         }
         return request.getRemoteAddr();
     }

@@ -23,6 +23,7 @@ import com.edulife.security.FirebaseAuthentication;
 import com.edulife.users.entity.User;
 import com.edulife.users.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.dao.DataIntegrityViolationException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
@@ -190,7 +191,19 @@ public class ExamService {
         int score = total == 0 ? 0 : (int) Math.round((correct * 100.0) / total);
         boolean passed = score >= exam.getPassScore();
 
-        ExamAttempt savedAttempt = attemptRepository.save(new ExamAttempt(user.getId(), exam.getId(), score, passed));
+        ExamAttempt savedAttempt;
+        try {
+            // Flush immediately so the one-pass-per-user unique index (V27) is enforced inside this
+            // transaction. If a concurrent submission already committed a passing attempt, this insert
+            // violates the index and we report the normal "already passed" result instead of awarding
+            // XP and issuing a certificate twice.
+            savedAttempt = attemptRepository.saveAndFlush(new ExamAttempt(user.getId(), exam.getId(), score, passed));
+        } catch (DataIntegrityViolationException e) {
+            if (passed) {
+                throw new ExamAlreadyPassedException();
+            }
+            throw e;
+        }
 
         String certificateNumber = null;
         if (passed) {

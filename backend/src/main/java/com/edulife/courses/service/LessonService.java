@@ -3,6 +3,8 @@ package com.edulife.courses.service;
 import com.edulife.courses.dto.LessonDetailDto;
 import com.edulife.courses.entity.CourseSection;
 import com.edulife.courses.entity.Lesson;
+import com.edulife.courses.model.CourseStatus;
+import com.edulife.courses.repository.CourseRepository;
 import com.edulife.courses.repository.CourseSectionRepository;
 import com.edulife.courses.repository.LessonRepository;
 import com.edulife.enrollments.model.EnrollmentStatus;
@@ -23,17 +25,20 @@ public class LessonService {
 
     private final LessonRepository lessonRepository;
     private final CourseSectionRepository sectionRepository;
+    private final CourseRepository courseRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final LessonProgressRepository lessonProgressRepository;
     private final UserRepository userRepository;
 
     public LessonService(LessonRepository lessonRepository,
                          CourseSectionRepository sectionRepository,
+                         CourseRepository courseRepository,
                          EnrollmentRepository enrollmentRepository,
                          LessonProgressRepository lessonProgressRepository,
                          UserRepository userRepository) {
         this.lessonRepository         = lessonRepository;
         this.sectionRepository        = sectionRepository;
+        this.courseRepository         = courseRepository;
         this.enrollmentRepository     = enrollmentRepository;
         this.lessonProgressRepository = lessonProgressRepository;
         this.userRepository           = userRepository;
@@ -53,6 +58,14 @@ public class LessonService {
                     user.getId(), courseId, EnrollmentStatus.ACTIVE);
             if (!enrolled) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Enroll in this course to access the lesson");
+            }
+        } else {
+            // Preview lessons are readable without enrolment, but only for PUBLISHED courses.
+            // Without this check an unenrolled learner could read preview content of a DRAFT or
+            // ARCHIVED course by guessing its id, leaking unpublished material.
+            boolean published = courseRepository.findByIdAndStatus(courseId, CourseStatus.PUBLISHED).isPresent();
+            if (!published) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Lesson not found");
             }
         }
 

@@ -45,8 +45,11 @@ public class SecurityConfig {
     // RateLimitFilter is NOT @Component to avoid double-registration as a servlet filter.
     // It is instantiated here and added explicitly after FirebaseTokenFilter so that
     // SecurityContext is already populated when rate limit keys are resolved.
-    public RateLimitFilter rateLimitFilter(ApiErrorWriter apiErrorWriter) {
-        return new RateLimitFilter(apiErrorWriter);
+    public RateLimitFilter rateLimitFilter(
+            ApiErrorWriter apiErrorWriter,
+            @org.springframework.beans.factory.annotation.Value("${edulife.rate-limit.trusted-proxy-count:1}")
+            int trustedProxyCount) {
+        return new RateLimitFilter(apiErrorWriter, trustedProxyCount);
     }
 
     /**

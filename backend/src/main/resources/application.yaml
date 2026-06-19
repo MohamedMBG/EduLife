@@ -41,6 +41,11 @@ firebase:
     credentials-json: ${FIREBASE_ADMIN_CREDENTIALS_JSON:}
 
 edulife:
+  rate-limit:
+    # Trusted reverse proxies in front of the app. The per-IP rate-limit key is taken this many
+    # hops from the right of X-Forwarded-For so client-forged leftmost entries cannot mint buckets.
+    # Render/most single-proxy PaaS = 1; add Cloudflare in front = 2.
+    trusted-proxy-count: ${EDULIFE_RATE_LIMIT_TRUSTED_PROXIES:1}
   avatar:
     storage-dir: ${EDULIFE_AVATAR_STORAGE_DIR:uploads/avatars}
     public-base-url: ${EDULIFE_AVATAR_PUBLIC_BASE_URL:http://localhost:8080/uploads/avatars}
