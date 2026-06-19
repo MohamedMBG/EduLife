@@ -96,7 +96,9 @@ management:
 app:
   cors:
     # Comma-separated list of explicit origins.  Defaults to localhost dev origins so the
-    # web app works without configuration during development.  Production MUST override with
-    # the deployed website URL via APP_CORS_ALLOWED_ORIGINS (e.g. https://app.edulife.ma).
+    # web app works without configuration during development. The current Vercel deployment is
+    # included as a safe explicit default so browser auth sync does not fail closed on Render
+    # when APP_CORS_ALLOWED_ORIGINS was never set. Production SHOULD still override with the
+    # exact deployed website URL(s) via APP_CORS_ALLOWED_ORIGINS.
     # An empty value closes CORS entirely — no cross-origin browser request will be accepted.
-    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173}
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173,https://guided-journey-lab.vercel.app}

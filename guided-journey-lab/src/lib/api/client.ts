@@ -76,6 +76,14 @@ interface RequestOptions {
   getAccessToken?: (forceRefresh?: boolean) => Promise<string | null>;
 }
 
+function backendOriginLabel() {
+  try {
+    return new URL(appEnv.apiBaseUrl).origin;
+  } catch {
+    return appEnv.apiBaseUrl;
+  }
+}
+
 function buildUrl(path: string, query?: RequestOptions["query"]) {
   if (appEnv.demoMode) {
     throw new ApiClientError(500, "Network requests are disabled in website demo mode.");
@@ -153,7 +161,8 @@ async function makeRequest<T>(path: string, options: RequestOptions = {}) {
       if (e instanceof TypeError) {
         throw new ApiClientError(
           503,
-          "Cannot reach the server. Check your connection and try again.",
+          `Cannot reach the backend at ${backendOriginLabel()}. If Firebase sign-in succeeded, ` +
+            "the browser is likely being blocked by CORS or the backend origin is wrong.",
         );
       }
       throw e;
