@@ -125,4 +125,18 @@ public class SessionStorageTest {
         assertEquals("user-123", storage.getUserId());
         assertEquals("LEARNER", storage.getRole());
     }
+
+    @Test
+    public void clearAuthenticatedSession_dropsStaleIdentityButKeepsPendingRegistrationRole() {
+        storage.saveSession("old-admin", "ADMIN");
+        storage.savePendingRegistrationRole("TEACHER");
+
+        storage.clearAuthenticatedSession();
+
+        // Backend sync failure must remove stale routing data without losing first-sync intent.
+        assertNull(storage.getUserId());
+        assertNull(storage.getRole());
+        assertFalse(storage.hasSession());
+        assertEquals("TEACHER", storage.getPendingRegistrationRole());
+    }
 }

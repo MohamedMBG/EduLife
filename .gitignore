@@ -46,6 +46,7 @@ signing.properties
 
 # Logs and crash dumps may contain tokens, API responses, or user-identifying data.
 *.log
+*.logcat
 hs_err_pid*
 replay_pid*
 

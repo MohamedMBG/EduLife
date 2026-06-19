@@ -53,6 +53,7 @@ import com.baghdad.edulife.features.profile.model.UpdateProfileRequest;
 import java.util.List;
 
 import okhttp3.MultipartBody;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
@@ -63,6 +64,7 @@ import retrofit2.http.Path;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Query;
+import retrofit2.http.Streaming;
 
 /**
  * Retrofit interface defining all EduLife backend API endpoints.
@@ -196,6 +198,17 @@ public interface ApiService {
 
     @GET("certificates/{id}")
     Call<CertificateDetail> getCertificateById(@Path("id") String id);
+
+    /**
+     * Streams the certificate PDF so callers can write it directly to app-private storage
+     * without buffering the whole document in memory. Runs through the same OkHttp pipeline
+     * as every other call, so the Firebase Bearer token and the FirebaseTokenAuthenticator
+     * retry-once refresh apply here too — DownloadManager bypassed both, which the
+     * 2026-06 OWASP audit flagged.
+     */
+    @Streaming
+    @GET("certificates/{id}/download")
+    Call<ResponseBody> downloadCertificatePdf(@Path("id") String id);
 
     @POST("teacher-requests")
     Call<TeacherRequestResponse> submitTeacherRequest(@Body SubmitTeacherRequestBody body);

@@ -133,7 +133,7 @@ public class AuthRepository {
         FirebaseUser user = firebaseAuth.getCurrentUser();
 
         if (user == null) {
-            callback.onResult(new AuthResult(false, "User is not authenticated.", false));
+            failBackendSync(callback, "User is not authenticated.");
             return;
         }
 
@@ -143,7 +143,7 @@ public class AuthRepository {
                     String token = tokenResult.getToken();
 
                     if (token == null || token.isBlank()) {
-                        callback.onResult(new AuthResult(false, "Firebase ID token is missing.", false));
+                        failBackendSync(callback, "Firebase ID token is missing.");
                         return;
                     }
 
@@ -152,7 +152,7 @@ public class AuthRepository {
                     callBackendSync(callback);
                 })
                 .addOnFailureListener(e ->
-                        callback.onResult(new AuthResult(false, e.getMessage(), false))
+                        failBackendSync(callback, e.getMessage())
                 );
     }
 
@@ -172,15 +172,14 @@ public class AuthRepository {
             }
 
             // Cancel the in-flight sync so it does not keep a socket open after the deadline.
-            // Firebase session is intentionally preserved: backend sync is best-effort and must not
-            // log the user out when the server is unreachable.
+            // The local EduLife identity is cleared separately so launch routing cannot reuse a
+            // stale role after backend identity sync failed.
             syncCall.cancel();
-            callback.onResult(new AuthResult(
-                    false,
+            failBackendSync(
+                    callback,
                     "Backend sync timed out. Confirm the backend is running and the device can reach " +
-                            "the configured API base URL.",
-                    false
-            ));
+                            "the configured API base URL."
+            );
         };
 
         mainHandler.postDelayed(timeoutRunnable, AUTH_SYNC_TIMEOUT_MS);
@@ -207,7 +206,7 @@ public class AuthRepository {
                     sessionStorage.clearPendingRegistrationRole();
                     callback.onResult(new AuthResult(true, "Sync successful.", false));
                 } else {
-                    callback.onResult(new AuthResult(false, decision.message, false));
+                    failBackendSync(callback, decision.message);
                 }
             }
 
@@ -219,14 +218,21 @@ public class AuthRepository {
 
                 mainHandler.removeCallbacks(timeoutRunnable);
 
-                // Sync is best-effort; Firebase session stays valid even when the backend is unreachable.
-                callback.onResult(new AuthResult(
-                        false,
-                        "Network error during sync: " + readableSyncFailure(t),
-                        false
-                ));
+                // Firebase may still be signed in, but EduLife screens must not trust a previously
+                // stored backend userId/role after the authoritative sync failed.
+                failBackendSync(callback, "Network error during sync: " + readableSyncFailure(t));
             }
         });
+    }
+
+    private void failBackendSync(AuthCallback callback, String message) {
+        // Clear only the synced backend identity. Firebase auth remains so the UI can show the
+        // sync error, but MainActivity cannot route from a stale local role on next launch.
+        sessionStorage.clearAuthenticatedSession();
+        String readableMessage = message == null || message.isBlank()
+                ? "Backend identity sync failed."
+                : message;
+        callback.onResult(new AuthResult(false, readableMessage, false));
     }
 
     private String readableSyncFailure(Throwable throwable) {

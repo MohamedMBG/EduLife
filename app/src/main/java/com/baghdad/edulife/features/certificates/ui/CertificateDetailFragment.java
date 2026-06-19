@@ -1,14 +1,8 @@
 package com.baghdad.edulife.features.certificates.ui;
 
-import android.app.DownloadManager;
 import android.content.ActivityNotFoundException;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -16,18 +10,17 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 
-import com.baghdad.edulife.BuildConfig;
 import com.baghdad.edulife.R;
+import com.baghdad.edulife.features.certificates.data.CertificateDownloader;
+import com.baghdad.edulife.features.certificates.data.CertificatePdfIntents;
 import com.baghdad.edulife.features.certificates.model.CertificateDetail;
 import com.baghdad.edulife.features.certificates.viewmodel.CertificateDetailViewModel;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 
+import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -41,8 +34,6 @@ public class CertificateDetailFragment extends Fragment {
             new SimpleDateFormat("MMM d, yyyy", Locale.ENGLISH);
 
     private CertificateDetailViewModel viewModel;
-    private BroadcastReceiver downloadReceiver;
-    private long pendingDownloadId = -1;
 
     public CertificateDetailFragment() {
         super(R.layout.fragment_certificate_detail);
@@ -124,42 +115,90 @@ public class CertificateDetailFragment extends Fragment {
     }
 
     private void downloadPdf(CertificateDetail cert) {
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user == null) return;
+        if (cert == null || cert.id == null || cert.id.isBlank()) return;
+        Toast.makeText(requireContext(), R.string.cert_download_started, Toast.LENGTH_SHORT).show();
+        CertificateDownloader.download(
+                requireContext(),
+                cert.id,
+                cert.certificateNumber != null ? cert.certificateNumber : cert.id,
+                new CertificateDownloader.Callback() {
+                    @Override
+                    public void onDownloaded(@NonNull File pdf) {
+                        if (!isAdded()) return;
+                        try {
+                            startActivity(CertificatePdfIntents.viewIntent(requireContext(), pdf));
+                        } catch (ActivityNotFoundException e) {
+                            Toast.makeText(requireContext(),
+                                    R.string.cert_no_pdf_viewer, Toast.LENGTH_LONG).show();
+                        }
+                    }
 
-        user.getIdToken(false).addOnSuccessListener(result -> {
-            String token = result.getToken();
-            if (token == null) return;
+                    @Override
+                    public void onNetworkError() {
+                        if (!isAdded()) return;
+                        Toast.makeText(requireContext(),
+                                R.string.cert_download_network_error, Toast.LENGTH_SHORT).show();
+                    }
 
-            String baseUrl = BuildConfig.API_BASE_URL;
-            if (!baseUrl.endsWith("/")) baseUrl += "/";
-            String url = baseUrl + "certificates/" + cert.id + "/download";
-            String fileName = "certificate-" + cert.certificateNumber + ".pdf";
-
-            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url))
-                    .setTitle(getString(R.string.cert_download_notification_title, cert.courseTitle))
-                    .setDescription(cert.certificateNumber)
-                    .addRequestHeader("Authorization", "Bearer " + token)
-                    .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
-                    .setAllowedOverMetered(true)
-                    .setAllowedOverRoaming(true)
-                    .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
-                    .setMimeType("application/pdf");
-
-            DownloadManager dm = (DownloadManager) requireContext()
-                    .getSystemService(Context.DOWNLOAD_SERVICE);
-            pendingDownloadId = dm.enqueue(request);
-            registerDownloadReceiver(dm);
-
-            Toast.makeText(requireContext(), R.string.cert_download_started, Toast.LENGTH_SHORT).show();
-        }).addOnFailureListener(e ->
-                Toast.makeText(requireContext(), R.string.cert_download_auth_error, Toast.LENGTH_SHORT).show()
-        );
+                    @Override
+                    public void onServerError(int httpCode) {
+                        if (!isAdded()) return;
+                        int msg = httpCode == 401
+                                ? R.string.cert_download_auth_error
+                                : R.string.cert_download_network_error;
+                        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     private void shareCert(CertificateDetail cert) {
+        if (cert == null || cert.id == null || cert.id.isBlank()) return;
+        Toast.makeText(requireContext(), R.string.cert_share_preparing, Toast.LENGTH_SHORT).show();
+        // Share is gated behind a fresh download to private storage so the resulting Intent can
+        // attach the PDF via FileProvider — explicit per-grant access only, no public file path.
+        CertificateDownloader.download(
+                requireContext(),
+                cert.id,
+                cert.certificateNumber != null ? cert.certificateNumber : cert.id,
+                new CertificateDownloader.Callback() {
+                    @Override
+                    public void onDownloaded(@NonNull File pdf) {
+                        if (!isAdded()) return;
+                        Intent share = CertificatePdfIntents.shareIntent(requireContext(), pdf);
+                        String summary = buildShareSummary(cert);
+                        if (!summary.isEmpty()) {
+                            share.putExtra(Intent.EXTRA_TEXT, summary);
+                        }
+                        try {
+                            startActivity(Intent.createChooser(share,
+                                    getString(R.string.cert_detail_share)));
+                        } catch (ActivityNotFoundException e) {
+                            Toast.makeText(requireContext(),
+                                    R.string.cert_no_pdf_viewer, Toast.LENGTH_LONG).show();
+                        }
+                    }
+
+                    @Override
+                    public void onNetworkError() {
+                        if (!isAdded()) return;
+                        Toast.makeText(requireContext(),
+                                R.string.cert_download_network_error, Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onServerError(int httpCode) {
+                        if (!isAdded()) return;
+                        int msg = httpCode == 401
+                                ? R.string.cert_download_auth_error
+                                : R.string.cert_download_network_error;
+                        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private String buildShareSummary(CertificateDetail cert) {
         String date = cert.issuedAt != null ? formatDate(cert.issuedAt) : "";
-        String text = getString(R.string.cert_share_text,
+        return getString(R.string.cert_share_text,
                 cert.learnerName != null ? cert.learnerName : "",
                 cert.courseTitle != null ? cert.courseTitle : "",
                 cert.courseLevel != null ? cert.courseLevel : "",
@@ -167,12 +206,6 @@ public class CertificateDetailFragment extends Fragment {
                 cert.certificateNumber != null ? cert.certificateNumber : "",
                 date,
                 cert.verificationHash != null ? cert.verificationHash : "");
-
-        Intent shareIntent = new Intent(Intent.ACTION_SEND);
-        shareIntent.setType("text/plain");
-        shareIntent.putExtra(Intent.EXTRA_TEXT, text);
-        startActivity(Intent.createChooser(shareIntent,
-                getString(R.string.cert_detail_share)));
     }
 
     private String formatDate(String issuedAt) {
@@ -182,41 +215,6 @@ public class CertificateDetailFragment extends Fragment {
             return parsed != null ? DATE_FMT.format(parsed) : datePart;
         } catch (ParseException e) {
             return issuedAt;
-        }
-    }
-
-    private void registerDownloadReceiver(DownloadManager dm) {
-        if (downloadReceiver != null) {
-            requireContext().unregisterReceiver(downloadReceiver);
-        }
-        downloadReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
-                if (id != pendingDownloadId) return;
-                Uri uri = dm.getUriForDownloadedFile(id);
-                if (uri == null) return;
-                Intent open = new Intent(Intent.ACTION_VIEW);
-                open.setDataAndType(uri, "application/pdf");
-                open.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
-                try {
-                    startActivity(open);
-                } catch (ActivityNotFoundException e) {
-                    Toast.makeText(context, R.string.cert_no_pdf_viewer, Toast.LENGTH_LONG).show();
-                }
-            }
-        };
-        IntentFilter filter = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
-        ContextCompat.registerReceiver(requireContext(), downloadReceiver, filter,
-                ContextCompat.RECEIVER_NOT_EXPORTED);
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        if (downloadReceiver != null) {
-            requireContext().unregisterReceiver(downloadReceiver);
-            downloadReceiver = null;
         }
     }
 }

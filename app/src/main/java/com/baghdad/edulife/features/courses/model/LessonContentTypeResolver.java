@@ -1,8 +1,5 @@
 package com.baghdad.edulife.features.courses.model;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 /**
@@ -111,22 +108,24 @@ public final class LessonContentTypeResolver {
     }
 
     /**
-     * Resolves the URL actually loaded into the in-app WebView. PDF content (by lesson type or
-     * by {@code .pdf} extension) is wrapped in the Google Docs viewer; everything else loads
-     * directly. Pure and host-JVM testable. Moved verbatim from {@code LessonPlayerFragment}.
+     * Returns the URL the in-app WebView should load. PDF content used to be wrapped in
+     * {@code https://docs.google.com/gview} which leaked private (potentially signed) lesson
+     * URLs to a third party — the 2026-06 OWASP audit flagged this as M6/M9. The PDF flow now
+     * downloads to private cache through the authenticated OkHttp client and opens via
+     * FileProvider, so the WebView never needs the GDocs wrapper. The method is kept (returning
+     * the raw URL) so a future in-app PDF renderer can plug in here without touching callers.
      */
     public static String resolveViewerUrl(String lessonType, String contentUrl) {
-        String type = lessonType == null ? "" : lessonType.toUpperCase(Locale.ROOT);
-        String url = contentUrl.toLowerCase(Locale.ROOT);
-        boolean looksLikePdf = type.equals("PDF") || url.endsWith(".pdf");
-        if (looksLikePdf) {
-            try {
-                String encoded = URLEncoder.encode(contentUrl, StandardCharsets.UTF_8.name());
-                return "https://docs.google.com/gview?embedded=true&url=" + encoded;
-            } catch (UnsupportedEncodingException e) {
-                return contentUrl;
-            }
-        }
         return contentUrl;
+    }
+
+    /**
+     * True when the lesson should go through the authenticated download + FileProvider path
+     * instead of being rendered inline. PDF lesson types and {@code .pdf} URLs both qualify.
+     */
+    public static boolean shouldDownloadInsteadOfInline(String lessonType, String contentUrl) {
+        String type = lessonType == null ? "" : lessonType.toUpperCase(Locale.ROOT);
+        String url = contentUrl == null ? "" : contentUrl.toLowerCase(Locale.ROOT);
+        return type.equals("PDF") || url.endsWith(".pdf");
     }
 }

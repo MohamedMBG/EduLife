@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Folders the EduLife FileProvider is allowed to grant read access to. Restricted to the
+  app-private subdirectories that hold downloaded certificate PDFs and downloaded lesson
+  resources so a misconfigured grant cannot expose the rest of internal storage.
+-->
+<paths>
+    <files-path name="certificates" path="certificates/"/>
+    <cache-path name="lesson_downloads" path="lesson_downloads/"/>
+</paths>

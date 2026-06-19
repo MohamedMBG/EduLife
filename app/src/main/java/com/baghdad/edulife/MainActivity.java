@@ -19,11 +19,9 @@ import androidx.navigation.fragment.NavHostFragment;
 import com.baghdad.edulife.core.session.SessionEventBus;
 import com.baghdad.edulife.core.storage.SessionStorage;
 import com.baghdad.edulife.features.onboarding.data.OnboardingPreferences;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-
-import kotlin.Unit;
-import me.ibrahimsn.lib.SmoothBottomBar;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -39,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
         insetsController.setSystemBarsBehavior(
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
 
-        SmoothBottomBar bottomNav = findViewById(R.id.bottomNavView);
+        BottomNavigationView bottomNav = findViewById(R.id.bottomNavView);
         View mainContainer = findViewById(R.id.mainContainer);
         View navHostView = findViewById(R.id.main);
 
@@ -61,18 +59,24 @@ public class MainActivity extends AppCompatActivity {
 
         NavController navController = navHostFragment.getNavController();
 
-        int[] tabDestinations = {R.id.homeFragment, R.id.coursesFragment, R.id.plannerFragment, R.id.gamificationFragment, R.id.profileFragment};
+        // The bottom-nav menu item ids ARE the nav-graph destination ids (see menu/bottom_nav_menu.xml),
+        // so a selected item maps straight onto navigate() with no index table.
         NavOptions tabOptions = new NavOptions.Builder()
                 .setLaunchSingleTop(true)
                 .setRestoreState(true)
                 .setPopUpTo(R.id.homeFragment, false, true)
                 .build();
 
-        bottomNav.setOnItemSelected((kotlin.jvm.functions.Function1<Integer, Unit>) position -> {
-            if (position >= 0 && position < tabDestinations.length) {
-                navController.navigate(tabDestinations[position], null, tabOptions);
+        bottomNav.setOnItemSelectedListener(item -> {
+            // Guard against re-navigating to the tab we're already on. This also makes the
+            // setSelectedItemId() sync below a no-op instead of a feedback loop, because by the
+            // time onDestinationChanged fires the current destination already equals the item id.
+            if (navController.getCurrentDestination() != null
+                    && navController.getCurrentDestination().getId() == item.getItemId()) {
+                return true;
             }
-            return Unit.INSTANCE;
+            navController.navigate(item.getItemId(), null, tabOptions);
+            return true;
         });
 
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
@@ -83,11 +87,9 @@ public class MainActivity extends AppCompatActivity {
                     || id == R.id.gamificationFragment
                     || id == R.id.profileFragment;
             bottomNav.setVisibility(isMainTab ? View.VISIBLE : View.GONE);
-            if (id == R.id.homeFragment)             bottomNav.setItemActiveIndex(0);
-            else if (id == R.id.coursesFragment)      bottomNav.setItemActiveIndex(1);
-            else if (id == R.id.plannerFragment)      bottomNav.setItemActiveIndex(2);
-            else if (id == R.id.gamificationFragment) bottomNav.setItemActiveIndex(3);
-            else if (id == R.id.profileFragment)      bottomNav.setItemActiveIndex(4);
+            if (isMainTab && bottomNav.getSelectedItemId() != id) {
+                bottomNav.setSelectedItemId(id);
+            }
         });
 
         observeSessionExpiry(navController);

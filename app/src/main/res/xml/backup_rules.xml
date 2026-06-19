@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Auto Backup rules for devices below API 31.
-
-  Excludes the encrypted session prefs so a cloud-restored install never reuses an
-  identity that belonged to a previous device. The Firebase ID token is not stored
-  here, but the persisted userId + role are still sensitive identifiers tied to a
-  verified Firebase account.
-
-  The legacy "edulife_session" name is excluded too in case an upgraded install
-  still has the old plaintext file mid-migration when a backup is taken.
+  Pre-API-31 Auto Backup is disabled in the manifest via android:allowBackup="false",
+  so this rule file should not actually run. It is kept (and explicitly excludes the
+  whole app) only so a future flip back to allowBackup="true" cannot accidentally
+  ship learner identity, planner data, certificates, or analytics caches to the
+  cloud without an intentional review of every domain listed here.
 -->
 <full-backup-content>
-    <exclude domain="sharedpref" path="edulife_session_secure.xml"/>
-    <exclude domain="sharedpref" path="edulife_session.xml"/>
+    <exclude domain="sharedpref" path="."/>
+    <exclude domain="database"  path="."/>
+    <exclude domain="file"      path="."/>
+    <exclude domain="external"  path="."/>
+    <exclude domain="root"      path="."/>
 </full-backup-content>

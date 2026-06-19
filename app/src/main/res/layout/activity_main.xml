@@ -19,22 +19,26 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <me.ibrahimsn.lib.SmoothBottomBar
+    <!--
+      Material BottomNavigationView (Maven Central) replaced the JitPack SmoothBottomBar
+      (audit 2026-06-19 P3-5). The floating rounded look is preserved via @drawable/bg_bottom_nav
+      + margins + elevation; the active-pill colour comes from the theme's colorSecondaryContainer
+      (= brand_primary_surface), and icon/label tint from @color/bottom_nav_tint.
+    -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavView"
         android:layout_width="0dp"
-        android:layout_height="64dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_bottom_nav"
         android:elevation="12dp"
         android:visibility="gone"
-        app:backgroundColor="@color/brand_surface"
-        app:cornerRadius="24dp"
-        app:duration="300"
-        app:iconSize="24dp"
-        app:iconTint="@color/brand_text_secondary"
-        app:iconTintActive="@color/brand_primary"
-        app:indicatorColor="@color/brand_primary_surface"
+        app:elevation="12dp"
+        app:itemIconTint="@color/bottom_nav_tint"
+        app:itemTextColor="@color/bottom_nav_tint"
+        app:labelVisibilityMode="selected"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

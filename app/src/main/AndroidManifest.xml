@@ -6,7 +6,7 @@
 
     <application
         android:name="com.baghdad.edulife.EduLifeApp"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
@@ -24,6 +24,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!--
+          Hands out per-grant content:// URIs for the app-private downloads (certificates,
+          lesson resources). exported=false + grantUriPermissions=true is the standard
+          pattern: only the explicit Intent.FLAG_GRANT_READ_URI_PERMISSION recipients see
+          the file, no other app can enumerate or read it.
+        -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>

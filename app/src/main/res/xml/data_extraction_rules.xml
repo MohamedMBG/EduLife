@@ -1,18 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Data extraction rules for API 31+ Auto Backup and Device-to-Device transfer.
+  API 31+ rules. Auto Backup is already disabled via android:allowBackup="false".
+  Device-to-device transfer is governed by <device-transfer> and is still permitted
+  by default, so we explicitly exclude every storage domain so a transfer cannot
+  carry the previous learner's session, planner data, onboarding flag, certificate
+  cache, or any future local storage onto another device.
 
-  Cloud backup and device transfer both exclude the encrypted session prefs and
-  the legacy plaintext file so the EduLife identity is never restored onto a
-  device the original learner does not control.
+  When a new local store is added, the right answer is to leave it covered by
+  these all-excluded rules rather than to weaken them.
 -->
 <data-extraction-rules>
     <cloud-backup>
-        <exclude domain="sharedpref" path="edulife_session_secure.xml"/>
-        <exclude domain="sharedpref" path="edulife_session.xml"/>
+        <exclude domain="sharedpref" path="."/>
+        <exclude domain="database"  path="."/>
+        <exclude domain="file"      path="."/>
+        <exclude domain="external"  path="."/>
+        <exclude domain="root"      path="."/>
     </cloud-backup>
     <device-transfer>
-        <exclude domain="sharedpref" path="edulife_session_secure.xml"/>
-        <exclude domain="sharedpref" path="edulife_session.xml"/>
+        <exclude domain="sharedpref" path="."/>
+        <exclude domain="database"  path="."/>
+        <exclude domain="file"      path="."/>
+        <exclude domain="external"  path="."/>
+        <exclude domain="root"      path="."/>
     </device-transfer>
 </data-extraction-rules>

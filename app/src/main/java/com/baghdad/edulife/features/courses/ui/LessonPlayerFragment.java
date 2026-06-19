@@ -6,8 +6,11 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Html;
+import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
+import android.text.style.URLSpan;
 import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
@@ -26,14 +29,18 @@ import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavBackStackEntry;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
+import com.baghdad.edulife.BuildConfig;
 import com.baghdad.edulife.R;
+import com.baghdad.edulife.core.web.UrlSecurityPolicy;
 import com.baghdad.edulife.features.courses.data.CourseRepository;
+import com.baghdad.edulife.features.courses.data.LessonPdfDownloader;
 import com.baghdad.edulife.features.gamification.data.GamificationRepository;
 import com.baghdad.edulife.features.gamification.model.GamificationUiState;
 import com.baghdad.edulife.features.courses.model.CourseDetail;
@@ -42,10 +49,13 @@ import com.baghdad.edulife.features.courses.model.CourseSection;
 import com.baghdad.edulife.features.courses.model.LessonContentTypeResolver;
 import com.baghdad.edulife.features.courses.model.LessonDetail;
 import com.baghdad.edulife.features.courses.model.LessonSummary;
+import com.baghdad.edulife.features.courses.model.LessonWebViewHosts;
 import com.baghdad.edulife.features.courses.viewmodel.CourseDetailViewModel;
 import com.baghdad.edulife.features.courses.viewmodel.LessonPlayerViewModel;
 
+import java.io.File;
 import java.util.Locale;
+import java.util.Set;
 
 public class LessonPlayerFragment extends Fragment {
 
@@ -79,6 +89,8 @@ public class LessonPlayerFragment extends Fragment {
 
     private LessonPlayerViewModel viewModel;
     private OnBackPressedCallback viewerBackCallback;
+    private final Set<String> webViewTrustedHosts =
+            LessonWebViewHosts.forApiBaseUrl(BuildConfig.API_BASE_URL);
 
     public LessonPlayerFragment() {
         super(R.layout.fragment_lesson_player);
@@ -296,7 +308,11 @@ public class LessonPlayerFragment extends Fragment {
                 lessonResourceLabel.setText(R.string.lesson_player_pdf_label);
                 lessonOpenResourceButton.setText(R.string.lesson_player_view_pdf);
                 if (result.actionEnabled) {
-                    lessonOpenResourceButton.setOnClickListener(v -> openInAppViewer());
+                    // The previous flow wrapped the URL in Google Docs Viewer and loaded it into
+                    // the in-app WebView, which disclosed private lesson URLs to a third party
+                    // (audit M6/M9). Now download to private cache and open via FileProvider.
+                    String pdfUrl = url;
+                    lessonOpenResourceButton.setOnClickListener(v -> downloadAndOpenPdf(pdfUrl));
                 } else {
                     lessonOpenResourceButton.setEnabled(false);
                     lessonOpenResourceButton.setAlpha(0.4f);
@@ -347,13 +363,34 @@ public class LessonPlayerFragment extends Fragment {
     @SuppressWarnings("deprecation")
     private void renderTextContent(String contentBody) {
         String html = contentBody.replace("\n", "<br/>");
-        Spanned rendered;
+        Spanned parsed;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            rendered = Html.fromHtml(html, Html.FROM_HTML_MODE_COMPACT);
+            parsed = Html.fromHtml(html, Html.FROM_HTML_MODE_COMPACT);
         } else {
-            rendered = Html.fromHtml(html);
+            parsed = Html.fromHtml(html);
         }
-        lessonTextContent.setText(rendered);
+
+        // Lesson bodies are teacher/admin-authored and may embed <a href> links. Html.fromHtml
+        // turns those into URLSpans that LinkMovementMethod would launch via a raw ACTION_VIEW —
+        // bypassing UrlSecurityPolicy and letting a file://, intent://, or javascript: href escape
+        // the player's URL policy (audit 2026-06-19 P2-1). Re-wrap every URLSpan so a tap routes
+        // through openExternalUrl(), which classifies the URL before launching anything.
+        SpannableStringBuilder safe = new SpannableStringBuilder(parsed);
+        for (URLSpan span : safe.getSpans(0, safe.length(), URLSpan.class)) {
+            int start = safe.getSpanStart(span);
+            int end = safe.getSpanEnd(span);
+            int flags = safe.getSpanFlags(span);
+            final String linkUrl = span.getURL();
+            safe.removeSpan(span);
+            safe.setSpan(new ClickableSpan() {
+                @Override
+                public void onClick(@NonNull View widget) {
+                    openExternalUrl(linkUrl);
+                }
+            }, start, end, flags);
+        }
+
+        lessonTextContent.setText(safe);
         lessonTextContent.setMovementMethod(LinkMovementMethod.getInstance());
     }
 
@@ -363,9 +400,22 @@ public class LessonPlayerFragment extends Fragment {
             return;
         }
         String normalized = url.trim();
-        if (!normalized.startsWith("http://") && !normalized.startsWith("https://")) {
+        // Backend may carry a bare host (no scheme); promote to https before classification so
+        // policy decisions reflect the actual link being launched.
+        if (!normalized.contains("://")) {
             normalized = "https://" + normalized;
         }
+
+        UrlSecurityPolicy.Decision decision = UrlSecurityPolicy.classify(normalized, webViewTrustedHosts);
+        if (decision == UrlSecurityPolicy.Decision.BLOCK) {
+            // file://, javascript:, intent://, http://, unknown schemes — all rejected here so a
+            // teacher-authored content URL can never coerce the player into rendering arbitrary
+            // local files or launching attacker-chosen components.
+            Toast.makeText(requireContext(),
+                    R.string.lesson_player_unsafe_link, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         try {
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(normalized)));
         } catch (ActivityNotFoundException e) {
@@ -373,13 +423,74 @@ public class LessonPlayerFragment extends Fragment {
         }
     }
 
+    private void downloadAndOpenPdf(String url) {
+        if (url == null || url.isBlank()) {
+            Toast.makeText(requireContext(), R.string.lesson_player_no_link, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        // PDF flow always goes to private cache + FileProvider open. Authenticated bearer is
+        // only attached for backend-host PDFs (see LessonPdfDownloader.isBackendHost); third-
+        // party hosts are fetched with a separate un-authenticated client so the Firebase token
+        // never leaves the EduLife origin.
+        Toast.makeText(requireContext(), R.string.lesson_player_pdf_downloading, Toast.LENGTH_SHORT).show();
+        LessonPdfDownloader.download(requireContext(), url, deriveFileNameHint(url),
+                new LessonPdfDownloader.Callback() {
+                    @Override
+                    public void onDownloaded(@NonNull File pdf) {
+                        if (!isAdded()) return;
+                        openPrivatePdfFile(pdf);
+                    }
+
+                    @Override
+                    public void onUnsafeUrl() {
+                        if (!isAdded()) return;
+                        Toast.makeText(requireContext(),
+                                R.string.lesson_player_unsafe_link, Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onNetworkError() {
+                        if (!isAdded()) return;
+                        Toast.makeText(requireContext(),
+                                R.string.lesson_player_pdf_download_error, Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void openPrivatePdfFile(File pdf) {
+        Uri uri = FileProvider.getUriForFile(
+                requireContext(),
+                requireContext().getPackageName() + ".fileprovider",
+                pdf);
+        Intent view = new Intent(Intent.ACTION_VIEW);
+        view.setDataAndType(uri, "application/pdf");
+        view.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
+                | Intent.FLAG_ACTIVITY_NEW_TASK);
+        try {
+            startActivity(view);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(requireContext(),
+                    R.string.cert_no_pdf_viewer, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private String deriveFileNameHint(String url) {
+        int slash = url.lastIndexOf('/');
+        String tail = slash >= 0 && slash < url.length() - 1 ? url.substring(slash + 1) : url;
+        int q = tail.indexOf('?');
+        if (q > 0) tail = tail.substring(0, q);
+        return tail.isEmpty() ? "lesson" : tail;
+    }
+
     // ─── In-app WebView viewer ────────────────────────────────────────────────
 
     @SuppressWarnings("deprecation")
     private void configureWebView() {
         WebSettings settings = viewerWebView.getSettings();
-        settings.setJavaScriptEnabled(true);
-        settings.setDomStorageEnabled(true);
+        // JS is OFF by default. It is only re-enabled right before loading a trusted-host video
+        // embed (loadDetailInWebView). Inline body HTML, which never needs JS, stays sandboxed.
+        settings.setJavaScriptEnabled(false);
+        settings.setDomStorageEnabled(false);
         settings.setLoadWithOverviewMode(true);
         settings.setUseWideViewPort(true);
         settings.setBuiltInZoomControls(true);
@@ -391,8 +502,25 @@ public class LessonPlayerFragment extends Fragment {
         viewerWebView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                String scheme = request.getUrl().getScheme();
-                return scheme == null || !(scheme.equals("http") || scheme.equals("https"));
+                String requestUrl = request.getUrl() != null ? request.getUrl().toString() : null;
+                UrlSecurityPolicy.Decision decision =
+                        UrlSecurityPolicy.classify(requestUrl, webViewTrustedHosts);
+                if (decision == UrlSecurityPolicy.Decision.ALLOW_IN_APP) {
+                    return false; // let WebView load it
+                }
+                if (decision == UrlSecurityPolicy.Decision.ALLOW_EXTERNAL) {
+                    // Send navigations to non-allowlisted HTTPS hosts to the system browser so
+                    // the user sees the destination origin and the in-app WebView doesn't run
+                    // arbitrary third-party JavaScript inside the player surface.
+                    openExternalUrl(requestUrl);
+                    return true;
+                }
+                // BLOCK: file://, javascript:, intent://, http://, unknown schemes.
+                if (isAdded()) {
+                    Toast.makeText(requireContext(),
+                            R.string.lesson_player_unsafe_link, Toast.LENGTH_SHORT).show();
+                }
+                return true;
             }
 
             @Override
@@ -450,16 +578,51 @@ public class LessonPlayerFragment extends Fragment {
             return;
         }
 
+        // PDFs no longer load through the WebView — they go through the authenticated download
+        // path. Anything still routed here that the resolver flags as PDF gets bumped to that
+        // safer path instead of falling back into the WebView and re-introducing the GDocs leak.
+        if (!url.isEmpty()
+                && LessonContentTypeResolver.shouldDownloadInsteadOfInline(detail.lessonType, url)) {
+            viewerOpened = false;
+            downloadAndOpenPdf(url);
+            return;
+        }
+
         viewerContainer.setVisibility(View.VISIBLE);
         if (viewerBackCallback != null) {
             viewerBackCallback.setEnabled(true);
         }
 
         if (!url.isEmpty()) {
-            viewerWebView.loadUrl(LessonContentTypeResolver.resolveViewerUrl(detail.lessonType, url));
+            UrlSecurityPolicy.Decision decision =
+                    UrlSecurityPolicy.classify(url, webViewTrustedHosts);
+            if (decision == UrlSecurityPolicy.Decision.ALLOW_IN_APP) {
+                // Trusted-host video embeds (YouTube/Vimeo/backend) need JS to play. Enable it
+                // for the load and rely on the allowlist + WebViewClient to keep navigation
+                // inside the trusted origin.
+                viewerWebView.getSettings().setJavaScriptEnabled(true);
+                viewerWebView.getSettings().setDomStorageEnabled(true);
+                viewerWebView.loadUrl(LessonContentTypeResolver.resolveViewerUrl(detail.lessonType, url));
+                return;
+            }
+            // Non-allowlisted HTTPS / blocked: don't bring the URL into the in-app surface.
+            // ALLOW_EXTERNAL goes to the system browser; BLOCK toasts and aborts.
+            viewerContainer.setVisibility(View.GONE);
+            viewerOpened = false;
+            if (viewerBackCallback != null) viewerBackCallback.setEnabled(false);
+            if (decision == UrlSecurityPolicy.Decision.ALLOW_EXTERNAL) {
+                openExternalUrl(url);
+            } else {
+                Toast.makeText(requireContext(),
+                        R.string.lesson_player_unsafe_link, Toast.LENGTH_SHORT).show();
+            }
             return;
         }
 
+        // Inline body — render as data URL with JS explicitly off. setJavaScriptEnabled(false)
+        // is reapplied here in case a previous load enabled it for a trusted video.
+        viewerWebView.getSettings().setJavaScriptEnabled(false);
+        viewerWebView.getSettings().setDomStorageEnabled(false);
         String html = "<html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/>"
                 + "<style>body{font-family:sans-serif;padding:16px;line-height:1.6;color:#222}</style>"
                 + "</head><body>" + body.replace("\n", "<br/>") + "</body></html>";

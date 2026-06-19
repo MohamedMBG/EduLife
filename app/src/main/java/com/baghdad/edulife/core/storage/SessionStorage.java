@@ -25,7 +25,7 @@ import java.security.GeneralSecurityException;
  *
  * Usage pattern:
  *   - Write: after /api/v1/auth/sync succeeds
- *   - Clear: on logout or sync failure
+ *   - Clear: on logout or when backend identity cannot be established
  *   - Read:  by any feature that needs the internal identity
  */
 public class SessionStorage {
@@ -157,8 +157,9 @@ public class SessionStorage {
 
     /**
      * Clears all stored session data.
-     * Must be called on logout and on /api/v1/auth/sync failure
-     * to prevent stale identity from leaking into future sessions.
+     * Must be called on logout or full account reset, when pending registration state should also
+     * be discarded. Auth sync failure uses clearAuthenticatedSession() so first-sync retries keep
+     * the selected registration role.
      *
      * Uses commit() so a crash immediately after sign-out cannot leave a stale userId/role on
      * disk and let a different user inherit it on the next launch. Logout flows already block
@@ -166,5 +167,19 @@ public class SessionStorage {
      */
     public void clearSession() {
         prefs.edit().clear().commit();
+    }
+
+    /**
+     * Clears only the authenticated EduLife identity returned by /auth/sync.
+     *
+     * Auth sync failures must remove stale userId/role so launch routing cannot reuse a previous
+     * account. The pending registration role is intentionally preserved because it is not an
+     * authenticated identity and may be needed when a newly verified user retries the first sync.
+     */
+    public void clearAuthenticatedSession() {
+        prefs.edit()
+                .remove(KEY_USER_ID)
+                .remove(KEY_ROLE)
+                .commit();
     }
 }

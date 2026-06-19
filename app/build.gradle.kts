@@ -1,3 +1,4 @@
+import org.gradle.api.GradleException
 import java.util.Properties
 
 plugins {
@@ -12,13 +13,31 @@ val localProperties = Properties().apply {
     }
 }
 
-val configuredApiBaseUrl = providers.gradleProperty("edulife.apiBaseUrl")
-    .orElse(localProperties.getProperty("edulife.apiBaseUrl") ?: "http://10.0.2.2:8080/api/v1/")
-    .get()
+val defaultDebugApiBaseUrl = "http://10.0.2.2:8080/api/v1/"
+val releaseTaskRequested = gradle.startParameter.taskNames.any { taskName ->
+    val normalizedTaskName = taskName.lowercase()
+    normalizedTaskName.contains("release") || normalizedTaskName == "assemble"
+}
+val gradleApiBaseUrl = providers.gradleProperty("edulife.apiBaseUrl").orNull
+val configuredApiBaseUrl = if (releaseTaskRequested) {
+    gradleApiBaseUrl
+        ?: throw GradleException(
+            "Release builds require edulife.apiBaseUrl. " +
+                    "Pass -Pedulife.apiBaseUrl=https://your-api.example/api/v1/."
+        )
+} else {
+    gradleApiBaseUrl ?: localProperties.getProperty("edulife.apiBaseUrl") ?: defaultDebugApiBaseUrl
+}.trim()
 val normalizedApiBaseUrl = if (configuredApiBaseUrl.endsWith("/")) {
     configuredApiBaseUrl
 } else {
     "$configuredApiBaseUrl/"
+}
+
+// Release artifacts must receive an explicit HTTPS API endpoint, because Firebase bearer tokens
+// are attached to protected API calls. Debug builds can still use local.properties or the default.
+if (releaseTaskRequested && !normalizedApiBaseUrl.startsWith("https://")) {
+    throw GradleException("Release builds must set edulife.apiBaseUrl to an HTTPS endpoint.")
 }
 
 android {
@@ -95,9 +114,9 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel:2.7.0")
     implementation("androidx.lifecycle:lifecycle-livedata:2.7.0")
 
-// Retrofit (STABLE)
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+// Retrofit (STABLE) — 2.11.0 per audit 2026-06-19 P3-6 (was 2.9.0, 2020-era).
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
 
 // OkHttp (safe modern)
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
@@ -109,8 +128,8 @@ dependencies {
     // ViewPager2
     implementation("androidx.viewpager2:viewpager2:1.0.0")
 
-    // SmoothBottomBar
-    implementation("com.github.ibrahimsn98:SmoothBottomBar:1.7.9")
+    // Bottom navigation uses the Material BottomNavigationView (bundled in libs.material above);
+    // the JitPack SmoothBottomBar was removed in audit 2026-06-19 P3-5 to drop GitHub-built jars.
 
     // RecyclerView for course catalog and featured lists
     implementation("androidx.recyclerview:recyclerview:1.3.2")

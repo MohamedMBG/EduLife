@@ -52,6 +52,12 @@ public class ProfileFragment extends Fragment {
     private static final String TAG = "ProfileFragment";
     private static final int AVATAR_MAX_PX = 1024;
     private static final int AVATAR_JPEG_QUALITY = 88;
+    // The photo picker already restricts the source to images, but a 50 MP camera shot can still
+    // blow past 100 MB of decoded bitmap memory before scaleBitmap() ever runs. Cap the on-disk
+    // source size so a malicious or accidentally huge image never reaches the full bitmap decoder.
+    // 5 MB matches the product/backend avatar limit (AGENTS.md); the backend enforces it
+    // authoritatively, this is the client-side fast-fail.
+    private static final long AVATAR_MAX_BYTES = 5L * 1024L * 1024L;
 
     private AuthViewModel authViewModel;
     private ProfileViewModel profileViewModel;
@@ -161,15 +167,38 @@ public class ProfileFragment extends Fragment {
 
     @Nullable
     private File compressImage(Context context, Uri uri) {
-        try (InputStream inputStream = context.getContentResolver().openInputStream(uri)) {
-            if (inputStream == null) {
-                Log.w(TAG, "Avatar source stream was null for uri=" + uri);
+        // Reject obviously oversized sources before any decode work. Many providers report a real
+        // size; the unknown branch (-1) is allowed because the bounds decode below caps memory too.
+        long sourceBytes = querySourceBytes(context, uri);
+        if (sourceBytes > AVATAR_MAX_BYTES) {
+            // Do not log the content:// uri itself — it can identify the picked media item.
+            Log.w(TAG, "Avatar source exceeds max bytes (" + sourceBytes + ")");
+            return null;
+        }
+
+        try {
+            BitmapFactory.Options bounds = decodeBounds(context, uri);
+            if (bounds == null || bounds.outWidth <= 0 || bounds.outHeight <= 0) {
+                Log.w(TAG, "Avatar bounds decode failed");
                 return null;
             }
 
-            Bitmap original = BitmapFactory.decodeStream(inputStream);
+            BitmapFactory.Options decodeOptions = new BitmapFactory.Options();
+            decodeOptions.inSampleSize = computeInSampleSize(
+                    bounds.outWidth, bounds.outHeight, AVATAR_MAX_PX);
+            // ARGB_8888 is the avatar default; downsampled bitmap is at most ~AVATAR_MAX_PX^2 * 4B.
+            decodeOptions.inPreferredConfig = Bitmap.Config.ARGB_8888;
+
+            Bitmap original;
+            try (InputStream decodeStream = context.getContentResolver().openInputStream(uri)) {
+                if (decodeStream == null) {
+                    Log.w(TAG, "Avatar source stream was null");
+                    return null;
+                }
+                original = BitmapFactory.decodeStream(decodeStream, null, decodeOptions);
+            }
             if (original == null) {
-                Log.w(TAG, "BitmapFactory.decodeStream returned null for uri=" + uri
+                Log.w(TAG, "BitmapFactory.decodeStream returned null"
                         + " — likely unsupported format or corrupt source");
                 return null;
             }
@@ -188,14 +217,47 @@ public class ProfileFragment extends Fragment {
         } catch (FileNotFoundException e) {
             // Provider revoked the URI between the picker callback and the read attempt, or
             // the source content was deleted from underneath us. Treat as recoverable.
-            Log.w(TAG, "Avatar source not found for uri=" + uri, e);
+            Log.w(TAG, "Avatar source not found", e);
             return null;
         } catch (IOException e) {
             // Disk full, cache dir not writable, or the decoded bitmap failed to flush.
             // These are operational failures the user can retry after freeing space.
-            Log.e(TAG, "Avatar compression IO failure for uri=" + uri, e);
+            Log.e(TAG, "Avatar compression IO failure", e);
             return null;
         }
+    }
+
+    private long querySourceBytes(Context context, Uri uri) {
+        try (android.database.Cursor c = context.getContentResolver()
+                .query(uri, new String[]{android.provider.OpenableColumns.SIZE},
+                        null, null, null)) {
+            if (c != null && c.moveToFirst() && !c.isNull(0)) {
+                return c.getLong(0);
+            }
+        } catch (Exception ignored) {
+            // Some providers reject metadata queries — fall through to "unknown".
+        }
+        return -1L;
+    }
+
+    @Nullable
+    private BitmapFactory.Options decodeBounds(Context context, Uri uri) throws IOException {
+        try (InputStream boundsStream = context.getContentResolver().openInputStream(uri)) {
+            if (boundsStream == null) return null;
+            BitmapFactory.Options opts = new BitmapFactory.Options();
+            opts.inJustDecodeBounds = true;
+            BitmapFactory.decodeStream(boundsStream, null, opts);
+            return opts;
+        }
+    }
+
+    static int computeInSampleSize(int srcWidth, int srcHeight, int maxPx) {
+        int sample = 1;
+        int largest = Math.max(srcWidth, srcHeight);
+        while ((largest / sample) > maxPx) {
+            sample <<= 1;
+        }
+        return sample;
     }
 
     private Bitmap scaleBitmap(Bitmap src, int maxPx) {

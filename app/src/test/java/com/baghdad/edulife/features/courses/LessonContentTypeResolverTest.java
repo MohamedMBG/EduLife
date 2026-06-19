@@ -145,23 +145,44 @@ public class LessonContentTypeResolverTest {
         assertEquals(Display.FALLBACK, r.display);
     }
 
-    // ── resolveViewerUrl: PDF wrapping ──
+    // ── resolveViewerUrl: PDF is no longer wrapped in Google Docs Viewer ──
 
     @Test
-    public void pdfTypeUrl_isWrappedInGoogleDocsViewer() {
-        String viewer = LessonContentTypeResolver.resolveViewerUrl("PDF", "https://cdn/file.pdf");
-        assertTrue(viewer.startsWith("https://docs.google.com/gview?embedded=true&url="));
+    public void pdfTypeUrl_isReturnedRawSoCallerCanRouteToAuthenticatedDownload() {
+        String url = "https://cdn/file.pdf";
+        // P2 audit (2026-06): we stopped wrapping PDFs in https://docs.google.com/gview to
+        // avoid leaking private lesson URLs to a third party. PDFs now go through the
+        // download-to-private-cache path; this method just returns the URL unchanged.
+        assertEquals(url, LessonContentTypeResolver.resolveViewerUrl("PDF", url));
     }
 
     @Test
-    public void pdfExtensionUrl_isWrappedEvenWhenTypeIsNotPdf() {
-        String viewer = LessonContentTypeResolver.resolveViewerUrl("RESOURCE", "https://cdn/report.PDF");
-        assertTrue(viewer.startsWith("https://docs.google.com/gview?embedded=true&url="));
+    public void pdfExtensionUrl_isReturnedRawEvenWhenTypeIsNotPdf() {
+        String url = "https://cdn/report.PDF";
+        assertEquals(url, LessonContentTypeResolver.resolveViewerUrl("RESOURCE", url));
     }
 
     @Test
     public void nonPdfUrl_isLoadedDirectly() {
         String url = "https://example.com/page";
         assertEquals(url, LessonContentTypeResolver.resolveViewerUrl("ARTICLE", url));
+    }
+
+    // ── shouldDownloadInsteadOfInline: PDF routing ──
+
+    @Test
+    public void pdfLessonType_routesToDownload() {
+        assertTrue(LessonContentTypeResolver.shouldDownloadInsteadOfInline("PDF", "https://cdn/x"));
+    }
+
+    @Test
+    public void pdfExtensionUrl_routesToDownload() {
+        assertTrue(LessonContentTypeResolver.shouldDownloadInsteadOfInline("RESOURCE", "https://cdn/x.pdf"));
+    }
+
+    @Test
+    public void nonPdf_doesNotRouteToDownload() {
+        assertFalse(LessonContentTypeResolver.shouldDownloadInsteadOfInline("ARTICLE", "https://example.com/post"));
+        assertFalse(LessonContentTypeResolver.shouldDownloadInsteadOfInline("VIDEO", "https://youtube.com/watch?v=abc"));
     }
 }
