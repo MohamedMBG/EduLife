@@ -29,6 +29,13 @@ public class FirebaseAuthInterceptor implements Interceptor {
     public Response intercept(Chain chain) throws IOException {
         Request originalRequest = chain.request();
 
+        if (originalRequest.header("Authorization") != null) {
+            // /auth/sync can supply the freshly fetched Firebase token directly from the login
+            // flow. Respect that header so the interceptor does not trigger a second token fetch
+            // and accidentally turn a Firebase latency issue into a fake backend outage.
+            return chain.proceed(originalRequest);
+        }
+
         FirebaseUser currentUser = firebaseAuth.getCurrentUser();
         if (currentUser == null) {
             // No signed-in user; let the request proceed without a Bearer header so the

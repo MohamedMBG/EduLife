@@ -147,9 +147,10 @@ public class AuthRepository {
                         return;
                     }
 
-                    // Token obtained — now call the backend sync endpoint.
-                    // The actual Bearer header is injected by FirebaseAuthInterceptor, not here.
-                    callBackendSync(callback);
+                    // Reuse the same freshly forced token for /auth/sync. This removes a second
+                    // Firebase token fetch inside OkHttp that could fail separately from the
+                    // backend call and show a misleading "cannot reach server" error.
+                    callBackendSync(callback, token);
                 })
                 .addOnFailureListener(e ->
                         failBackendSync(callback, e.getMessage())
@@ -160,11 +161,12 @@ public class AuthRepository {
      * Executes the Retrofit call to POST /api/v1/auth/sync and handles the response.
      * Saves the session on success; clears it on any error path.
      */
-    private void callBackendSync(AuthCallback callback) {
+    private void callBackendSync(AuthCallback callback, String firebaseIdToken) {
         String pendingRole = sessionStorage.getPendingRegistrationRole();
+        String authorizationHeader = "Bearer " + firebaseIdToken;
         Call<AuthSyncResponse> syncCall = pendingRole == null || pendingRole.isBlank()
-                ? apiService.syncUser()
-                : apiService.syncUser(new AuthSyncRequest(pendingRole));
+                ? apiService.syncUser(authorizationHeader)
+                : apiService.syncUser(authorizationHeader, new AuthSyncRequest(pendingRole));
         AtomicBoolean callbackDelivered = new AtomicBoolean(false);
         Runnable timeoutRunnable = () -> {
             if (!callbackDelivered.compareAndSet(false, true)) {

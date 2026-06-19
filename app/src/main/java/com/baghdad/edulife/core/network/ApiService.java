@@ -58,6 +58,7 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
+import retrofit2.http.Header;
 import retrofit2.http.Multipart;
 import retrofit2.http.Part;
 import retrofit2.http.Path;
@@ -79,17 +80,24 @@ public interface ApiService {
      * Returns the internal userId and role for local session storage.
      *
      * Endpoint: POST /api/v1/auth/sync
-     * Authorization: Bearer <Firebase ID token>  (added by FirebaseAuthInterceptor)
+     * Authorization: Bearer <Firebase ID token>  (passed explicitly by AuthRepository)
+     *
+     * Why explicit here: login already forced a fresh Firebase token before calling /auth/sync.
+     * Reusing that exact token avoids a second Firebase round-trip inside OkHttp, which could
+     * fail independently and masquerade as "server unreachable" even when Render is healthy.
      */
     @POST("auth/sync")
-    Call<AuthSyncResponse> syncUser();
+    Call<AuthSyncResponse> syncUser(@Header("Authorization") String authorization);
 
     /**
      * Sends the chosen first-time role during the initial verified auth sync.
      * The backend ignores this body for existing users and never allows ADMIN self-assignment.
      */
     @POST("auth/sync")
-    Call<AuthSyncResponse> syncUser(@Body AuthSyncRequest request);
+    Call<AuthSyncResponse> syncUser(
+            @Header("Authorization") String authorization,
+            @Body AuthSyncRequest request
+    );
 
     /**
      * Loads the published course catalog from the live backend.
