@@ -1,5 +1,6 @@
 package com.edulife.admin.dto;
 
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -14,6 +15,7 @@ public record UpdateCourseRequest(
         @Size(max = 500, message = "shortDescription must be 500 characters or fewer")
         String shortDescription,
 
+        @Size(max = 20000, message = "description must be 20000 characters or fewer")
         String description,
 
         @Size(max = 10, message = "languageCode must be 10 characters or fewer")
@@ -21,5 +23,9 @@ public record UpdateCourseRequest(
 
         String level,
 
+        // Only http(s) URLs accepted; other schemes (javascript:, data:) block stored-XSS via the
+        // cover image rendered as <img src> by both clients.
+        @Size(max = 2048, message = "imageUrl must be 2048 characters or fewer")
+        @Pattern(regexp = "^(https?://.+)?$", message = "imageUrl must be an http(s) URL")
         String imageUrl
 ) {}

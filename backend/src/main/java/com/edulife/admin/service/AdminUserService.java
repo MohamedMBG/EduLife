@@ -51,6 +51,15 @@ public class AdminUserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
+        // Block demoting the last remaining ADMIN — otherwise the platform could be left with no
+        // account able to manage users, roles, or content, with no in-app way to recover.
+        if (user.getRole() == UserRole.ADMIN
+                && request.role() != UserRole.ADMIN
+                && userRepository.countByRole(UserRole.ADMIN) <= 1) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Cannot remove the last administrator");
+        }
+
         user.setRole(request.role());
         // JPA dirty-checking persists the role change on transaction commit; no explicit save needed.
         return toDto(user);

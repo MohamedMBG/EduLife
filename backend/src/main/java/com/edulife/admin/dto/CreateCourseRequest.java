@@ -1,6 +1,7 @@
 package com.edulife.admin.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -16,6 +17,7 @@ public record CreateCourseRequest(
         String shortDescription,
 
         @NotBlank(message = "description is required")
+        @Size(max = 20000, message = "description must be 20000 characters or fewer")
         String description,
 
         @NotBlank(message = "languageCode is required")
@@ -25,5 +27,9 @@ public record CreateCourseRequest(
         // level maps to the `level` column, which also serves as the catalog category filter.
         String level,
 
+        // imageUrl is rendered as an <img src> by both clients, so only http(s) URLs are accepted.
+        // Rejecting other schemes (javascript:, data:, etc.) blocks stored-XSS via the cover image.
+        @Size(max = 2048, message = "imageUrl must be 2048 characters or fewer")
+        @Pattern(regexp = "^(https?://.+)?$", message = "imageUrl must be an http(s) URL")
         String imageUrl
 ) {}
