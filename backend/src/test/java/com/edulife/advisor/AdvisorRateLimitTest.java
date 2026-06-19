@@ -25,7 +25,7 @@ class AdvisorRateLimitTest {
 
     @BeforeEach
     void setUp() {
-        filter = new RateLimitFilter(writer);
+        filter = new RateLimitFilter(writer, 1);
         SecurityContextHolder.clearContext();
     }
 

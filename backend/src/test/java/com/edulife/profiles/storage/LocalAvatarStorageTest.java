@@ -14,13 +14,17 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class LocalAvatarStorageTest {
 
+    // Minimal valid PNG signature so magic-byte sniffing accepts the upload.
+    private static final byte[] PNG_BYTES =
+            {(byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0};
+
     @Test
     void storeWritesFileAndReturnsPublicUrl(@TempDir Path tempDir) throws Exception {
         LocalAvatarStorage storage = newStorage(tempDir);
 
         AvatarStorage.StoredAvatar stored = storage.store(
                 UUID.randomUUID(),
-                new MockMultipartFile("file", "a.png", "image/png", new byte[] {1, 2, 3})
+                new MockMultipartFile("file", "a.png", "image/png", PNG_BYTES)
         );
 
         assertThat(stored.publicUrl()).startsWith("http://localhost:8080/uploads/avatars/");
@@ -69,12 +73,27 @@ class LocalAvatarStorageTest {
     }
 
     @Test
+    void storeRejectsSpoofedContentType(@TempDir Path tempDir) {
+        LocalAvatarStorage storage = newStorage(tempDir);
+
+        // Declares image/png but the bytes are HTML — magic-byte sniffing must reject it so a
+        // renamed script cannot be stored and served back to a browser as an avatar.
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () ->
+                storage.store(UUID.randomUUID(),
+                        new MockMultipartFile("file", "x.png", "image/png",
+                                "<html><script>alert(1)</script></html>".getBytes()))
+        );
+
+        assertThat(ex.getStatusCode().value()).isEqualTo(415);
+    }
+
+    @Test
     void deleteIfStoredRemovesPreviousFile(@TempDir Path tempDir) throws Exception {
         LocalAvatarStorage storage = newStorage(tempDir);
 
         AvatarStorage.StoredAvatar stored = storage.store(
                 UUID.randomUUID(),
-                new MockMultipartFile("file", "a.png", "image/png", new byte[] {1, 2})
+                new MockMultipartFile("file", "a.png", "image/png", PNG_BYTES)
         );
 
         storage.deleteIfStored(stored.publicUrl());

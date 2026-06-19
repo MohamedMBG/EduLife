@@ -19,7 +19,7 @@ class RateLimitRetryAfterTest {
 
     private final ApiErrorWriter writer =
             new ApiErrorWriter(new ObjectMapper().registerModule(new JavaTimeModule()));
-    private final RateLimitFilter filter = new RateLimitFilter(writer);
+    private final RateLimitFilter filter = new RateLimitFilter(writer, 1);
     private final FilterChain passthrough = (req, res) -> {};
 
     @Test

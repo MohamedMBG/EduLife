@@ -87,7 +87,7 @@ class ExamServiceCertificateTest {
     @Test
     void submitExamGeneratesCertificateOnlyWhenPassed() {
         givenExamWithOneQuestion();
-        given(attemptRepository.save(any(ExamAttempt.class))).willAnswer(invocation -> savedAttempt(invocation.getArgument(0)));
+        given(attemptRepository.saveAndFlush(any(ExamAttempt.class))).willAnswer(invocation -> savedAttempt(invocation.getArgument(0)));
         given(certificateService.generateCertificateAfterExamPass(USER_ID, COURSE_ID, ATTEMPT_ID))
                 .willReturn(new CertificateDetailDto(
                         CERT_ID,
@@ -114,7 +114,7 @@ class ExamServiceCertificateTest {
     @Test
     void submitExamDoesNotGenerateCertificateWhenFailed() {
         givenExamWithOneQuestion();
-        given(attemptRepository.save(any(ExamAttempt.class))).willAnswer(invocation -> savedAttempt(invocation.getArgument(0)));
+        given(attemptRepository.saveAndFlush(any(ExamAttempt.class))).willAnswer(invocation -> savedAttempt(invocation.getArgument(0)));
 
         ExamResultDto result = examService.submitExam(COURSE_ID,
                 new SubmitExamRequest(List.of(new SubmitExamRequest.AnswerDto(QUESTION_ID, WRONG_CHOICE_ID))));
