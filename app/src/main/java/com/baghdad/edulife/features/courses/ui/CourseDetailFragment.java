@@ -24,7 +24,9 @@ import com.bumptech.glide.Glide;
 import com.baghdad.edulife.R;
 import com.baghdad.edulife.features.courses.model.CourseDetail;
 import com.baghdad.edulife.features.courses.model.CourseDetailUiState;
+import com.baghdad.edulife.features.courses.model.CourseProgressSummary;
 import com.baghdad.edulife.features.courses.model.CourseSection;
+import com.baghdad.edulife.features.courses.model.LessonContentTypeResolver;
 import com.baghdad.edulife.features.courses.model.LessonSummary;
 import com.baghdad.edulife.features.courses.viewmodel.CourseDetailViewModel;
 
@@ -48,6 +50,8 @@ public class CourseDetailFragment extends Fragment {
     private String courseId = "";
     private boolean isEnrolled;
     private Map<String, Boolean> lessonCompletionMap = new HashMap<>();
+    private CourseProgressSummary lastProgressSummary;
+    private boolean progressLoadFailed;
 
     public CourseDetailFragment() {
         super(R.layout.fragment_course_detail);
@@ -92,6 +96,16 @@ public class CourseDetailFragment extends Fragment {
             if (current != null && current.courseDetail != null) {
                 bindCourseDetail(current.courseDetail);
             }
+        });
+
+        courseDetailViewModel.getProgressSummary().observe(getViewLifecycleOwner(), summary -> {
+            lastProgressSummary = summary;
+            renderProgressCard();
+            updateExamCta();
+        });
+        courseDetailViewModel.getProgressError().observe(getViewLifecycleOwner(), failed -> {
+            progressLoadFailed = Boolean.TRUE.equals(failed);
+            renderProgressCard();
         });
 
         CourseDetailUiState currentState = courseDetailViewModel.getUiState().getValue();
@@ -140,6 +154,78 @@ public class CourseDetailFragment extends Fragment {
         requireView().findViewById(R.id.enrollCtaFooter).setVisibility(View.GONE);
         statusText.setVisibility(View.VISIBLE);
         statusText.setText(message);
+    }
+
+    /**
+     * Renders the course-learning progress card from the latest summary + error signal:
+     * success → "X of Y lessons completed · Z% complete" with a percent bar; fetch failure →
+     * a tap-to-retry message instead of silently vanishing. Hidden only when the learner is not
+     * enrolled or no progress has loaded yet.
+     */
+    private void renderProgressCard() {
+        if (progressSummaryLayout == null) return;
+
+        if (!isEnrolled) {
+            progressSummaryLayout.setVisibility(View.GONE);
+            return;
+        }
+
+        if (progressLoadFailed) {
+            progressSummaryText.setText(R.string.course_detail_progress_error);
+            progressSummaryBar.setVisibility(View.GONE);
+            progressSummaryLayout.setClickable(true);
+            progressSummaryLayout.setOnClickListener(v -> {
+                progressLoadFailed = false;
+                progressSummaryText.setText(R.string.courses_progress_loading);
+                if (!courseId.isBlank()) courseDetailViewModel.loadLessonCompletion(courseId);
+            });
+            progressSummaryLayout.setVisibility(View.VISIBLE);
+            return;
+        }
+
+        CourseProgressSummary summary = lastProgressSummary;
+        if (summary == null || summary.totalLessons <= 0) {
+            progressSummaryLayout.setVisibility(View.GONE);
+            return;
+        }
+
+        int percent = (int) Math.round(summary.percentComplete);
+        if (percent < 0) percent = 0;
+        if (percent > 100) percent = 100;
+
+        progressSummaryText.setText(getString(
+                R.string.progress_lessons_summary,
+                summary.completedLessons,
+                summary.totalLessons) + " · " + getString(R.string.progress_percent, percent));
+        progressSummaryBar.setVisibility(View.VISIBLE);
+        progressSummaryBar.setProgress(percent);
+        progressSummaryLayout.setClickable(false);
+        progressSummaryLayout.setOnClickListener(null);
+        progressSummaryLayout.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * Gates the final-exam CTA on lesson completion. The button is only locked when progress is
+     * positively known to be incomplete; if progress is unknown or failed to load it stays
+     * enabled so a flaky progress endpoint can't trap an eligible learner — the backend remains
+     * authoritative on exam eligibility either way.
+     */
+    private void updateExamCta() {
+        View view = getView();
+        if (view == null || !isEnrolled) return;
+        Button takeExamBtn = view.findViewById(R.id.takeExamButton);
+        if (takeExamBtn == null || takeExamBtn.getVisibility() != View.VISIBLE) return;
+
+        CourseProgressSummary summary = lastProgressSummary;
+        boolean known = summary != null && summary.totalLessons > 0;
+        boolean complete = known && summary.completedLessons >= summary.totalLessons;
+        boolean locked = known && !complete;
+
+        takeExamBtn.setEnabled(!locked);
+        takeExamBtn.setAlpha(locked ? 0.5f : 1f);
+        takeExamBtn.setText(locked
+                ? R.string.exam_locked_until_complete
+                : R.string.exam_take_cta);
     }
 
     private int heroForLevel(String level) {
@@ -211,6 +297,9 @@ public class CourseDetailFragment extends Fragment {
                 Navigation.findNavController(requireView())
                         .navigate(R.id.action_courseDetailFragment_to_examFragment, examArgs);
             });
+            // Re-evaluate the lock now that the button is visible; the progress observer also
+            // calls this once the summary arrives/refreshes.
+            updateExamCta();
         } else {
             takeExamBtn.setVisibility(View.GONE);
             enrollBtn.setVisibility(View.VISIBLE);
@@ -338,10 +427,7 @@ public class CourseDetailFragment extends Fragment {
 
         // Left icon area: displays circular shape representing the media category (video vs text).
         ImageView typeIcon = new ImageView(requireContext());
-        int iconRes = "VIDEO".equalsIgnoreCase(lesson.lessonType)
-                ? R.drawable.ic_play_circle
-                : R.drawable.ic_description;
-        typeIcon.setImageResource(iconRes);
+        typeIcon.setImageResource(lessonTypeIcon(lesson.lessonType));
         typeIcon.setBackgroundResource(R.drawable.bg_lesson_icon_container);
         typeIcon.setPadding(dp(10), dp(10), dp(10), dp(10));
         typeIcon.setImageTintList(ColorStateList.valueOf(requireContext().getColor(R.color.brand_primary)));
@@ -451,6 +537,27 @@ public class CourseDetailFragment extends Fragment {
         }
 
         return lessonLayout;
+    }
+
+    /**
+     * Maps a lesson content type to its row icon. Type-name spelling lives only in
+     * {@link LessonContentTypeResolver#classifyKind}; unknown types fall back to the generic
+     * document icon so a new backend type never crashes or renders blank.
+     */
+    private int lessonTypeIcon(String lessonType) {
+        switch (LessonContentTypeResolver.classifyKind(lessonType)) {
+            case VIDEO:
+                return R.drawable.ic_play_circle;
+            case ARTICLE:
+                return R.drawable.ic_book_open;
+            case TEXT:
+                return R.drawable.ic_notes;
+            case PDF:
+            case RESOURCE:
+            case UNKNOWN:
+            default:
+                return R.drawable.ic_description;
+        }
     }
 
     private int dp(int value) {

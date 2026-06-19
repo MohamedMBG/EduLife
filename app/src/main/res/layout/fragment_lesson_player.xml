@@ -484,7 +484,7 @@
             android:background="@drawable/bg_lesson_nav_button_outline"
             android:text="@string/lesson_player_prev"
             android:textAllCaps="false"
-            android:textColor="@color/brand_primary"
+            android:textColor="@color/white"
             android:textSize="14sp"
             android:textStyle="bold" />
 

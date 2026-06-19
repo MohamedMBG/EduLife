@@ -119,6 +119,7 @@
     <string name="course_detail_locked">Enrollment required later</string>
     <string name="course_detail_missing_id">Course detail could not open because the course ID was missing.</string>
     <string name="course_detail_loading">Loading course detail...</string>
+    <string name="course_detail_progress_error">Couldn\'t load progress. Tap to retry.</string>
 
     <!-- Enroll screen -->
     <string name="enroll_header_label">Course Enrollment</string>
@@ -345,6 +346,7 @@
 
     <string name="exam_result_done">Back to Course</string>
     <string name="exam_take_cta">Take Final Exam</string>
+    <string name="exam_locked_until_complete">Complete all lessons to unlock the exam</string>
     <string name="exam_question_label">Question %1$d</string>
     <string name="exam_question_of">Question %1$d of %2$d</string>
     <string name="exam_progress_pill">%1$d/%2$d</string>

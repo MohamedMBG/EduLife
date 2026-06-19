@@ -23,6 +23,13 @@ public class CourseDetailViewModel extends AndroidViewModel {
             new MutableLiveData<>(CourseDetailUiState.idle());
     private final MutableLiveData<Map<String, Boolean>> lessonCompletionState =
             new MutableLiveData<>(new LinkedHashMap<>());
+    // Aggregate completed/total/percent for the course-learning progress card. Kept separate
+    // from the flattened per-lesson map so the header can render even before sections bind.
+    private final MutableLiveData<CourseProgressSummary> progressSummary =
+            new MutableLiveData<>();
+    // True when the last progress fetch failed (vs. simply not loaded), so the card can show a
+    // retry affordance instead of silently vanishing.
+    private final MutableLiveData<Boolean> progressError = new MutableLiveData<>(false);
 
     public CourseDetailViewModel(@NonNull Application application) {
         super(application);
@@ -35,6 +42,14 @@ public class CourseDetailViewModel extends AndroidViewModel {
 
     public LiveData<Map<String, Boolean>> getLessonCompletionState() {
         return lessonCompletionState;
+    }
+
+    public LiveData<CourseProgressSummary> getProgressSummary() {
+        return progressSummary;
+    }
+
+    public LiveData<Boolean> getProgressError() {
+        return progressError;
     }
 
     public void loadCourseDetail(String courseId) {
@@ -60,6 +75,8 @@ public class CourseDetailViewModel extends AndroidViewModel {
                 // Course detail needs only the per-lesson completed flag, so the fragment receives
                 // a normalized lessonId -> completed map instead of parsing nested section DTOs.
                 lessonCompletionState.postValue(flattenCompletionMap(progress));
+                progressSummary.postValue(progress);
+                progressError.postValue(false);
             }
 
             @Override
@@ -67,6 +84,8 @@ public class CourseDetailViewModel extends AndroidViewModel {
                 // Completion indicators are additive UX. A failure here must not block the
                 // underlying course detail screen or hide otherwise accessible lessons.
                 lessonCompletionState.postValue(new LinkedHashMap<>());
+                progressSummary.postValue(null);
+                progressError.postValue(true);
             }
         });
     }

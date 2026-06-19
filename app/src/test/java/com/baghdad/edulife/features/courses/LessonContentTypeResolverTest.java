@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.baghdad.edulife.features.courses.model.LessonContentTypeResolver;
 import com.baghdad.edulife.features.courses.model.LessonContentTypeResolver.Display;
+import com.baghdad.edulife.features.courses.model.LessonContentTypeResolver.Kind;
 import com.baghdad.edulife.features.courses.model.LessonContentTypeResolver.Result;
 
 import org.junit.Test;
@@ -184,5 +185,24 @@ public class LessonContentTypeResolverTest {
     public void nonPdf_doesNotRouteToDownload() {
         assertFalse(LessonContentTypeResolver.shouldDownloadInsteadOfInline("ARTICLE", "https://example.com/post"));
         assertFalse(LessonContentTypeResolver.shouldDownloadInsteadOfInline("VIDEO", "https://youtube.com/watch?v=abc"));
+    }
+
+    // ── classifyKind: single source of accepted type-name spellings (used by list-row icons) ──
+
+    @Test
+    public void classifyKind_mapsKnownTypes_caseInsensitive() {
+        assertEquals(Kind.VIDEO, LessonContentTypeResolver.classifyKind("video"));
+        assertEquals(Kind.ARTICLE, LessonContentTypeResolver.classifyKind("ARTICLE"));
+        assertEquals(Kind.ARTICLE, LessonContentTypeResolver.classifyKind("link"));
+        assertEquals(Kind.TEXT, LessonContentTypeResolver.classifyKind("Text"));
+        assertEquals(Kind.PDF, LessonContentTypeResolver.classifyKind("PDF"));
+        assertEquals(Kind.RESOURCE, LessonContentTypeResolver.classifyKind("resource"));
+    }
+
+    @Test
+    public void classifyKind_unknownNullBlank_isUnknown_noCrash() {
+        assertEquals(Kind.UNKNOWN, LessonContentTypeResolver.classifyKind("SOMETHING_NEW"));
+        assertEquals(Kind.UNKNOWN, LessonContentTypeResolver.classifyKind(null));
+        assertEquals(Kind.UNKNOWN, LessonContentTypeResolver.classifyKind(""));
     }
 }

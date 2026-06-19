@@ -50,6 +50,33 @@ public final class LessonContentTypeResolver {
         }
     }
 
+    /**
+     * Coarse content kind used by list rows (icons/badges) that only need the lesson's category,
+     * not the full surface decision. Single source of the accepted type-name spellings so callers
+     * never re-list "VIDEO"/"ARTICLE"/… strings of their own.
+     */
+    public enum Kind { VIDEO, ARTICLE, TEXT, PDF, RESOURCE, UNKNOWN }
+
+    /** Maps a raw lesson type to a {@link Kind}; null/blank/unrecognised → {@link Kind#UNKNOWN}. */
+    public static Kind classifyKind(String lessonType) {
+        String type = lessonType != null ? lessonType.toUpperCase(Locale.ROOT) : "";
+        switch (type) {
+            case "VIDEO":
+                return Kind.VIDEO;
+            case "ARTICLE":
+            case "LINK":
+                return Kind.ARTICLE;
+            case "TEXT":
+                return Kind.TEXT;
+            case "PDF":
+                return Kind.PDF;
+            case "RESOURCE":
+                return Kind.RESOURCE;
+            default:
+                return Kind.UNKNOWN;
+        }
+    }
+
     private LessonContentTypeResolver() {
     }
 
