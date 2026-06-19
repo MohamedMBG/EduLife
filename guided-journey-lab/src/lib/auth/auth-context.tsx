@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { useLocation, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import type { User as FirebaseUser } from "firebase/auth";
 import { ApiClientError, syncAuth } from "../api/client";
 import type { UserRole } from "../api/types";
@@ -37,6 +38,29 @@ function readStoredIntendedRole(): UserRole | undefined {
   }
 
   return REGISTERABLE_ROLES.has(stored as UserRole) ? (stored as UserRole) : undefined;
+}
+
+// On logout, drop the learner's locally cached study data (planner, lesson notes, advisor briefs,
+// pending registration role) so the next person on a shared device cannot read it (audit
+// 2026-06-19 P3-4). The "edulife-dark" theme preference (hyphen, not underscore) is intentionally
+// preserved, and the demo store ("edulife.website…") is left to demoLogout.
+function clearLocalEduLifeData() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith("edulife_")) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
+  } catch {
+    // Storage can throw in private mode / when blocked — logout must still proceed.
+  }
 }
 
 interface RegisterInput {
@@ -111,6 +135,7 @@ class UnverifiedEmailError extends Error {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const configError = appEnv.demoMode ? null : getFirebaseConfigurationError();
   const [status, setStatus] = useState<AuthStatus>(() => {
     if (appEnv.demoMode) {
@@ -356,6 +381,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function logout() {
     syncedUidRef.current = null;
+
+    // Wipe locally cached private data and any in-memory React Query results so a signed-out
+    // session leaves nothing behind for the next user of the browser (audit 2026-06-19 P3-4).
+    clearLocalEduLifeData();
+    queryClient.clear();
 
     if (appEnv.demoMode) {
       await demoLogout();

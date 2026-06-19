@@ -964,7 +964,9 @@ function SelectedPathSection({
                 className="h-full min-h-[300px] w-full object-cover transition-transform duration-1000 hover:scale-110"
                 onError={(e) => {
                   e.currentTarget.style.display = "none";
-                  e.currentTarget.parentElement?.querySelector("[data-fallback]")?.removeAttribute("hidden");
+                  e.currentTarget.parentElement
+                    ?.querySelector("[data-fallback]")
+                    ?.removeAttribute("hidden");
                 }}
               />
             ) : null}
@@ -1678,6 +1680,20 @@ function extractReasoningBullets(text: string): string[] {
   return sentences.slice(0, 4);
 }
 
+// The advisor message/reason is Groq AI-generated (untrusted) text. It is rendered via
+// dangerouslySetInnerHTML, so every character must be HTML-escaped BEFORE we inject our own
+// <strong> highlight markup — otherwise a prompt-injected or echoed payload like
+// "<img src=x onerror=...>" would execute (audit 2026-06-19 P2-2). Keywords are matched
+// against the escaped text; they contain no special characters, so escaping does not break them.
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function highlightKeyTerms(text: string): string {
   const keywords = [
     "digital workflow efficiency",
@@ -1690,7 +1706,7 @@ function highlightKeyTerms(text: string): string {
     "structured",
   ];
 
-  let result = text;
+  let result = escapeHtml(text);
   for (const keyword of keywords) {
     const regex = new RegExp(`(${keyword})`, "gi");
     result = result.replace(regex, `<strong style="color: ${MM.primary}">$1</strong>`);

@@ -1,0 +1,23 @@
+# EduLife web — discourage indexing of authenticated / private route trees.
+# These render only a hydratable shell to crawlers (data is fetched client-side behind
+# Firebase auth + backend RBAC), but we still keep the paths out of search results.
+User-agent: *
+Allow: /$
+Allow: /login
+Allow: /register
+Allow: /forgot-password
+Allow: /certificates/verify/
+Disallow: /dashboard
+Disallow: /explore
+Disallow: /courses
+Disallow: /learn
+Disallow: /planner
+Disallow: /advisor
+Disallow: /analytics
+Disallow: /level
+Disallow: /profile
+Disallow: /certificates
+Disallow: /teach
+Disallow: /groups
+Disallow: /approvals
+Disallow: /admin

@@ -45,11 +45,51 @@ export function getMissingEnvVars() {
   return requiredEnvVars.filter((name) => readEnv(name).length === 0);
 }
 
+// Cleartext HTTP is only acceptable for local development hosts. A production API base URL must
+// be HTTPS, because the Firebase ID token rides on every request (audit 2026-06-19 P2-3).
+const LOCAL_DEV_HOSTS: ReadonlySet<string> = new Set([
+  "localhost",
+  "127.0.0.1",
+  "0.0.0.0",
+  "[::1]",
+  "::1",
+]);
+
+export function getInsecureApiBaseUrlError(): string | null {
+  if (demoMode) {
+    return null;
+  }
+
+  const raw = appEnv.apiBaseUrl;
+
+  if (!raw) {
+    // Missing value is reported by the required-vars check instead.
+    return null;
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    return `Invalid VITE_API_BASE_URL: "${raw}" is not a valid URL.`;
+  }
+
+  if (parsed.protocol === "https:") {
+    return null;
+  }
+
+  if (parsed.protocol === "http:" && LOCAL_DEV_HOSTS.has(parsed.hostname)) {
+    return null;
+  }
+
+  return "VITE_API_BASE_URL must use HTTPS in production. Cleartext HTTP is only allowed for local development hosts (localhost / 127.0.0.1).";
+}
+
 export function getEnvConfigurationError() {
   const missing = getMissingEnvVars();
 
   if (missing.length === 0) {
-    return null;
+    return getInsecureApiBaseUrlError();
   }
 
   return `Missing website environment values: ${missing.join(", ")}. Copy guided-journey-lab/.env.example into a local .env file and fill in the Firebase + backend settings, or set VITE_DEMO_MODE=true to run the standalone demo.`;
