@@ -38,19 +38,22 @@ public class CmsExamService {
     private final ExamChoiceRepository choiceRepository;
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
+    private final CmsCourseAccessGuard courseAccessGuard;
 
     public CmsExamService(
             ExamRepository examRepository,
             ExamQuestionRepository questionRepository,
             ExamChoiceRepository choiceRepository,
             CourseRepository courseRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            CmsCourseAccessGuard courseAccessGuard
     ) {
         this.examRepository = examRepository;
         this.questionRepository = questionRepository;
         this.choiceRepository = choiceRepository;
         this.courseRepository = courseRepository;
         this.userRepository = userRepository;
+        this.courseAccessGuard = courseAccessGuard;
     }
 
     @Transactional(readOnly = true)
@@ -200,8 +203,12 @@ public class CmsExamService {
     }
 
     private void loadCourseForRead(UUID courseId, User currentUser) {
-        courseRepository.findById(courseId)
+        var course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
+        // The CMS exam view exposes correct-answer flags, so the reader must own the course
+        // (or be admin / the managing group admin). Without this an authorized teacher could read
+        // any other teacher's answer key by guessing a courseId.
+        courseAccessGuard.requireReadAccess(currentUser, course);
     }
 
     private void loadCourseForMutation(UUID courseId, User currentUser) {

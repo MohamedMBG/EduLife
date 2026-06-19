@@ -27,15 +27,18 @@ public class CmsSectionService {
     private final CourseRepository courseRepository;
     private final CourseSectionRepository sectionRepository;
     private final UserRepository userRepository;
+    private final CmsCourseAccessGuard courseAccessGuard;
 
     public CmsSectionService(
             CourseRepository courseRepository,
             CourseSectionRepository sectionRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            CmsCourseAccessGuard courseAccessGuard
     ) {
         this.courseRepository = courseRepository;
         this.sectionRepository = sectionRepository;
         this.userRepository = userRepository;
+        this.courseAccessGuard = courseAccessGuard;
     }
 
     @Transactional(readOnly = true)
@@ -100,8 +103,12 @@ public class CmsSectionService {
     }
 
     private Course loadCourseForRead(UUID courseId, User currentUser) {
-        return courseRepository.findById(courseId)
+        Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
+        // Listing a course's sections exposes unpublished authoring data, so reads require the
+        // same ownership scope as mutations (admin / owner / managing group admin).
+        courseAccessGuard.requireReadAccess(currentUser, course);
+        return course;
     }
 
     private Course loadCourseForMutation(UUID courseId, User currentUser) {

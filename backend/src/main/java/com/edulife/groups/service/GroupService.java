@@ -238,16 +238,20 @@ public class GroupService {
         }
 
         if (hasUserId) {
+            // Internal ids are opaque (not enumerable), so an authorized owner may add a known user.
             if (!userRepository.existsById(request.userId())) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
             }
             return request.userId();
         }
 
-        return userRepository.findByEmail(request.email().trim().toLowerCase())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "No user with that email"))
-                .getId();
+        // Direct add-by-email is intentionally not supported. Branching on whether the email maps to
+        // a user would let an authorized owner enumerate registered accounts (existing vs missing)
+        // and silently add arbitrary unrelated users without consent. A single generic message is
+        // returned regardless of the email, disclosing nothing. Members are added by internal id
+        // (authorized + verified) or join through the consent-based join-request flow.
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "Unable to add a member with the provided details. Add by user id or use a join request.");
     }
 
     @Transactional
@@ -266,15 +270,38 @@ public class GroupService {
         User currentUser = resolveCurrentUser();
         Group group = loadGroupForManagement(groupId, currentUser);
 
-        if (!courseRepository.existsById(request.courseId())) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found");
-        }
+        Course course = courseRepository.findById(request.courseId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
+        requireCourseAttachableToGroup(currentUser, group, course);
+
         if (groupCourseRepository.existsByGroupIdAndCourseId(group.getId(), request.courseId())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Course already attached to group");
         }
 
         GroupCourse saved = groupCourseRepository.save(new GroupCourse(group.getId(), request.courseId()));
         return new GroupCourseDto(saved.getGroupId(), saved.getCourseId(), saved.getAttachedAt());
+    }
+
+    /**
+     * A group may only contain courses that belong to its authorized scope: courses authored by the
+     * group owner, or by a teacher the group manages. Without this an owner could attach an
+     * unrelated teacher's course (including unpublished/private ones) and pull its cohort into the
+     * group's analytics. Platform admins manage every group, so existing admin rules let them attach
+     * any course.
+     */
+    private void requireCourseAttachableToGroup(User currentUser, Group group, Course course) {
+        if (currentUser.getRole() == UserRole.ADMIN) {
+            return;
+        }
+        UUID authorId = course.getCreatedByUserId();
+        UUID groupOwnerId = group.getCreatedBy();
+        boolean authoredByGroupOwner = authorId != null && authorId.equals(groupOwnerId);
+        boolean authoredByManagedTeacher = authorId != null
+                && groupMemberRepository.existsMemberManagedBy(groupOwnerId, authorId);
+        if (!authoredByGroupOwner && !authoredByManagedTeacher) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "You can only attach courses authored by you or by a teacher in your group");
+        }
     }
 
     private Group loadGroupForManagement(UUID groupId, User currentUser) {

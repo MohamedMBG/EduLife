@@ -29,17 +29,20 @@ public class CmsLessonService {
     private final CourseSectionRepository sectionRepository;
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
+    private final CmsCourseAccessGuard courseAccessGuard;
 
     public CmsLessonService(
             LessonRepository lessonRepository,
             CourseSectionRepository sectionRepository,
             CourseRepository courseRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            CmsCourseAccessGuard courseAccessGuard
     ) {
         this.lessonRepository = lessonRepository;
         this.sectionRepository = sectionRepository;
         this.courseRepository = courseRepository;
         this.userRepository = userRepository;
+        this.courseAccessGuard = courseAccessGuard;
     }
 
     @Transactional(readOnly = true)
@@ -125,8 +128,13 @@ public class CmsLessonService {
     }
 
     private CourseSection loadSectionForRead(UUID sectionId, User currentUser) {
-        return sectionRepository.findById(sectionId)
+        CourseSection section = sectionRepository.findById(sectionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Section not found"));
+        // Listing a section's lessons exposes unpublished content (contentBody/contentUrl), so
+        // reads require the same ownership scope as mutations, resolved through section → course.
+        courseRepository.findById(section.getCourseId())
+                .ifPresent(course -> courseAccessGuard.requireReadAccess(currentUser, course));
+        return section;
     }
 
     private LessonAdminDto toDto(Lesson l) {

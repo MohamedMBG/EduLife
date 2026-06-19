@@ -127,7 +127,9 @@ class AuthSyncControllerTest {
     }
 
     @Test
-    void syncHonorsTeacherIntentOnlyOnFirstLogin() throws Exception {
+    void syncResolvesStaffTeacherEmailToTeacherFromAllowlist() throws Exception {
+        // teacher@edulife.test is promoted by the trusted staff allowlist (verified email), NOT by
+        // any client-supplied intendedRole. Sending no body proves the role is allowlist-driven.
         FirebaseToken decodedToken = org.mockito.Mockito.mock(FirebaseToken.class);
 
         given(firebaseAuth.verifyIdToken("teacher-token")).willReturn(decodedToken);
@@ -136,17 +138,51 @@ class AuthSyncControllerTest {
         given(decodedToken.isEmailVerified()).willReturn(true);
 
         mockMvc.perform(post("/api/v1/auth/sync")
-                        .header("Authorization", "Bearer teacher-token")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"intendedRole\":\"TEACHER\"}"))
+                        .header("Authorization", "Bearer teacher-token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.role").value("TEACHER"));
 
-        // Role intent is registration-only; later syncs must not demote or mutate trusted DB role.
+        // Trusted DB role is stable across repeat logins.
         mockMvc.perform(post("/api/v1/auth/sync")
                         .header("Authorization", "Bearer teacher-token"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.role").value("TEACHER"));
+    }
+
+    @Test
+    void syncIgnoresTeacherIntentForNonStaffEmail() throws Exception {
+        // P0 regression: a normal (non-staff) registrant must never self-promote to TEACHER.
+        FirebaseToken decodedToken = org.mockito.Mockito.mock(FirebaseToken.class);
+
+        given(firebaseAuth.verifyIdToken("escalate-teacher-token")).willReturn(decodedToken);
+        given(decodedToken.getUid()).willReturn("firebase-uid-escalate-teacher");
+        given(decodedToken.getEmail()).willReturn("escalate-teacher@edulife.test");
+        given(decodedToken.isEmailVerified()).willReturn(true);
+
+        mockMvc.perform(post("/api/v1/auth/sync")
+                        .header("Authorization", "Bearer escalate-teacher-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"intendedRole\":\"TEACHER\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("LEARNER"));
+    }
+
+    @Test
+    void syncIgnoresGroupAdminIntentForNonStaffEmail() throws Exception {
+        // P0 regression: a normal (non-staff) registrant must never self-promote to GROUP_ADMIN.
+        FirebaseToken decodedToken = org.mockito.Mockito.mock(FirebaseToken.class);
+
+        given(firebaseAuth.verifyIdToken("escalate-ga-token")).willReturn(decodedToken);
+        given(decodedToken.getUid()).willReturn("firebase-uid-escalate-ga");
+        given(decodedToken.getEmail()).willReturn("escalate-ga@edulife.test");
+        given(decodedToken.isEmailVerified()).willReturn(true);
+
+        mockMvc.perform(post("/api/v1/auth/sync")
+                        .header("Authorization", "Bearer escalate-ga-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"intendedRole\":\"GROUP_ADMIN\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("LEARNER"));
     }
 
     @Test

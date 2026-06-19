@@ -76,10 +76,11 @@ public class AccountService {
             // A missing Firebase user means the account is already gone; finish the local
             // anonymization quietly so the client still receives 204.
             if (e.getErrorCode() == ErrorCode.NOT_FOUND) {
-                log.info("Firebase user {} already absent during account deletion.", firebaseUid);
+                // Do not log the Firebase UID; it is a sensitive identifier.
+                log.info("Firebase account already absent during account deletion.");
                 return;
             }
-            log.error("Firebase deleteUser failed for {}", firebaseUid, e);
+            log.error("Firebase deleteUser failed during account deletion.", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Could not finalize account deletion");
         }

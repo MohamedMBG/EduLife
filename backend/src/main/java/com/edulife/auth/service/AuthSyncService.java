@@ -124,13 +124,12 @@ public class AuthSyncService {
     }
 
     private UserRole resolveIntendedRole(AuthSyncRequest request) {
-        if (request == null || request.intendedRole() == null) {
-            return UserRole.LEARNER;
-        }
-        // ADMIN cannot be self-assigned through registration.
-        if (request.intendedRole() == UserRole.ADMIN) {
-            return UserRole.LEARNER;
-        }
-        return request.intendedRole();
+        // Self-service auth sync must NEVER grant a privileged role. Every account created here is
+        // a LEARNER regardless of what the client sends in intendedRole. TEACHER, GROUP_ADMIN, and
+        // ADMIN are assigned only by trusted backend mechanisms — the staff allowlist
+        // (reconcileStaffRole, keyed on the verified token email) or admin role management — never
+        // from the request body. intendedRole is intentionally ignored to close the privilege-
+        // escalation path where a registrant could self-promote to TEACHER/GROUP_ADMIN.
+        return UserRole.LEARNER;
     }
 }

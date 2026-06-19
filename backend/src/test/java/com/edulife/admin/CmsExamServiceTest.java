@@ -2,6 +2,7 @@ package com.edulife.admin;
 
 import com.edulife.admin.dto.CreateExamRequest;
 import com.edulife.admin.dto.ExamAdminDto;
+import com.edulife.admin.service.CmsCourseAccessGuard;
 import com.edulife.admin.service.CmsExamService;
 import com.edulife.courses.entity.Course;
 import com.edulife.courses.repository.CourseRepository;
@@ -11,6 +12,7 @@ import com.edulife.exams.entity.ExamQuestion;
 import com.edulife.exams.repository.ExamChoiceRepository;
 import com.edulife.exams.repository.ExamQuestionRepository;
 import com.edulife.exams.repository.ExamRepository;
+import com.edulife.groups.repository.GroupMemberRepository;
 import com.edulife.security.FirebaseAuthentication;
 import com.edulife.users.entity.User;
 import com.edulife.users.model.UserRole;
@@ -33,6 +35,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -50,6 +53,7 @@ class CmsExamServiceTest {
     @Mock private ExamChoiceRepository choiceRepository;
     @Mock private CourseRepository courseRepository;
     @Mock private UserRepository userRepository;
+    @Mock private GroupMemberRepository groupMemberRepository;
 
     private CmsExamService cmsExamService;
 
@@ -57,7 +61,8 @@ class CmsExamServiceTest {
     void setUp() {
         cmsExamService = new CmsExamService(
                 examRepository, questionRepository, choiceRepository,
-                courseRepository, userRepository
+                courseRepository, userRepository,
+                new CmsCourseAccessGuard(groupMemberRepository)
         );
     }
 
@@ -216,8 +221,8 @@ class CmsExamServiceTest {
 
     @Test
     void getAfterDeleteReturns404() {
-        setUpAuthMinimal("owner-uid", OWNER_ID);
-        givenCourseExists();
+        setUpAuth("owner-uid", OWNER_ID, UserRole.TEACHER);
+        givenCourseOwnedBy(OWNER_ID);
         given(examRepository.findByCourseId(COURSE_ID)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> cmsExamService.getExam(COURSE_ID))
@@ -225,18 +230,93 @@ class CmsExamServiceTest {
                 .hasMessageContaining("No exam found");
     }
 
-    // ── helpers ──
+    // ── P1: CMS exam read must enforce course ownership (answer key disclosure) ──
 
-    private void setUpAuthMinimal(String firebaseUid, UUID userId) {
-        SecurityContextHolder.getContext().setAuthentication(
-                new FirebaseAuthentication(firebaseUid, "user@edulife.test", null)
-        );
-        User user = mock(User.class);
-        given(userRepository.findByFirebaseUid(firebaseUid)).willReturn(Optional.of(user));
+    @Test
+    void ownerCanReadExamWithCorrectAnswerFlags() {
+        setUpAuth("owner-uid", OWNER_ID, UserRole.TEACHER);
+        givenCourseOwnedBy(OWNER_ID);
+        givenExamWithOneQuestionTwoChoices();
+
+        ExamAdminDto result = cmsExamService.getExam(COURSE_ID);
+
+        // CMS view is owner/admin only, so it intentionally exposes isCorrect.
+        assertThat(result.questions()).hasSize(1);
+        assertThat(result.questions().get(0).choices())
+                .anyMatch(ExamAdminDto.ChoiceDto::correct);
     }
 
-    private void givenCourseExists() {
-        given(courseRepository.findById(COURSE_ID)).willReturn(Optional.of(mock(Course.class)));
+    @Test
+    void nonOwnerTeacherCannotReadExam() {
+        setUpAuth("other-uid", OTHER_USER_ID, UserRole.TEACHER);
+        givenCourseOwnedBy(OWNER_ID);
+
+        assertThatThrownBy(() -> cmsExamService.getExam(COURSE_ID))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Not the course owner");
+    }
+
+    @Test
+    void adminCanReadAnyExam() {
+        setUpAuth("admin-uid", OTHER_USER_ID, UserRole.ADMIN);
+        givenCourseOwnedBy(OWNER_ID);
+        givenExamWithOneQuestionTwoChoices();
+
+        ExamAdminDto result = cmsExamService.getExam(COURSE_ID);
+
+        assertThat(result.questions()).hasSize(1);
+    }
+
+    @Test
+    void learnerCannotReadExam() {
+        setUpAuth("learner-uid", OTHER_USER_ID, UserRole.LEARNER);
+        givenCourseOwnedBy(OWNER_ID);
+
+        assertThatThrownBy(() -> cmsExamService.getExam(COURSE_ID))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Not the course owner");
+    }
+
+    @Test
+    void unauthorizedGroupAdminCannotReadExam() {
+        setUpAuth("ga-uid", OTHER_USER_ID, UserRole.GROUP_ADMIN);
+        givenCourseOwnedBy(OWNER_ID);
+        given(groupMemberRepository.existsMemberManagedBy(OTHER_USER_ID, OWNER_ID)).willReturn(false);
+
+        assertThatThrownBy(() -> cmsExamService.getExam(COURSE_ID))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Not the course owner");
+    }
+
+    @Test
+    void authorizedGroupAdminCanReadExamForManagedAuthor() {
+        setUpAuth("ga-uid", OTHER_USER_ID, UserRole.GROUP_ADMIN);
+        givenCourseOwnedBy(OWNER_ID);
+        given(groupMemberRepository.existsMemberManagedBy(OTHER_USER_ID, OWNER_ID)).willReturn(true);
+        givenExamWithOneQuestionTwoChoices();
+
+        ExamAdminDto result = cmsExamService.getExam(COURSE_ID);
+
+        assertThat(result.questions()).hasSize(1);
+    }
+
+    // ── helpers ──
+
+    private void givenExamWithOneQuestionTwoChoices() {
+        Exam exam = new Exam(COURSE_ID, "Exam", 80, 20);
+        ReflectionTestUtils.setField(exam, "id", EXAM_ID);
+        given(examRepository.findByCourseId(COURSE_ID)).willReturn(Optional.of(exam));
+
+        ExamQuestion q1 = new ExamQuestion(EXAM_ID, "Q?", 1);
+        ReflectionTestUtils.setField(q1, "id", Q1_ID);
+        given(questionRepository.findAllByExamIdOrderByOrderIndexAsc(EXAM_ID)).willReturn(List.of(q1));
+
+        ExamChoice correct = new ExamChoice(Q1_ID, "A", true);
+        ExamChoice wrong = new ExamChoice(Q1_ID, "B", false);
+        ReflectionTestUtils.setField(correct, "id", UUID.randomUUID());
+        ReflectionTestUtils.setField(wrong, "id", UUID.randomUUID());
+        given(choiceRepository.findAllByQuestionIdIn(List.of(Q1_ID)))
+                .willReturn(List.of(correct, wrong));
     }
 
     private void setUpAuth(String firebaseUid, UUID userId, UserRole role) {
@@ -244,14 +324,16 @@ class CmsExamServiceTest {
                 new FirebaseAuthentication(firebaseUid, "user@edulife.test", null)
         );
         User user = mock(User.class);
-        given(user.getId()).willReturn(userId);
+        // getId() is unused on the ADMIN short-circuit path, so keep it lenient.
+        lenient().when(user.getId()).thenReturn(userId);
         given(user.getRole()).willReturn(role);
         given(userRepository.findByFirebaseUid(firebaseUid)).willReturn(Optional.of(user));
     }
 
     private void givenCourseOwnedBy(UUID ownerId) {
         Course course = mock(Course.class);
-        given(course.getCreatedByUserId()).willReturn(ownerId);
+        // getCreatedByUserId() is unused on the ADMIN short-circuit path, so keep it lenient.
+        lenient().when(course.getCreatedByUserId()).thenReturn(ownerId);
         given(courseRepository.findById(COURSE_ID)).willReturn(Optional.of(course));
     }
 
