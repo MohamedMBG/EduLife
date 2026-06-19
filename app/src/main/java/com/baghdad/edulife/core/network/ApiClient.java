@@ -27,6 +27,14 @@ public class ApiClient {
     }
 
     /**
+     * Exposes the configured API base URL so login failures can name the backend this APK is
+     * actually targeting. That makes wrong-environment builds obvious during mobile testing.
+     */
+    public static String getBaseUrl() {
+        return BASE_URL;
+    }
+
+    /**
      * Returns the same authenticated OkHttp client Retrofit uses. Exposed so feature code
      * (certificate / lesson resource downloads) can stream large response bodies through the
      * exact same pipeline — including FirebaseAuthInterceptor's Bearer header and

@@ -67,7 +67,10 @@
     <string name="auth_login_button_loading">Signing in…</string>
     <string name="auth_login_email_not_verified">Email not verified. Check your inbox and click the verification link, then try again.</string>
     <string name="auth_error_server_unreachable">Cannot reach the server. Make sure your phone is on the right network and the backend is running.</string>
+    <string name="auth_error_server_unreachable_with_host">Cannot reach the server at %1$s. Check that this build points to the right backend and that your connection is working.</string>
     <string name="auth_error_server_timeout">The server did not answer in time. Check that the backend is running and reachable at the configured IP address.</string>
+    <string name="auth_error_server_timeout_with_host">The server at %1$s did not answer in time. If this is Render, retry after the service wakes up.</string>
+    <string name="auth_error_placeholder_api_host">This APK is still pointed at the placeholder API host example.com. Rebuild it with your Render API URL before testing on the phone.</string>
     <string name="auth_error_server_rejected">Server rejected the request (%1$s). Contact support if this persists.</string>
     <string name="auth_error_bad_credentials">Incorrect email or password. Please try again.</string>
     <string name="auth_error_email_not_verified">Email not verified. Check your inbox and click the verification link.</string>

@@ -16,6 +16,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 
+import okhttp3.HttpUrl;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -179,8 +180,7 @@ public class AuthRepository {
             syncCall.cancel();
             failBackendSync(
                     callback,
-                    "Backend sync timed out. Confirm the backend is running and the device can reach " +
-                            "the configured API base URL."
+                    "Backend sync timed out while reaching " + describeConfiguredApiTarget() + "."
             );
         };
 
@@ -222,7 +222,10 @@ public class AuthRepository {
 
                 // Firebase may still be signed in, but EduLife screens must not trust a previously
                 // stored backend userId/role after the authoritative sync failed.
-                failBackendSync(callback, "Network error during sync: " + readableSyncFailure(t));
+                failBackendSync(
+                        callback,
+                        "Network error during sync to " + describeConfiguredApiTarget() + ": " + readableSyncFailure(t)
+                );
             }
         });
     }
@@ -247,5 +250,18 @@ public class AuthRepository {
             return "The request was canceled after waiting too long for the backend.";
         }
         return message;
+    }
+
+    /**
+     * Uses the configured base URL host instead of a generic "server" label so wrong-target APKs
+     * are obvious immediately on a physical device.
+     */
+    private String describeConfiguredApiTarget() {
+        String baseUrl = ApiClient.getBaseUrl();
+        HttpUrl parsedUrl = HttpUrl.parse(baseUrl);
+        if (parsedUrl == null || parsedUrl.host() == null || parsedUrl.host().isBlank()) {
+            return baseUrl;
+        }
+        return parsedUrl.host();
     }
 }

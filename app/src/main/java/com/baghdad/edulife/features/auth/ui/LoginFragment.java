@@ -17,9 +17,12 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 
 import com.baghdad.edulife.R;
+import com.baghdad.edulife.core.network.ApiClient;
 import com.baghdad.edulife.core.storage.SessionStorage;
 import com.baghdad.edulife.features.auth.model.AuthUiState;
 import com.baghdad.edulife.features.auth.viewmodel.AuthViewModel;
+
+import okhttp3.HttpUrl;
 
 public class LoginFragment extends Fragment {
 
@@ -147,11 +150,17 @@ public class LoginFragment extends Fragment {
     }
 
     private String friendlyMessage(String raw) {
-        if (raw.startsWith("Network error during sync:")) {
-            return getString(R.string.auth_error_server_unreachable);
+        String configuredApiHost = configuredApiHost();
+        if ("example.com".equalsIgnoreCase(configuredApiHost)) {
+            // Release builds can pass the HTTPS gate while still pointing at the placeholder host.
+            // Surface that explicitly so connectivity debugging does not go down the wrong path.
+            return getString(R.string.auth_error_placeholder_api_host);
+        }
+        if (raw.startsWith("Network error during sync:") || raw.startsWith("Network error during sync to ")) {
+            return getString(R.string.auth_error_server_unreachable_with_host, configuredApiHost);
         }
         if (raw.startsWith("Backend sync timed out.")) {
-            return getString(R.string.auth_error_server_timeout);
+            return getString(R.string.auth_error_server_timeout_with_host, configuredApiHost);
         }
         if (raw.startsWith("Backend sync failed.")) {
             return getString(R.string.auth_error_server_rejected,
@@ -167,6 +176,18 @@ public class LoginFragment extends Fragment {
             return getString(R.string.auth_error_network);
         }
         return raw;
+    }
+
+    /**
+     * Extracts the backend host from the build-time API URL so auth errors reveal the exact
+     * environment this installed APK is configured to call.
+     */
+    private String configuredApiHost() {
+        HttpUrl parsedUrl = HttpUrl.parse(ApiClient.getBaseUrl());
+        if (parsedUrl == null || parsedUrl.host() == null || parsedUrl.host().isBlank()) {
+            return ApiClient.getBaseUrl();
+        }
+        return parsedUrl.host();
     }
 
     private void togglePasswordVisibility(@NonNull EditText passwordEditText) {
