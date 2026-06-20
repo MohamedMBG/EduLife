@@ -69,9 +69,9 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource(CorsProperties properties) {
         CorsConfiguration config = new CorsConfiguration();
-        // Explicit allowlist only; never wildcard. An empty list means CORS is effectively closed
-        // and any cross-origin preflight will be rejected by Spring's CorsProcessor with 403.
-        config.setAllowedOrigins(properties.getAllowedOrigins());
+        // Explicit allowlist only; never wildcard. The effective list combines configured origins
+        // with EduLife's known first-party web client.
+        config.setAllowedOrigins(properties.getEffectiveAllowedOrigins());
         config.setAllowedMethods(properties.getAllowedMethods());
         config.setAllowedHeaders(properties.getAllowedHeaders());
         config.setMaxAge(properties.getMaxAgeSeconds());

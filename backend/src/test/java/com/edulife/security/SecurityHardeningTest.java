@@ -49,6 +49,20 @@ class SecurityHardeningTest {
     }
 
     @Test
+    void deployedWebsiteOriginSurvivesEnvironmentAllowlistOverride() throws Exception {
+        // Render supplies APP_CORS_ALLOWED_ORIGINS as an override. The first-party Vercel origin
+        // must remain allowed even when that environment value is stale or development-only.
+        mockMvc.perform(options("/api/v1/auth/sync")
+                        .header(HttpHeaders.ORIGIN, "https://guided-journey-lab.vercel.app")
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST")
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS, "authorization,content-type"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(
+                        HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN,
+                        "https://guided-journey-lab.vercel.app"));
+    }
+
+    @Test
     void preflightFromUnknownOriginIsRejected() throws Exception {
         mockMvc.perform(options("/api/v1/secure/profile")
                         .header(HttpHeaders.ORIGIN, "http://evil.example.com")
