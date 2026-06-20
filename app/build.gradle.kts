@@ -52,8 +52,10 @@ android {
         applicationId = "com.baghdad.edulife"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        // Increment for the downloadable prerelease APK so Android recognizes the rebuilt
+        // mobile-auth fix as newer than the stale website artifact.
+        versionCode = 2
+        versionName = "1.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
