@@ -31,6 +31,9 @@ import com.baghdad.edulife.core.storage.SessionStorage;
 import com.baghdad.edulife.features.auth.viewmodel.AuthViewModel;
 import com.baghdad.edulife.features.profile.model.ProfileResponse;
 import com.baghdad.edulife.features.profile.model.TeacherRequestResponse;
+import com.baghdad.edulife.features.gamification.model.Badge;
+import com.baghdad.edulife.features.gamification.model.GamificationUiState;
+import com.baghdad.edulife.features.gamification.viewmodel.GamificationViewModel;
 import com.baghdad.edulife.features.profile.viewmodel.ProfileViewModel;
 import com.bumptech.glide.Glide;
 import com.baghdad.edulife.features.profile.viewmodel.TeacherRequestViewModel;
@@ -61,6 +64,7 @@ public class ProfileFragment extends Fragment {
 
     private AuthViewModel authViewModel;
     private ProfileViewModel profileViewModel;
+    private GamificationViewModel gamificationViewModel;
     private ActivityResultLauncher<PickVisualMediaRequest> pickMediaLauncher;
     private TeacherRequestViewModel teacherRequestViewModel;
     private String currentRoleCode = "LEARNER";
@@ -86,6 +90,7 @@ public class ProfileFragment extends Fragment {
 
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
         profileViewModel = new ViewModelProvider(this).get(ProfileViewModel.class);
+        gamificationViewModel = new ViewModelProvider(this).get(GamificationViewModel.class);
         teacherRequestViewModel = new ViewModelProvider(this).get(TeacherRequestViewModel.class);
         SessionStorage sessionStorage = new SessionStorage(requireContext());
         currentRoleCode = sessionStorage.getRole() != null
@@ -110,6 +115,17 @@ public class ProfileFragment extends Fragment {
         if (isTeacherRequestEligible(currentRoleCode)) {
             teacherRequestViewModel.loadLatestRequest();
         }
+
+        observeGamification(view);
+        gamificationViewModel.refreshState();
+
+        view.findViewById(R.id.profileViewAchievements).setOnClickListener(v ->
+                Navigation.findNavController(v)
+                        .navigate(R.id.action_profileFragment_to_gamificationFragment));
+
+        view.findViewById(R.id.profileViewRanking).setOnClickListener(v ->
+                Navigation.findNavController(v)
+                        .navigate(R.id.action_profileFragment_to_leaderboardFragment));
 
         view.findViewById(R.id.avatarContainer).setOnClickListener(v ->
                 pickMediaLauncher.launch(
@@ -267,6 +283,27 @@ public class ProfileFragment extends Fragment {
 
         float ratio = w > h ? (float) maxPx / w : (float) maxPx / h;
         return Bitmap.createScaledBitmap(src, Math.round(w * ratio), Math.round(h * ratio), true);
+    }
+
+    private void observeGamification(View view) {
+        TextView xpView = view.findViewById(R.id.profileGamificationXp);
+        TextView levelView = view.findViewById(R.id.profileGamificationLevel);
+        TextView streakView = view.findViewById(R.id.profileGamificationStreak);
+        TextView badgesView = view.findViewById(R.id.profileGamificationBadges);
+
+        gamificationViewModel.uiState.observe(getViewLifecycleOwner(), state -> {
+            if (state == null) return;
+            xpView.setText(String.valueOf(state.totalXp));
+            levelView.setText(String.valueOf(state.levelInfo != null ? state.levelInfo.level : 0));
+            streakView.setText(String.valueOf(state.streak));
+            int earned = 0;
+            if (state.badges != null) {
+                for (Badge b : state.badges) {
+                    if (b.earned) earned++;
+                }
+            }
+            badgesView.setText(String.valueOf(earned));
+        });
     }
 
     private void observeAvatarUpload(View view) {
