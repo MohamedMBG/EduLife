@@ -120,6 +120,12 @@
         <action
             android:id="@+id/action_profileFragment_to_studentAnalyticsFragment"
             app:destination="@id/studentAnalyticsFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_gamificationFragment"
+            app:destination="@id/gamificationFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_leaderboardFragment"
+            app:destination="@id/leaderboardFragment" />
     </fragment>
 
     <fragment
@@ -443,7 +449,19 @@
     <fragment
         android:id="@+id/gamificationFragment"
         android:name="com.baghdad.edulife.features.gamification.ui.GamificationFragment"
-        android:label="Achievements" />
+        android:label="Achievements">
+        <action
+            android:id="@+id/action_gamificationFragment_to_courseDetailFragment"
+            app:destination="@id/courseDetailFragment" />
+        <action
+            android:id="@+id/action_gamificationFragment_to_leaderboardFragment"
+            app:destination="@id/leaderboardFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/leaderboardFragment"
+        android:name="com.baghdad.edulife.features.gamification.ui.LeaderboardFragment"
+        android:label="Leaderboard" />
 
     <!-- ── Analytics dashboards (Phase B) ───────────────────────────── -->
 

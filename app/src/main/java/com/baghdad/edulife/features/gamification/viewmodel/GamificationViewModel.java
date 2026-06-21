@@ -12,7 +12,10 @@ import com.baghdad.edulife.features.analytics.model.StudentAnalyticsSummary;
 import com.baghdad.edulife.features.gamification.data.GamificationRepository;
 import com.baghdad.edulife.features.gamification.model.Badge;
 import com.baghdad.edulife.features.gamification.model.GamificationUiState;
+import com.baghdad.edulife.features.gamification.model.LeaderboardEntryResponse;
 import com.baghdad.edulife.features.gamification.model.LevelInfo;
+
+import java.util.List;
 
 /**
  * Backend-fetched gamification state. All progression numbers come from the
@@ -35,6 +38,15 @@ public class GamificationViewModel extends AndroidViewModel {
 
     private final MutableLiveData<Boolean> _isLoading = new MutableLiveData<>(false);
     public final LiveData<Boolean> isLoading = _isLoading;
+
+    private final MutableLiveData<List<LeaderboardEntryResponse>> _leaderboard = new MutableLiveData<>();
+    public final LiveData<List<LeaderboardEntryResponse>> leaderboard = _leaderboard;
+
+    private final MutableLiveData<String> _leaderboardError = new MutableLiveData<>();
+    public final LiveData<String> leaderboardError = _leaderboardError;
+
+    private final MutableLiveData<Boolean> _leaderboardLoading = new MutableLiveData<>(false);
+    public final LiveData<Boolean> leaderboardLoading = _leaderboardLoading;
 
     private GamificationUiState lastGamificationState;
     private StudentAnalyticsSummary lastAnalytics;
@@ -127,5 +139,22 @@ public class GamificationViewModel extends AndroidViewModel {
             if (b.earned) return true;
         }
         return false;
+    }
+
+    public void loadLeaderboard(int limit) {
+        _leaderboardLoading.postValue(true);
+        gamificationRepository.loadLeaderboard(limit, new GamificationRepository.LeaderboardCallback() {
+            @Override
+            public void onSuccess(List<LeaderboardEntryResponse> entries) {
+                _leaderboard.postValue(entries);
+                _leaderboardLoading.postValue(false);
+            }
+
+            @Override
+            public void onError(String message) {
+                _leaderboardError.postValue(message);
+                _leaderboardLoading.postValue(false);
+            }
+        });
     }
 }

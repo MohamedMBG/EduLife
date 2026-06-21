@@ -676,4 +676,46 @@
     <string name="analytics_platform_cohorts_section">Enrollments by month</string>
     <string name="analytics_platform_cert_trend_section">Certificates by month</string>
 
+    <!-- ══ GAMIFICATION V2 (redesigned dashboard) ══ -->
+    <string name="gamification_v2_greeting">Welcome back!</string>
+    <string name="gamification_v2_level_label">Level %1$d</string>
+    <string name="gamification_v2_progress_label">%1$d%% to Level %2$d</string>
+    <string name="gamification_v2_progress_max">Level 10 — Master</string>
+    <string name="gamification_v2_xp_label">Total XP</string>
+    <string name="gamification_v2_streak_label">Streak</string>
+    <string name="gamification_v2_streak_days">%1$d days</string>
+    <string name="gamification_v2_streak_none">0 days</string>
+    <string name="gamification_v2_rank_label">Ranking</string>
+    <string name="gamification_v2_rank_value">#%1$d</string>
+
+    <!-- Quick actions -->
+    <string name="gamification_action_continue">Continue Learning</string>
+    <string name="gamification_action_badges">View Badges</string>
+    <string name="gamification_action_ranking">View Ranking</string>
+
+    <!-- ══ LEADERBOARD ══ -->
+    <string name="leaderboard_title">Leaderboard</string>
+    <string name="leaderboard_subtitle">Top learners on EduLife</string>
+    <string name="leaderboard_xp_label">%1$d XP</string>
+    <string name="leaderboard_level_label">Lvl %1$d</string>
+    <string name="leaderboard_rank_label">#%1$d</string>
+    <string name="leaderboard_you_label">You</string>
+    <string name="leaderboard_loading">Loading rankings…</string>
+    <string name="leaderboard_error_title">Could not load rankings</string>
+    <string name="leaderboard_error_body">Check your connection and try again.</string>
+    <string name="leaderboard_retry">Try again</string>
+    <string name="leaderboard_empty">No rankings available yet. Be the first!</string>
+    <string name="leaderboard_podium_1st">1st Place</string>
+    <string name="leaderboard_podium_2nd">2nd Place</string>
+    <string name="leaderboard_podium_3rd">3rd Place</string>
+
+    <!-- Profile gamification overview -->
+    <string name="profile_gamification_title">Gamification</string>
+    <string name="profile_gamification_xp">XP</string>
+    <string name="profile_gamification_level">Level</string>
+    <string name="profile_gamification_streak">Streak</string>
+    <string name="profile_gamification_badges">Badges</string>
+    <string name="profile_gamification_view_achievements">View Achievements</string>
+    <string name="profile_gamification_view_ranking">View Ranking</string>
+
 </resources>
