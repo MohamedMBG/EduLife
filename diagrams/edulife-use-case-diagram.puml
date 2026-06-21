@@ -1,0 +1,222 @@
+@startuml EduLifeUseCase
+
+' ──────────────────────────────────────────────────
+'  EduLife — Plateforme de formation en ligne
+'  UML Use Case Diagram
+' ──────────────────────────────────────────────────
+
+left to right direction
+scale max 2480x3508
+
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName "Serif"
+skinparam defaultFontSize 12
+skinparam dpi 200
+skinparam Padding 2
+skinparam Nodesep 10
+skinparam Ranksep 30
+
+skinparam rectangle {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 20
+    FontStyle bold
+}
+
+skinparam package {
+    BackgroundColor #F5F5F5
+    BorderColor #999999
+    FontSize 14
+    FontStyle italic
+    BorderStyle dashed
+}
+
+skinparam usecase {
+    BackgroundColor White
+    BorderColor Black
+    FontSize 11
+}
+
+skinparam actor {
+    BorderColor Black
+    FontSize 11
+}
+
+skinparam ArrowColor Black
+skinparam ArrowFontSize 9
+
+' ════════════════════════════════
+'  LEFT ACTORS
+' ════════════════════════════════
+
+actor "Visitor" as V
+actor "Learner" as L
+actor "Teacher" as T
+actor "Group\nAdmin" as GA
+actor "Platform\nAdmin" as PA
+
+L --|> V
+
+' ════════════════════════════════
+'  RIGHT ACTORS (External Systems)
+' ════════════════════════════════
+
+actor "Firebase\nAuthentication" as FB
+actor "Cloudinary\nStorage" as CL
+actor "Groq LLM\nAI Service" as AI
+
+' ════════════════════════════════
+'  SYSTEM BOUNDARY
+' ════════════════════════════════
+
+rectangle "                                          EduLife System                                          " {
+
+    package "Learning & Certification Service" {
+        (Register) as UC1
+        (Log In) as UC2
+        (Verify Email) as UC3
+        (Sync Identity) as UC4
+        (Manage Profile) as UC5
+        (Upload Avatar) as UC6
+        (Browse Courses) as UC7
+        (View Course Details) as UC8
+        (Enroll in Course) as UC9
+        (Access Lessons) as UC10
+        (Complete Lesson) as UC11
+        (Track Progress) as UC12
+        (Take MCQ Exam) as UC13
+        (Submit Exam) as UC14
+        (View Result) as UC15
+        (Generate Certificate) as UC16
+        (Download Certificate) as UC17
+        (Verify Certificate) as UC18
+        (View Gamification) as UC19
+        (View Leaderboard) as UC20
+        (View Learner Analytics) as UC21
+        (Use Study Planner) as UC22
+        (Use Career Advisor) as UC23
+    }
+
+    package "Content, Group & Administration Service" {
+        (Apply as Teacher) as UC24
+        (Review Teacher Requests) as UC25
+        (Create Course) as UC26
+        (Manage Sections & Lessons) as UC27
+        (Upload Cover Image) as UC28
+        (Create Final Exam) as UC29
+        (Publish Course) as UC30
+        (Archive Course) as UC31
+        (View Teacher Analytics) as UC32
+        (Create Group) as UC33
+        (Manage Group Members) as UC34
+        (Approve Join Requests) as UC35
+        (Attach Courses to Group) as UC36
+        (Approve Group Courses) as UC37
+        (View Group Analytics) as UC38
+        (Manage Users & Roles) as UC39
+        (View Platform Metrics) as UC40
+        (View Platform Analytics) as UC41
+        (Delete Account) as UC42
+    }
+}
+
+' ════════════════════════════════
+'  VISITOR LINKS
+' ════════════════════════════════
+
+V -- UC1
+V -- UC2
+V -- UC7
+V -- UC18
+
+' ════════════════════════════════
+'  LEARNER LINKS
+' ════════════════════════════════
+
+L -- UC5
+L -- UC9
+L -- UC10
+L -- UC13
+L -- UC17
+L -- UC19
+L -- UC20
+L -- UC21
+L -- UC22
+L -- UC23
+L -- UC24
+L -- UC42
+
+' ════════════════════════════════
+'  TEACHER LINKS
+' ════════════════════════════════
+
+T -- UC2
+T -- UC26
+T -- UC27
+T -- UC29
+T -- UC28
+T -- UC32
+
+' ════════════════════════════════
+'  GROUP ADMIN LINKS
+' ════════════════════════════════
+
+GA -- UC2
+GA -- UC33
+GA -- UC34
+GA -- UC35
+GA -- UC36
+GA -- UC37
+GA -- UC38
+
+' ════════════════════════════════
+'  PLATFORM ADMIN LINKS
+' ════════════════════════════════
+
+PA -- UC2
+PA -- UC25
+PA -- UC30
+PA -- UC31
+PA -- UC39
+PA -- UC40
+PA -- UC41
+
+' ════════════════════════════════
+'  EXTERNAL SYSTEM LINKS
+' ════════════════════════════════
+
+UC2 -- FB
+UC1 -- FB
+UC4 -- FB
+UC3 -- FB
+
+UC28 -- CL
+UC6 -- CL
+
+UC23 -- AI
+
+' ════════════════════════════════
+'  <<include>> RELATIONSHIPS
+' ════════════════════════════════
+
+UC2 .> UC4 : <<include>>
+UC1 .> UC3 : <<include>>
+UC13 .> UC14 : <<include>>
+UC14 .> UC15 : <<include>>
+UC11 .> UC12 : <<include>>
+UC26 .> UC27 : <<include>>
+
+' ════════════════════════════════
+'  <<extend>> RELATIONSHIPS
+' ════════════════════════════════
+
+UC15 .> UC16 : <<extend>>
+UC16 .> UC17 : <<extend>>
+UC7 .> UC8 : <<extend>>
+UC5 .> UC6 : <<extend>>
+UC26 .> UC28 : <<extend>>
+UC9 .> UC10 : <<extend>>
+UC10 .> UC11 : <<extend>>
+
+@enduml
