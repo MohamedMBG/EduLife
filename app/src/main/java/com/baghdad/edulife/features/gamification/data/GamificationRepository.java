@@ -135,7 +135,9 @@ public class GamificationRepository {
                 badges,
                 /* lessonsCompleted */ 0,
                 /* coursesEnrolled */ 0,
-                /* certificatesEarned */ unlocked
+                /* certificatesEarned */ unlocked,
+                body.longestStreak,
+                body.lastActivityDate
         );
     }
 

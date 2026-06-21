@@ -30,9 +30,16 @@ public class GamificationUiState {
     /** Count of certificates earned */
     public final int certificatesEarned;
 
+    /** Longest streak ever recorded */
+    public final int longestStreak;
+
+    /** ISO date of last activity (e.g. "2026-06-20") */
+    public final String lastActivityDate;
+
     public GamificationUiState(int totalXp, LevelInfo levelInfo, int streak,
                                List<Badge> badges, int lessonsCompleted,
-                               int coursesEnrolled, int certificatesEarned) {
+                               int coursesEnrolled, int certificatesEarned,
+                               int longestStreak, String lastActivityDate) {
         this.totalXp = totalXp;
         this.levelInfo = levelInfo;
         this.streak = streak;
@@ -40,5 +47,7 @@ public class GamificationUiState {
         this.lessonsCompleted = lessonsCompleted;
         this.coursesEnrolled = coursesEnrolled;
         this.certificatesEarned = certificatesEarned;
+        this.longestStreak = longestStreak;
+        this.lastActivityDate = lastActivityDate;
     }
 }

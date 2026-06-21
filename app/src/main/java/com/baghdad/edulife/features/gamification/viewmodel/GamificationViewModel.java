@@ -111,7 +111,9 @@ public class GamificationViewModel extends AndroidViewModel {
                 lastGamificationState.badges,
                 lessons,
                 courses,
-                certs
+                certs,
+                lastGamificationState.longestStreak,
+                lastGamificationState.lastActivityDate
         );
         _uiState.postValue(merged);
         _isLoading.postValue(false);

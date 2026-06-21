@@ -676,6 +676,54 @@
     <string name="analytics_platform_cohorts_section">Enrollments by month</string>
     <string name="analytics_platform_cert_trend_section">Certificates by month</string>
 
+    <!-- Gamification motivation / info dialog -->
+    <string name="gamification_motivation_max">You reached the summit. Legendary status.</string>
+    <string name="gamification_motivation_start">Complete your first lesson to start earning XP!</string>
+    <string name="gamification_motivation_close">So close! %1$d XP to reach Level %2$d.</string>
+    <string name="gamification_motivation_streak">%1$d-day streak — you\'re on fire!</string>
+    <string name="gamification_motivation_next">%1$d XP to Level %2$d. Keep going!</string>
+    <string name="gamification_level_info_title">How levels work</string>
+    <string name="gamification_level_info_body">Earn XP by completing lessons, passing exams, and earning certificates. Each level requires more XP than the last. Climb from Novice to Master across 10 levels.</string>
+    <string name="gamification_level_info_got_it">Got it</string>
+    <string name="gamification_level_ring_desc">Level %1$d</string>
+    <string name="gamification_xp_icon_desc">XP star</string>
+    <string name="gamification_level_info_desc">Level info</string>
+    <string name="gamification_week_title">This week</string>
+    <string name="gamification_courses_title">Your Courses</string>
+    <string name="gamification_courses_subtitle">Progress on enrolled courses</string>
+    <string name="gamification_courses_empty_title">No courses yet</string>
+    <string name="gamification_courses_empty_body">Enroll in a course from the catalog to start tracking progress here.</string>
+    <string name="gamification_courses_error">Couldn\'t load course progress. Tap to retry.</string>
+    <string name="gamification_loading">Loading achievements…</string>
+    <string name="gamification_error_title">Something went wrong</string>
+    <string name="gamification_error_body">We couldn\'t load your achievements. Check your connection and try again.</string>
+    <string name="gamification_retry">Retry</string>
+    <string name="gamification_longest_streak_none">Best streak: none yet</string>
+    <string name="gamification_longest_streak_one">Best streak: 1 day</string>
+    <string name="gamification_longest_streak">Best streak: %1$d days</string>
+    <string name="gamification_week_day_active_desc">%1$s — active</string>
+    <string name="gamification_week_day_inactive_desc">%1$s — inactive</string>
+
+    <string-array name="gamification_week_day_initials">
+        <item>M</item>
+        <item>T</item>
+        <item>W</item>
+        <item>T</item>
+        <item>F</item>
+        <item>S</item>
+        <item>S</item>
+    </string-array>
+
+    <string-array name="gamification_week_day_names">
+        <item>Monday</item>
+        <item>Tuesday</item>
+        <item>Wednesday</item>
+        <item>Thursday</item>
+        <item>Friday</item>
+        <item>Saturday</item>
+        <item>Sunday</item>
+    </string-array>
+
     <!-- ══ GAMIFICATION V2 (redesigned dashboard) ══ -->
     <string name="gamification_v2_greeting">Welcome back!</string>
     <string name="gamification_v2_level_label">Level %1$d</string>
