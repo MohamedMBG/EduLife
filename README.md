@@ -18,6 +18,8 @@ Core learner journey:
 Discover -> Enroll -> Learn -> Take exam -> Pass -> Receive certificate
 ```
 
+EduLife is being built as a realistic MVP. The focus is on delivering the core learner loop reliably before expanding into broader platform features.
+
 ## Repository Overview
 
 This repository contains the main EduLife product codebase:
@@ -27,7 +29,17 @@ This repository contains the main EduLife product codebase:
 - `guided-journey-lab/` - React web client for the platform experience
 - `docs/` - task audits, architecture notes, and implementation records
 
-## Architecture Snapshot
+## Product Surfaces
+
+EduLife is delivered through three coordinated application layers:
+
+- **Android app** for the primary learner experience
+- **Backend API** for business rules, data access, security, exams, and certificates
+- **Web client** for the browser-based platform experience and operational workflows
+
+All clients depend on the same backend contracts and security rules.
+
+## Architecture
 
 EduLife keeps the MVP intentionally simple:
 
@@ -37,6 +49,52 @@ EduLife keeps the MVP intentionally simple:
 - **Auth**: Firebase on the client, validated server-side with internal user resolution
 
 The backend is the source of truth for permissions, enrollments, exams, and certificates.
+
+### Backend Design
+
+The backend is one Spring Boot application organized by domain modules instead of separate services. This keeps deployment and development simple while still maintaining clean boundaries between areas such as:
+
+- authentication and user identity
+- profiles and roles
+- courses, lessons, and enrollments
+- progress tracking
+- exams and certificates
+- admin and group operations
+
+This approach fits the current MVP stage: one deployable system, clear module ownership, and no unnecessary distributed-system complexity.
+
+### Android Design
+
+The Android app follows pragmatic MVVM with a feature-first structure:
+
+- `ui/` for screens and rendering
+- `viewmodel/` for state handling
+- `data/` for repositories and API calls
+- `model/` for feature models and UI state
+
+The Android client is meant to stay thin. Business rules remain on the backend, while the app focuses on navigation, state, and user interaction.
+
+### Web Design
+
+The web client is a React and TypeScript application that consumes the same backend APIs. It is used for the browser experience and complements the mobile flow with a modern frontend architecture centered on routing, reusable components, and shared API utilities.
+
+### Security Model
+
+EduLife uses Firebase for authentication on the client side, but access control is enforced on the backend. The backend validates Firebase tokens, resolves the internal user record, checks role permissions, and protects learner data and exam integrity server-side.
+
+## Repository Structure
+
+```text
+EduLife/
+|-- app/
+|-- backend/
+|-- guided-journey-lab/
+|-- docs/
+|-- diagrams/
+|-- README.md
+|-- AGENTS.md
+|-- CLAUDE.md
+```
 
 ## Tech Stack
 
@@ -77,6 +135,14 @@ Open the project in Android Studio, add the required Firebase configuration, the
 ## Project Status
 
 EduLife is under active MVP development. The current direction prioritizes the end-to-end learner flow before expanding into broader CMS, social, payment, or AI-heavy features.
+
+## Principles
+
+- Keep the learner journey first
+- Keep business logic on the backend
+- Keep architecture clean but pragmatic
+- Prefer vertical slices over disconnected mock work
+- Avoid overbuilding beyond MVP scope
 
 ## Where To Look Next
 
