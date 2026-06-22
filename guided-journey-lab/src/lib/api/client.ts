@@ -84,6 +84,77 @@ function backendOriginLabel() {
   }
 }
 
+const LOCAL_BACKEND_HOSTS: ReadonlySet<string> = new Set([
+  "localhost",
+  "127.0.0.1",
+  "0.0.0.0",
+  "[::1]",
+  "::1",
+]);
+
+const BACKEND_MEDIA_URL_KEYS: ReadonlySet<string> = new Set([
+  "avatarUrl",
+  "imageUrl",
+  "coverImageUrl",
+  "pdfUrl",
+]);
+
+function resolveBackendHostedMediaUrl(url: string) {
+  const trimmedUrl = url.trim();
+
+  if (!trimmedUrl) {
+    return url;
+  }
+
+  let apiBaseUrl: URL;
+  try {
+    apiBaseUrl = new URL(`${appEnv.apiBaseUrl}/`);
+  } catch {
+    return url;
+  }
+
+  try {
+    const parsedUrl = new URL(trimmedUrl);
+    if (!LOCAL_BACKEND_HOSTS.has(parsedUrl.hostname)) {
+      return parsedUrl.toString();
+    }
+
+    // The backend falls back to localhost media URLs when the public base URL env var is unset.
+    // Rewrite those first-party file paths onto the configured API origin so the website does
+    // not render blocked localhost assets under the production CSP.
+    return new URL(
+      `${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`,
+      `${apiBaseUrl.origin}/`,
+    ).toString();
+  } catch {
+    if (!trimmedUrl.startsWith("/")) {
+      return url;
+    }
+    return new URL(trimmedUrl, apiBaseUrl).toString();
+  }
+}
+
+function normalizeBackendMediaUrls<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.map((item) => normalizeBackendMediaUrls(item)) as T;
+  }
+
+  if (!value || typeof value !== "object") {
+    return value;
+  }
+
+  const normalized: Record<string, unknown> = {};
+  for (const [key, nestedValue] of Object.entries(value as Record<string, unknown>)) {
+    if (typeof nestedValue === "string" && BACKEND_MEDIA_URL_KEYS.has(key)) {
+      normalized[key] = resolveBackendHostedMediaUrl(nestedValue);
+      continue;
+    }
+    normalized[key] = normalizeBackendMediaUrls(nestedValue);
+  }
+
+  return normalized as T;
+}
+
 function buildUrl(path: string, query?: RequestOptions["query"]) {
   if (appEnv.demoMode) {
     throw new ApiClientError(500, "Network requests are disabled in website demo mode.");
@@ -187,7 +258,7 @@ async function makeRequest<T>(path: string, options: RequestOptions = {}) {
     return undefined as T;
   }
 
-  return (await response.json()) as T;
+  return normalizeBackendMediaUrls((await response.json()) as T);
 }
 
 export function syncAuth(

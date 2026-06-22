@@ -178,7 +178,7 @@ public class ProfileFragment extends Fragment {
             Toast.makeText(requireContext(), R.string.avatar_upload_error, Toast.LENGTH_SHORT).show();
             return;
         }
-        profileViewModel.uploadAvatar(compressed);
+        profileViewModel.uploadAvatar(compressed, "image/jpeg");
     }
 
     @Nullable
@@ -228,6 +228,12 @@ public class ProfileFragment extends Fragment {
 
             if (!scaled.equals(original)) scaled.recycle();
             original.recycle();
+
+            if(outfile.length() > AVATAR_MAX_BYTES) {
+                Log.w(TAG, "Compressed avatar exceeds max bytes (" + outFile.length() + ")");
+                outFile.delete();
+                return null;
+            }
 
             return outFile;
         } catch (FileNotFoundException e) {

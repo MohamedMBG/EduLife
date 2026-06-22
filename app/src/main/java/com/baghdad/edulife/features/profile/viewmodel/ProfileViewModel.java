@@ -120,7 +120,7 @@ public class ProfileViewModel extends ViewModel {
         _saveError.setValue(null);
     }
 
-    public void uploadAvatar(File imageFile) {
+    public void uploadAvatar(File imageFile, String mimeType) {
         // Drop overlapping requests: rapid taps on the avatar picker callback otherwise produce
         // N concurrent multipart uploads that all race to update the server-side avatar URL.
         // The in-flight flag is the single source of truth so the fragment does not need its own
@@ -129,7 +129,7 @@ public class ProfileViewModel extends ViewModel {
 
         _uploading.setValue(true);
         _uploadError.setValue(null);
-        repository.uploadAvatar(imageFile, new ProfileRepository.UploadAvatarCallback() {
+        repository.uploadAvatar(imageFile , mimeType , new ProfileRepository.UploadAvatarCallback() {
             @Override
             public void onSuccess(String avatarUrl) {
                 _uploading.postValue(false);

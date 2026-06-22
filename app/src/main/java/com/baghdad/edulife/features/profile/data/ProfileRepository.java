@@ -83,8 +83,9 @@ public class ProfileRepository {
         });
     }
 
-    public void uploadAvatar(File imageFile, UploadAvatarCallback callback) {
-        RequestBody reqBody = RequestBody.create(imageFile, MediaType.parse("image/jpeg"));
+    public void uploadAvatar(File imageFile, String mimeType, UploadAvatarCallback callback) {
+        RequestBody reqBody = RequestBody.create(imageFile, MediaType.parse(mimeType));
+        
         MultipartBody.Part part = MultipartBody.Part.createFormData("file", imageFile.getName(), reqBody);
         apiService.uploadAvatar(part).enqueue(new Callback<AvatarUploadResponse>() {
             @Override
