@@ -2,23 +2,36 @@ package com.edulife.profiles.storage;
 
 import com.edulife.profiles.config.AvatarStorageProperties;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @Component
 public class LocalAvatarStorage implements AvatarStorage {
 
     private static final Logger log = LoggerFactory.getLogger(LocalAvatarStorage.class);
+    private static final String AVATAR_PUBLIC_PATH = "/uploads/avatars";
+    private static final Set<String> LOCAL_HOSTS = Set.of(
+            "localhost",
+            "127.0.0.1",
+            "0.0.0.0",
+            "::1",
+            "[::1]"
+    );
 
     // Filename is generated from a UUID and a fixed extension whitelist so a malicious client
     // cannot smuggle a script path or unexpected MIME through the original filename.
@@ -120,12 +133,11 @@ public class LocalAvatarStorage implements AvatarStorage {
         if (publicUrl == null || publicUrl.isBlank()) {
             return;
         }
-        String base = trimTrailingSlash(properties.getPublicBaseUrl());
-        if (!publicUrl.startsWith(base + "/")) {
-            // URL points elsewhere (e.g. legacy CDN); leave it alone.
+        String filename = extractStoredFilename(publicUrl);
+        if (filename == null || filename.isBlank()) {
+            // URL points elsewhere (for example a CDN-hosted legacy avatar); leave it alone.
             return;
         }
-        String filename = publicUrl.substring(base.length() + 1);
         Path baseDir = Paths.get(properties.getStorageDir()).toAbsolutePath().normalize();
         Path target = baseDir.resolve(filename).normalize();
         if (!target.startsWith(baseDir)) {
@@ -140,7 +152,69 @@ public class LocalAvatarStorage implements AvatarStorage {
     }
 
     private String buildPublicUrl(String filename) {
-        return trimTrailingSlash(properties.getPublicBaseUrl()) + "/" + filename;
+        String configuredBaseUrl = trimTrailingSlash(properties.getPublicBaseUrl());
+        String requestBaseUrl = resolveRequestPublicBaseUrl();
+
+        // Render and other proxies terminate TLS in front of Spring. When the configured public
+        // base URL is still the localhost fallback, prefer the request origin so API responses do
+        // not hand the website a CSP-blocked localhost avatar URL after upload.
+        String baseUrl = shouldUseRequestOrigin(configuredBaseUrl, requestBaseUrl)
+                ? requestBaseUrl
+                : configuredBaseUrl;
+        return trimTrailingSlash(baseUrl) + "/" + filename;
+    }
+
+    private String resolveRequestPublicBaseUrl() {
+        if (!(RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes)) {
+            return null;
+        }
+        return trimTrailingSlash(ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path(AVATAR_PUBLIC_PATH)
+                .build()
+                .toUriString());
+    }
+
+    private static boolean shouldUseRequestOrigin(String configuredBaseUrl, String requestBaseUrl) {
+        return requestBaseUrl != null && !requestBaseUrl.isBlank()
+                && (configuredBaseUrl.isBlank() || isLocalFallbackUrl(configuredBaseUrl));
+    }
+
+    private static boolean isLocalFallbackUrl(String url) {
+        try {
+            String host = new URI(url).getHost();
+            return host != null && LOCAL_HOSTS.contains(host);
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    private static String extractStoredFilename(String publicUrl) {
+        String normalized = publicUrl.trim();
+        if (normalized.isBlank()) {
+            return null;
+        }
+
+        String path = normalized;
+        try {
+            URI parsed = new URI(normalized);
+            if (parsed.getPath() != null && !parsed.getPath().isBlank()) {
+                path = parsed.getPath();
+            }
+        } catch (Exception ignored) {
+            // Keep the raw value; relative paths still flow through the fixed-prefix check below.
+        }
+
+        String pathPrefix = AVATAR_PUBLIC_PATH + "/";
+        int prefixIndex = path.indexOf(pathPrefix);
+        if (prefixIndex < 0) {
+            return null;
+        }
+
+        String filename = path.substring(prefixIndex + pathPrefix.length());
+        if (filename.isBlank() || filename.contains("/")) {
+            return null;
+        }
+        return filename;
     }
 
     private static String trimTrailingSlash(String value) {

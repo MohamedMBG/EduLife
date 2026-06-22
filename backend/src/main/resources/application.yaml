@@ -2,6 +2,10 @@ server:
   # Tomcat advertises its identity in the Server header by default; clear it so the server stack
   # is not broadcast in every response.
   server-header: ""
+  # Render terminates TLS before the Spring app. Honor X-Forwarded-* headers so request-derived
+  # public URLs (avatars, future media links) use the real HTTPS origin instead of an internal
+  # container host or localhost-style fallback.
+  forward-headers-strategy: framework
 
 spring:
   datasource:

@@ -7,6 +7,9 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.server.ResponseStatusException;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,6 +35,27 @@ class LocalAvatarStorageTest {
 
         String filename = stored.publicUrl().substring(stored.publicUrl().lastIndexOf('/') + 1);
         assertThat(Files.exists(tempDir.resolve(filename))).isTrue();
+    }
+
+    @Test
+    void storePrefersForwardedRequestOriginWhenConfiguredBaseIsLocalhostFallback(@TempDir Path tempDir) {
+        LocalAvatarStorage storage = newStorage(tempDir);
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/v1/profile/avatar");
+        request.setScheme("https");
+        request.setServerName("edulife-2bro.onrender.com");
+        request.setServerPort(443);
+
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+        try {
+            AvatarStorage.StoredAvatar stored = storage.store(
+                    UUID.randomUUID(),
+                    new MockMultipartFile("file", "a.png", "image/png", PNG_BYTES)
+            );
+
+            assertThat(stored.publicUrl()).startsWith("https://edulife-2bro.onrender.com/uploads/avatars/");
+        } finally {
+            RequestContextHolder.resetRequestAttributes();
+        }
     }
 
     @Test
@@ -99,6 +123,21 @@ class LocalAvatarStorageTest {
         storage.deleteIfStored(stored.publicUrl());
 
         String filename = stored.publicUrl().substring(stored.publicUrl().lastIndexOf('/') + 1);
+        assertThat(Files.exists(tempDir.resolve(filename))).isFalse();
+    }
+
+    @Test
+    void deleteIfStoredRemovesFileGeneratedFromDifferentPublicOrigin(@TempDir Path tempDir) throws Exception {
+        LocalAvatarStorage storage = newStorage(tempDir);
+
+        AvatarStorage.StoredAvatar stored = storage.store(
+                UUID.randomUUID(),
+                new MockMultipartFile("file", "a.png", "image/png", PNG_BYTES)
+        );
+
+        String filename = stored.publicUrl().substring(stored.publicUrl().lastIndexOf('/') + 1);
+        storage.deleteIfStored("https://edulife-2bro.onrender.com/uploads/avatars/" + filename);
+
         assertThat(Files.exists(tempDir.resolve(filename))).isFalse();
     }
 
