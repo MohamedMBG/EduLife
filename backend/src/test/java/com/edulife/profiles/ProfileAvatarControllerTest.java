@@ -48,7 +48,8 @@ class ProfileAvatarControllerTest {
         mockValidFirebaseToken();
 
         given(profileService.uploadAvatar(any()))
-                .willReturn(new AvatarUploadResponse("http://localhost:8080/uploads/avatars/abc.png"));
+                .willReturn(new AvatarUploadResponse(
+                        "https://res.cloudinary.com/demo/image/upload/edulife/avatars/abc.png"));
 
         MockMultipartFile file = new MockMultipartFile(
                 "file",
@@ -61,7 +62,8 @@ class ProfileAvatarControllerTest {
                         .file(file)
                         .header("Authorization", "Bearer valid-token"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.avatarUrl").value("http://localhost:8080/uploads/avatars/abc.png"));
+                .andExpect(jsonPath("$.avatarUrl").value(
+                        "https://res.cloudinary.com/demo/image/upload/edulife/avatars/abc.png"));
     }
 
     @Test
