@@ -229,7 +229,7 @@ public class ProfileFragment extends Fragment {
             if (!scaled.equals(original)) scaled.recycle();
             original.recycle();
 
-            if(outfile.length() > AVATAR_MAX_BYTES) {
+            if (outFile.length() > AVATAR_MAX_BYTES) {
                 Log.w(TAG, "Compressed avatar exceeds max bytes (" + outFile.length() + ")");
                 outFile.delete();
                 return null;
