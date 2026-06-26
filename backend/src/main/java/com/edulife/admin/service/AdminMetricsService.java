@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/** Aggregates platform-wide counts (users, courses, enrollments, certificates) for the admin dashboard. */
 @Service
 public class AdminMetricsService {
 
@@ -37,6 +38,7 @@ public class AdminMetricsService {
         this.teacherRequestRepository = teacherRequestRepository;
     }
 
+    /** Returns a single DTO with all dashboard counters, queried in one read-only transaction. */
     @Transactional(readOnly = true)
     public AdminMetricsDto getMetrics() {
         return new AdminMetricsDto(

@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller for lesson detail endpoints, scoped under a course.
+ */
 @RestController
 @RequestMapping("/api/v1/courses/{courseId}/lessons")
 public class LessonController {
@@ -18,6 +21,13 @@ public class LessonController {
         this.lessonService = lessonService;
     }
 
+    /**
+     * Returns full lesson content. Requires enrollment unless the lesson is a preview.
+     *
+     * @param courseId the parent course UUID
+     * @param lessonId the lesson UUID
+     * @return lesson detail including content body/URL and completion status
+     */
     @GetMapping("/{lessonId}")
     public LessonDetailDto getLessonDetail(
             @PathVariable UUID courseId,

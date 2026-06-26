@@ -1,5 +1,8 @@
 package com.baghdad.edulife.features.gamification.model;
 
+/**
+ * Client-side badge model combining backend unlock state with platform-specific icon and emoji.
+ */
 public class Badge {
 
     public final String id;

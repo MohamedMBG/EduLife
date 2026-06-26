@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+/** Spring Data repository for {@link Group} entities. */
 public interface GroupRepository extends JpaRepository<Group, UUID> {
 
     List<Group> findAllByCreatedBy(UUID createdBy);

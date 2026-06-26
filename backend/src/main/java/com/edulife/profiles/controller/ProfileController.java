@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * REST controller for the authenticated learner's profile: view, update, and avatar upload.
+ */
 @RestController
 @RequestMapping("/api/v1/profile")
 public class ProfileController {

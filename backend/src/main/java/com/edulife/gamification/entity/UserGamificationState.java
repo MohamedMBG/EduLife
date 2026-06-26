@@ -11,6 +11,11 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
+/**
+ * Mutable aggregate holding a learner's cumulative XP, computed level, streak counters,
+ * and streak-bonus flags. Protected by an optimistic {@code @Version} lock to handle
+ * concurrent XP awards safely.
+ */
 @Entity
 @Table(name = "user_gamification_state")
 public class UserGamificationState {
@@ -104,6 +109,7 @@ public class UserGamificationState {
         return updatedAt;
     }
 
+    /** Adds XP to the total. Rejects negative deltas. */
     public void addXp(int delta) {
         if (delta < 0) {
             throw new IllegalArgumentException("XP delta must be non-negative");
@@ -115,6 +121,7 @@ public class UserGamificationState {
         this.level = level;
     }
 
+    /** Updates the current streak and promotes longest streak if exceeded. */
     public void setCurrentStreak(int currentStreak) {
         this.currentStreak = currentStreak;
         if (currentStreak > this.longestStreak) {

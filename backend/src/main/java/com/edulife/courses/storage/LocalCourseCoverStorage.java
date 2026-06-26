@@ -14,7 +14,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-// Replaced by CloudinaryStorageService — kept for reference only.
+/**
+ * Local filesystem storage for course cover images.
+ *
+ * <p>Replaced by {@link CloudinaryStorageService} -- kept for reference only.
+ */
 public class LocalCourseCoverStorage {
 
     private static final Logger log = LoggerFactory.getLogger(LocalCourseCoverStorage.class);
@@ -32,6 +36,12 @@ public class LocalCourseCoverStorage {
         this.properties = properties;
     }
 
+    /**
+     * Validates and stores a course cover image on the local filesystem.
+     *
+     * @return the public URL of the stored image
+     * @throws ResponseStatusException on validation failure or I/O error
+     */
     public String store(UUID courseId, MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Image file is required");
@@ -65,6 +75,7 @@ public class LocalCourseCoverStorage {
         }
     }
 
+    /** Deletes a previously stored cover image if the URL matches the configured public base URL. */
     public void deleteIfStored(String publicUrl) {
         if (publicUrl == null || publicUrl.isBlank()) {
             return;

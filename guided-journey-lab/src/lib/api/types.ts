@@ -484,3 +484,26 @@ export interface CmsExamAdmin {
   timeLimitMinutes: number | null;
   questions: CmsExamQuestion[];
 }
+
+export interface GamificationBadge {
+  id: string;
+  label: string;
+  rarity: string;
+  unlockDescription: string;
+  unlocked: boolean;
+  unlockedAt: string | null;
+}
+
+export interface GamificationState {
+  totalXp: number;
+  level: number;
+  levelName: string;
+  currentLevelXp: number;
+  nextLevelXp: number;
+  xpIntoLevel: number;
+  xpForNextLevel: number;
+  currentStreak: number;
+  longestStreak: number;
+  lastActivityDate: string | null;
+  badges: GamificationBadge[];
+}

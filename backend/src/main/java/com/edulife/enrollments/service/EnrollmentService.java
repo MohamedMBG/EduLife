@@ -26,6 +26,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Core service for enrollment lifecycle management.
+ *
+ * <p>Enrollment is transactional: creating or reactivating an enrollment also initializes
+ * course progress and emits gamification XP. Ownership checks ensure learners can only
+ * manage their own enrollments.</p>
+ */
 @Service
 public class EnrollmentService {
 
@@ -48,6 +55,16 @@ public class EnrollmentService {
         this.gamificationService = gamificationService;
     }
 
+    /**
+     * Enrolls the authenticated learner in the given course.
+     *
+     * <p>If a cancelled enrollment already exists, it is reactivated instead of creating
+     * a duplicate row. Initializes course progress and awards enrollment XP.</p>
+     *
+     * @param courseId the published course to enroll in
+     * @return enrollment confirmation with id, timestamp, and status
+     * @throws ResponseStatusException 404 if course not found, 409 if already enrolled
+     */
     @Transactional
     public EnrollmentResponse enroll(UUID courseId) {
         User user = resolveCurrentUser();
@@ -86,6 +103,12 @@ public class EnrollmentService {
         );
     }
 
+    /**
+     * Cancels an enrollment after verifying ownership.
+     *
+     * @param enrollmentId the enrollment to cancel
+     * @throws ResponseStatusException 404 if not found, 403 if not owned by current user
+     */
     @Transactional
     public void unenroll(UUID enrollmentId) {
         User user = resolveCurrentUser();
@@ -101,6 +124,7 @@ public class EnrollmentService {
         enrollmentRepository.save(enrollment);
     }
 
+    /** Returns all active enrollments for the authenticated learner, enriched with course metadata. */
     public List<EnrolledCourseDto> getMyEnrollments() {
         User user = resolveCurrentUser();
 
@@ -137,6 +161,7 @@ public class EnrollmentService {
                 .toList();
     }
 
+    /** Resolves the internal user from the Firebase-authenticated security context. */
     private User resolveCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 

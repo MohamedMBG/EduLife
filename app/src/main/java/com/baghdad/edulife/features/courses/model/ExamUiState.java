@@ -1,5 +1,6 @@
 package com.baghdad.edulife.features.courses.model;
 
+/** Immutable UI state for loading an exam, covering loading, success, already-passed, cooldown, and error outcomes. */
 public class ExamUiState {
     public final boolean loading;
     public final ExamResponse exam;

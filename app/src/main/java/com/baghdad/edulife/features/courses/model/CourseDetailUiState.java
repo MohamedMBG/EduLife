@@ -1,5 +1,8 @@
 package com.baghdad.edulife.features.courses.model;
 
+/**
+ * Immutable UI state for the course detail screen, holding the loaded course detail or an error message.
+ */
 public class CourseDetailUiState {
     public final boolean loading;
     public final CourseDetail courseDetail;

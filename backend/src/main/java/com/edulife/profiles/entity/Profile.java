@@ -11,6 +11,10 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * JPA entity representing a learner's profile (display name, bio, avatar URL).
+ * Each profile is linked one-to-one with a {@link com.edulife.users.entity.User} via {@code userId}.
+ */
 @Entity
 @Table(name = "profiles")
 public class Profile {

@@ -9,6 +9,7 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 
+/** JPA entity representing the many-to-many link between a group and a course. */
 @Entity
 @Table(name = "group_courses")
 @IdClass(GroupCourseId.class)

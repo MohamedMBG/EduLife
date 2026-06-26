@@ -9,6 +9,11 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * JPA entity recording that a learner has completed a specific lesson.
+ *
+ * <p>Each row represents a single lesson completion event with a timestamp.</p>
+ */
 @Entity
 @Table(name = "lesson_progress")
 public class LessonProgress {

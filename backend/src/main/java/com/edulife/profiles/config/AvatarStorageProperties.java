@@ -2,6 +2,9 @@ package com.edulife.profiles.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+/**
+ * Externalized configuration for avatar storage: directory path, public URL prefix, and max file size (5 MB default).
+ */
 @ConfigurationProperties(prefix = "edulife.avatar")
 public class AvatarStorageProperties {
 

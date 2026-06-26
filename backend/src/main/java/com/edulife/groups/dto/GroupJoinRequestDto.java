@@ -4,6 +4,7 @@ import com.edulife.groups.model.GroupJoinRequestStatus;
 import java.time.Instant;
 import java.util.UUID;
 
+/** Full view of a group join request including requester and reviewer details. */
 public record GroupJoinRequestDto(
         UUID id,
         UUID groupId,

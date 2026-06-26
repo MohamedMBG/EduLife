@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/** REST controller for CMS exam authoring (CRUD operations on a course's exam). */
 @RestController
 @RequestMapping("/api/v1/cms/courses/{courseId}/exam")
 @PreAuthorize("hasAnyRole('TEACHER','GROUP_ADMIN','ADMIN')")
@@ -52,6 +53,7 @@ public class CmsExamController {
                 .body(cmsExamService.createExam(courseId, request));
     }
 
+    /** Replaces the exam's questions and choices wholesale (delete-and-recreate). */
     @PutMapping
     public ExamAdminDto updateExam(
             @PathVariable UUID courseId,
@@ -60,6 +62,7 @@ public class CmsExamController {
         return cmsExamService.updateExam(courseId, request);
     }
 
+    /** Deletes the exam and all its questions and choices. */
     @DeleteMapping
     public ResponseEntity<Void> deleteExam(@PathVariable UUID courseId) {
         cmsExamService.deleteExam(courseId);

@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+/** Spring Data repository for {@link GroupJoinRequest} entities with status and group filtering. */
 public interface GroupJoinRequestRepository extends JpaRepository<GroupJoinRequest, UUID> {
 
     boolean existsByGroupIdAndRequesterUserIdAndStatus(

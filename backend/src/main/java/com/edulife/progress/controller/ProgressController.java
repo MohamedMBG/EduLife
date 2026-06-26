@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller for lesson-completion actions within a course.
+ */
 @RestController
 @RequestMapping("/api/v1/courses/{courseId}")
 public class ProgressController {
@@ -19,6 +22,7 @@ public class ProgressController {
         this.progressService = progressService;
     }
 
+    /** Marks a lesson as completed for the authenticated learner. Idempotent. */
     @PostMapping("/lessons/{lessonId}/complete")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void markComplete(

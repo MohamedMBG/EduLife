@@ -3,6 +3,9 @@ package com.baghdad.edulife.features.advisor.model;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Immutable UI state for the advisor screen, representing idle, loading, success, and error states.
+ */
 public final class AdvisorUiState {
     public final boolean loading;
     public final String learnerGoal;

@@ -23,6 +23,13 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+/**
+ * Single-activity host for EduLife's navigation graph.
+ *
+ * <p>Responsibilities: edge-to-edge window setup, bottom navigation wiring,
+ * start-destination routing based on onboarding/auth/role state, and
+ * centralized session-expiry handling via {@link SessionEventBus}.
+ */
 public class MainActivity extends AppCompatActivity {
 
     @Override
@@ -120,6 +127,10 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Selects the nav graph start destination based on Firebase auth state, session storage,
+     * and whether onboarding has been seen. Called only on fresh launch (savedInstanceState == null).
+     */
     private void configureNavigationStartDestination() {
         NavHostFragment navHostFragment =
                 (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.main);

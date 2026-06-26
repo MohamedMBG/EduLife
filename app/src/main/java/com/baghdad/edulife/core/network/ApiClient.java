@@ -10,6 +10,12 @@ import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+/**
+ * Singleton Retrofit client for all EduLife backend API calls.
+ *
+ * <p>Configures OkHttp with Firebase auth interceptor, token authenticator,
+ * timeouts, and debug logging. Thread-safe lazy initialization via {@link #getClient()}.
+ */
 public class ApiClient {
 
     private static final String BASE_URL = BuildConfig.API_BASE_URL;

@@ -9,6 +9,7 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 
+/** JPA entity representing a user's membership in a group. */
 @Entity
 @Table(name = "group_members")
 @IdClass(GroupMemberId.class)

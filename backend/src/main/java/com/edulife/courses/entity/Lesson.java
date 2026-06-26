@@ -9,6 +9,11 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * JPA entity mapped to the {@code lessons} table.
+ *
+ * <p>Represents a single learning unit (VIDEO, ARTICLE, or RESOURCE) within a course section.
+ */
 @Entity
 @Table(name = "lessons")
 public class Lesson {

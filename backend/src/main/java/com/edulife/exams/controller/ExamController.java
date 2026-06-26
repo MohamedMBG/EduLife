@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller for course exam operations including retrieval, status checks, and submission.
+ */
 @RestController
 @RequestMapping("/api/v1/courses/{courseId}/exam")
 public class ExamController {
@@ -24,16 +27,19 @@ public class ExamController {
         this.examService = examService;
     }
 
+    /** Returns the exam for a course with shuffled choices; requires active enrollment. */
     @GetMapping
     public ExamDto getExam(@PathVariable UUID courseId) {
         return examService.getExam(courseId);
     }
 
+    /** Returns the learner's exam status including pass state, failed attempts, and cooldown info. */
     @GetMapping("/status")
     public ExamStatusDto getExamStatus(@PathVariable UUID courseId) {
         return examService.getExamStatus(courseId);
     }
 
+    /** Submits exam answers for server-side scoring; issues a certificate on pass. */
     @PostMapping("/submit")
     public ExamResultDto submitExam(
             @PathVariable UUID courseId,

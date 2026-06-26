@@ -2,6 +2,7 @@ package com.edulife.exams.exception;
 
 import java.time.Instant;
 
+/** Thrown when a learner attempts an exam during the 72-hour cooldown after 2 consecutive failures. */
 public class ExamCooldownException extends RuntimeException {
 
     private final Instant cooldownEndsAt;

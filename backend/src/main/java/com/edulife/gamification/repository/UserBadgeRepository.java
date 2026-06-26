@@ -8,6 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+/**
+ * Repository for learner badge unlocks, supporting lookup by user and existence checks.
+ */
 public interface UserBadgeRepository extends JpaRepository<UserBadge, UserBadge.Key> {
 
     List<UserBadge> findAllByIdUserIdOrderByUnlockedAtAsc(UUID userId);

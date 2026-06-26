@@ -11,8 +11,14 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+/**
+ * Repository that communicates with the backend advisor endpoint to fetch course recommendations.
+ */
 public class AdvisorRepository {
 
+    /**
+     * Callback interface for asynchronous advisor recommendation results.
+     */
     public interface AdvisorCallback {
         void onSuccess(AdvisorResponse response);
         void onRateLimit();
@@ -25,6 +31,10 @@ public class AdvisorRepository {
         this.apiService = ApiClient.getClient().create(ApiService.class);
     }
 
+    /**
+     * Sends a learner's career goal to the advisor API and delivers results via the callback.
+     * Distinguishes rate-limit (HTTP 429) responses from general errors.
+     */
     public void recommend(String goal, AdvisorCallback callback) {
         apiService.requestAdvisorRecommendation(new AdvisorRequest(goal))
                 .enqueue(new Callback<AdvisorResponse>() {

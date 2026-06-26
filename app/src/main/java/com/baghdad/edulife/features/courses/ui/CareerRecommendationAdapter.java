@@ -15,6 +15,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * RecyclerView adapter that displays career-advisor course recommendations ranked by relevance,
+ * with click handling to navigate to the recommended course's detail screen.
+ */
 public class CareerRecommendationAdapter
         extends RecyclerView.Adapter<CareerRecommendationAdapter.RecommendationViewHolder> {
 
@@ -72,6 +76,10 @@ public class CareerRecommendationAdapter
             scoreText = itemView.findViewById(R.id.recommendationScoreText);
         }
 
+        /**
+         * Binds a recommendation to the view, styling the first item as "BEST MATCH"
+         * and subsequent items as "ALTERNATIVE" to establish visual priority.
+         */
         void bind(
                 int rank,
                 CareerCourseRecommendation recommendation,
@@ -101,7 +109,9 @@ public class CareerRecommendationAdapter
             itemView.setOnClickListener(v -> listener.onRecommendationClick(recommendation));
         }
 
-        // Map short ISO codes to user-friendly display labels so language codes (e.g. 'en') read naturally.
+        /**
+         * Converts short ISO language codes and level slugs into user-friendly display labels.
+         */
         private String normalizeLabel(String rawValue) {
             if (rawValue == null || rawValue.isBlank()) {
                 return "Unknown";

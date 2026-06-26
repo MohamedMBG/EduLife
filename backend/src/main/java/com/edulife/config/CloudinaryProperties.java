@@ -2,6 +2,7 @@ package com.edulife.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+/** Externalized Cloudinary account properties (cloud name, API key, secret, and upload folder). */
 @ConfigurationProperties(prefix = "cloudinary")
 public class CloudinaryProperties {
 

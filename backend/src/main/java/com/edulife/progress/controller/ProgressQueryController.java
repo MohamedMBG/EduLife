@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller for querying learner progress on enrolled courses.
+ */
 @RestController
 @RequestMapping("/api/v1/progress")
 public class ProgressQueryController {
@@ -18,6 +21,7 @@ public class ProgressQueryController {
         this.progressService = progressService;
     }
 
+    /** Returns section-by-section progress for the authenticated learner in the given course. */
     @GetMapping("/courses/{courseId}")
     public CourseProgressDto getCourseProgress(@PathVariable UUID courseId) {
         return progressService.getCourseProgress(courseId);

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+/** Spring Data repository for {@link Enrollment} persistence and query operations. */
 public interface EnrollmentRepository extends JpaRepository<Enrollment, UUID> {
 
     boolean existsByUserIdAndCourseId(UUID userId, UUID courseId);

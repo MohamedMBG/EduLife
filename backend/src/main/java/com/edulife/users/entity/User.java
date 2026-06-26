@@ -5,6 +5,10 @@ import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * JPA entity representing a platform user, linked to Firebase via {@code firebaseUid}.
+ * PII columns are nullable to support account anonymization on self-deletion.
+ */
 @Entity
 @Table(
         name = "users",

@@ -26,6 +26,7 @@ import type {
   ExamResult,
   ExamStatus,
   ExamSubmitRequest,
+  GamificationState,
   GroupDetail,
   GroupCohortAnalytics,
   GroupSummary,
@@ -695,6 +696,16 @@ export function verifyCertificate(hash: string) {
   return makeRequest<CertificateVerification>(
     `api/v1/certificates/verify/${encodeURIComponent(hash)}`,
   );
+}
+
+export function getGamificationState(
+  getAccessToken: NonNullable<RequestOptions["getAccessToken"]>,
+) {
+  if (appEnv.demoMode) {
+    throw new ApiClientError(501, "Gamification is not available in website demo mode.");
+  }
+
+  return makeRequest<GamificationState>("api/v1/gamification/me", { getAccessToken });
 }
 
 // ── Admin endpoints (ADMIN role only) ────────────────────────────────────────

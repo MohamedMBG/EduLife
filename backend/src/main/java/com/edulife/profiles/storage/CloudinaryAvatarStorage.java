@@ -16,6 +16,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Primary {@link AvatarStorage} implementation that uploads avatars to Cloudinary.
+ * Validates content type and magic bytes (JPEG, PNG, WebP) and enforces the 5 MB size limit.
+ */
 @Service
 @Primary
 public class CloudinaryAvatarStorage implements AvatarStorage {
@@ -109,6 +113,7 @@ public class CloudinaryAvatarStorage implements AvatarStorage {
         }
     }
 
+    /** Extracts the Cloudinary public ID from a secure URL, scoped to the configured avatar folder. */
     private String extractPublicId(String publicUrl) {
         if (publicUrl == null || publicUrl.isBlank()) {
             return null;
@@ -144,6 +149,7 @@ public class CloudinaryAvatarStorage implements AvatarStorage {
         }
     }
 
+    /** Returns the file extension for a supported image format detected from magic bytes, or {@code null}. */
     private static String detectImageExtension(byte[] bytes) {
         if (bytes == null) {
             return null;

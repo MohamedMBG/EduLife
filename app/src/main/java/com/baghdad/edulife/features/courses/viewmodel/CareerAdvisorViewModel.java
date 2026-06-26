@@ -24,6 +24,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Matches a learner's free-text career goal against the published course catalog
+ * using keyword scoring and career-signal expansion, then surfaces up to two recommendations.
+ */
 public class CareerAdvisorViewModel extends AndroidViewModel {
 
     private static final int MAX_RECOMMENDATIONS = 2;
@@ -48,6 +52,13 @@ public class CareerAdvisorViewModel extends AndroidViewModel {
         return uiState;
     }
 
+    /**
+     * Validates the career goal text, fetches the course catalog from the backend,
+     * scores each course against the goal tokens, and posts the ranked recommendations
+     * (or an error) to {@link #getUiState()}.
+     *
+     * @param rawGoal free-text career goal entered by the learner
+     */
     public void analyzeGoal(String rawGoal) {
         String goal = rawGoal == null ? "" : rawGoal.trim();
         if (goal.length() < 4) {
@@ -78,6 +89,11 @@ public class CareerAdvisorViewModel extends AndroidViewModel {
         });
     }
 
+    /**
+     * Scores every course against the goal using direct token overlap, expanded career
+     * signals, and level/language bonuses. Falls back to beginner-friendly suggestions
+     * when no course scores above zero so the learner always gets actionable advice.
+     */
     private List<CareerCourseRecommendation> rankCourses(String goal, List<CourseSummary> courses) {
         Set<String> goalTokens = tokenize(goal);
         Set<String> expandedSignals = expandCareerSignals(goalTokens);
@@ -107,6 +123,10 @@ public class CareerAdvisorViewModel extends AndroidViewModel {
         return strongestOneOrTwo(ranked);
     }
 
+    /**
+     * Computes a relevance score for a single course by combining direct token matches (+12),
+     * expanded career signal matches (+8), and contextual bonuses for level and language (+6 each).
+     */
     private ScoredCourse scoreCourse(
             Set<String> goalTokens,
             Set<String> expandedSignals,
@@ -197,6 +217,10 @@ public class CareerAdvisorViewModel extends AndroidViewModel {
         return message.toString();
     }
 
+    /**
+     * Keeps the recommendation list focused: always returns the top course, and includes
+     * a second only when its score is at least half the leader's (minimum 8) to avoid noise.
+     */
     private List<CareerCourseRecommendation> strongestOneOrTwo(List<CareerCourseRecommendation> ranked) {
         if (ranked.isEmpty()) {
             return ranked;
@@ -217,6 +241,9 @@ public class CareerAdvisorViewModel extends AndroidViewModel {
         return result;
     }
 
+    /**
+     * Splits normalized text into unique tokens, discarding stop words and tokens shorter than 3 characters.
+     */
     private Set<String> tokenize(String text) {
         Set<String> tokens = new LinkedHashSet<>();
         String[] parts = normalize(text).split("[^a-z0-9]+");
@@ -229,6 +256,10 @@ public class CareerAdvisorViewModel extends AndroidViewModel {
         return tokens;
     }
 
+    /**
+     * Expands goal tokens into related domain terms using the static career-signal map
+     * (e.g., "developer" expands to "digital", "productivity", "skills", "study").
+     */
     private Set<String> expandCareerSignals(Set<String> goalTokens) {
         Set<String> signals = new LinkedHashSet<>();
         for (String token : goalTokens) {

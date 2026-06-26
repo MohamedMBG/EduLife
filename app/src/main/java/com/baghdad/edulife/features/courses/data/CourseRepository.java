@@ -22,6 +22,10 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+/**
+ * Repository that mediates between the courses UI layer and the backend API for catalog browsing,
+ * enrollment management, lesson details, and progress tracking.
+ */
 public class CourseRepository {
 
     private static final int DEFAULT_PAGE_SIZE = 20;
@@ -30,6 +34,8 @@ public class CourseRepository {
     private final ApiService apiService;
 
     public CourseRepository() {
+        // The repository always talks through the shared Retrofit client so auth headers and
+        // timeout settings stay consistent across the app.
         this.apiService = ApiClient.getClient().create(ApiService.class);
     }
 
@@ -60,6 +66,8 @@ public class CourseRepository {
 
     private static CourseSummary buildFallback(String id, String slug, String title,
                                                String shortDescription, String level, String lang) {
+        // The fallback catalog reuses the same DTO shape as the live API so the UI can render
+        // offline data without special-case mapping code.
         CourseSummary course = new CourseSummary();
         course.id = id;
         course.slug = slug;
@@ -70,6 +78,10 @@ public class CourseRepository {
         return course;
     }
 
+    /**
+     * Returns hardcoded seed courses filtered by category, used as a fallback when the backend
+     * is unreachable during offline development.
+     */
     public static List<CourseSummary> fallbackCourses(String category) {
         if (category == null || category.isBlank()) {
             return FALLBACK_COURSES;
@@ -123,6 +135,10 @@ public class CourseRepository {
         });
     }
 
+    /**
+     * Loads the full unfiltered course catalog for the career advisor feature, ignoring
+     * the currently selected Home filter so guidance considers all available courses.
+     */
     public void loadCoursesForAdvisor(CourseCatalogCallback callback) {
         // The advisor must compare against the published catalog as a whole, not the currently
         // selected Home filter, otherwise career guidance could miss a stronger course match.
@@ -152,6 +168,8 @@ public class CourseRepository {
     }
 
     public void loadCourseDetail(String courseId, CourseDetailCallback callback) {
+        // Course detail is a read-only screen, so any missing body is treated as a load failure
+        // instead of silently constructing a partial view that could confuse the learner.
         apiService.getCourseDetail(courseId).enqueue(new Callback<CourseDetail>() {
             @Override
             public void onResponse(@NonNull Call<CourseDetail> call, @NonNull Response<CourseDetail> response) {
@@ -191,6 +209,10 @@ public class CourseRepository {
         void onError(String message);
     }
 
+    /**
+     * Enrolls the current learner in a course, distinguishing 409 (already enrolled) from
+     * other errors so the UI can show a specific message instead of a generic failure.
+     */
     public void enrollCourse(String courseId, EnrollCallback callback) {
         apiService.enrollCourse(new EnrollRequest(courseId)).enqueue(new Callback<EnrollmentResponse>() {
             @Override
@@ -213,6 +235,7 @@ public class CourseRepository {
         });
     }
 
+    /** Removes the learner's enrollment, handling 403 (forbidden) and 404 (not found) distinctly. */
     public void unenroll(String enrollmentId, UnenrollCallback callback) {
         apiService.unenroll(enrollmentId).enqueue(new Callback<Void>() {
             @Override
@@ -278,6 +301,10 @@ public class CourseRepository {
         });
     }
 
+    /**
+     * Marks a lesson as complete on the backend, mapping HTTP 403 to
+     * {@link MarkCompleteFailure#NOT_ENROLLED} so the UI can show a targeted message.
+     */
     public void markLessonComplete(String courseId, String lessonId, MarkCompleteCallback callback) {
         apiService.markLessonComplete(courseId, lessonId).enqueue(new Callback<Void>() {
             @Override
@@ -299,6 +326,8 @@ public class CourseRepository {
     }
 
     public void getCourseProgress(String courseId, CourseProgressCallback callback) {
+        // Progress is permissioned data, so 403/404 are surfaced as explicit domain messages
+        // instead of being collapsed into a generic network failure.
         apiService.getCourseProgress(courseId).enqueue(new Callback<CourseProgressSummary>() {
             @Override
             public void onResponse(@NonNull Call<CourseProgressSummary> call, @NonNull Response<CourseProgressSummary> response) {
@@ -325,6 +354,8 @@ public class CourseRepository {
     }
 
     public void getMyEnrollments(MyEnrollmentsCallback callback) {
+        // The enrolled-courses list drives the learner's personal dashboard, so an empty or
+        // missing body is treated as an API problem rather than an empty state.
         apiService.getMyEnrollments().enqueue(new Callback<List<EnrolledCourse>>() {
             @Override
             public void onResponse(@NonNull Call<List<EnrolledCourse>> call, @NonNull Response<List<EnrolledCourse>> response) {
@@ -343,6 +374,8 @@ public class CourseRepository {
     }
 
     private String safeMessage(Throwable throwable) {
+        // Retrofit failures often arrive without a useful message, so this normalizes the text
+        // before it reaches the UI and keeps error handling stable.
         if (throwable.getMessage() == null || throwable.getMessage().isBlank()) {
             return "Unknown error";
         }

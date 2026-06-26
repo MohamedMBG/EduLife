@@ -23,6 +23,10 @@ import com.baghdad.edulife.features.courses.model.CareerAdvisorUiState;
 import com.baghdad.edulife.features.courses.model.CareerCourseRecommendation;
 import com.baghdad.edulife.features.courses.viewmodel.CareerAdvisorViewModel;
 
+/**
+ * Fragment that lets a learner describe a career goal and receive course recommendations
+ * matched locally by the ViewModel against the course catalog.
+ */
 public class CareerAdvisorFragment extends Fragment {
 
     private CareerAdvisorViewModel viewModel;
@@ -95,6 +99,10 @@ public class CareerAdvisorFragment extends Fragment {
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::renderState);
     }
 
+    /**
+     * Maps the current UI state to view visibility and content, toggling between the
+     * initial guidance card style and the response card style when recommendations exist.
+     */
     private void renderState(CareerAdvisorUiState state) {
         if (state == null) {
             return;
@@ -142,6 +150,10 @@ public class CareerAdvisorFragment extends Fragment {
         recommendationRecycler.setVisibility(hasRecommendations ? View.VISIBLE : View.GONE);
     }
 
+    /**
+     * Navigates to the course detail screen for a recommended course, passing the course ID
+     * with {@code isEnrolled=false} so the detail page shows the enrollment CTA.
+     */
     private void openRecommendedCourse(CareerCourseRecommendation recommendation) {
         if (recommendation == null
                 || recommendation.course == null

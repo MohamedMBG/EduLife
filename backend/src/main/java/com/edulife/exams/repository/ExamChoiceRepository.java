@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+/** Spring Data repository for exam choices, supporting bulk retrieval by question and cascading deletes. */
 public interface ExamChoiceRepository extends JpaRepository<ExamChoice, UUID> {
 
     List<ExamChoice> findAllByQuestionId(UUID questionId);

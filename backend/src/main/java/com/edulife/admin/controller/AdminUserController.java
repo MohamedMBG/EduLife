@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/** REST controller for admin-level user management (listing, role changes). */
 @RestController
 @RequestMapping("/api/v1/admin/users")
 // All admin user-management endpoints require ADMIN to prevent TEACHERs from promoting accounts.

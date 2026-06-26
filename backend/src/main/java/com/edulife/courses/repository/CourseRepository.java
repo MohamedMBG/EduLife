@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+/** Spring Data JPA repository for {@link Course} entities with discovery, CMS, and full-text search queries. */
 public interface CourseRepository extends JpaRepository<Course, UUID> {
 
     // Discovery always excludes drafts and archived rows at the query level so the service
@@ -32,12 +33,12 @@ public interface CourseRepository extends JpaRepository<Course, UUID> {
     // Group admins review courses authored by the teachers inside their groups.
     List<Course> findAllByCreatedByUserIdIn(java.util.Collection<UUID> createdByUserIds);
 
-    // Full-text search via the search_vector tsvector column added in V13__course_fts.sql.
-    // plainto_tsquery converts a raw user query into a tsquery without requiring special
-    // syntax from the caller (unlike to_tsquery which needs explicit AND/OR operators).
-    // The separate countQuery is required by Spring Data JPA for native paginated queries.
     long countByStatus(CourseStatus status);
 
+    /**
+     * Full-text search against the {@code search_vector} tsvector column.
+     * Uses {@code plainto_tsquery} so callers pass plain text without special syntax.
+     */
     @Query(
         value = "SELECT * FROM courses WHERE status = 'PUBLISHED' " +
                 "AND search_vector @@ plainto_tsquery('simple', :query) " +

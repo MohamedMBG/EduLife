@@ -5,6 +5,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Canonical catalog of all 12 badges. Badge definitions are shared between Android and Web
+ * via the backend API; clients must never duplicate these constants.
+ */
 public final class BadgeCatalog {
 
     public static final String FIRST_FLAME = "first_flame";
@@ -41,10 +45,12 @@ public final class BadgeCatalog {
     private BadgeCatalog() {
     }
 
+    /** Returns all badge definitions in display order. */
     public static List<BadgeDefinition> all() {
         return ALL;
     }
 
+    /** Looks up a badge by its unique string identifier. */
     public static Optional<BadgeDefinition> byId(String id) {
         return Optional.ofNullable(BY_ID.get(id));
     }

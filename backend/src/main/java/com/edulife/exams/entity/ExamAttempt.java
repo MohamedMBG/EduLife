@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 
+/** JPA entity recording a single exam attempt by a learner, including score and pass/fail outcome. */
 @Entity
 @Table(name = "exam_attempts")
 public class ExamAttempt {

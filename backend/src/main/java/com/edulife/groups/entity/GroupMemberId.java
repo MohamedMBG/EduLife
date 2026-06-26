@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Objects;
 import java.util.UUID;
 
+/** Composite primary key for {@link GroupMember} (groupId + userId). */
 public class GroupMemberId implements Serializable {
 
     private UUID groupId;

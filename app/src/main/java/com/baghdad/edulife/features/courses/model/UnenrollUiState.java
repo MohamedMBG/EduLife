@@ -1,5 +1,6 @@
 package com.baghdad.edulife.features.courses.model;
 
+/** Immutable UI state for the course unenrollment action, representing idle, loading, success, or error states. */
 public class UnenrollUiState {
     public final boolean loading;
     public final boolean unenrolled;

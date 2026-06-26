@@ -30,6 +30,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Orchestrates the course recommendation pipeline: intent extraction, deterministic ranking,
+ * LLM-based recommendation (with deterministic fallback), and audit logging.
+ */
 @Service
 public class AdvisorService {
 
@@ -64,6 +68,10 @@ public class AdvisorService {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * Processes a recommendation request for the authenticated user: sanitizes the goal,
+     * runs the recommendation pipeline, logs the result, and returns the response.
+     */
     public AdvisorResponse recommend(AdvisorRequest request) {
         User user = resolveCurrentUser();
         String sanitizedGoal = sanitizeGoal(request.goal());
@@ -91,6 +99,7 @@ public class AdvisorService {
         return response;
     }
 
+    /** Runs intent extraction, deterministic shortlisting, then LLM call with deterministic fallback. */
     private AdvisorResponse runPipeline(String goal, List<CourseContextDto> catalog) {
         IntentResult intent = intentExtractor.extract(goal);
         List<ScoredCourse> shortlist = deterministicRanker.shortlist(catalog, intent);
@@ -112,6 +121,7 @@ public class AdvisorService {
         return buildDeterministicResponse(goal, shortlist);
     }
 
+    /** Validates LLM picks against the catalog, filtering out unknown course IDs and clamping confidence. */
     private AdvisorResponse validateLlmResult(AdvisorLlmResult result, List<CourseContextDto> catalog) {
         if (result == null || result.picks() == null) {
             return new AdvisorResponse("", List.of());
@@ -147,6 +157,7 @@ public class AdvisorService {
         return new AdvisorResponse(message, recs, "groq");
     }
 
+    /** Builds a recommendation response using keyword-based scores when the LLM is unavailable. */
     private AdvisorResponse buildDeterministicResponse(String goal, List<ScoredCourse> shortlist) {
         if (shortlist.isEmpty()) {
             return new AdvisorResponse(
@@ -184,6 +195,7 @@ public class AdvisorService {
         return new AdvisorResponse(message, recs, "deterministic-fallback");
     }
 
+    /** Normalizes a raw keyword score to a 0.0-1.0 confidence range relative to the best score. */
     private double normalizeScore(int rawScore, List<ScoredCourse> shortlist) {
         int maxPossible = shortlist.stream().mapToInt(ScoredCourse::score).max().orElse(1);
         if (maxPossible <= 0) return 0.5;

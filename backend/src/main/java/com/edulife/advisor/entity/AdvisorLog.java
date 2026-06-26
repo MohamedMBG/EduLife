@@ -12,6 +12,7 @@ import java.util.UUID;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+/** Audit entity that records each advisor recommendation request, its response, provider, and latency. */
 @Entity
 @Table(name = "advisor_log")
 public class AdvisorLog {

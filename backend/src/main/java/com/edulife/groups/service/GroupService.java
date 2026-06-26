@@ -41,6 +41,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Core service for group lifecycle: creation, membership, course attachment, and join-request workflow.
+ * Enforces ownership checks so only the group creator (or platform ADMIN) can manage a group.
+ */
 @Service
 public class GroupService {
 
@@ -67,6 +71,7 @@ public class GroupService {
         this.courseRepository = courseRepository;
     }
 
+    /** Creates a new group owned by the authenticated user. */
     @Transactional
     public GroupDto createGroup(CreateGroupRequest request) {
         User currentUser = resolveCurrentUser();
@@ -74,6 +79,7 @@ public class GroupService {
         return toDto(saved);
     }
 
+    /** Lists groups owned by the caller (ADMIN sees all); lazily creates a default group for new GROUP_ADMINs. */
     @Transactional
     public List<GroupSummaryDto> listMyGroups() {
         User currentUser = resolveCurrentUser();
@@ -98,6 +104,7 @@ public class GroupService {
                 .toList();
     }
 
+    /** Submits a join request for a teacher to join an institute group; prevents duplicates. */
     @Transactional
     public GroupJoinRequestDto submitJoinRequest(UUID groupId, CreateGroupJoinRequest request) {
         User currentUser = resolveCurrentUser();
@@ -142,6 +149,7 @@ public class GroupService {
         return toJoinRequestDtos(requests);
     }
 
+    /** Approves a pending join request, adding the requester as a group member in the same transaction. */
     @Transactional
     public GroupJoinRequestDto approveJoinRequest(UUID groupId, UUID requestId) {
         User currentUser = resolveCurrentUser();
@@ -157,6 +165,7 @@ public class GroupService {
         return toJoinRequestDto(request);
     }
 
+    /** Rejects a pending join request with an optional admin note. */
     @Transactional
     public GroupJoinRequestDto rejectJoinRequest(UUID groupId, UUID requestId, ReviewGroupJoinRequest review) {
         User currentUser = resolveCurrentUser();
@@ -166,6 +175,7 @@ public class GroupService {
         return toJoinRequestDto(request);
     }
 
+    /** Returns full group detail including enriched member and course lists; owner or ADMIN only. */
     @Transactional
     public GroupDetailDto getGroupDetail(UUID groupId) {
         User currentUser = resolveCurrentUser();
@@ -212,6 +222,7 @@ public class GroupService {
         return new GroupDetailDto(group.getId(), group.getName(), group.getCreatedAt(), memberDtos, courseDtos);
     }
 
+    /** Adds a user to a group by internal user ID; rejects add-by-email to prevent account enumeration. */
     @Transactional
     public GroupMemberDto addMember(UUID groupId, AddMemberRequest request) {
         User currentUser = resolveCurrentUser();
@@ -254,6 +265,7 @@ public class GroupService {
                 "Unable to add a member with the provided details. Add by user id or use a join request.");
     }
 
+    /** Removes a member from a group; throws 404 if the member is not found. */
     @Transactional
     public void removeMember(UUID groupId, UUID userId) {
         User currentUser = resolveCurrentUser();
@@ -265,6 +277,7 @@ public class GroupService {
         }
     }
 
+    /** Attaches a course to a group after verifying the course is authored by the owner or a managed teacher. */
     @Transactional
     public GroupCourseDto attachCourse(UUID groupId, AttachCourseRequest request) {
         User currentUser = resolveCurrentUser();
@@ -304,6 +317,7 @@ public class GroupService {
         }
     }
 
+    /** Loads a group and verifies the caller is its owner or a platform ADMIN. */
     private Group loadGroupForManagement(UUID groupId, User currentUser) {
         Group group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Group not found"));

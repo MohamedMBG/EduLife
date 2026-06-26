@@ -2,6 +2,7 @@ package com.baghdad.edulife.features.courses.model;
 
 import java.util.List;
 
+/** Backend response DTO for fetching an exam, containing metadata and the list of questions to present. */
 public class ExamResponse {
     public String examId;
     public String courseId;

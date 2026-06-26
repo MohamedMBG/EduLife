@@ -13,6 +13,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Handles course cover image uploads and deletions via the Cloudinary API.
+ * Validates file type (JPG, PNG, WebP) and enforces a 5 MB size limit.
+ */
 @Service
 public class CloudinaryStorageService {
 
@@ -35,6 +39,14 @@ public class CloudinaryStorageService {
         this.properties = properties;
     }
 
+    /**
+     * Validates and uploads a course cover image to Cloudinary.
+     *
+     * @param courseId the course this cover belongs to
+     * @param file     the uploaded image file
+     * @return upload result containing the secure URL and public ID
+     * @throws ResponseStatusException on validation failure or upload error
+     */
     @SuppressWarnings("unchecked")
     public CloudinaryUploadResult store(UUID courseId, MultipartFile file) {
         if (file == null || file.isEmpty()) {
@@ -70,6 +82,7 @@ public class CloudinaryStorageService {
         }
     }
 
+    /** Deletes a Cloudinary asset by its public ID. Silently ignores null/blank IDs. */
     public void deleteByPublicId(String publicId) {
         if (publicId == null || publicId.isBlank()) {
             return;

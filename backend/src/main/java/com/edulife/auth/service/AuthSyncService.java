@@ -16,6 +16,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+/**
+ * Synchronizes Firebase-authenticated users with the internal user store.
+ *
+ * <p>On each call it creates or retrieves the internal user row, backfills the profile
+ * display name from Firebase, and reconciles staff roles from the server-trusted allowlist.</p>
+ */
 @Service
 public class AuthSyncService {
 
@@ -32,6 +38,10 @@ public class AuthSyncService {
         this.staffRoleProperties = staffRoleProperties;
     }
 
+    /**
+     * Resolves the current Firebase principal to an internal user, creating one if absent,
+     * and returns the user ID with the authoritative role.
+     */
     @Transactional
     public AuthSyncResponse syncCurrentUser(AuthSyncRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -67,6 +77,7 @@ public class AuthSyncService {
         return new AuthSyncResponse(user.getId(), user.getRole());
     }
 
+    /** Backfills the profile display name from Firebase if it is currently blank. */
     private void ensureProfileDisplayName(UUID userId, String displayName) {
         if (displayName == null || displayName.isBlank()) {
             return;
@@ -79,6 +90,7 @@ public class AuthSyncService {
         }
     }
 
+    /** Promotes the user to a staff role if the verified email matches the server allowlist. */
     private User reconcileStaffRole(User user, String email) {
         UserRole staffRole = staffRoleProperties.roleFor(email);
         if (staffRole != null && staffRole != user.getRole()) {
@@ -88,6 +100,7 @@ public class AuthSyncService {
         return user;
     }
 
+    /** Finds an existing user by email or creates a new one, handling concurrent sync races. */
     private User createUserIfAbsent(String firebaseUid, String email, AuthSyncRequest request) {
         return userRepository.findByEmail(email)
                 .map(user -> relinkExistingEmailUser(user, firebaseUid))
@@ -113,6 +126,7 @@ public class AuthSyncService {
                 .orElseThrow(() -> new IllegalStateException("Auth sync failed to create or load the internal user."));
     }
 
+    /** Re-links an existing email-matched user to a new Firebase UID after account recreation. */
     private User relinkExistingEmailUser(User user, String firebaseUid) {
         if (!firebaseUid.equals(user.getFirebaseUid())) {
             // Firebase verified emails are unique in the project, so email is the stable account

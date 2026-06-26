@@ -2,6 +2,9 @@ package com.edulife.courses.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+/**
+ * Configuration properties for local course cover image storage under {@code edulife.course-covers.*}.
+ */
 @ConfigurationProperties(prefix = "edulife.course-covers")
 public class CourseCoverStorageProperties {
 

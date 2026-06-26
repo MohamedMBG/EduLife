@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.util.UUID;
 
+/** JPA entity representing an answer choice for an exam question; the {@code correct} flag is never sent to clients. */
 @Entity
 @Table(name = "exam_choices")
 public class ExamChoice {

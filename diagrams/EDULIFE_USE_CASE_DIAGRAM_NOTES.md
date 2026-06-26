@@ -5,6 +5,8 @@
 - **PlantUML source:** `diagrams/edulife-use-case-diagram.puml`
 - **Rendered output:** `diagrams/edulife-use-case-diagram.png` / `.svg`
 
+The current French diagram is intentionally more compact than the earlier exhaustive version: several closely related actions are grouped into broader use cases so the final shape stays less vertical and more rectangular for report use.
+
 ---
 
 ## Actors Identified
@@ -13,8 +15,7 @@
 
 | Actor | Role | Source |
 |-------|------|--------|
-| **Visitor** | Unauthenticated user. Can browse courses and verify certificates publicly. | Public endpoints in `CertificateController`, `CourseController` |
-| **Learner (Apprenant)** | Registered user with LEARNER role. Core consumer of learning content. Inherits from Visitor. | `UserRole.LEARNER` — default role on registration |
+| **Learner (Apprenant)** | Registered user with LEARNER role. Core consumer of learning content. In the current French diagram, public discovery and certificate verification are grouped under this actor because the separate Visitor actor was removed. | `UserRole.LEARNER` — default role on registration |
 | **Teacher (Enseignant)** | Content creator with TEACHER role. Creates courses, sections, lessons, and exams via CMS. | `UserRole.TEACHER` — granted after admin-approved teacher request |
 | **Group Administrator** | Institute/organization manager with GROUP_ADMIN role. Manages groups, members, and course approvals within their institute. | `UserRole.GROUP_ADMIN` — assigned by platform admin |
 | **Platform Administrator** | System-wide supervisor with ADMIN role. Manages users, reviews teacher applications, publishes courses, and monitors platform metrics. | `UserRole.ADMIN` — assigned via `StaffRoleProperties` config |
@@ -23,7 +24,7 @@
 
 | System | Role | Source |
 |--------|------|--------|
-| **Firebase Authentication Service** | Handles user registration, login, email verification, and token generation. Backend validates tokens server-side via Firebase Admin SDK. | `FirebaseConfig.java`, `FirebaseTokenFilter.java`, `FirebaseAuthInterceptor.java` |
+| **Firebase Authentication Service** | Handles user registration, login, email verification, and token generation. Backend validates tokens server-side via Firebase Admin SDK. In the current diagram it is rendered as a rectangle rather than a stickman. | `FirebaseConfig.java`, `FirebaseTokenFilter.java`, `FirebaseAuthInterceptor.java` |
 | **Cloudinary Media Storage** | Stores course cover images and user avatar uploads. Backend integrates via Cloudinary SDK with local fallback for development. | `CloudinaryConfig.java`, `CloudinaryStorageService.java` |
 | **Groq LLM AI Service** | Powers the Career Advisor feature. Backend sends learner goals + course catalog to Groq API, receives AI-generated course recommendations. | `GroqLlmClient.java`, `AdvisorService.java` |
 
@@ -140,11 +141,11 @@ Insert the PNG image directly. Use landscape orientation if needed for readabili
 
 ## Density Warning
 
-This diagram contains **5 human actors**, **3 external systems**, and **~40 use cases** across two service groups. On a single A4 page in portrait mode, labels may become small.
+This diagram contains **4 human actors**, **3 external systems**, and **~40 use cases** across two service groups. On a single A4 page in portrait mode, labels may become small.
 
 **Recommendations:**
 1. Use **landscape A4** for the single combined diagram
 2. Alternatively, split into **two separate diagrams**:
-   - Diagram A: Learning & Certification Service (Visitor, Learner + external systems)
+   - Diagram A: Learning & Certification Service (Learner + external systems)
    - Diagram B: Content, Group & Administration Service (Teacher, Group Admin, Platform Admin)
 3. For the report, the combined diagram provides better overview; split diagrams provide better readability

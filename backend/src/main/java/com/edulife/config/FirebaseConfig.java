@@ -18,6 +18,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+/**
+ * Initializes the Firebase Admin SDK from configured credentials and exposes
+ * {@link FirebaseAuth} for token verification across all protected endpoints.
+ */
 @Configuration
 @EnableConfigurationProperties(FirebaseAdminProperties.class)
 @Profile("!test")
@@ -45,6 +49,7 @@ public class FirebaseConfig {
         }
     }
 
+    /** Opens a credentials stream from raw JSON or a file path, failing fast if neither is set. */
     private InputStream openCredentialsStream(FirebaseAdminProperties properties) throws IOException {
         String credentialsJson = properties.getCredentialsJson();
         if (credentialsJson != null && !credentialsJson.isBlank()) {

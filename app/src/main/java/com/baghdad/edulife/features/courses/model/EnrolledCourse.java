@@ -1,5 +1,8 @@
 package com.baghdad.edulife.features.courses.model;
 
+/**
+ * DTO representing a course the learner is enrolled in, combining enrollment metadata with course summary fields.
+ */
 public class EnrolledCourse {
     public String enrollmentId;
     public String courseId;

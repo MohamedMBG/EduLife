@@ -31,8 +31,13 @@ public class AdminUserService {
         this.userRepository = userRepository;
     }
 
+    /**
+     * Lists users with optional role filter, paginated and sorted by creation date.
+     *
+     * @param roleFilter optional role to filter by; {@code null} returns all users
+     * @param pageable   page request (capped at {@value MAX_PAGE_SIZE} per page)
+     */
     @Transactional(readOnly = true)
-    // Reading all users is safe as read-only; no accidental flush happens during the transaction.
     public Page<UserSummaryDto> listUsers(UserRole roleFilter, Pageable pageable) {
         Pageable sanitized = sanitize(pageable);
 
@@ -43,10 +48,12 @@ public class AdminUserService {
         return page.map(this::toDto);
     }
 
+    /**
+     * Changes the role of an existing user, blocking demotion of the last ADMIN.
+     *
+     * @throws ResponseStatusException 404 if user not found, 409 if demoting the last admin
+     */
     @Transactional
-    // A separate write transaction ensures the role change is committed before the response
-    // is sent, preventing a partial-success scenario where the response claimed success but
-    // the DB row was never updated.
     public UserSummaryDto changeRole(UUID userId, ChangeRoleRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));

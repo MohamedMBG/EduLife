@@ -6,6 +6,9 @@ import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * JPA entity representing a learner's request to be promoted to the teacher role.
+ */
 @Entity
 @Table(name = "teacher_requests")
 public class TeacherRequest {

@@ -9,6 +9,11 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * JPA entity tracking aggregate lesson-completion counts for a learner in a course.
+ *
+ * <p>Updated whenever a lesson is completed or when enrollment initializes progress.</p>
+ */
 @Entity
 @Table(name = "course_progress")
 public class CourseProgress {
@@ -43,6 +48,7 @@ public class CourseProgress {
         this.lastUpdatedAt    = Instant.now();
     }
 
+    /** Refreshes the completed and total lesson counts and updates the timestamp. */
     public void update(int completedLessons, int totalLessons) {
         this.completedLessons = completedLessons;
         this.totalLessons     = totalLessons;

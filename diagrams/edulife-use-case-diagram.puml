@@ -1,9 +1,4 @@
-@startuml EduLifeUseCase
-
-' ──────────────────────────────────────────────────
-'  EduLife — Plateforme de formation en ligne
-'  UML Use Case Diagram
-' ──────────────────────────────────────────────────
+@startuml EduLifeUseCaseFr
 
 left to right direction
 scale max 2480x3508
@@ -13,14 +8,14 @@ skinparam shadowing false
 skinparam defaultFontName "Serif"
 skinparam defaultFontSize 12
 skinparam dpi 200
-skinparam Padding 2
-skinparam Nodesep 10
-skinparam Ranksep 30
+skinparam nodesep 22
+skinparam ranksep 30
+skinparam linetype ortho
 
 skinparam rectangle {
     BackgroundColor White
     BorderColor Black
-    FontSize 20
+    FontSize 18
     FontStyle bold
 }
 
@@ -46,177 +41,142 @@ skinparam actor {
 skinparam ArrowColor Black
 skinparam ArrowFontSize 9
 
-' ════════════════════════════════
-'  LEFT ACTORS
-' ════════════════════════════════
+actor "Apprenant" as Learner
+actor "Enseignant" as Teacher
+actor "Admin\nGroupe" as GroupAdmin
+actor "Admin\nPlateforme" as PlatformAdmin
 
-actor "Visitor" as V
-actor "Learner" as L
-actor "Teacher" as T
-actor "Group\nAdmin" as GA
-actor "Platform\nAdmin" as PA
+rectangle "Firebase\nAuthentication" as Firebase
+actor "Stockage\nCloudinary" as Cloudinary
+actor "Service IA\nGroq" as Groq
 
-L --|> V
+rectangle "                            Systeme EduLife                            " {
 
-' ════════════════════════════════
-'  RIGHT ACTORS (External Systems)
-' ════════════════════════════════
+    package "Service d'apprentissage et de certification" {
+        (S'inscrire\net verifier l'e-mail) as L1
+        (Se connecter\net synchroniser l'identite) as L2
+        (Gerer le profil\net l'avatar) as L3
+        (Parcourir les cours\net voir le detail) as L4
+        (S'inscrire\na un cours) as L5
+        (Acceder aux lecons\net suivre la progression) as L6
+        (Passer et soumettre\nl'examen QCM) as L7
+        (Consulter le resultat\net generer le certificat) as L8
+        (Telecharger ou verifier\nun certificat) as L9
+        (Consulter la gamification\net le classement) as L10
+        (Consulter les analytics\napprenant) as L11
+        (Utiliser le planner\nd'etude) as L12
+        (Utiliser l'advisor\ncarriere) as L13
 
-actor "Firebase\nAuthentication" as FB
-actor "Cloudinary\nStorage" as CL
-actor "Groq LLM\nAI Service" as AI
+        L1 -[hidden]right- L8
+        L2 -[hidden]right- L9
+        L3 -[hidden]right- L10
+        L4 -[hidden]right- L11
+        L5 -[hidden]right- L12
+        L6 -[hidden]right- L13
 
-' ════════════════════════════════
-'  SYSTEM BOUNDARY
-' ════════════════════════════════
+        L1 -[hidden]down- L2
+        L2 -[hidden]down- L3
+        L3 -[hidden]down- L4
+        L4 -[hidden]down- L5
+        L5 -[hidden]down- L6
+        L6 -[hidden]down- L7
 
-rectangle "                                          EduLife System                                          " {
-
-    package "Learning & Certification Service" {
-        (Register) as UC1
-        (Log In) as UC2
-        (Verify Email) as UC3
-        (Sync Identity) as UC4
-        (Manage Profile) as UC5
-        (Upload Avatar) as UC6
-        (Browse Courses) as UC7
-        (View Course Details) as UC8
-        (Enroll in Course) as UC9
-        (Access Lessons) as UC10
-        (Complete Lesson) as UC11
-        (Track Progress) as UC12
-        (Take MCQ Exam) as UC13
-        (Submit Exam) as UC14
-        (View Result) as UC15
-        (Generate Certificate) as UC16
-        (Download Certificate) as UC17
-        (Verify Certificate) as UC18
-        (View Gamification) as UC19
-        (View Leaderboard) as UC20
-        (View Learner Analytics) as UC21
-        (Use Study Planner) as UC22
-        (Use Career Advisor) as UC23
+        L8 -[hidden]down- L9
+        L9 -[hidden]down- L10
+        L10 -[hidden]down- L11
+        L11 -[hidden]down- L12
+        L12 -[hidden]down- L13
     }
 
-    package "Content, Group & Administration Service" {
-        (Apply as Teacher) as UC24
-        (Review Teacher Requests) as UC25
-        (Create Course) as UC26
-        (Manage Sections & Lessons) as UC27
-        (Upload Cover Image) as UC28
-        (Create Final Exam) as UC29
-        (Publish Course) as UC30
-        (Archive Course) as UC31
-        (View Teacher Analytics) as UC32
-        (Create Group) as UC33
-        (Manage Group Members) as UC34
-        (Approve Join Requests) as UC35
-        (Attach Courses to Group) as UC36
-        (Approve Group Courses) as UC37
-        (View Group Analytics) as UC38
-        (Manage Users & Roles) as UC39
-        (View Platform Metrics) as UC40
-        (View Platform Analytics) as UC41
-        (Delete Account) as UC42
+    package "Service contenu, groupe et administration" {
+        (Demander le role\nd'enseignant) as C1
+        (Creer un cours) as C2
+        (Gerer sections, lecons\net image de couverture) as C3
+        (Creer l'examen final) as C4
+        (Consulter les analytics\nenseignant) as C5
+        (Creer un groupe) as C6
+        (Gerer les membres\net les adhesions) as C7
+        (Attacher et approuver\nles cours du groupe) as C8
+        (Consulter les analytics\ndu groupe) as C9
+        (Examiner les demandes\nd'enseignant) as C10
+        (Publier ou archiver\nun cours) as C11
+        (Gerer les utilisateurs\net les roles) as C12
+        (Consulter les metriques\net analytics plateforme) as C13
+        (Supprimer le compte) as C14
+
+        C1 -[hidden]right- C8
+        C2 -[hidden]right- C9
+        C3 -[hidden]right- C10
+        C4 -[hidden]right- C11
+        C5 -[hidden]right- C12
+        C6 -[hidden]right- C13
+        C7 -[hidden]right- C14
+
+        C1 -[hidden]down- C2
+        C2 -[hidden]down- C3
+        C3 -[hidden]down- C4
+        C4 -[hidden]down- C5
+        C5 -[hidden]down- C6
+        C6 -[hidden]down- C7
+
+        C8 -[hidden]down- C9
+        C9 -[hidden]down- C10
+        C10 -[hidden]down- C11
+        C11 -[hidden]down- C12
+        C12 -[hidden]down- C13
+        C13 -[hidden]down- C14
     }
 }
 
-' ════════════════════════════════
-'  VISITOR LINKS
-' ════════════════════════════════
+Learner -- L1
+Learner -- L2
+Learner -- L3
+Learner -- L4
+Learner -- L5
+Learner -- L6
+Learner -- L7
+Learner -- L8
+Learner -- L9
+Learner -- L10
+Learner -- L11
+Learner -- L12
+Learner -- L13
+Learner -- C1
+Learner -- C14
 
-V -- UC1
-V -- UC2
-V -- UC7
-V -- UC18
+Teacher -- L2
+Teacher -- C2
+Teacher -- C3
+Teacher -- C4
+Teacher -- C5
 
-' ════════════════════════════════
-'  LEARNER LINKS
-' ════════════════════════════════
+GroupAdmin -- L2
+GroupAdmin -- C6
+GroupAdmin -- C7
+GroupAdmin -- C8
+GroupAdmin -- C9
 
-L -- UC5
-L -- UC9
-L -- UC10
-L -- UC13
-L -- UC17
-L -- UC19
-L -- UC20
-L -- UC21
-L -- UC22
-L -- UC23
-L -- UC24
-L -- UC42
+PlatformAdmin -- L2
+PlatformAdmin -- C10
+PlatformAdmin -- C11
+PlatformAdmin -- C12
+PlatformAdmin -- C13
 
-' ════════════════════════════════
-'  TEACHER LINKS
-' ════════════════════════════════
+L1 -- Firebase
+L2 -- Firebase
 
-T -- UC2
-T -- UC26
-T -- UC27
-T -- UC29
-T -- UC28
-T -- UC32
+L3 -- Cloudinary
+C3 -- Cloudinary
 
-' ════════════════════════════════
-'  GROUP ADMIN LINKS
-' ════════════════════════════════
+L13 -- Groq
 
-GA -- UC2
-GA -- UC33
-GA -- UC34
-GA -- UC35
-GA -- UC36
-GA -- UC37
-GA -- UC38
-
-' ════════════════════════════════
-'  PLATFORM ADMIN LINKS
-' ════════════════════════════════
-
-PA -- UC2
-PA -- UC25
-PA -- UC30
-PA -- UC31
-PA -- UC39
-PA -- UC40
-PA -- UC41
-
-' ════════════════════════════════
-'  EXTERNAL SYSTEM LINKS
-' ════════════════════════════════
-
-UC2 -- FB
-UC1 -- FB
-UC4 -- FB
-UC3 -- FB
-
-UC28 -- CL
-UC6 -- CL
-
-UC23 -- AI
-
-' ════════════════════════════════
-'  <<include>> RELATIONSHIPS
-' ════════════════════════════════
-
-UC2 .> UC4 : <<include>>
-UC1 .> UC3 : <<include>>
-UC13 .> UC14 : <<include>>
-UC14 .> UC15 : <<include>>
-UC11 .> UC12 : <<include>>
-UC26 .> UC27 : <<include>>
-
-' ════════════════════════════════
-'  <<extend>> RELATIONSHIPS
-' ════════════════════════════════
-
-UC15 .> UC16 : <<extend>>
-UC16 .> UC17 : <<extend>>
-UC7 .> UC8 : <<extend>>
-UC5 .> UC6 : <<extend>>
-UC26 .> UC28 : <<extend>>
-UC9 .> UC10 : <<extend>>
-UC10 .> UC11 : <<extend>>
+L5 .> L4 : <<extend>>
+L6 .> L5 : <<extend>>
+L7 .> L6 : <<extend>>
+L8 .> L7 : <<include>>
+L9 .> L8 : <<extend>>
+C3 .> C2 : <<include>>
+C8 .> C6 : <<extend>>
+C11 .> C2 : <<extend>>
 
 @enduml

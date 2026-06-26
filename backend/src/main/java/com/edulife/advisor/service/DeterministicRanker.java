@@ -9,6 +9,10 @@ import java.util.List;
 import java.util.Set;
 import org.springframework.stereotype.Component;
 
+/**
+ * Keyword-based course ranker that scores courses against extracted intent keywords,
+ * weighting matches in title, tags, description, and lesson titles.
+ */
 @Component
 public class DeterministicRanker {
 
@@ -21,6 +25,7 @@ public class DeterministicRanker {
 
     private static final int MAX_SHORTLIST = 5;
 
+    /** Scores and ranks all catalog courses by keyword relevance, returning only those with a positive score. */
     public List<ScoredCourse> rank(List<CourseContextDto> catalog, IntentResult intent) {
         List<ScoredCourse> scored = new ArrayList<>();
 
@@ -35,6 +40,7 @@ public class DeterministicRanker {
         return scored;
     }
 
+    /** Returns the top-N ranked courses, falling back to the first N catalog entries if no keywords match. */
     public List<ScoredCourse> shortlist(List<CourseContextDto> catalog, IntentResult intent) {
         List<ScoredCourse> ranked = rank(catalog, intent);
         if (ranked.isEmpty()) {
@@ -46,6 +52,7 @@ public class DeterministicRanker {
         return ranked.stream().limit(MAX_SHORTLIST).toList();
     }
 
+    /** Computes a weighted relevance score for a single course based on keyword matches across its fields. */
     private ScoredCourse scoreCourse(CourseContextDto course, IntentResult intent) {
         Set<String> expandedKeywords = intent.expandedKeywords();
         Set<String> directKeywords = intent.keywords();
@@ -118,5 +125,6 @@ public class DeterministicRanker {
         return s == null ? "" : s;
     }
 
+    /** A course paired with its computed relevance score and the set of keywords that matched. */
     public record ScoredCourse(CourseContextDto course, int score, Set<String> matchedKeywords) {}
 }

@@ -5,6 +5,12 @@ import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * JPA entity mapped to the {@code courses} table.
+ *
+ * <p>Represents an e-learning course with lifecycle states (DRAFT, PUBLISHED, ARCHIVED)
+ * and ownership tracked via {@code createdByUserId}.
+ */
 @Entity
 @Table(name = "courses")
 public class Course {

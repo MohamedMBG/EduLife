@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 
+/** JPA entity representing an institute group, owned by the user who created it. */
 @Entity
 @Table(name = "groups")
 public class Group {

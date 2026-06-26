@@ -14,6 +14,10 @@ import com.baghdad.edulife.features.courses.model.CourseSummary;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * RecyclerView adapter that displays a list of course summaries using either a featured
+ * or standard card layout, with click handling to open a course's detail screen.
+ */
 public class CourseAdapter extends RecyclerView.Adapter<CourseAdapter.CourseViewHolder> {
 
     public interface OnCourseClickListener {
@@ -87,6 +91,10 @@ public class CourseAdapter extends RecyclerView.Adapter<CourseAdapter.CourseView
             });
         }
 
+        /**
+         * Applies level-specific background drawable and text color to the level badge
+         * (beginner=green, intermediate=orange, advanced=red).
+         */
         private void applyLevelStyle(String level) {
             int bgRes;
             int textColor;

@@ -9,6 +9,11 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * JPA entity mapped to the {@code course_sections} table.
+ *
+ * <p>Groups lessons within a course and controls their display ordering.
+ */
 @Entity
 @Table(name = "course_sections")
 public class CourseSection {

@@ -18,6 +18,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Service that handles account deletion by anonymizing local data and removing the Firebase identity.
+ */
 @Service
 public class AccountService {
 

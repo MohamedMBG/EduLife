@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+/** Spring Data repository for certificates, supporting ownership checks, verification lookups, and analytics counts. */
 public interface CertificateRepository extends JpaRepository<Certificate, UUID> {
     List<Certificate> findAllByUserId(UUID userId);
     boolean existsByUserIdAndCourseId(UUID userId, UUID courseId);

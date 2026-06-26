@@ -6,6 +6,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * Registers avatar storage properties and serves uploaded avatar files as static resources.
+ */
 @Configuration
 @EnableConfigurationProperties(AvatarStorageProperties.class)
 public class AvatarStorageConfig implements WebMvcConfigurer {

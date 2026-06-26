@@ -1,5 +1,6 @@
 package com.baghdad.edulife.features.courses.model;
 
+/** Immutable UI state for the exam status check, representing idle, loading, success, or error states. */
 public class ExamStatusUiState {
     public final boolean loading;
     public final ExamStatusResponse status;

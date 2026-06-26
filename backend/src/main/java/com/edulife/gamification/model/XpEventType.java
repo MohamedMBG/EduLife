@@ -1,5 +1,9 @@
 package com.edulife.gamification.model;
 
+/**
+ * Enumeration of all XP-awarding events with their fixed point values.
+ * These values are the single source of truth shared across Android and Web.
+ */
 public enum XpEventType {
     LESSON_COMPLETED(25),
     COURSE_COMPLETED(100),

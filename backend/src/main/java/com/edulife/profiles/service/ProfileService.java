@@ -22,6 +22,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Service handling profile retrieval, updates, and avatar uploads for the authenticated user.
+ * Profiles are lazily created on first access.
+ */
 @Service
 public class ProfileService {
 
@@ -47,12 +51,14 @@ public class ProfileService {
         this.avatarStorage = avatarStorage;
     }
 
+    /** Returns the authenticated user's profile, creating one lazily if it does not exist. */
     public ProfileDto getProfile() {
         User user = resolveCurrentUser();
         Profile profile = findOrCreateProfile(user.getId());
         return toDto(user, profile);
     }
 
+    /** Updates display name and bio for the authenticated user's profile. */
     @Transactional
     public ProfileDto updateProfile(UpdateProfileRequest request) {
         User user = resolveCurrentUser();
@@ -62,6 +68,7 @@ public class ProfileService {
         return toDto(user, profile);
     }
 
+    /** Stores a new avatar image, updates the profile URL, and deletes the previous avatar if any. */
     @Transactional
     public AvatarUploadResponse uploadAvatar(MultipartFile file) {
         User user = resolveCurrentUser();

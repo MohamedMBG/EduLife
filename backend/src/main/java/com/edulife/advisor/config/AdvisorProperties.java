@@ -3,6 +3,7 @@ package com.edulife.advisor.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "edulife.advisor")
+/** Externalized configuration properties for the advisor module (prefix {@code edulife.advisor}). */
 public class AdvisorProperties {
 
     private String provider = "stub";

@@ -44,6 +44,7 @@ public class StaffRoleProperties {
         return null;
     }
 
+    /** A single email-to-role mapping in the staff allowlist. */
     public static class Entry {
         private String email;
         private UserRole role;

@@ -14,6 +14,10 @@ import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Append-only XP event record. Each row represents a single XP award with a unique
+ * {@code dedup_key} to guarantee idempotent emission across concurrent writers.
+ */
 @Entity
 @Table(
         name = "gamification_xp_events",

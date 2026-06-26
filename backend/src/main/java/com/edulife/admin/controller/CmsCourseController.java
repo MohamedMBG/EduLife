@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+/** REST controller for CMS course lifecycle operations (create, update, publish, archive). */
 @RestController
 @RequestMapping("/api/v1/cms/courses")
 // TEACHER, GROUP_ADMIN, and ADMIN can create/edit courses; per-course ownership is enforced in the service layer.

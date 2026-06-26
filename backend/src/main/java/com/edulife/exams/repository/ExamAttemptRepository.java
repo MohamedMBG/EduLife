@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+/** Spring Data repository for exam attempts, providing pass/fail checks, cooldown queries, and analytics aggregates. */
 public interface ExamAttemptRepository extends JpaRepository<ExamAttempt, UUID> {
     boolean existsByUserIdAndExamIdAndPassedTrue(UUID userId, UUID examId);
 

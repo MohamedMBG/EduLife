@@ -20,6 +20,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Service for retrieving lesson content with enrollment and preview access checks.
+ */
 @Service
 public class LessonService {
 
@@ -44,6 +47,12 @@ public class LessonService {
         this.userRepository           = userRepository;
     }
 
+    /**
+     * Returns full lesson detail for an authenticated learner.
+     * Non-preview lessons require an active enrollment; preview lessons require the course to be published.
+     *
+     * @throws ResponseStatusException 404 if lesson/section not found, 403 if not enrolled
+     */
     public LessonDetailDto getLessonDetail(UUID courseId, UUID lessonId) {
         Lesson lesson = lessonRepository.findByIdAndCourseId(lessonId, courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lesson not found"));
@@ -88,6 +97,7 @@ public class LessonService {
         );
     }
 
+    /** Resolves the internal {@link User} from the current Firebase security context. */
     private User resolveCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (!(auth instanceof FirebaseAuthentication firebaseAuth)) {

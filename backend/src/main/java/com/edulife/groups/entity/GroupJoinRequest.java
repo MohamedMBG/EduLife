@@ -13,6 +13,7 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 
+/** JPA entity tracking a teacher's request to join an institute group, with approval/rejection workflow. */
 @Entity
 @Table(name = "group_join_requests")
 public class GroupJoinRequest {

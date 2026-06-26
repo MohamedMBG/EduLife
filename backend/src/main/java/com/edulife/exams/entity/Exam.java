@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.util.UUID;
 
+/** JPA entity representing a course exam with a configurable pass score and optional time limit. */
 @Entity
 @Table(name = "exams")
 public class Exam {

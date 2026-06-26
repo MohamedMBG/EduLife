@@ -29,6 +29,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
+/**
+ * Core service for certificate lifecycle: generation after exam pass, retrieval, PDF download, and verification.
+ *
+ * <p>Certificates are only issued server-side after a passing exam attempt. Point-in-time snapshots of
+ * learner, teacher, and course data are stored so the credential remains accurate regardless of future
+ * profile or course edits. Historical rows missing snapshot data are resolved on read from live sources.</p>
+ */
 @Service
 @EnableConfigurationProperties(CertificateStorageProperties.class)
 public class CertificateService {
@@ -57,6 +64,10 @@ public class CertificateService {
         this.storageProperties = storageProperties;
     }
 
+    /**
+     * Generates a certificate after a successful exam pass, or returns an existing one if already issued.
+     * Snapshots learner/teacher/course data, persists the certificate, and best-effort pre-renders the PDF.
+     */
     public CertificateDetailDto generateCertificateAfterExamPass(UUID userId, UUID courseId, UUID examAttemptId) {
         if (certificateRepository.existsByUserIdAndCourseId(userId, courseId)) {
             Certificate existing = certificateRepository.findByUserIdAndCourseId(userId, courseId)
@@ -96,18 +107,21 @@ public class CertificateService {
         return toDetailDto(cert);
     }
 
+    /** Returns all certificates for a learner as summary DTOs. */
     public List<CertificateSummaryDto> getMyCertificates(UUID userId) {
         return certificateRepository.findAllByUserId(userId).stream()
                 .map(this::toSummaryDto)
                 .toList();
     }
 
+    /** Returns a single certificate's details; only the owning learner may access it. */
     public CertificateDetailDto getCertificateById(UUID userId, UUID certificateId) {
         Certificate cert = certificateRepository.findByIdAndUserId(certificateId, userId)
                 .orElseThrow(() -> new CertificateNotFoundException("Certificate not found"));
         return toDetailDto(cert);
     }
 
+    /** Verifies a certificate's authenticity by its SHA-256 verification hash (public, no auth required). */
     public CertificateVerificationDto verifyCertificate(String verificationHash) {
         Certificate cert = certificateRepository.findByVerificationHash(verificationHash)
                 .orElseThrow(() -> new CertificateNotFoundException("Certificate not found for the given verification hash"));
@@ -124,6 +138,10 @@ public class CertificateService {
         );
     }
 
+    /**
+     * Regenerates and returns the PDF bytes for download, verifying ownership and downloadability.
+     * The PDF is rendered on demand from the snapshot rather than reading a stored file.
+     */
     public byte[] getCertificatePdfForDownload(UUID userId, UUID certificateId) {
         // Look up by id first so we can distinguish "missing" (404) from "owned by another learner"
         // (403) instead of collapsing both into a not-found.
@@ -162,6 +180,7 @@ public class CertificateService {
         return resolveUserDisplayName(course.getCreatedByUserId(), "EduLife Instructor");
     }
 
+    /** Resolves a display name from profile, then email, falling back to the provided default. */
     private String resolveUserDisplayName(UUID userId, String fallbackName) {
         String profileName = profileRepository.findByUserId(userId)
                 .map(Profile::getDisplayName)
@@ -198,6 +217,7 @@ public class CertificateService {
         return value == null || value.isBlank() ? fallback : value;
     }
 
+    /** Generates a SHA-256 verification hash from the certificate number, user ID, and course ID. */
     private String generateVerificationHash(String certificateNumber, UUID userId, UUID courseId) {
         try {
             String raw = certificateNumber + ":" + userId + ":" + courseId;
@@ -261,6 +281,7 @@ public class CertificateService {
         );
     }
 
+    /** Resolves certificate display data, filling missing snapshots from live sources for historical rows. */
     private ResolvedCertificateData resolveCertificateData(Certificate cert) {
         Course course = null;
         if (hasMissingCourseOrTeacherSnapshot(cert)) {
@@ -297,6 +318,7 @@ public class CertificateService {
         return id.toString().substring(0, 8);
     }
 
+    /** Internal record holding resolved display names and course info for a certificate. */
     private record ResolvedCertificateData(
             String learnerName,
             String teacherName,

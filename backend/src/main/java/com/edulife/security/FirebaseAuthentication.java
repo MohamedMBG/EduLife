@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 
+/** Spring Security authentication token carrying the verified Firebase user identity. */
 public class FirebaseAuthentication extends AbstractAuthenticationToken {
 
     private final String firebaseUid;

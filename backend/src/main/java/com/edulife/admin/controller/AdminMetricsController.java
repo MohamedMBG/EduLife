@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/** REST controller exposing platform-wide metrics for the admin dashboard. */
 @RestController
 @RequestMapping("/api/v1/admin/metrics")
 @PreAuthorize("hasRole('ADMIN')")

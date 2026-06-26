@@ -3,6 +3,9 @@ package com.baghdad.edulife.features.courses.model;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Immutable UI state for the course catalog screen, tracking the loaded course list, active category filter, and loading/error status.
+ */
 public class CourseCatalogUiState {
     public final boolean loading;
     public final List<CourseSummary> courses;

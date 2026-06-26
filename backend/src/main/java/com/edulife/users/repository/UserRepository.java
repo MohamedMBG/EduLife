@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+/** Spring Data repository for {@link User} entities, with lookups by Firebase UID and email. */
 public interface UserRepository extends JpaRepository<User, UUID> {
 
     Optional<User> findByFirebaseUid(String firebaseUid);
@@ -22,6 +23,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     boolean existsByEmail(String email);
 
+    /** Idempotent upsert used during auth sync; inserts a new user row only if the Firebase UID is absent. */
     @Modifying
     @Query(value = """
             INSERT INTO users (id, firebase_uid, email, role)

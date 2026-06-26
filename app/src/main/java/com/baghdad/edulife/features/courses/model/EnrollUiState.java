@@ -1,5 +1,8 @@
 package com.baghdad.edulife.features.courses.model;
 
+/**
+ * Immutable UI state for the enrollment action, distinguishing between new enrollment, duplicate enrollment (HTTP 409), and error outcomes.
+ */
 public class EnrollUiState {
     public final boolean loading;
     public final boolean enrolled;

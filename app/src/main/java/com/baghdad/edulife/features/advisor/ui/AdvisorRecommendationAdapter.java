@@ -14,9 +14,14 @@ import com.baghdad.edulife.features.advisor.model.AdvisorRecommendation;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * RecyclerView adapter that displays advisor course recommendations, styling the first
+ * item as "Best Match" and subsequent items as alternatives.
+ */
 public class AdvisorRecommendationAdapter
         extends RecyclerView.Adapter<AdvisorRecommendationAdapter.ViewHolder> {
 
+    /** Listener invoked when a recommendation card is tapped. */
     public interface OnRecommendationClickListener {
         void onRecommendationClick(AdvisorRecommendation recommendation);
     }

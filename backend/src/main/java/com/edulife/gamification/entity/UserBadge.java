@@ -11,6 +11,10 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
+/**
+ * JPA entity recording that a learner has unlocked a specific badge. Uses a composite
+ * primary key of (user_id, badge_id) to prevent duplicate unlocks.
+ */
 @Entity
 @Table(name = "user_badges")
 public class UserBadge {
@@ -47,6 +51,7 @@ public class UserBadge {
         return unlockedAt;
     }
 
+    /** Composite primary key pairing a user with a badge identifier. */
     @Embeddable
     public static class Key implements Serializable {
 

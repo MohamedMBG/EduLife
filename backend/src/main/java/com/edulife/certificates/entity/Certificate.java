@@ -10,6 +10,12 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * JPA entity representing an issued certificate with point-in-time snapshots of learner, teacher, and course data.
+ *
+ * <p>Snapshots preserve the certificate as it was issued, even if profiles or course metadata change later.
+ * Legacy columns from earlier schema versions are read as fallbacks via {@link #firstPresent}.</p>
+ */
 @Entity
 @Table(name = "certificates")
 public class Certificate {

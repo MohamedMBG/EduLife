@@ -1,16 +1,20 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { ArrowLeft } from "lucide-react";
 import { AppLayout } from "../components/app/AppLayout";
 import {
   getCourseProgress,
-  getProfile,
+  getGamificationState,
   listMyCertificates,
   listMyEnrollments,
 } from "../lib/api/client";
 import { RequireAuth, useAuth } from "../lib/auth/auth-context";
-import type { Certificate, CourseProgress, EnrolledCourse, Profile } from "../lib/api/types";
+import type {
+  Certificate,
+  CourseProgress,
+  EnrolledCourse,
+  GamificationState,
+} from "../lib/api/types";
 
 // Level subcomponents
 import { RankCard } from "../components/level/RankCard";
@@ -24,14 +28,10 @@ import { LevelSkeleton, EmptyState } from "../components/level/LevelStates";
 
 // Types and constants
 import {
-  LevelState,
-  LEVEL_THRESHOLDS,
+  type LevelState,
   XP_LESSON_COMPLETE,
-  XP_ENROLLMENT,
   XP_PER_CERTIFICATE_BUNDLE,
-  XP_STREAK_3_BONUS,
-  XP_STREAK_7_BONUS,
-  ActivityCollections,
+  type ActivityCollections,
 } from "../components/level/level-types";
 
 export const Route = createFileRoute("/level")({
@@ -39,7 +39,7 @@ export const Route = createFileRoute("/level")({
   head: () => ({ meta: [{ title: "Level & Progress — EduLife" }] }),
 });
 
-// ─── derivation helpers ────────────────────────────────────────────────────────
+// ─── display helpers (activity feed + weekly chart only) ─────────────────────
 
 function startOfDay(d: Date) {
   const x = new Date(d);
@@ -47,56 +47,9 @@ function startOfDay(d: Date) {
   return x;
 }
 
-function deriveLevel(totalXp: number) {
-  let level = 1;
-  for (let i = 1; i < LEVEL_THRESHOLDS.length; i++) {
-    if (totalXp >= LEVEL_THRESHOLDS[i]) level = i + 1;
-  }
-  level = Math.min(level, LEVEL_THRESHOLDS.length);
-  const isMax = level >= LEVEL_THRESHOLDS.length;
-  const lower = LEVEL_THRESHOLDS[level - 1];
-  const upper = isMax ? lower + 5000 : LEVEL_THRESHOLDS[level];
-  const xpInto = Math.max(0, totalXp - lower);
-  const xpRequired = Math.max(1, upper - lower);
-  return { level, xpInto, xpRequired, isMax };
-}
-
-function computeStreak(daysSet: Set<string>) {
-  if (daysSet.size === 0) return 0;
-  const today = startOfDay(new Date());
-  let streak = 0;
-  let start = 0;
-
-  if (!daysSet.has(today.toDateString())) {
-    // streak is allowed to ignore today before midnight; keep yesterday's run alive
-    start = 1;
-  }
-
-  for (let i = start; i < 365; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
-    if (daysSet.has(d.toDateString())) streak++;
-    else break;
-  }
-  return streak;
-}
-
-function computeLongestStreak(dates: Date[]) {
-  if (dates.length === 0) return 0;
-  const uniq = Array.from(new Set(dates.map((d) => startOfDay(d).getTime()))).sort((a, b) => a - b);
-  let longest = 1;
-  let current = 1;
-  for (let i = 1; i < uniq.length; i++) {
-    if (uniq[i] - uniq[i - 1] === 86400000) current++;
-    else current = 1;
-    if (current > longest) longest = current;
-  }
-  return longest;
-}
-
 function buildWeekWindow() {
   const today = startOfDay(new Date());
-  const dow = today.getDay(); // 0=Sun..6=Sat
+  const dow = today.getDay();
   const offsetToMonday = dow === 0 ? -6 : 1 - dow;
   const monday = new Date(today);
   monday.setDate(today.getDate() + offsetToMonday);
@@ -107,45 +60,6 @@ function buildWeekWindow() {
     d.setDate(monday.getDate() + i);
     return { date: d, label, key: d.toDateString() };
   });
-}
-
-function countStreakBonuses(dates: Date[]) {
-  if (dates.length === 0) return { three: 0, seven: 0 };
-  const uniq = Array.from(new Set(dates.map((d) => startOfDay(d).getTime()))).sort((a, b) => a - b);
-  let three = 0;
-  let seven = 0;
-  let runLen = 1;
-  for (let i = 1; i <= uniq.length; i++) {
-    const continued = i < uniq.length && uniq[i] - uniq[i - 1] === 86400000;
-    if (continued) {
-      runLen++;
-    } else {
-      if (runLen >= 3) three++;
-      if (runLen >= 7) seven++;
-      runLen = 1;
-    }
-  }
-  return { three, seven };
-}
-
-function maxRolling7DayCount(dates: Date[]) {
-  if (dates.length === 0) return 0;
-  const byDay = new Map<number, number>();
-  for (const d of dates) {
-    const t = startOfDay(d).getTime();
-    byDay.set(t, (byDay.get(t) ?? 0) + 1);
-  }
-  const sortedDays = Array.from(byDay.keys()).sort((a, b) => a - b);
-  let max = 0;
-  for (const day of sortedDays) {
-    let count = 0;
-    for (let i = 0; i < 7; i++) {
-      const k = day + i * 86400000;
-      count += byDay.get(k) ?? 0;
-    }
-    if (count > max) max = count;
-  }
-  return max;
 }
 
 function collectActivity(
@@ -182,8 +96,10 @@ function collectActivity(
   return { lessonCompletions, certificateEvents };
 }
 
-function deriveState(
-  profile: Profile | undefined,
+// ─── state builder — authoritative values from backend, display data from activity ──
+
+function buildLevelState(
+  gamState: GamificationState,
   enrollments: EnrolledCourse[],
   progresses: (CourseProgress | undefined)[],
   certificates: Certificate[],
@@ -194,34 +110,34 @@ function deriveState(
     certificates,
   );
 
-  const completionsCounted = lessonCompletions.length;
-  const profileCompleted = profile?.completedLessons ?? 0;
-  const totalLessons = Math.max(completionsCounted, profileCompleted);
-  const totalCertificates = certificates.length;
-  const totalEnrollments = profile?.enrolledCourses ?? enrollments.length;
+  const isMax = gamState.level >= 10;
+  // xpForNextLevel = 0 at max level; guard denominator
+  const xpRequired = isMax ? 1 : Math.max(1, gamState.xpForNextLevel);
+  const xpInto = gamState.xpIntoLevel;
+  const xpPct = isMax ? 100 : Math.min(100, Math.round((xpInto / xpRequired) * 100));
 
-  // Streak bonuses (awarded once per completed run that crossed each threshold).
-  const allDates: Date[] = [
+  const earnedBadges = new Set(
+    gamState.badges.filter((b) => b.unlocked).map((b) => b.id),
+  );
+
+  const totalLessons = progresses.reduce(
+    (sum, cp) => sum + (cp?.completedLessons ?? 0),
+    0,
+  );
+  const totalCertificates = certificates.length;
+  const totalEnrollments = enrollments.length;
+
+  const week = buildWeekWindow();
+  const todayKey = startOfDay(new Date()).toDateString();
+
+  const allDates = [
     ...lessonCompletions.map((l) => l.date),
     ...certificateEvents.map((c) => c.date),
   ];
-  const { three: streak3Count, seven: streak7Count } = countStreakBonuses(allDates);
-
-  const totalXp =
-    totalLessons * XP_LESSON_COMPLETE +
-    totalCertificates * XP_PER_CERTIFICATE_BUNDLE +
-    totalEnrollments * XP_ENROLLMENT +
-    streak3Count * XP_STREAK_3_BONUS +
-    streak7Count * XP_STREAK_7_BONUS;
-
-  const { level, xpInto, xpRequired, isMax } = deriveLevel(totalXp);
-  const xpPct = Math.min(100, Math.round((xpInto / xpRequired) * 100));
-
   const dayKeys = new Set(allDates.map((d) => startOfDay(d).toDateString()));
-  const streak = computeStreak(dayKeys);
-  const longestStreak = computeLongestStreak(allDates);
 
-  const week = buildWeekWindow();
+  // Weekly chart: display-only approximation of XP earned per day.
+  // Not authoritative — gamState.totalXp is the source of truth.
   const weeklyXp = week.map(({ date, label, key }) => {
     const lessonsCount = lessonCompletions.filter(
       (l) => startOfDay(l.date).toDateString() === key,
@@ -237,16 +153,16 @@ function deriveState(
   });
   const xpWeek = weeklyXp.reduce((sum, d) => sum + d.xp, 0);
 
-  const todayKey = startOfDay(new Date()).toDateString();
+  const todayLessons = lessonCompletions.filter(
+    (l) => startOfDay(l.date).toDateString() === todayKey,
+  ).length;
+  const todayCerts = certificateEvents.filter(
+    (c) => startOfDay(c.date).toDateString() === todayKey,
+  ).length;
   const xpToday =
-    lessonCompletions.filter((l) => startOfDay(l.date).toDateString() === todayKey).length *
-      XP_LESSON_COMPLETE +
-    certificateEvents.filter((c) => startOfDay(c.date).toDateString() === todayKey).length *
-      XP_PER_CERTIFICATE_BUNDLE;
-  const questDailyDone = Math.min(
-    3,
-    lessonCompletions.filter((l) => startOfDay(l.date).toDateString() === todayKey).length,
-  );
+    todayLessons * XP_LESSON_COMPLETE + todayCerts * XP_PER_CERTIFICATE_BUNDLE;
+
+  const questDailyDone = Math.min(3, todayLessons);
   const questCertEarned = totalCertificates > 0;
 
   const streakDays = week.map(({ label, key, date }) => ({
@@ -255,41 +171,7 @@ function deriveState(
     today: key === todayKey && date <= new Date(),
   }));
 
-  // Badge derivation — shared spec, ids must match Android XpEngine.
-  const earnedBadges = new Set<string>();
-  if (totalLessons >= 1) earnedBadges.add("first_flame");
-  if (totalLessons >= 10) earnedBadges.add("bookworm");
-  if (totalCertificates >= 1) {
-    earnedBadges.add("sharp_mind");
-    earnedBadges.add("graduate");
-  }
-  if (totalCertificates >= 3) earnedBadges.add("trophy_hunter");
-  if (longestStreak >= 14) earnedBadges.add("dedicated");
-  if (longestStreak >= 30) earnedBadges.add("star_learner");
-  if (longestStreak >= 60) earnedBadges.add("inferno");
-  if (level >= 7) earnedBadges.add("scholar");
-  if (level >= 10) earnedBadges.add("master");
-  if (maxRolling7DayCount(lessonCompletions.map((l) => l.date)) >= 5) {
-    earnedBadges.add("on_a_roll");
-  }
-
-  // Speed Run — 3+ lessons in a single day
-  {
-    const byDay = new Map<string, number>();
-    for (const l of lessonCompletions) {
-      const k = startOfDay(l.date).toDateString();
-      byDay.set(k, (byDay.get(k) ?? 0) + 1);
-    }
-    for (const v of byDay.values()) {
-      if (v >= 3) {
-        earnedBadges.add("speed_run");
-        break;
-      }
-    }
-  }
-
-  // Recent activity feed
-  const activityItems = [
+  const recentActivity = [
     ...lessonCompletions.map((l) => ({
       kind: "lesson" as const,
       title: l.title,
@@ -309,8 +191,8 @@ function deriveState(
     .slice(0, 6);
 
   return {
-    totalXp,
-    level,
+    totalXp: gamState.totalXp,
+    level: gamState.level,
     xpInto,
     xpRequired,
     xpPct,
@@ -318,8 +200,8 @@ function deriveState(
     totalLessons,
     totalCertificates,
     totalEnrollments,
-    streak,
-    longestStreak,
+    streak: gamState.currentStreak,
+    longestStreak: gamState.longestStreak,
     xpToday,
     xpWeek,
     weeklyXp,
@@ -327,8 +209,8 @@ function deriveState(
     earnedBadges,
     questDailyDone,
     questCertEarned,
-    recentActivity: activityItems,
-    hasAnyActivity: totalLessons + totalCertificates > 0,
+    recentActivity,
+    hasAnyActivity: gamState.totalXp > 0 || certificates.length > 0,
   };
 }
 
@@ -345,9 +227,9 @@ function LevelRoute() {
 function LevelPage() {
   const auth = useAuth();
 
-  const profileQuery = useQuery({
-    queryKey: ["profile"],
-    queryFn: () => getProfile(auth.getAccessToken),
+  const gamificationQuery = useQuery({
+    queryKey: ["gamification"],
+    queryFn: () => getGamificationState(auth.getAccessToken),
   });
 
   const enrollmentsQuery = useQuery({
@@ -373,34 +255,33 @@ function LevelPage() {
   const progressLoading = progressQueries.length > 0 && progressQueries.some((q) => q.isPending);
 
   const firstError =
-    profileQuery.error ??
+    gamificationQuery.error ??
     enrollmentsQuery.error ??
     certificatesQuery.error ??
     progressQueries.find((q) => q.error)?.error ??
     null;
 
   const isPending =
-    profileQuery.isPending ||
+    gamificationQuery.isPending ||
     enrollmentsQuery.isPending ||
     certificatesQuery.isPending ||
     progressLoading;
 
-  const state = useMemo(
-    () =>
-      deriveState(
-        profileQuery.data,
-        enrollments,
-        progressQueries.map((q) => q.data),
-        certificatesQuery.data ?? [],
-      ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [
-      profileQuery.data,
-      enrollmentsQuery.data,
-      certificatesQuery.data,
-      progressQueries.map((q) => q.data).join("|"),
-    ],
-  );
+  const state = useMemo(() => {
+    if (!gamificationQuery.data) return null;
+    return buildLevelState(
+      gamificationQuery.data,
+      enrollments,
+      progressQueries.map((q) => q.data),
+      certificatesQuery.data ?? [],
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    gamificationQuery.data,
+    enrollmentsQuery.data,
+    certificatesQuery.data,
+    progressQueries.map((q) => q.data).join("|"),
+  ]);
 
   const session = auth.session;
   const shellUser = {
@@ -420,7 +301,7 @@ function LevelPage() {
 
         {isPending ? (
           <LevelSkeleton />
-        ) : !state.hasAnyActivity ? (
+        ) : !state || !state.hasAnyActivity ? (
           <EmptyState />
         ) : (
           <>

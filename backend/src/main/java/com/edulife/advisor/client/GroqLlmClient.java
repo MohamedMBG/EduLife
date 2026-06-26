@@ -11,6 +11,7 @@ import java.util.Map;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RestClient;
 
+/** LLM client that calls the Groq chat-completions API to generate course recommendations. */
 public class GroqLlmClient implements LlmClient {
 
     private static final String SYSTEM_PROMPT = """
@@ -87,6 +88,7 @@ public class GroqLlmClient implements LlmClient {
         return parseGroqResponse(raw);
     }
 
+    /** Extracts the assistant message content from Groq's response and deserializes it. */
     private AdvisorLlmResult parseGroqResponse(String raw) {
         try {
             JsonNode root = objectMapper.readTree(raw);
@@ -106,6 +108,7 @@ public class GroqLlmClient implements LlmClient {
         }
     }
 
+    /** Removes markdown code fences that the LLM may wrap around its JSON output. */
     private String stripMarkdownFences(String text) {
         if (text == null) return "";
         String trimmed = text.strip();

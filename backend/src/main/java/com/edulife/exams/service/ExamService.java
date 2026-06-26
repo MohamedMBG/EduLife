@@ -38,6 +38,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Core service for exam lifecycle: retrieval, status checks, and submission with server-side scoring.
+ *
+ * <p>Business rules enforced: pass threshold is 80%, 2 consecutive failures trigger a 72-hour cooldown,
+ * correct answers are never exposed to clients, and certificates are issued only upon passing.</p>
+ */
 @Service
 public class ExamService {
 
@@ -69,6 +75,10 @@ public class ExamService {
         this.gamificationService = gamificationService;
     }
 
+    /**
+     * Retrieves the exam for a course with questions and shuffled choices.
+     * Requires the current user to have an active enrollment. Correct answers are excluded from the response.
+     */
     public ExamDto getExam(UUID courseId) {
         User user = resolveCurrentUser();
 
@@ -103,6 +113,9 @@ public class ExamService {
                 exam.getPassScore(), exam.getTimeLimitMinutes(), questionDtos);
     }
 
+    /**
+     * Returns the learner's exam status including pass state, failure count, and 72-hour cooldown window.
+     */
     public ExamStatusDto getExamStatus(UUID courseId) {
         User user = resolveCurrentUser();
 
@@ -135,6 +148,12 @@ public class ExamService {
         return new ExamStatusDto(exam.getId(), passed, (int) failedAttempts, 2, inCooldown, cooldownEndsAt);
     }
 
+    /**
+     * Scores an exam submission server-side, records the attempt, and issues a certificate on pass.
+     *
+     * <p>Enforces enrollment, already-passed, and cooldown guards. On pass, awards gamification XP
+     * and delegates certificate generation to {@link CertificateService}.</p>
+     */
     @Transactional
     public ExamResultDto submitExam(UUID courseId, SubmitExamRequest request) {
         User user = resolveCurrentUser();
@@ -229,6 +248,7 @@ public class ExamService {
                 (int) totalFailed, cooldownEndsAt);
     }
 
+    /** Resolves the current authenticated user from the Firebase security context. */
     private User resolveCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (!(auth instanceof FirebaseAuthentication firebaseAuth)) {

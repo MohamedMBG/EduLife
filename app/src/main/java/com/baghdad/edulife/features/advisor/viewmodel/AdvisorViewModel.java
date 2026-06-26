@@ -13,6 +13,10 @@ import com.baghdad.edulife.features.advisor.model.AdvisorUiState;
 
 import java.util.Collections;
 
+/**
+ * ViewModel for the advisor screen that manages UI state and delegates recommendation
+ * requests to {@link AdvisorRepository}, validating goal input before sending.
+ */
 public class AdvisorViewModel extends AndroidViewModel {
 
     private final AdvisorRepository repository;
@@ -28,6 +32,10 @@ public class AdvisorViewModel extends AndroidViewModel {
         return uiState;
     }
 
+    /**
+     * Validates the goal (minimum 4 characters) and triggers an advisor recommendation request.
+     * Updates UI state to loading, then to success or error based on the repository callback.
+     */
     public void recommend(String rawGoal) {
         String goal = rawGoal == null ? "" : rawGoal.trim();
         if (goal.length() < 4) {

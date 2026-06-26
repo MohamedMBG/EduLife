@@ -26,6 +26,10 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+/**
+ * Global exception handler that maps domain and framework exceptions to the
+ * standardized {@link ApiError} JSON contract, preventing raw stack traces in API responses.
+ */
 @RestControllerAdvice
 public class GlobalApiExceptionHandler {
 

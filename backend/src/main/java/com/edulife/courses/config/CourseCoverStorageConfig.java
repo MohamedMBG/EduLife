@@ -6,6 +6,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * Configures static resource handling for locally stored course cover images.
+ */
 @Configuration
 @EnableConfigurationProperties(CourseCoverStorageProperties.class)
 public class CourseCoverStorageConfig implements WebMvcConfigurer {
@@ -16,6 +19,7 @@ public class CourseCoverStorageConfig implements WebMvcConfigurer {
         this.properties = properties;
     }
 
+    /** Maps {@code /uploads/course-covers/**} to the configured filesystem directory. */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         String absolute = Paths.get(properties.getStorageDir()).toAbsolutePath().normalize().toString();

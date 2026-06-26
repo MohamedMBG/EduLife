@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+/** Spring Data repository for {@link GroupMember} entities, including group-admin scope queries. */
 public interface GroupMemberRepository extends JpaRepository<GroupMember, GroupMemberId> {
 
     boolean existsByGroupIdAndUserId(UUID groupId, UUID userId);

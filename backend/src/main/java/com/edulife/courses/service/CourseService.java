@@ -22,6 +22,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
+/**
+ * Service handling course discovery and detail retrieval for published courses.
+ *
+ * <p>Provides paginated listing with optional category filter and full-text search,
+ * plus single-course detail with nested sections and lessons.
+ */
 @Service
 public class CourseService {
 
@@ -42,9 +48,11 @@ public class CourseService {
         this.lessonRepository = lessonRepository;
     }
 
+    /**
+     * Returns a paginated list of published courses, optionally filtered by category or search query.
+     * Full-text search takes priority when both {@code category} and {@code query} are provided.
+     */
     @Transactional(readOnly = true)
-    // Read-only transaction keeps the discovery slice safe from accidental writes while still
-    // allowing the service to orchestrate repositories and DTO mapping in one place.
     public Page<CourseSummaryDto> getPublishedCourses(String category, String query, Pageable pageable) {
         Pageable sanitizedPageable = sanitizePageable(pageable);
 
@@ -71,9 +79,12 @@ public class CourseService {
         return courses.map(this::toCourseSummary);
     }
 
+    /**
+     * Returns full detail for a published course including its sections and lesson summaries.
+     *
+     * @throws ResponseStatusException 404 if the course does not exist or is not published
+     */
     @Transactional(readOnly = true)
-    // Detail reads remain published-only so learners cannot enumerate draft content simply by
-    // guessing IDs before teacher/admin flows are added later.
     public CourseDetailDto getPublishedCourseDetail(UUID courseId) {
         Course course = courseRepository.findByIdAndStatus(courseId, CourseStatus.PUBLISHED)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
@@ -141,6 +152,7 @@ public class CourseService {
         );
     }
 
+    /** Clamps page size to {@code MAX_PAGE_SIZE} and enforces {@code publishedAt} descending sort. */
     private Pageable sanitizePageable(Pageable pageable) {
         int pageNumber = pageable == null ? 0 : Math.max(pageable.getPageNumber(), 0);
         int requestedSize = pageable == null ? DEFAULT_PAGE_SIZE : pageable.getPageSize();

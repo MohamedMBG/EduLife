@@ -25,6 +25,12 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+/**
+ * Central Spring Security configuration for the EduLife backend.
+ *
+ * <p>Assembles the stateless security filter chain with Firebase token authentication,
+ * rate limiting, CORS, HSTS, and consistent error responses for all protected endpoints.</p>
+ */
 @Configuration
 @EnableMethodSecurity
 @EnableConfigurationProperties(CorsProperties.class)

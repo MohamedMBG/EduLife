@@ -130,6 +130,10 @@ public class AnalyticsService {
 
     // ── helpers ────────────────────────────────────────────────────────────────
 
+    /**
+     * Builds per-course analytics for a single course owned by the requesting teacher.
+     * Handles courses that have no exam yet by defaulting attempt counts to zero.
+     */
     private TeacherCourseAnalyticsDto toCourseAnalytics(Course course) {
         UUID courseId = course.getId();
 

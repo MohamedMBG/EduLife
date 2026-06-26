@@ -13,6 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Admin-only controller for reviewing, approving, and rejecting teacher promotion requests.
+ */
 @RestController
 @RequestMapping("/api/v1/admin/teacher-requests")
 @PreAuthorize("hasRole('ADMIN')")

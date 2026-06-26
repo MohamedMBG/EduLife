@@ -2,6 +2,7 @@ package com.edulife.certificates.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+/** Configuration properties for certificate PDF storage location and public URL prefix. */
 @ConfigurationProperties(prefix = "edulife.certificates")
 public class CertificateStorageProperties {
 

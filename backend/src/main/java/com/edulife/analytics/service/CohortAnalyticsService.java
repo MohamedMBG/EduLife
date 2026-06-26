@@ -142,6 +142,7 @@ public class CohortAnalyticsService {
 
     // ── helpers ────────────────────────────────────────────────────────────────
 
+    /** Converts a native-query funnel projection to an immutable DTO, defaulting to empty on null. */
     private static FunnelDto toFunnel(FunnelProjection p) {
         // A scoped funnel query always returns one row; guard against null defensively.
         if (p == null) {
@@ -150,12 +151,19 @@ public class CohortAnalyticsService {
         return new FunnelDto(p.getEnrolled(), p.getStarted(), p.getCompleted(), p.getPassed(), p.getCertified());
     }
 
+    /** Converts native-query month/count projections to immutable DTOs. */
     private static List<MonthCountDto> toMonthCounts(List<MonthCountProjection> rows) {
         return rows.stream()
                 .map(r -> new MonthCountDto(r.getMonth(), r.getTotal()))
                 .toList();
     }
 
+    /**
+     * Resolves the internal user from the Firebase identity in the security context.
+     *
+     * @throws IllegalStateException if the authentication is not a Firebase token
+     * @throws ResponseStatusException (401) if no internal user matches the Firebase UID
+     */
     private User resolveCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (!(authentication instanceof FirebaseAuthentication firebaseAuth)) {

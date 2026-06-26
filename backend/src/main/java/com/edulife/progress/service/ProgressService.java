@@ -27,6 +27,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Core service for tracking learner progress through courses and lessons.
+ *
+ * <p>Handles lesson completion (idempotent), course progress aggregation,
+ * and gamification XP emission for lesson/course completion events.</p>
+ */
 @Service
 public class ProgressService {
 
@@ -55,6 +61,17 @@ public class ProgressService {
         this.gamificationService      = gamificationService;
     }
 
+    /**
+     * Marks a lesson as completed for the authenticated learner.
+     *
+     * <p>Idempotent: a second call for the same lesson is a no-op. On first completion,
+     * syncs course progress, emits lesson-completion XP, and triggers course-completion
+     * XP if all lessons are now done.</p>
+     *
+     * @param courseId the course containing the lesson
+     * @param lessonId the lesson to mark complete
+     * @throws ResponseStatusException 404 if lesson not found, 403 if not enrolled
+     */
     @Transactional
     public void markLessonComplete(UUID courseId, UUID lessonId) {
         User user = resolveCurrentUser();
@@ -87,6 +104,13 @@ public class ProgressService {
         }
     }
 
+    /**
+     * Builds a detailed progress view for the authenticated learner in the given course.
+     *
+     * @param courseId the course to retrieve progress for
+     * @return section-by-section progress with per-lesson completion status
+     * @throws ResponseStatusException 403 if not enrolled
+     */
     public CourseProgressDto getCourseProgress(UUID courseId) {
         User user = resolveCurrentUser();
 
@@ -138,11 +162,13 @@ public class ProgressService {
         return new CourseProgressDto(courseId, completed, total, percentComplete, sectionDtos);
     }
 
+    /** Creates or updates the course progress row during enrollment initialization. */
     @Transactional
     public void initializeCourseProgress(UUID userId, UUID courseId) {
         syncCourseProgress(userId, courseId);
     }
 
+    /** Recalculates and persists the aggregate lesson counts for a user-course pair. */
     private void syncCourseProgress(UUID userId, UUID courseId) {
         long total     = lessonRepository.countByCourseId(courseId);
         long completed = lessonProgressRepository.countByUserIdAndCourseId(userId, courseId);
@@ -158,6 +184,7 @@ public class ProgressService {
                 );
     }
 
+    /** Resolves the internal user from the Firebase-authenticated security context. */
     private User resolveCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (!(auth instanceof FirebaseAuthentication firebaseAuth)) {

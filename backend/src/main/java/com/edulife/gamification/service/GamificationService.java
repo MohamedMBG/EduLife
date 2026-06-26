@@ -80,6 +80,7 @@ public class GamificationService {
     // -- Emission hooks ------------------------------------------------------
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
+    /** Awards ENROLLMENT XP (10) when a learner enrolls in a course. Idempotent by enrollment ID. */
     public void onEnrollment(UUID userId, UUID enrollmentId) {
         String dedupKey = "enrollment:" + enrollmentId;
         awardXpInternal(userId, XpEventType.ENROLLMENT, enrollmentId.toString(), dedupKey);
@@ -87,6 +88,7 @@ public class GamificationService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
+    /** Awards LESSON_COMPLETED XP (25) and updates the daily activity streak. Idempotent per user+lesson. */
     public void onLessonCompleted(UUID userId, UUID lessonId) {
         String dedupKey = "lesson:" + lessonId + ":" + userId;
         boolean awarded = awardXpInternal(userId, XpEventType.LESSON_COMPLETED, lessonId.toString(), dedupKey);
@@ -97,6 +99,7 @@ public class GamificationService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
+    /** Awards COURSE_COMPLETED XP (100) when all lessons in a course are done. Idempotent per user+course. */
     public void onCourseCompleted(UUID userId, UUID courseId) {
         String dedupKey = "course:" + courseId + ":" + userId;
         awardXpInternal(userId, XpEventType.COURSE_COMPLETED, courseId.toString(), dedupKey);
@@ -104,6 +107,7 @@ public class GamificationService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
+    /** Awards EXAM_PASSED XP (150) on a passing exam attempt. Idempotent by attempt ID. */
     public void onExamPassed(UUID userId, UUID examAttemptId) {
         String dedupKey = "exam:" + examAttemptId;
         awardXpInternal(userId, XpEventType.EXAM_PASSED, examAttemptId.toString(), dedupKey);
@@ -111,6 +115,7 @@ public class GamificationService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
+    /** Awards CERTIFICATE_EARNED XP (200) when a certificate is issued. Idempotent by certificate ID. */
     public void onCertificateEarned(UUID userId, UUID certificateId) {
         String dedupKey = "certificate:" + certificateId;
         awardXpInternal(userId, XpEventType.CERTIFICATE_EARNED, certificateId.toString(), dedupKey);
@@ -118,6 +123,7 @@ public class GamificationService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
+    /** Awards DAILY_LOGIN XP (5) once per UTC day per learner and updates streak. */
     public void onDailyLogin(UUID userId) {
         LocalDate today = LocalDate.now(clock.withZone(ACTIVITY_ZONE));
         String dedupKey = "login:" + userId + ":" + today;
@@ -131,6 +137,7 @@ public class GamificationService {
     // -- Reads ---------------------------------------------------------------
 
     @Transactional(readOnly = true)
+    /** Builds the full gamification state DTO for a learner, merging XP/level/streak with badge catalog. */
     public GamificationStateDto getState(UUID userId) {
         UserGamificationState state = stateRepository.findById(userId)
                 .orElseGet(() -> new UserGamificationState(userId));
@@ -181,6 +188,7 @@ public class GamificationService {
     }
 
     @Transactional(readOnly = true)
+    /** Returns the top N learners ranked by total XP, capped at 100. */
     public List<LeaderboardEntryDto> getLeaderboard(int limit) {
         int safeLimit = Math.max(1, Math.min(100, limit));
         List<UserGamificationState> top = stateRepository
@@ -213,6 +221,7 @@ public class GamificationService {
     }
 
     @Transactional(readOnly = true)
+    /** Returns the full badge catalog as DTOs without user-specific unlock info. */
     public List<BadgeDto> listBadgeDefinitions() {
         List<BadgeDto> out = new ArrayList<>(BadgeCatalog.all().size());
         for (BadgeDefinition def : BadgeCatalog.all()) {
@@ -223,6 +232,10 @@ public class GamificationService {
 
     // -- Internals -----------------------------------------------------------
 
+    /**
+     * Persists an XP event if the dedup key has not been claimed, then updates the user's
+     * aggregate state (total XP and level). Returns true if XP was actually awarded.
+     */
     private boolean awardXpInternal(UUID userId, XpEventType type, String sourceRef, String dedupKey) {
         if (eventRepository.existsByDedupKey(dedupKey)) {
             return false;
@@ -242,6 +255,10 @@ public class GamificationService {
         return true;
     }
 
+    /**
+     * Updates the learner's streak based on today's date vs. last activity date. Awards
+     * streak bonuses (+30 at 3 days, +75 at 7 days) once per active streak run.
+     */
     private void applyDailyActivity(UUID userId) {
         UserGamificationState state = stateRepository.findById(userId)
                 .orElseGet(() -> stateRepository.save(new UserGamificationState(userId)));
@@ -292,6 +309,10 @@ public class GamificationService {
         state.setStreakBonus7Awarded(false);
     }
 
+    /**
+     * Checks all 12 badge unlock conditions against the learner's current stats and
+     * persists any newly earned badges. Safe to call repeatedly; already-unlocked badges are skipped.
+     */
     private void evaluateBadges(UUID userId) {
         Set<String> already = badgeRepository.findBadgeIdsByUserId(userId);
         UserGamificationState state = stateRepository.findById(userId)
@@ -323,6 +344,7 @@ public class GamificationService {
         if (state.getLevel() >= 10) unlockBadge(userId, BadgeCatalog.MASTER, already);
     }
 
+    /** Persists a badge unlock if not already earned. Handles concurrent unlock races gracefully. */
     private void unlockBadge(UUID userId, String badgeId, Set<String> already) {
         if (already.contains(badgeId)) {
             return;

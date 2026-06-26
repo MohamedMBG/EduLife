@@ -3,6 +3,7 @@ package com.edulife.common.error;
 import java.time.Instant;
 import org.springframework.http.HttpStatus;
 
+/** Extended error response for exam cooldown violations, including when the cooldown expires. */
 public record ExamCooldownError(
         int status,
         String code,

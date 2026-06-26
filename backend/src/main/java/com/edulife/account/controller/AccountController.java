@@ -6,6 +6,9 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller for account-level operations such as self-service account deletion.
+ */
 @RestController
 @RequestMapping("/api/v1/account")
 public class AccountController {

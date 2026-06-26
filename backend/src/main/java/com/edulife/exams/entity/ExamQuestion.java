@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.util.UUID;
 
+/** JPA entity representing a single question within an exam, ordered by {@code orderIndex}. */
 @Entity
 @Table(name = "exam_questions")
 public class ExamQuestion {

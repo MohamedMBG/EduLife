@@ -15,18 +15,24 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+/**
+ * Repository that handles all admin-related API calls for dashboard stats and teacher request management.
+ */
 public class AdminRepository {
 
+    /** Callback for fetching platform-wide admin statistics. */
     public interface StatsCallback {
         void onSuccess(AdminStats stats);
         void onError(String message);
     }
 
+    /** Callback for fetching a list of teacher role requests. */
     public interface RequestsCallback {
         void onSuccess(List<AdminTeacherRequest> requests);
         void onError(String message);
     }
 
+    /** Callback for approve/reject actions on a single teacher request. */
     public interface ActionCallback {
         void onSuccess(AdminTeacherRequest updated);
         void onError(String message);
@@ -38,6 +44,7 @@ public class AdminRepository {
         this.apiService = ApiClient.getClient().create(ApiService.class);
     }
 
+    /** Fetches platform-wide admin statistics from the backend. */
     public void loadStats(StatsCallback callback) {
         apiService.getAdminStats().enqueue(new Callback<AdminStats>() {
             @Override

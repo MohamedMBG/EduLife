@@ -48,11 +48,13 @@ public final class LevelTable {
         return lo + 1;
     }
 
+    /** Returns the XP threshold required to reach the given level (clamped to 1..MAX_LEVEL). */
     public static int xpForLevel(int level) {
         int clamped = Math.max(1, Math.min(MAX_LEVEL, level));
         return THRESHOLDS[clamped - 1];
     }
 
+    /** Returns the display name for the given level (e.g. "Novice", "Master"). */
     public static String nameForLevel(int level) {
         int clamped = Math.max(1, Math.min(MAX_LEVEL, level));
         return NAMES.get(clamped - 1);

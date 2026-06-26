@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+/** REST controller for certificate listing, detail retrieval, PDF download, and public verification. */
 @RestController
 @RequestMapping("/api/v1/certificates")
 public class CertificateController {
@@ -32,18 +33,21 @@ public class CertificateController {
         this.userRepository = userRepository;
     }
 
+    /** Returns all certificates earned by the authenticated learner. */
     @GetMapping("/me")
     public List<CertificateSummaryDto> getMyCertificates(Authentication auth) {
         UUID userId = resolveUserId(auth);
         return certificateService.getMyCertificates(userId);
     }
 
+    /** Returns full details of a specific certificate owned by the authenticated learner. */
     @GetMapping("/{id}")
     public CertificateDetailDto getCertificate(@PathVariable UUID id, Authentication auth) {
         UUID userId = resolveUserId(auth);
         return certificateService.getCertificateById(userId, id);
     }
 
+    /** Downloads the certificate as a PDF; ownership is verified server-side. */
     @GetMapping("/{id}/download")
     public ResponseEntity<byte[]> downloadCertificate(@PathVariable UUID id, Authentication auth) {
         UUID userId = resolveUserId(auth);
@@ -54,11 +58,13 @@ public class CertificateController {
                 .body(pdf);
     }
 
+    /** Public endpoint to verify a certificate's authenticity by its hash (no auth required). */
     @GetMapping("/verify/{verificationHash}")
     public CertificateVerificationDto verifyCertificate(@PathVariable String verificationHash) {
         return certificateService.verifyCertificate(verificationHash);
     }
 
+    /** Resolves the internal user ID from the Firebase authentication token. */
     private UUID resolveUserId(Authentication auth) {
         if (!(auth instanceof FirebaseAuthentication firebaseAuth)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");

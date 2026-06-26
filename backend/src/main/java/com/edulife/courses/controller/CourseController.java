@@ -9,6 +9,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * REST controller for public course discovery endpoints.
+ */
 @RestController
 @RequestMapping("/api/v1/courses")
 public class CourseController {
@@ -19,9 +22,15 @@ public class CourseController {
         this.courseService = courseService;
     }
 
+    /**
+     * Lists published courses with optional category filter and full-text search.
+     *
+     * @param category optional level/category filter
+     * @param q        optional full-text search query (Postgres tsquery)
+     * @param pageable pagination parameters (default size 20)
+     * @return paginated course summaries
+     */
     @GetMapping
-    // The list endpoint stays intentionally thin so request parsing and HTTP wiring remain
-    // separate from the discovery business rules that belong in CourseService.
     public Page<CourseSummaryDto> listCourses(
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String q,
@@ -31,9 +40,13 @@ public class CourseController {
         return courseService.getPublishedCourses(category, q, pageable);
     }
 
+    /**
+     * Returns full detail for a single published course, including sections and lessons.
+     *
+     * @param courseId the course UUID
+     * @return course detail with nested sections and lesson summaries
+     */
     @GetMapping("/{courseId}")
-    // Detail lookup is UUID-based because the learner flow already uses backend IDs from the
-    // list response and this avoids reopening slug-routing decisions during Sprint 2.
     public CourseDetailDto getCourseDetail(@PathVariable UUID courseId) {
         return courseService.getPublishedCourseDetail(courseId);
     }

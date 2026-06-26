@@ -4,6 +4,7 @@ import com.edulife.advisor.dto.AdvisorLlmResult;
 import com.edulife.advisor.dto.CourseContextDto;
 import java.util.List;
 
+/** No-op LLM client used when no real provider is configured; always returns empty picks. */
 public class StubLlmClient implements LlmClient {
 
     @Override

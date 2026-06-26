@@ -2,6 +2,7 @@ package com.edulife.courses.dto;
 
 import java.util.UUID;
 
+/** Full lesson detail DTO including content body/URL and the learner's completion status. */
 public record LessonDetailDto(
         UUID lessonId,
         UUID courseId,

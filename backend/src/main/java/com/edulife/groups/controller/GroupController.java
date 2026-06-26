@@ -29,6 +29,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * REST controller for institute/group management: creation, membership, course attachment, and join requests.
+ * Restricted to TEACHER, GROUP_ADMIN, and ADMIN roles.
+ */
 @RestController
 @RequestMapping("/api/v1/groups")
 // GROUP_ADMIN manages institute groups; TEACHER manages their own cohorts; ADMIN can manage all.

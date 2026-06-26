@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/** REST controller for CMS section management within a course. */
 @RestController
 @RequestMapping("/api/v1/cms/courses/{courseId}/sections")
 // Section management requires the same role gate as course management.

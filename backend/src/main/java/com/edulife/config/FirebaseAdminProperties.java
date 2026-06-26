@@ -2,6 +2,7 @@ package com.edulife.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+/** Externalized properties for locating Firebase Admin SDK credentials (file path or raw JSON). */
 @ConfigurationProperties(prefix = "firebase.admin")
 public class FirebaseAdminProperties {
 

@@ -22,6 +22,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * Servlet filter that validates Firebase ID tokens from the Authorization header
+ * and populates the Spring SecurityContext with a {@link FirebaseAuthentication}.
+ *
+ * <p>Rejects requests with unverified emails and resolves user roles from the internal
+ * user table rather than trusting client-supplied claims.</p>
+ */
 public class FirebaseTokenFilter extends OncePerRequestFilter {
 
     private static final RequestMatcher PUBLIC_ENDPOINTS = new OrRequestMatcher(

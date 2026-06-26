@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+/** Spring Data repository for {@link LessonProgress} completion records. */
 public interface LessonProgressRepository extends JpaRepository<LessonProgress, UUID> {
 
     boolean existsByUserIdAndLessonId(UUID userId, UUID lessonId);

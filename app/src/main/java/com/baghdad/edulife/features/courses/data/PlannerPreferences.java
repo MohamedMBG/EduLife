@@ -47,6 +47,7 @@ public class PlannerPreferences {
         return prefs.getString(KEY_WEEKLY_GOAL, "");
     }
 
+    /** Saves the weekly target hours, clamped to the [1, 40] range. */
     public void saveTargetHours(int hours) {
         if (hours < 1) hours = 1;
         if (hours > 40) hours = 40;
@@ -92,6 +93,7 @@ public class PlannerPreferences {
         prefs.edit().putString(KEY_TASKS, json).apply();
     }
 
+    /** Deserializes planner tasks from JSON, returning an empty list on missing or corrupt data. */
     public List<PlannerTask> getTasks() {
         String json = prefs.getString(KEY_TASKS, null);
         if (json == null || json.isEmpty()) {

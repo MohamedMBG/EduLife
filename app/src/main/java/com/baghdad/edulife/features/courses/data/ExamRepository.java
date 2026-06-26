@@ -15,6 +15,10 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+/**
+ * Repository that handles exam retrieval, status checks, and answer submission against the
+ * backend API, including cooldown and already-passed edge cases.
+ */
 public class ExamRepository {
 
     private final ApiService apiService;
@@ -92,6 +96,10 @@ public class ExamRepository {
         });
     }
 
+    /**
+     * Submits exam answers for scoring. Handles 409 (already passed), 429 (cooldown after
+     * two failures), and parses the cooldown expiry timestamp from the error body.
+     */
     public void submitExam(String courseId, SubmitExamRequest request, SubmitCallback callback) {
         apiService.submitExam(courseId, request).enqueue(new Callback<ExamResultResponse>() {
             @Override

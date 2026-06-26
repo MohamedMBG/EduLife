@@ -22,6 +22,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * RecyclerView adapter for the course catalog on the home screen, displaying course cards
+ * with hero images, metadata, placeholder ratings, and optional per-course progress bars.
+ */
 public class CourseCatalogAdapter extends RecyclerView.Adapter<CourseCatalogAdapter.CourseViewHolder> {
 
     public interface OnCourseClickListener {
@@ -44,6 +48,9 @@ public class CourseCatalogAdapter extends RecyclerView.Adapter<CourseCatalogAdap
         notifyDataSetChanged();
     }
 
+    /**
+     * Updates the course-id-to-progress-percent mapping and refreshes all visible items.
+     */
     public void updateProgressMap(Map<String, Integer> map) {
         progressMap = map != null ? new HashMap<>(map) : Collections.emptyMap();
         notifyDataSetChanged();
@@ -154,6 +161,10 @@ public class CourseCatalogAdapter extends RecyclerView.Adapter<CourseCatalogAdap
             }
         }
 
+        /**
+         * Derives a deterministic rating from the course ID hash so placeholder values
+         * remain consistent across scrolls while the backend lacks a real ratings endpoint.
+         */
         private float stableRating(String id) {
             if (id == null) return 4.7f;
             int hash = Math.abs(id.hashCode());

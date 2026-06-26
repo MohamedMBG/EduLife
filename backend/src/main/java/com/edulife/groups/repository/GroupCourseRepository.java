@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+/** Spring Data repository for {@link GroupCourse} entities (group-to-course attachments). */
 public interface GroupCourseRepository extends JpaRepository<GroupCourse, GroupCourseId> {
 
     boolean existsByGroupIdAndCourseId(UUID groupId, UUID courseId);

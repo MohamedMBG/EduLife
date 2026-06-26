@@ -25,6 +25,13 @@ import com.baghdad.edulife.features.advisor.model.AdvisorRecommendation;
 import com.baghdad.edulife.features.advisor.model.AdvisorUiState;
 import com.baghdad.edulife.features.advisor.viewmodel.AdvisorViewModel;
 
+/**
+ * Fragment for the AI career advisor screen where learners submit career goals
+ * and receive ranked course recommendations from the backend.
+ *
+ * <p>Observes {@link AdvisorViewModel} UI state to toggle between loading, success,
+ * error, and empty views. Handles window insets for edge-to-edge display.</p>
+ */
 public class AdvisorFragment extends Fragment {
 
     private AdvisorViewModel viewModel;
@@ -93,6 +100,10 @@ public class AdvisorFragment extends Fragment {
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::renderState);
     }
 
+    /**
+     * Maps the current {@link AdvisorUiState} to view visibility and content,
+     * handling loading indicators, error cards, response styling, and the recommendation list.
+     */
     private void renderState(AdvisorUiState state) {
         if (state == null) return;
 
@@ -152,6 +163,9 @@ public class AdvisorFragment extends Fragment {
         recycler.setVisibility(hasRecs ? View.VISIBLE : View.GONE);
     }
 
+    /**
+     * Navigates to the course detail screen for the given recommendation, passing the course ID.
+     */
     private void openCourse(AdvisorRecommendation recommendation) {
         if (recommendation == null
                 || recommendation.courseId == null

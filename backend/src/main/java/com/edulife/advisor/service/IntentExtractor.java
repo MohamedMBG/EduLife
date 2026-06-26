@@ -6,6 +6,10 @@ import java.util.Map;
 import java.util.Set;
 import org.springframework.stereotype.Component;
 
+/**
+ * Extracts search intent from a learner's goal string by tokenizing, removing stop words,
+ * expanding keywords via synonym groups, and detecting the input language.
+ */
 @Component
 public class IntentExtractor {
 
@@ -91,6 +95,7 @@ public class IntentExtractor {
             Map.entry("create", List.of("development", "create", "build"))
     );
 
+    /** Parses the goal into direct keywords, synonym-expanded keywords, and the detected language. */
     public IntentResult extract(String goal) {
         String normalized = normalize(goal);
         Set<String> tokens = tokenize(normalized);
@@ -110,6 +115,7 @@ public class IntentExtractor {
         return tokens;
     }
 
+    /** Expands the token set by adding synonyms from {@code SYNONYM_GROUPS}. */
     private Set<String> expand(Set<String> tokens) {
         Set<String> expanded = new LinkedHashSet<>(tokens);
         for (String token : tokens) {
@@ -121,6 +127,7 @@ public class IntentExtractor {
         return expanded;
     }
 
+    /** Detects the goal language as Darija, French, or English based on marker words. */
     private String detectLanguage(String goal) {
         String lower = goal.toLowerCase();
         if (lower.contains("bghit") || lower.contains("ndir") || lower.contains("dyal")
@@ -135,6 +142,7 @@ public class IntentExtractor {
         return "en";
     }
 
+    /** Lowercases text and strips French diacritics for consistent keyword matching. */
     static String normalize(String text) {
         return text.toLowerCase()
                 .replace("é", "e").replace("è", "e").replace("ê", "e")
@@ -142,6 +150,7 @@ public class IntentExtractor {
                 .replace("û", "u").replace("î", "i").replace("ï", "i");
     }
 
+    /** Result of intent extraction: original keywords, expanded keywords, and detected language. */
     public record IntentResult(
             Set<String> keywords,
             Set<String> expandedKeywords,

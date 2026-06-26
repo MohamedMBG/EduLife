@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/advisor")
+/** REST controller exposing the AI-powered course recommendation endpoint. */
 public class AdvisorController {
 
     private final AdvisorService advisorService;

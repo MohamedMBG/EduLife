@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/** REST controller for CMS lesson management within a course section. */
 @RestController
 @RequestMapping("/api/v1/cms/sections/{sectionId}/lessons")
 @PreAuthorize("hasAnyRole('TEACHER','GROUP_ADMIN','ADMIN')")

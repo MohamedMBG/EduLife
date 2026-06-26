@@ -26,6 +26,7 @@ public class CorsProperties {
         this.allowedOrigins = allowedOrigins;
     }
 
+    /** Returns the configured origins merged with first-party origins that must never be removed. */
     public List<String> getEffectiveAllowedOrigins() {
         // The deployed web client is part of this application, so an old platform environment
         // override must not remove it and strand users after Firebase authentication succeeds.

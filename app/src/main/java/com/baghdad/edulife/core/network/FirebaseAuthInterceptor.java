@@ -12,6 +12,14 @@ import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
 
+/**
+ * OkHttp interceptor that attaches the current Firebase ID token as a Bearer header.
+ *
+ * <p>Uses the cached token when still valid; skips injection if the request already
+ * carries an Authorization header (e.g. /auth/sync passes its own fresh token).
+ * Token fetch failures are surfaced as {@link java.io.IOException} so callers see
+ * a network error rather than a misleading 401.
+ */
 public class FirebaseAuthInterceptor implements Interceptor {
 
     // getIdToken(false) returns the cached token instantly when it is still valid; the timeout

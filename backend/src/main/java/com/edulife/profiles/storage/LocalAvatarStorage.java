@@ -20,6 +20,10 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+/**
+ * Filesystem-backed {@link AvatarStorage} implementation for local development.
+ * Writes avatars to the configured directory and serves them via the static resource mapping.
+ */
 @Component
 public class LocalAvatarStorage implements AvatarStorage {
 
@@ -151,6 +155,7 @@ public class LocalAvatarStorage implements AvatarStorage {
         }
     }
 
+    /** Builds the publicly accessible avatar URL, preferring the request origin over a localhost fallback. */
     private String buildPublicUrl(String filename) {
         String configuredBaseUrl = trimTrailingSlash(properties.getPublicBaseUrl());
         String requestBaseUrl = resolveRequestPublicBaseUrl();
@@ -188,6 +193,7 @@ public class LocalAvatarStorage implements AvatarStorage {
         }
     }
 
+    /** Extracts the filename from a locally-stored avatar URL, or {@code null} if the URL is external. */
     private static String extractStoredFilename(String publicUrl) {
         String normalized = publicUrl.trim();
         if (normalized.isBlank()) {

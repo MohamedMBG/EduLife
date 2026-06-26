@@ -3,6 +3,10 @@ package com.baghdad.edulife.features.courses.model;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Immutable UI state for the career advisor screen, representing loading, success, and error phases
+ * of fetching course recommendations based on a learner's career goal.
+ */
 public class CareerAdvisorUiState {
     public final boolean loading;
     public final String learnerGoal;

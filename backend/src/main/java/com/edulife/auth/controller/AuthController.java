@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/** REST controller for Firebase authentication synchronization with the internal user store. */
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
@@ -18,6 +19,7 @@ public class AuthController {
         this.authSyncService = authSyncService;
     }
 
+    /** Synchronizes the authenticated Firebase user with the internal user table. */
     @PostMapping("/sync")
     public AuthSyncResponse sync(
             @RequestBody(required = false) AuthSyncRequest request

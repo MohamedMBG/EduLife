@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+/** Spring Data JPA repository for {@link CourseSection} entities. */
 public interface CourseSectionRepository extends JpaRepository<CourseSection, UUID> {
 
     // Course detail screens must render sections in learning order, so ordering is enforced

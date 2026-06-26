@@ -2,6 +2,9 @@ package com.baghdad.edulife.features.courses.model;
 
 import java.util.List;
 
+/**
+ * Detailed progress summary for a course, including lesson metadata (type, duration, ordering) alongside completion status.
+ */
 public class CourseProgressSummary {
     public String courseId;
     public int completedLessons;

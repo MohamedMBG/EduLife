@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
+/** Builds a list of {@link CourseContextDto} from published courses, including their lesson titles. */
 @Component
 public class CourseContextBuilder {
 
@@ -28,6 +29,7 @@ public class CourseContextBuilder {
         this.lessonRepository = lessonRepository;
     }
 
+    /** Returns context DTOs for all published courses (the goal parameter is reserved for future filtering). */
     public List<CourseContextDto> build(String goal) {
         return courseRepository.findAllByStatus(CourseStatus.PUBLISHED)
                 .stream()
@@ -49,6 +51,7 @@ public class CourseContextBuilder {
         );
     }
 
+    /** Fetches ordered lesson titles across all sections of a course. */
     private List<String> fetchLessonTitles(UUID courseId) {
         List<CourseSection> sections = sectionRepository.findAllByCourseIdOrderByDisplayOrderAsc(courseId);
         List<String> titles = new ArrayList<>();

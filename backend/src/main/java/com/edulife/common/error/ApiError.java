@@ -3,6 +3,7 @@ package com.edulife.common.error;
 import java.time.Instant;
 import org.springframework.http.HttpStatus;
 
+/** Standardized API error response body returned by all endpoints and security filters. */
 public record ApiError(
         int status,
         String code,

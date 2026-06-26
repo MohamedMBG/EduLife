@@ -37,12 +37,14 @@ public class GamificationController {
         this.userRepository = userRepository;
     }
 
+    /** Returns the authenticated learner's XP, level, streak, and badge state. */
     @GetMapping("/me")
     public GamificationStateDto getMyState() {
         User user = resolveCurrentUser();
         return gamificationService.getState(user.getId());
     }
 
+    /** Returns the global all-time leaderboard, capped at the requested limit (default 20, max 100). */
     @GetMapping("/leaderboard")
     public List<LeaderboardEntryDto> getLeaderboard(
             @RequestParam(value = "limit", required = false, defaultValue = "20") int limit
@@ -50,11 +52,13 @@ public class GamificationController {
         return gamificationService.getLeaderboard(limit);
     }
 
+    /** Returns all 12 badge definitions from the catalog (without user-specific unlock status). */
     @GetMapping("/badges")
     public List<BadgeDto> getBadgeCatalog() {
         return gamificationService.listBadgeDefinitions();
     }
 
+    /** Resolves the internal user from the Firebase-authenticated security context. */
     private User resolveCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (!(auth instanceof FirebaseAuthentication firebaseAuth)) {

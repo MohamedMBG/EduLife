@@ -13,6 +13,12 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * JPA entity representing a learner's enrollment in a course.
+ *
+ * <p>The table enforces a UNIQUE constraint on (user_id, course_id), so cancelled
+ * enrollments are reactivated rather than duplicated.</p>
+ */
 @Entity
 @Table(name = "enrollments")
 public class Enrollment {
@@ -42,6 +48,7 @@ public class Enrollment {
         this.courseId = courseId;
     }
 
+    /** Sets the enrollment timestamp and defaults status to ACTIVE on first persist. */
     @PrePersist
     void onCreate() {
         enrolledAt = Instant.now();
@@ -56,10 +63,12 @@ public class Enrollment {
     public Instant getEnrolledAt() { return enrolledAt; }
     public EnrollmentStatus getStatus() { return status; }
 
+    /** Soft-cancels this enrollment by setting its status to CANCELLED. */
     public void cancel() {
         this.status = EnrollmentStatus.CANCELLED;
     }
 
+    /** Reactivates a previously cancelled enrollment. */
     public void reactivate() {
         this.status = EnrollmentStatus.ACTIVE;
     }

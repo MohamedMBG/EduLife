@@ -13,6 +13,7 @@ import org.springframework.web.client.RestClient;
 
 @Configuration
 @EnableConfigurationProperties(AdvisorProperties.class)
+/** Spring configuration that selects the active {@link LlmClient} based on the advisor provider property. */
 public class AdvisorConfig {
 
     @Bean
