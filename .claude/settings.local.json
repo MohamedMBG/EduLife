@@ -68,7 +68,11 @@
       "Bash(xargs grep -l \"syncAuth\\\\|auth/sync\")",
       "Bash(npx --yes skills add https://github.com/Leonxlnx/taste-skill --skill \"design-taste-frontend\")",
       "Bash(npx --yes skills add https://github.com/Leonxlnx/taste-skill --skill \"redesign-existing-projects\")",
-      "Bash(npx --yes skills add https://github.com/Leonxlnx/taste-skill --skill \"high-end-visual-design\")"
+      "Bash(npx --yes skills add https://github.com/Leonxlnx/taste-skill --skill \"high-end-visual-design\")",
+      "Bash(./gradlew.bat :app:testDebugUnitTest --console=plain --no-daemon)",
+      "Bash(.\\\\gradlew.bat :app:testDebugUnitTest)",
+      "PowerShell(.\\\\gradlew.bat :app:assembleRelease 2>&1 | Select-Object -Last 15)",
+      "Bash(dir /s /b C:\\\\Users\\\\pc\\\\AndroidStudioProjects\\\\EduLife)"
     ]
   }
 }
